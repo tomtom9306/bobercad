@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/connection_library_schema.json",
+  "schema": "steel-connection-library",
+  "schemaVersion": "0.1.0",
+  "library": {
+    "id": "starter-connection-library",
+    "name": "Starter Steel Connection Library",
+    "version": "0.1.0",
+    "status": "demo-not-certified-for-fabrication",
+    "description": "Authoring presets for early steel connection modeling. Presets must create explicit project objects before viewing or export."
+  },
+  "units": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "connections": {
+    "beam_to_column_end_plate_m16_2x4": {
+      "id": "beam_to_column_end_plate_m16_2x4",
+      "type": "beam-to-column-end-plate",
+      "version": "0.1.0",
+      "name": "Beam to column end plate, M16 2x4",
+      "inputs": ["mainMember", "secondaryMember", "mainInterface", "secondaryInterface"],
+      "parameters": {
+        "plateThickness": 12,
+        "plateWidth": 170,
+        "plateHeight": 390,
+        "holePattern": "hole_pattern_2x4_m16",
+        "fastenerRef": "M16_8_8",
+        "holeDiameter": 18,
+        "fastenerRows": 4,
+        "fastenerColumns": 2,
+        "fastenerColumnGauge": 116,
+        "verticalPitch": 80,
+        "weldSize": 6
+      },
+      "produces": {
+        "plates": ["end-plate"],
+        "features": ["hole-pattern"],
+        "fastenerGroups": ["through-bolt-group"],
+        "welds": ["profile-end-weld"]
+      },
+      "notes": "Preset provenance only. Project connection must store the actual plates, features, fastener groups, and welds."
+    },
+    "manual_steel_to_steel_end_plate_m16_2x2": {
+      "id": "manual_steel_to_steel_end_plate_m16_2x2",
+      "type": "manual-steel-to-steel-end-plate",
+      "version": "0.1.0",
+      "name": "Manual steel-to-steel end plate, M16 2x2",
+      "inputs": ["mainMember", "secondaryMember", "connectionZone"],
+      "parameters": {
+        "plateThickness": 10,
+        "holePattern": "hole_pattern_2x2_m16",
+        "fastenerRef": "M16_8_8",
+        "holeDiameter": 18,
+        "fastenerRows": 2,
+        "fastenerColumns": 2,
+        "fastenerColumnGauge": 90,
+        "verticalPitch": 90
+      },
+      "produces": {
+        "plates": ["end-plate"],
+        "features": ["hole-pattern"],
+        "fastenerGroups": ["through-bolt-group"]
+      },
+      "notes": "Used by simple portal-frame samples as provenance only."
+    }
+  }
+}

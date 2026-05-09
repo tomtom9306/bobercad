@@ -1,0 +1,59 @@
+{
+  "$schema": "../schemas/viewer_settings_schema.json",
+  "schema": "steel-bim-viewer-settings",
+  "schemaVersion": "0.1.0",
+  "project": {
+    "path": "../projects/sample_beam_to_beam_end_plate.json"
+  },
+  "camera": {
+    "home": {
+      "yaw": -1.15,
+      "pitch": -0.55,
+      "scale": 0.04,
+      "pan": [0, 0]
+    },
+    "fit": {
+      "padding": 0.74,
+      "minDepthHalf": 1
+    }
+  },
+  "controls": {
+    "orbitSpeed": 0.008,
+    "minPitch": -1.35,
+    "maxPitch": 1.35,
+    "zoomInFactor": 1.1,
+    "zoomOutFactor": 0.9
+  },
+  "render": {
+    "background": "#f5f7fb",
+    "lighting": {
+      "direction": [0.2, -0.35, 0.9],
+      "ambient": 0.78,
+      "diffuse": 0.25
+    },
+    "edges": {
+      "defaultColor": "#516070",
+      "plateColor": "#4b5563",
+      "holeColor": "#111827",
+      "fastenerHeadColor": "#facc15",
+      "lineWidth": 1,
+      "fastenerHeadLineWidth": 2,
+      "weldLineWidth": 2
+    },
+    "fasteners": {
+      "length": 70,
+      "sides": 10,
+      "headRadiusFactor": 2.1
+    },
+    "curves": {
+      "circleSegments": 32,
+      "discSegments": 24
+    }
+  },
+  "ui": {
+    "showHud": true,
+    "showMeta": true,
+    "showResetButton": true,
+    "title": "project-name"
+  }
+}

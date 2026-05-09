@@ -1,0 +1,32 @@
+{
+  "$schema": "../schemas/material_schema.json",
+  "schema": "steel-material-library",
+  "schemaVersion": "0.1.0",
+  "library": {
+    "id": "starter-material-library",
+    "name": "Starter Steel Material Library",
+    "version": "0.1.0",
+    "status": "demo-not-certified-for-fabrication",
+    "description": "Small seed material library for early viewer and editor development. Replace with verified standard material data before fabrication use."
+  },
+  "units": {
+    "density": "kg/m3",
+    "stress": "MPa"
+  },
+  "materials": {
+    "S275": {
+      "id": "S275",
+      "name": "S275 structural steel",
+      "materialType": "steel",
+      "density": 7850,
+      "nominalYieldStrength": 275
+    },
+    "S355": {
+      "id": "S355",
+      "name": "S355 structural steel",
+      "materialType": "steel",
+      "density": 7850,
+      "nominalYieldStrength": 355
+    }
+  }
+}

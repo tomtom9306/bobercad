@@ -1,0 +1,1313 @@
+{
+  "$schema": "../schemas/project_schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_authoring_nc1_test_1",
+    "name": "Sample Authoring NC1 Test",
+    "description": "Small test project covering holePatterns, objectPatterns, detached authoring, connection preset provenance, frame template provenance, bent plate data, and NC1-ready member features.",
+    "createdWith": "manual-seed-0.5.0",
+    "bim": {
+      "name": "Sample Authoring NC1 Test",
+      "propertySets": {
+        "Identity": {
+          "projectNumber": "PRJ-004",
+          "status": "sample"
+        }
+      }
+    }
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [0, 0, 0],
+      "axisX": [1, 0, 0],
+      "axisY": [0, 1, 0],
+      "axisZ": [0, 0, 1]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners.json"
+    },
+    "connections": {
+      "libraryId": "starter-connection-library",
+      "version": "0.1.0",
+      "path": "../libraries/connections.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/frames.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_1",
+    "nodes": {
+      "site_1": {
+        "id": "site_1",
+        "type": "site",
+        "name": "Main Site",
+        "children": ["building_1"]
+      },
+      "building_1": {
+        "id": "building_1",
+        "type": "building",
+        "name": "Authoring Test Building",
+        "children": ["zone_test_a"]
+      },
+      "zone_test_a": {
+        "id": "zone_test_a",
+        "type": "zone",
+        "name": "Authoring And NC1 Test Zone",
+        "children": []
+      }
+    }
+  },
+  "gridSystems": {
+    "main_grid": {
+      "id": "main_grid",
+      "name": "Main Test Grid",
+      "origin": [0, 0, 0],
+      "rotation": 0,
+      "axes": {
+        "x": [
+          {
+            "id": "grid_1",
+            "label": "1",
+            "position": 0
+          },
+          {
+            "id": "grid_2",
+            "label": "2",
+            "position": 3000
+          },
+          {
+            "id": "grid_3",
+            "label": "3",
+            "position": 6500
+          }
+        ],
+        "y": [
+          {
+            "id": "grid_A",
+            "label": "A",
+            "position": 0
+          },
+          {
+            "id": "grid_B",
+            "label": "B",
+            "position": 1800
+          }
+        ]
+      }
+    }
+  },
+  "levels": {
+    "level_base": {
+      "id": "level_base",
+      "name": "Base",
+      "elevation": 0
+    },
+    "level_top": {
+      "id": "level_top",
+      "name": "Top Steel",
+      "elevation": 3000
+    }
+  },
+  "phases": {
+    "phase_1": {
+      "id": "phase_1",
+      "name": "Sample phase"
+    }
+  },
+  "lots": {
+    "lot_1": {
+      "id": "lot_1",
+      "name": "Sample lot"
+    }
+  },
+  "objectIndex": {
+    "wp_col_1_a_base": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_col_1_a_top": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_col_2_a_base": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_col_2_a_top": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_col_3_a_base": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_col_3_a_top": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_beam_start": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_beam_end": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_purlin_start": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_purlin_end": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "wp_bent_coupon_center": {
+      "collection": "workPoints",
+      "type": "record"
+    },
+    "rp_base_level": {
+      "collection": "referencePlanes",
+      "type": "level-plane"
+    },
+    "rp_grid_a_elevation": {
+      "collection": "referencePlanes",
+      "type": "vertical-grid-plane"
+    },
+    "rp_connection_plane_3a": {
+      "collection": "referencePlanes",
+      "type": "connection-working-plane"
+    },
+    "rp_bent_coupon_plane": {
+      "collection": "referencePlanes",
+      "type": "bent-plate-test-plane"
+    },
+    "group_test_frame": {
+      "collection": "groups",
+      "type": "object-group"
+    },
+    "group_bent_plate_coupon": {
+      "collection": "groups",
+      "type": "object-group"
+    },
+    "if_col_3_a_top": {
+      "collection": "interfaces",
+      "type": "member-end-plane"
+    },
+    "if_beam_1_end": {
+      "collection": "interfaces",
+      "type": "member-end-plane"
+    },
+    "cz_beam_1_col_3_a": {
+      "collection": "connectionZones",
+      "type": "beam-column-zone"
+    },
+    "asm_test_frame": {
+      "collection": "assemblies",
+      "type": "test-assembly"
+    },
+    "asm_test_connection": {
+      "collection": "assemblies",
+      "type": "connection-assembly"
+    },
+    "col_1_a": {
+      "collection": "members",
+      "type": "test-column"
+    },
+    "col_2_a": {
+      "collection": "members",
+      "type": "test-column"
+    },
+    "col_3_a": {
+      "collection": "members",
+      "type": "test-column"
+    },
+    "beam_1": {
+      "collection": "members",
+      "type": "test-beam"
+    },
+    "purlin_1": {
+      "collection": "members",
+      "type": "test-purlin"
+    },
+    "base_plate_1_a": {
+      "collection": "plates",
+      "type": "base-plate"
+    },
+    "base_plate_2_a": {
+      "collection": "plates",
+      "type": "base-plate"
+    },
+    "base_plate_3_a": {
+      "collection": "plates",
+      "type": "base-plate"
+    },
+    "end_plate_1": {
+      "collection": "plates",
+      "type": "end-plate"
+    },
+    "bent_bracket_1": {
+      "collection": "plates",
+      "type": "bent-plate"
+    },
+    "hole_pattern_2x2_m16": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    },
+    "hole_pattern_beam_web_2": {
+      "collection": "holePatterns",
+      "type": "linear-hole-pattern"
+    },
+    "pat_columns_grid_a_test": {
+      "collection": "objectPatterns",
+      "type": "linear-pattern"
+    },
+    "holes_base_plate_1_a": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_base_plate_2_a": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_base_plate_3_a": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_end_plate_1": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "beam_1_holes_web": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "beam_1_start_saw_cut": {
+      "collection": "features",
+      "type": "saw-cut"
+    },
+    "beam_1_end_miter_cut": {
+      "collection": "features",
+      "type": "miter-cut"
+    },
+    "beam_1_top_cope": {
+      "collection": "features",
+      "type": "cope"
+    },
+    "beam_1_slot_web": {
+      "collection": "features",
+      "type": "slot-hole"
+    },
+    "anchors_base_plate_1_a": {
+      "collection": "fastenerGroups",
+      "type": "anchor-group"
+    },
+    "anchors_base_plate_2_a": {
+      "collection": "fastenerGroups",
+      "type": "anchor-group"
+    },
+    "anchors_base_plate_3_a": {
+      "collection": "fastenerGroups",
+      "type": "anchor-group"
+    },
+    "bolts_end_plate_1": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "weld_beam_to_end_plate_1": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    },
+    "conn_beam_1_col_3_a": {
+      "collection": "connections",
+      "type": "manual-steel-to-steel-end-plate"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": ["collectionDefault", "typeDefault", "object"],
+    "collections": {
+      "members": {
+        "*": {
+          "material": "S355",
+          "rotation": 0,
+          "cardinalPoint": "middle-center",
+          "featureIds": [],
+          "display": {
+            "visible": true
+          },
+          "fabrication": {
+            "numberingStatus": "preliminary"
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_test_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "test-column": {
+          "profile": "DEMO_SHS_100X100X5",
+          "bim": {
+            "ifcClass": "IfcColumn",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Test column"
+              }
+            }
+          }
+        },
+        "test-beam": {
+          "profile": "DEMO_I_200X100X8X12",
+          "bim": {
+            "ifcClass": "IfcBeam",
+            "propertySets": {
+              "Identity": {
+                "objectType": "NC1 test beam"
+              }
+            }
+          }
+        },
+        "test-purlin": {
+          "profile": "DEMO_RHS_100X50X5",
+          "bim": {
+            "ifcClass": "IfcMember",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Test purlin"
+              }
+            }
+          }
+        }
+      },
+      "plates": {
+        "*": {
+          "material": "S355",
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_test_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "base-plate": {
+          "thickness": 12,
+          "width": 260,
+          "height": 260,
+          "normal": [0, 0, 1],
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 1, 0]
+        },
+        "end-plate": {
+          "thickness": 10
+        },
+        "bent-plate": {
+          "thickness": 8
+        }
+      },
+      "fastenerGroups": {
+        "*": {
+          "fastenerRef": "M16_8_8",
+          "display": {
+            "visible": true,
+            "color": "#d6a63a"
+          }
+        }
+      },
+      "welds": {
+        "*": {
+          "display": {
+            "visible": true,
+            "color": "#f6e05e"
+          }
+        }
+      },
+      "connections": {
+        "*": {
+          "generator": {
+            "status": "not-parametric-yet"
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_test_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        }
+      }
+    }
+  },
+  "model": {
+    "workPoints": {
+      "wp_col_1_a_base": {
+        "id": "wp_col_1_a_base",
+        "point": [0, 0, 0],
+        "role": "column-base",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "1",
+          "y": "A",
+          "level": "level_base"
+        },
+        "referencePlaneId": "rp_base_level"
+      },
+      "wp_col_1_a_top": {
+        "id": "wp_col_1_a_top",
+        "point": [0, 0, 3000],
+        "role": "column-top",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "1",
+          "y": "A",
+          "level": "level_top"
+        },
+        "referencePlaneId": "rp_grid_a_elevation"
+      },
+      "wp_col_2_a_base": {
+        "id": "wp_col_2_a_base",
+        "point": [3000, 0, 0],
+        "role": "column-base",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "2",
+          "y": "A",
+          "level": "level_base"
+        },
+        "referencePlaneId": "rp_base_level"
+      },
+      "wp_col_2_a_top": {
+        "id": "wp_col_2_a_top",
+        "point": [3000, 0, 3000],
+        "role": "column-top",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "2",
+          "y": "A",
+          "level": "level_top"
+        },
+        "referencePlaneId": "rp_grid_a_elevation"
+      },
+      "wp_col_3_a_base": {
+        "id": "wp_col_3_a_base",
+        "point": [6500, 0, 0],
+        "role": "column-base",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "3",
+          "y": "A",
+          "level": "level_base"
+        },
+        "referencePlaneId": "rp_base_level"
+      },
+      "wp_col_3_a_top": {
+        "id": "wp_col_3_a_top",
+        "point": [6500, 0, 3000],
+        "role": "column-top",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "3",
+          "y": "A",
+          "level": "level_top"
+        },
+        "referencePlaneId": "rp_grid_a_elevation"
+      },
+      "wp_beam_start": {
+        "id": "wp_beam_start",
+        "point": [0, 0, 3000],
+        "role": "beam-start",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "1",
+          "y": "A",
+          "level": "level_top"
+        },
+        "referencePlaneId": "rp_grid_a_elevation"
+      },
+      "wp_beam_end": {
+        "id": "wp_beam_end",
+        "point": [6500, 0, 3000],
+        "role": "beam-end",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "3",
+          "y": "A",
+          "level": "level_top"
+        },
+        "referencePlaneId": "rp_connection_plane_3a"
+      },
+      "wp_purlin_start": {
+        "id": "wp_purlin_start",
+        "point": [0, 1800, 3200],
+        "role": "purlin-start",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "1",
+          "y": "B",
+          "level": "level_top"
+        }
+      },
+      "wp_purlin_end": {
+        "id": "wp_purlin_end",
+        "point": [6500, 1800, 3200],
+        "role": "purlin-end",
+        "gridSystemId": "main_grid",
+        "gridRefs": {
+          "x": "3",
+          "y": "B",
+          "level": "level_top"
+        }
+      },
+      "wp_bent_coupon_center": {
+        "id": "wp_bent_coupon_center",
+        "point": [1450, -2100, 1350],
+        "role": "bent-plate-test-coupon"
+      }
+    },
+    "referencePlanes": {
+      "rp_base_level": {
+        "id": "rp_base_level",
+        "type": "level-plane",
+        "name": "Base level",
+        "origin": [0, 0, 0],
+        "normal": [0, 0, 1],
+        "axisX": [1, 0, 0],
+        "axisY": [0, 1, 0],
+        "extents": {
+          "xMin": -500,
+          "xMax": 7000,
+          "yMin": -500,
+          "yMax": 2200
+        }
+      },
+      "rp_grid_a_elevation": {
+        "id": "rp_grid_a_elevation",
+        "type": "vertical-grid-plane",
+        "name": "Grid A elevation",
+        "origin": [0, 0, 0],
+        "normal": [0, 1, 0],
+        "axisX": [1, 0, 0],
+        "axisY": [0, 0, 1],
+        "extents": {
+          "xMin": 0,
+          "xMax": 6500,
+          "yMin": 0,
+          "yMax": 3200
+        }
+      },
+      "rp_connection_plane_3a": {
+        "id": "rp_connection_plane_3a",
+        "type": "connection-working-plane",
+        "name": "Connection plane 3/A",
+        "origin": [6500, 0, 3000],
+        "normal": [1, 0, 0],
+        "axisX": [0, 1, 0],
+        "axisY": [0, 0, 1],
+        "extents": {
+          "xMin": -300,
+          "xMax": 300,
+          "yMin": -300,
+          "yMax": 300
+        }
+      },
+      "rp_bent_coupon_plane": {
+        "id": "rp_bent_coupon_plane",
+        "type": "bent-plate-test-plane",
+        "name": "Bent plate test coupon plane",
+        "origin": [1450, -2100, 1350],
+        "normal": [0, 0, 1],
+        "axisX": [1, 0, 0],
+        "axisY": [0, 1, 0],
+        "extents": {
+          "xMin": -700,
+          "xMax": 700,
+          "yMin": -550,
+          "yMax": 550
+        }
+      }
+    },
+    "groups": {
+      "group_test_frame": {
+        "id": "group_test_frame",
+        "type": "object-group",
+        "name": "Authoring NC1 test frame",
+        "objectIds": ["col_1_a", "col_2_a", "col_3_a", "beam_1", "purlin_1", "end_plate_1"],
+        "sourceTemplate": {
+          "library": "frames",
+          "id": "portal_frame_2_column_1_beam",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "frame-template",
+          "sourceTemplate": {
+            "library": "frames",
+            "id": "portal_frame_2_column_1_beam",
+            "version": "0.1.0"
+          },
+          "notes": "Frame template provenance only; stored objects are source of truth."
+        }
+      },
+      "group_bent_plate_coupon": {
+        "id": "group_bent_plate_coupon",
+        "type": "object-group",
+        "name": "Bent plate test coupon",
+        "objectIds": ["bent_bracket_1"],
+        "authoring": {
+          "source": "manual-test-fixture",
+          "notes": "Isolated visual and data-model test for flatPattern bendLines."
+        }
+      }
+    },
+    "interfaces": {
+      "if_col_3_a_top": {
+        "id": "if_col_3_a_top",
+        "type": "member-end-plane",
+        "ownerId": "col_3_a",
+        "role": "column-top",
+        "origin": [6500, 0, 3000],
+        "normal": [0, 0, 1],
+        "localAxisY": [1, 0, 0],
+        "localAxisZ": [0, 1, 0],
+        "extents": {
+          "width": 180,
+          "height": 180
+        },
+        "memberEnd": "end"
+      },
+      "if_beam_1_end": {
+        "id": "if_beam_1_end",
+        "type": "member-end-plane",
+        "ownerId": "beam_1",
+        "role": "beam-end",
+        "origin": [6500, 0, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 200,
+          "height": 260
+        },
+        "memberEnd": "end"
+      }
+    },
+    "connectionZones": {
+      "cz_beam_1_col_3_a": {
+        "id": "cz_beam_1_col_3_a",
+        "type": "beam-column-zone",
+        "name": "Beam 1 to column 3/A",
+        "mainObjectId": "col_3_a",
+        "secondaryObjectIds": ["beam_1"],
+        "interfaceIds": ["if_col_3_a_top", "if_beam_1_end"],
+        "connectionIds": ["conn_beam_1_col_3_a"],
+        "objectIds": ["col_3_a", "beam_1", "end_plate_1", "bolts_end_plate_1"]
+      }
+    },
+    "assemblies": {
+      "asm_test_frame": {
+        "id": "asm_test_frame",
+        "type": "test-assembly",
+        "mark": "A100",
+        "name": "Authoring NC1 Test Frame",
+        "parentAssemblyId": null,
+        "childAssemblyIds": ["asm_test_connection"],
+        "sourceTemplate": {
+          "library": "frames",
+          "id": "portal_frame_2_column_1_beam",
+          "version": "0.1.0"
+        }
+      },
+      "asm_test_connection": {
+        "id": "asm_test_connection",
+        "type": "connection-assembly",
+        "mark": "A100-C1",
+        "name": "Beam 1 connection",
+        "parentAssemblyId": "asm_test_frame",
+        "childAssemblyIds": []
+      }
+    },
+    "members": {
+      "col_1_a": {
+        "id": "col_1_a",
+        "type": "test-column",
+        "start": [0, 0, 0],
+        "end": [0, 0, 3000],
+        "startPointRef": "wp_col_1_a_base",
+        "endPointRef": "wp_col_1_a_top",
+        "referencePlaneId": "rp_grid_a_elevation",
+        "fabrication": {
+          "partMark": "C1",
+          "assemblyMark": "A100",
+          "numberingStatus": "preliminary"
+        },
+        "authoring": {
+          "source": "object-pattern",
+          "patternId": "pat_columns_grid_a_test",
+          "patternIndex": 0,
+          "patternStatus": "source"
+        },
+        "display": {
+          "color": "#1f77b4"
+        },
+        "assemblyId": "asm_test_frame"
+      },
+      "col_2_a": {
+        "id": "col_2_a",
+        "type": "test-column",
+        "start": [3000, 0, 0],
+        "end": [3000, 0, 3000],
+        "startPointRef": "wp_col_2_a_base",
+        "endPointRef": "wp_col_2_a_top",
+        "referencePlaneId": "rp_grid_a_elevation",
+        "fabrication": {
+          "partMark": "C2",
+          "assemblyMark": "A100",
+          "numberingStatus": "preliminary"
+        },
+        "authoring": {
+          "source": "object-pattern",
+          "patternId": "pat_columns_grid_a_test",
+          "patternIndex": 1,
+          "patternStatus": "linked"
+        },
+        "display": {
+          "color": "#1f77b4"
+        },
+        "assemblyId": "asm_test_frame"
+      },
+      "col_3_a": {
+        "id": "col_3_a",
+        "type": "test-column",
+        "start": [6500, 0, 0],
+        "end": [6500, 0, 3000],
+        "startPointRef": "wp_col_3_a_base",
+        "endPointRef": "wp_col_3_a_top",
+        "referencePlaneId": "rp_grid_a_elevation",
+        "fabrication": {
+          "partMark": "C3",
+          "assemblyMark": "A100",
+          "numberingStatus": "preliminary"
+        },
+        "authoring": {
+          "source": "object-pattern",
+          "patternId": "pat_columns_grid_a_test",
+          "patternIndex": 2,
+          "patternStatus": "detached"
+        },
+        "display": {
+          "color": "#1f77b4"
+        },
+        "assemblyId": "asm_test_frame"
+      },
+      "beam_1": {
+        "id": "beam_1",
+        "type": "test-beam",
+        "start": [0, 0, 3000],
+        "end": [6500, 0, 3000],
+        "startPointRef": "wp_beam_start",
+        "endPointRef": "wp_beam_end",
+        "referencePlaneId": "rp_grid_a_elevation",
+        "featureIds": ["beam_1_holes_web", "beam_1_start_saw_cut", "beam_1_end_miter_cut", "beam_1_top_cope", "beam_1_slot_web"],
+        "fabrication": {
+          "partMark": "B1",
+          "assemblyMark": "A100",
+          "numberingStatus": "preliminary",
+          "nc1Ready": true
+        },
+        "display": {
+          "color": "#9fb3c8"
+        },
+        "assemblyId": "asm_test_frame"
+      },
+      "purlin_1": {
+        "id": "purlin_1",
+        "type": "test-purlin",
+        "start": [0, 1800, 3200],
+        "end": [6500, 1800, 3200],
+        "startPointRef": "wp_purlin_start",
+        "endPointRef": "wp_purlin_end",
+        "fabrication": {
+          "partMark": "P1",
+          "assemblyMark": "A101",
+          "numberingStatus": "preliminary"
+        },
+        "display": {
+          "color": "#17becf",
+          "visible": false
+        },
+        "assemblyId": "asm_test_frame"
+      }
+    },
+    "plates": {
+      "base_plate_1_a": {
+        "id": "base_plate_1_a",
+        "type": "base-plate",
+        "center": [0, 0, -6],
+        "fabrication": {
+          "partMark": "BP1",
+          "assemblyMark": "A100"
+        },
+        "featureIds": ["holes_base_plate_1_a"],
+        "display": {
+          "color": "#d6c23a"
+        },
+        "assemblyId": "asm_test_frame"
+      },
+      "base_plate_2_a": {
+        "id": "base_plate_2_a",
+        "type": "base-plate",
+        "center": [3000, 0, -6],
+        "fabrication": {
+          "partMark": "BP2",
+          "assemblyMark": "A100"
+        },
+        "featureIds": ["holes_base_plate_2_a"],
+        "display": {
+          "color": "#d6c23a"
+        },
+        "assemblyId": "asm_test_frame"
+      },
+      "base_plate_3_a": {
+        "id": "base_plate_3_a",
+        "type": "base-plate",
+        "center": [6500, 0, -6],
+        "fabrication": {
+          "partMark": "BP3",
+          "assemblyMark": "A100"
+        },
+        "featureIds": ["holes_base_plate_3_a"],
+        "display": {
+          "color": "#d6c23a"
+        },
+        "assemblyId": "asm_test_frame"
+      },
+      "end_plate_1": {
+        "id": "end_plate_1",
+        "type": "end-plate",
+        "center": [6505, 0, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "width": 190,
+        "height": 280,
+        "featureIds": ["holes_end_plate_1"],
+        "fabrication": {
+          "partMark": "EP1",
+          "assemblyMark": "A100"
+        },
+        "display": {
+          "color": "#6b8f71"
+        },
+        "assemblyId": "asm_test_frame"
+      },
+      "bent_bracket_1": {
+        "id": "bent_bracket_1",
+        "type": "bent-plate",
+        "center": [1450, -2100, 1350],
+        "normal": [0, 0, 1],
+        "localAxisY": [1, 0, 0],
+        "localAxisZ": [0, 1, 0],
+        "outline": [
+          [-600, -425],
+          [600, -425],
+          [600, 425],
+          [-600, 425]
+        ],
+        "flatPattern": {
+          "outline": [
+            [0, 0],
+            [1200, 0],
+            [1200, 850],
+            [0, 850]
+          ],
+          "bendLines": [
+            {
+              "id": "bend_1",
+              "start": [0, 360],
+              "end": [1200, 360],
+              "angle": 90,
+              "radius": 20,
+              "direction": "up"
+            }
+          ]
+        },
+        "fabrication": {
+          "partMark": "BR1-TEST",
+          "assemblyMark": "A101"
+        },
+        "display": {
+          "color": "#9b5de5"
+        },
+        "assemblyId": "asm_test_frame",
+        "authoring": {
+          "source": "manual-bent-plate-test",
+          "notes": "Large standalone bent plate test coupon. It is not part of the frame group; it only proves flatPattern bendLines can describe a bent plate without storing mesh geometry."
+        },
+        "referencePlaneId": "rp_bent_coupon_plane",
+        "thickness": 20
+      }
+    },
+    "holePatterns": {
+      "hole_pattern_2x2_m16": {
+        "id": "hole_pattern_2x2_m16",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "positions": [
+          [-45, -45],
+          [45, -45],
+          [-45, 45],
+          [45, 45]
+        ]
+      },
+      "hole_pattern_beam_web_2": {
+        "id": "hole_pattern_beam_web_2",
+        "type": "linear-hole-pattern",
+        "holeDiameter": 18,
+        "positions": [
+          [-60, 0],
+          [60, 0]
+        ]
+      }
+    },
+    "objectPatterns": {
+      "pat_columns_grid_a_test": {
+        "id": "pat_columns_grid_a_test",
+        "type": "linear-pattern",
+        "name": "Test grid A columns with detached column 3",
+        "status": "partially-detached",
+        "sourceObjectIds": ["col_1_a"],
+        "generatedObjectIds": ["col_1_a", "col_2_a", "col_3_a"],
+        "detachedObjectIds": ["col_3_a"],
+        "deletedObjectIds": [],
+        "transform": {
+          "direction": [1, 0, 0],
+          "spacing": 3000,
+          "count": 3
+        },
+        "notes": "col_3_a is manually moved to x=6500, so it is detached from the original 3000 mm spacing."
+      }
+    },
+    "features": {
+      "holes_base_plate_1_a": {
+        "id": "holes_base_plate_1_a",
+        "type": "hole-pattern",
+        "ownerId": "base_plate_1_a",
+        "holePatternRef": "hole_pattern_2x2_m16",
+        "reference": {
+          "kind": "plate-face",
+          "face": "front",
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 1, 0]
+        },
+        "fabrication": {
+          "operation": "drill"
+        }
+      },
+      "holes_base_plate_2_a": {
+        "id": "holes_base_plate_2_a",
+        "type": "hole-pattern",
+        "ownerId": "base_plate_2_a",
+        "holePatternRef": "hole_pattern_2x2_m16",
+        "reference": {
+          "kind": "plate-face",
+          "face": "front",
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 1, 0]
+        },
+        "fabrication": {
+          "operation": "drill"
+        }
+      },
+      "holes_base_plate_3_a": {
+        "id": "holes_base_plate_3_a",
+        "type": "hole-pattern",
+        "ownerId": "base_plate_3_a",
+        "holePatternRef": "hole_pattern_2x2_m16",
+        "reference": {
+          "kind": "plate-face",
+          "face": "front",
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 1, 0]
+        },
+        "fabrication": {
+          "operation": "drill"
+        }
+      },
+      "holes_end_plate_1": {
+        "id": "holes_end_plate_1",
+        "type": "hole-pattern",
+        "ownerId": "end_plate_1",
+        "holePatternRef": "hole_pattern_2x2_m16",
+        "reference": {
+          "kind": "plate-face",
+          "face": "front",
+          "localAxisY": [0, 1, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "fabrication": {
+          "operation": "drill"
+        }
+      },
+      "beam_1_holes_web": {
+        "id": "beam_1_holes_web",
+        "type": "hole-pattern",
+        "ownerId": "beam_1",
+        "holePatternRef": "hole_pattern_beam_web_2",
+        "reference": {
+          "kind": "member-face",
+          "faceRef": "web.left",
+          "origin": [6200, 0, 3000],
+          "normal": [0, -1, 0],
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "fabrication": {
+          "operation": "drill"
+        }
+      },
+      "beam_1_start_saw_cut": {
+        "id": "beam_1_start_saw_cut",
+        "type": "saw-cut",
+        "ownerId": "beam_1",
+        "reference": {
+          "kind": "member-end",
+          "memberEnd": "start",
+          "origin": [0, 0, 3000],
+          "normal": [-1, 0, 0],
+          "localAxisY": [0, 1, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "cut": {
+          "angleY": 0,
+          "angleZ": -22
+        },
+        "fabrication": {
+          "operation": "saw"
+        },
+        "dimensions": {
+          "width": 180,
+          "height": 240
+        }
+      },
+      "beam_1_end_miter_cut": {
+        "id": "beam_1_end_miter_cut",
+        "type": "miter-cut",
+        "ownerId": "beam_1",
+        "reference": {
+          "kind": "member-end",
+          "memberEnd": "end",
+          "origin": [6500, 0, 3000],
+          "normal": [1, 0, 0],
+          "localAxisY": [0, 1, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "cut": {
+          "angleY": 0,
+          "angleZ": 26
+        },
+        "fabrication": {
+          "operation": "saw"
+        },
+        "dimensions": {
+          "width": 180,
+          "height": 240
+        }
+      },
+      "beam_1_top_cope": {
+        "id": "beam_1_top_cope",
+        "type": "cope",
+        "ownerId": "beam_1",
+        "reference": {
+          "kind": "member-end",
+          "memberEnd": "end",
+          "origin": [6400, 0, 3088],
+          "normal": [1, 0, 0],
+          "localAxisY": [0, 1, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "dimensions": {
+          "depth": 70,
+          "length": 120,
+          "radius": 8
+        },
+        "fabrication": {
+          "operation": "cope"
+        }
+      },
+      "beam_1_slot_web": {
+        "id": "beam_1_slot_web",
+        "type": "slot-hole",
+        "ownerId": "beam_1",
+        "reference": {
+          "kind": "member-face",
+          "faceRef": "web.left",
+          "origin": [3000, -6, 3000],
+          "normal": [0, -1, 0],
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "position": [0, 0],
+        "slot": {
+          "length": 110,
+          "width": 24,
+          "orientation": 0
+        },
+        "fabrication": {
+          "operation": "slot"
+        }
+      }
+    },
+    "fastenerGroups": {
+      "anchors_base_plate_1_a": {
+        "id": "anchors_base_plate_1_a",
+        "type": "anchor-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "hole_pattern_2x2_m16",
+        "participants": ["base_plate_1_a", "col_1_a"],
+        "through": {
+          "fromFeatureId": "holes_base_plate_1_a"
+        },
+        "display": {
+          "color": "#d6a63a"
+        }
+      },
+      "anchors_base_plate_2_a": {
+        "id": "anchors_base_plate_2_a",
+        "type": "anchor-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "hole_pattern_2x2_m16",
+        "participants": ["base_plate_2_a", "col_2_a"],
+        "through": {
+          "fromFeatureId": "holes_base_plate_2_a"
+        },
+        "display": {
+          "color": "#d6a63a"
+        }
+      },
+      "anchors_base_plate_3_a": {
+        "id": "anchors_base_plate_3_a",
+        "type": "anchor-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "hole_pattern_2x2_m16",
+        "participants": ["base_plate_3_a", "col_3_a"],
+        "through": {
+          "fromFeatureId": "holes_base_plate_3_a"
+        },
+        "display": {
+          "color": "#d6a63a"
+        }
+      },
+      "bolts_end_plate_1": {
+        "id": "bolts_end_plate_1",
+        "type": "fastener-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "hole_pattern_2x2_m16",
+        "participants": ["end_plate_1", "beam_1", "col_3_a"],
+        "through": {
+          "fromFeatureId": "holes_end_plate_1"
+        },
+        "display": {
+          "color": "#d6a63a"
+        }
+      }
+    },
+    "welds": {
+      "weld_beam_to_end_plate_1": {
+        "id": "weld_beam_to_end_plate_1",
+        "type": "fillet-weld",
+        "size": 6,
+        "length": "profile-perimeter",
+        "participants": ["beam_1", "end_plate_1"],
+        "reference": {
+          "kind": "member-end-profile",
+          "memberId": "beam_1",
+          "end": "end"
+        },
+        "fabrication": {
+          "operation": "weld"
+        }
+      }
+    },
+    "connections": {
+      "conn_beam_1_col_3_a": {
+        "id": "conn_beam_1_col_3_a",
+        "type": "manual-steel-to-steel-end-plate",
+        "mainMemberId": "col_3_a",
+        "secondaryMemberId": "beam_1",
+        "connectionZoneId": "cz_beam_1_col_3_a",
+        "sourcePreset": {
+          "library": "connections",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "manualParts": {
+          "plateIds": ["end_plate_1"],
+          "featureIds": ["holes_end_plate_1"],
+          "fastenerGroupIds": ["bolts_end_plate_1"],
+          "weldIds": ["weld_beam_to_end_plate_1"]
+        },
+        "referenceParameters": {
+          "plateThickness": 10,
+          "fastenerRef": "M16_8_8",
+          "holeDiameter": 18
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          },
+          "notes": "Preset provenance only; manualParts store the actual connection objects."
+        }
+      }
+    },
+    "addonData": {
+      "purpose": "Compact regression sample for core authoring and NC1 data model concepts."
+    }
+  },
+  "migrationHistory": [
+    {
+      "id": "seed_authoring_nc1_test_0_5_0",
+      "description": "Initial small authoring and NC1 test project.",
+      "schemaVersion": "0.5.0"
+    }
+  ]
+}

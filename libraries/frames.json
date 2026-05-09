@@ -1,0 +1,86 @@
+{
+  "$schema": "../schemas/frame_library_schema.json",
+  "schema": "steel-frame-library",
+  "schemaVersion": "0.1.0",
+  "library": {
+    "id": "starter-frame-library",
+    "name": "Starter Steel Frame Library",
+    "version": "0.1.0",
+    "status": "demo-not-certified-for-fabrication",
+    "description": "Reusable authoring templates for common steel frame arrangements. Using a template must write explicit project objects."
+  },
+  "units": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "frames": {
+    "portal_frame_2_column_1_beam": {
+      "id": "portal_frame_2_column_1_beam",
+      "type": "portal-frame-template",
+      "version": "0.1.0",
+      "name": "Two column portal frame",
+      "localWorkPoints": {
+        "left_base": [0, 0, 0],
+        "left_top": [0, 0, 6000],
+        "right_top": [6000, 0, 6000],
+        "right_base": [6000, 0, 0]
+      },
+      "members": [
+        {
+          "role": "left-column",
+          "type": "industrial-column",
+          "start": "left_base",
+          "end": "left_top",
+          "rotation": 0,
+          "cardinalPoint": "middle-center"
+        },
+        {
+          "role": "right-column",
+          "type": "industrial-column",
+          "start": "right_base",
+          "end": "right_top",
+          "rotation": 0,
+          "cardinalPoint": "middle-center"
+        },
+        {
+          "role": "roof-beam",
+          "type": "primary-beam",
+          "start": "left_top",
+          "end": "right_top",
+          "rotation": 0,
+          "cardinalPoint": "middle-center"
+        }
+      ],
+      "groups": [
+        {
+          "role": "frame-group",
+          "type": "object-group"
+        }
+      ],
+      "notes": "Template geometry is local authoring input only. Project members and work points remain source of truth after placement."
+    },
+    "roof_purlin_line": {
+      "id": "roof_purlin_line",
+      "type": "linear-member-template",
+      "version": "0.1.0",
+      "name": "Roof purlin line",
+      "localWorkPoints": {
+        "start": [0, 0, 0],
+        "end": [3000, 0, 0]
+      },
+      "members": [
+        {
+          "role": "purlin",
+          "type": "purlin",
+          "start": "start",
+          "end": "end",
+          "rotation": 0,
+          "cardinalPoint": "middle-center"
+        }
+      ],
+      "parameters": {
+        "preferredPatternType": "linear-pattern"
+      }
+    }
+  }
+}

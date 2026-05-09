@@ -1,0 +1,1805 @@
+{
+  "$schema": "../schemas/project_schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_portal_frame_1",
+    "name": "Sample Portal Frame",
+    "description": "Simple grid-based portal frame sample. Geometry is stored directly in member start/end and plate placement; grids and placementIntent are descriptive only.",
+    "createdWith": "manual-seed-0.3.0",
+    "bim": {
+      "name": "Sample Portal Frame",
+      "propertySets": {
+        "Identity": {
+          "projectNumber": "PRJ-002",
+          "status": "sample"
+        }
+      }
+    }
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [0, 0, 0],
+      "axisX": [1, 0, 0],
+      "axisY": [0, 1, 0],
+      "axisZ": [0, 0, 1]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners.json"
+    },
+    "connections": {
+      "libraryId": "starter-connection-library",
+      "version": "0.1.0",
+      "path": "../libraries/connections.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/frames.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_1",
+    "nodes": {
+      "site_1": {
+        "id": "site_1",
+        "type": "site",
+        "name": "Main Site",
+        "children": ["building_1"]
+      },
+      "building_1": {
+        "id": "building_1",
+        "type": "building",
+        "name": "Portal Frame Demo",
+        "children": ["zone_frame_a"]
+      },
+      "zone_frame_a": {
+        "id": "zone_frame_a",
+        "type": "zone",
+        "name": "Frame Grid 1-2 / A-B",
+        "children": []
+      }
+    }
+  },
+  "gridSystems": {
+    "main_grid": {
+      "id": "main_grid",
+      "name": "Main Grid",
+      "origin": [0, 0, 0],
+      "rotation": 0,
+      "axes": {
+        "x": [
+          {
+            "id": "grid_1",
+            "label": "1",
+            "position": 0
+          },
+          {
+            "id": "grid_2",
+            "label": "2",
+            "position": 5000
+          }
+        ],
+        "y": [
+          {
+            "id": "grid_a",
+            "label": "A",
+            "position": 0
+          },
+          {
+            "id": "grid_b",
+            "label": "B",
+            "position": 3000
+          }
+        ]
+      }
+    }
+  },
+  "levels": {
+    "level_base": {
+      "id": "level_base",
+      "name": "Base",
+      "elevation": 0
+    },
+    "level_eaves": {
+      "id": "level_eaves",
+      "name": "Eaves",
+      "elevation": 3000
+    }
+  },
+  "phases": {
+    "phase_1": {
+      "id": "phase_1",
+      "name": "Phase 1"
+    }
+  },
+  "lots": {
+    "lot_1": {
+      "id": "lot_1",
+      "name": "Lot 1"
+    }
+  },
+  "objectIndex": {
+    "group_portal_frame_1": {
+      "collection": "groups",
+      "type": "portal-frame"
+    },
+    "if_column_1a_x_plus": {
+      "collection": "interfaces",
+      "type": "planar-face"
+    },
+    "if_column_2a_x_minus": {
+      "collection": "interfaces",
+      "type": "planar-face"
+    },
+    "if_column_1b_x_plus": {
+      "collection": "interfaces",
+      "type": "planar-face"
+    },
+    "if_column_2b_x_minus": {
+      "collection": "interfaces",
+      "type": "planar-face"
+    },
+    "if_side_beam_a_start": {
+      "collection": "interfaces",
+      "type": "member-end-face"
+    },
+    "if_side_beam_a_end": {
+      "collection": "interfaces",
+      "type": "member-end-face"
+    },
+    "if_side_beam_b_start": {
+      "collection": "interfaces",
+      "type": "member-end-face"
+    },
+    "if_side_beam_b_end": {
+      "collection": "interfaces",
+      "type": "member-end-face"
+    },
+    "if_side_beam_a_inner_y_plus": {
+      "collection": "interfaces",
+      "type": "planar-face"
+    },
+    "if_side_beam_b_inner_y_minus": {
+      "collection": "interfaces",
+      "type": "planar-face"
+    },
+    "if_cross_beam_1_start": {
+      "collection": "interfaces",
+      "type": "member-end-face"
+    },
+    "if_cross_beam_1_end": {
+      "collection": "interfaces",
+      "type": "member-end-face"
+    },
+    "cz_side_a_start": {
+      "collection": "connectionZones",
+      "type": "manual-steel-to-steel-zone"
+    },
+    "cz_side_a_end": {
+      "collection": "connectionZones",
+      "type": "manual-steel-to-steel-zone"
+    },
+    "cz_side_b_start": {
+      "collection": "connectionZones",
+      "type": "manual-steel-to-steel-zone"
+    },
+    "cz_side_b_end": {
+      "collection": "connectionZones",
+      "type": "manual-steel-to-steel-zone"
+    },
+    "cz_cross_a": {
+      "collection": "connectionZones",
+      "type": "manual-steel-to-steel-zone"
+    },
+    "cz_cross_b": {
+      "collection": "connectionZones",
+      "type": "manual-steel-to-steel-zone"
+    },
+    "column_1a": {
+      "collection": "members",
+      "type": "portal-column"
+    },
+    "column_1b": {
+      "collection": "members",
+      "type": "portal-column"
+    },
+    "column_2a": {
+      "collection": "members",
+      "type": "portal-column"
+    },
+    "column_2b": {
+      "collection": "members",
+      "type": "portal-column"
+    },
+    "side_beam_a": {
+      "collection": "members",
+      "type": "portal-side-beam"
+    },
+    "side_beam_b": {
+      "collection": "members",
+      "type": "portal-side-beam"
+    },
+    "cross_beam_1": {
+      "collection": "members",
+      "type": "portal-cross-beam"
+    },
+    "base_plate_1a": {
+      "collection": "plates",
+      "type": "base-plate"
+    },
+    "base_plate_1b": {
+      "collection": "plates",
+      "type": "base-plate"
+    },
+    "base_plate_2a": {
+      "collection": "plates",
+      "type": "base-plate"
+    },
+    "base_plate_2b": {
+      "collection": "plates",
+      "type": "base-plate"
+    },
+    "end_plate_side_a_start": {
+      "collection": "plates",
+      "type": "beam-end-plate"
+    },
+    "end_plate_side_a_end": {
+      "collection": "plates",
+      "type": "beam-end-plate"
+    },
+    "end_plate_side_b_start": {
+      "collection": "plates",
+      "type": "beam-end-plate"
+    },
+    "end_plate_side_b_end": {
+      "collection": "plates",
+      "type": "beam-end-plate"
+    },
+    "end_plate_cross_a": {
+      "collection": "plates",
+      "type": "beam-end-plate"
+    },
+    "end_plate_cross_b": {
+      "collection": "plates",
+      "type": "beam-end-plate"
+    },
+    "holes_side_a_start": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_side_a_end": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_side_b_start": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_side_b_end": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_cross_a": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_cross_b": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "fasteners_side_a_start": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "fasteners_side_a_end": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "fasteners_side_b_start": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "fasteners_side_b_end": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "fasteners_cross_a": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "fasteners_cross_b": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "conn_side_a_start": {
+      "collection": "connections",
+      "type": "manual-steel-to-steel"
+    },
+    "conn_side_a_end": {
+      "collection": "connections",
+      "type": "manual-steel-to-steel"
+    },
+    "conn_side_b_start": {
+      "collection": "connections",
+      "type": "manual-steel-to-steel"
+    },
+    "conn_side_b_end": {
+      "collection": "connections",
+      "type": "manual-steel-to-steel"
+    },
+    "conn_cross_a": {
+      "collection": "connections",
+      "type": "manual-steel-to-steel"
+    },
+    "conn_cross_b": {
+      "collection": "connections",
+      "type": "manual-steel-to-steel"
+    },
+    "hole_pattern_steel_2x2": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": ["collectionDefault", "typeDefault", "object"],
+    "collections": {
+      "members": {
+        "*": {
+          "material": "S355",
+          "rotation": 0,
+          "cardinalPoint": "middle-center",
+          "featureIds": [],
+          "fabrication": {
+            "numberingStatus": "not-numbered"
+          },
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_frame_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "portal-column": {
+          "profile": "DEMO_I_300X150X8X12",
+          "bim": {
+            "ifcClass": "IfcColumn",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Portal frame column",
+                "category": "Structural framing"
+              }
+            }
+          }
+        },
+        "portal-side-beam": {
+          "profile": "DEMO_I_200X100X8X12",
+          "bim": {
+            "ifcClass": "IfcBeam",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Portal side beam",
+                "category": "Structural framing"
+              }
+            }
+          }
+        },
+        "portal-cross-beam": {
+          "profile": "DEMO_I_200X100X8X12",
+          "bim": {
+            "ifcClass": "IfcBeam",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Portal cross beam",
+                "category": "Structural framing"
+              }
+            }
+          }
+        }
+      },
+      "plates": {
+        "*": {
+          "material": "S355",
+          "fabrication": {
+            "numberingStatus": "not-numbered"
+          },
+          "display": {
+            "visible": true,
+            "color": "#4b7f77"
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_frame_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "base-plate": {
+          "thickness": 12,
+          "width": 260,
+          "height": 260,
+          "normal": [0, 0, 1],
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 1, 0],
+          "bim": {
+            "ifcClass": "IfcPlate",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Base plate",
+                "category": "Base plates"
+              }
+            }
+          }
+        },
+        "beam-end-plate": {
+          "thickness": 12,
+          "width": 180,
+          "height": 240,
+          "display": {
+            "color": "#5f8f88"
+          },
+          "bim": {
+            "ifcClass": "IfcPlate",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Manual steel-to-steel end plate",
+                "category": "Steel connection plate"
+              }
+            }
+          }
+        }
+      },
+      "fastenerGroups": {
+        "*": {
+          "fastenerRef": "M16_8_8",
+          "display": {
+            "visible": true,
+            "color": "#d6a63a"
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_frame_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "shopOrSite": "site",
+            "status": "modeled"
+          }
+        }
+      },
+      "welds": {
+        "*": {
+          "display": {
+            "visible": true
+          }
+        }
+      },
+      "connections": {
+        "*": {
+          "generator": {
+            "status": "not-parametric-yet"
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_frame_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        }
+      }
+    }
+  },
+  "model": {
+    "groups": {
+      "group_portal_frame_1": {
+        "id": "group_portal_frame_1",
+        "type": "portal-frame",
+        "projectTreeNodeId": "zone_frame_a",
+        "name": "Portal frame 1",
+        "objectIds": [
+          "column_1a",
+          "column_1b",
+          "column_2a",
+          "column_2b",
+          "side_beam_a",
+          "side_beam_b",
+          "cross_beam_1",
+          "base_plate_1a",
+          "base_plate_1b",
+          "base_plate_2a",
+          "base_plate_2b",
+          "end_plate_side_a_start",
+          "end_plate_side_a_end",
+          "end_plate_side_b_start",
+          "end_plate_side_b_end",
+          "end_plate_cross_a",
+          "end_plate_cross_b",
+          "fasteners_side_a_start",
+          "fasteners_side_a_end",
+          "fasteners_side_b_start",
+          "fasteners_side_b_end",
+          "fasteners_cross_a",
+          "fasteners_cross_b",
+          "conn_side_a_start",
+          "conn_side_a_end",
+          "conn_side_b_start",
+          "conn_side_b_end",
+          "conn_cross_a",
+          "conn_cross_b"
+        ],
+        "sourceTemplate": {
+          "library": "frames",
+          "id": "portal_frame_2_column_1_beam",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "frame-template",
+          "sourceTemplate": {
+            "library": "frames",
+            "id": "portal_frame_2_column_1_beam",
+            "version": "0.1.0"
+          },
+          "notes": "Template provenance only; members are stored explicitly."
+        }
+      }
+    },
+    "interfaces": {
+      "if_column_1a_x_plus": {
+        "id": "if_column_1a_x_plus",
+        "type": "planar-face",
+        "ownerId": "column_1a",
+        "role": "side-beam-bearing-face",
+        "origin": [150, 0, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 150,
+          "height": 240
+        },
+        "faceRef": "x-plus"
+      },
+      "if_column_2a_x_minus": {
+        "id": "if_column_2a_x_minus",
+        "type": "planar-face",
+        "ownerId": "column_2a",
+        "role": "side-beam-bearing-face",
+        "origin": [4850, 0, 3000],
+        "normal": [-1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 150,
+          "height": 240
+        },
+        "faceRef": "x-minus"
+      },
+      "if_column_1b_x_plus": {
+        "id": "if_column_1b_x_plus",
+        "type": "planar-face",
+        "ownerId": "column_1b",
+        "role": "side-beam-bearing-face",
+        "origin": [150, 3000, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 150,
+          "height": 240
+        },
+        "faceRef": "x-plus"
+      },
+      "if_column_2b_x_minus": {
+        "id": "if_column_2b_x_minus",
+        "type": "planar-face",
+        "ownerId": "column_2b",
+        "role": "side-beam-bearing-face",
+        "origin": [4850, 3000, 3000],
+        "normal": [-1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 150,
+          "height": 240
+        },
+        "faceRef": "x-minus"
+      },
+      "if_side_beam_a_start": {
+        "id": "if_side_beam_a_start",
+        "type": "member-end-face",
+        "ownerId": "side_beam_a",
+        "role": "connection-end-face",
+        "origin": [162, 0, 3000],
+        "normal": [-1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 100,
+          "height": 200
+        },
+        "memberEnd": "start"
+      },
+      "if_side_beam_a_end": {
+        "id": "if_side_beam_a_end",
+        "type": "member-end-face",
+        "ownerId": "side_beam_a",
+        "role": "connection-end-face",
+        "origin": [4838, 0, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 100,
+          "height": 200
+        },
+        "memberEnd": "end"
+      },
+      "if_side_beam_b_start": {
+        "id": "if_side_beam_b_start",
+        "type": "member-end-face",
+        "ownerId": "side_beam_b",
+        "role": "connection-end-face",
+        "origin": [162, 3000, 3000],
+        "normal": [-1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 100,
+          "height": 200
+        },
+        "memberEnd": "start"
+      },
+      "if_side_beam_b_end": {
+        "id": "if_side_beam_b_end",
+        "type": "member-end-face",
+        "ownerId": "side_beam_b",
+        "role": "connection-end-face",
+        "origin": [4838, 3000, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 100,
+          "height": 200
+        },
+        "memberEnd": "end"
+      },
+      "if_side_beam_a_inner_y_plus": {
+        "id": "if_side_beam_a_inner_y_plus",
+        "type": "planar-face",
+        "ownerId": "side_beam_a",
+        "role": "cross-beam-bearing-face",
+        "origin": [2500, 50, 3000],
+        "normal": [0, 1, 0],
+        "localAxisY": [1, 0, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 180,
+          "height": 240
+        },
+        "faceRef": "y-plus"
+      },
+      "if_side_beam_b_inner_y_minus": {
+        "id": "if_side_beam_b_inner_y_minus",
+        "type": "planar-face",
+        "ownerId": "side_beam_b",
+        "role": "cross-beam-bearing-face",
+        "origin": [2500, 2950, 3000],
+        "normal": [0, -1, 0],
+        "localAxisY": [1, 0, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 180,
+          "height": 240
+        },
+        "faceRef": "y-minus"
+      },
+      "if_cross_beam_1_start": {
+        "id": "if_cross_beam_1_start",
+        "type": "member-end-face",
+        "ownerId": "cross_beam_1",
+        "role": "connection-end-face",
+        "origin": [2500, 62, 3000],
+        "normal": [0, -1, 0],
+        "localAxisY": [1, 0, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 100,
+          "height": 200
+        },
+        "memberEnd": "start"
+      },
+      "if_cross_beam_1_end": {
+        "id": "if_cross_beam_1_end",
+        "type": "member-end-face",
+        "ownerId": "cross_beam_1",
+        "role": "connection-end-face",
+        "origin": [2500, 2938, 3000],
+        "normal": [0, 1, 0],
+        "localAxisY": [1, 0, 0],
+        "localAxisZ": [0, 0, 1],
+        "extents": {
+          "width": 100,
+          "height": 200
+        },
+        "memberEnd": "end"
+      }
+    },
+    "connectionZones": {
+      "cz_side_a_start": {
+        "id": "cz_side_a_start",
+        "type": "manual-steel-to-steel-zone",
+        "name": "Side beam A start to column 1/A",
+        "mainObjectId": "column_1a",
+        "secondaryObjectIds": ["side_beam_a"],
+        "interfaceIds": ["if_column_1a_x_plus", "if_side_beam_a_start"],
+        "connectionIds": ["conn_side_a_start"],
+        "objectIds": ["end_plate_side_a_start", "holes_side_a_start", "fasteners_side_a_start"]
+      },
+      "cz_side_a_end": {
+        "id": "cz_side_a_end",
+        "type": "manual-steel-to-steel-zone",
+        "name": "Side beam A end to column 2/A",
+        "mainObjectId": "column_2a",
+        "secondaryObjectIds": ["side_beam_a"],
+        "interfaceIds": ["if_column_2a_x_minus", "if_side_beam_a_end"],
+        "connectionIds": ["conn_side_a_end"],
+        "objectIds": ["end_plate_side_a_end", "holes_side_a_end", "fasteners_side_a_end"]
+      },
+      "cz_side_b_start": {
+        "id": "cz_side_b_start",
+        "type": "manual-steel-to-steel-zone",
+        "name": "Side beam B start to column 1/B",
+        "mainObjectId": "column_1b",
+        "secondaryObjectIds": ["side_beam_b"],
+        "interfaceIds": ["if_column_1b_x_plus", "if_side_beam_b_start"],
+        "connectionIds": ["conn_side_b_start"],
+        "objectIds": ["end_plate_side_b_start", "holes_side_b_start", "fasteners_side_b_start"]
+      },
+      "cz_side_b_end": {
+        "id": "cz_side_b_end",
+        "type": "manual-steel-to-steel-zone",
+        "name": "Side beam B end to column 2/B",
+        "mainObjectId": "column_2b",
+        "secondaryObjectIds": ["side_beam_b"],
+        "interfaceIds": ["if_column_2b_x_minus", "if_side_beam_b_end"],
+        "connectionIds": ["conn_side_b_end"],
+        "objectIds": ["end_plate_side_b_end", "holes_side_b_end", "fasteners_side_b_end"]
+      },
+      "cz_cross_a": {
+        "id": "cz_cross_a",
+        "type": "manual-steel-to-steel-zone",
+        "name": "Cross beam start to side beam A",
+        "mainObjectId": "side_beam_a",
+        "secondaryObjectIds": ["cross_beam_1"],
+        "interfaceIds": ["if_side_beam_a_inner_y_plus", "if_cross_beam_1_start"],
+        "connectionIds": ["conn_cross_a"],
+        "objectIds": ["end_plate_cross_a", "holes_cross_a", "fasteners_cross_a"]
+      },
+      "cz_cross_b": {
+        "id": "cz_cross_b",
+        "type": "manual-steel-to-steel-zone",
+        "name": "Cross beam end to side beam B",
+        "mainObjectId": "side_beam_b",
+        "secondaryObjectIds": ["cross_beam_1"],
+        "interfaceIds": ["if_side_beam_b_inner_y_minus", "if_cross_beam_1_end"],
+        "connectionIds": ["conn_cross_b"],
+        "objectIds": ["end_plate_cross_b", "holes_cross_b", "fasteners_cross_b"]
+      }
+    },
+    "assemblies": {},
+    "members": {
+      "column_1a": {
+        "id": "column_1a",
+        "type": "portal-column",
+        "start": [0, 0, 0],
+        "end": [0, 0, 3120],
+        "gridPlacement": {
+          "start": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_a",
+            "level": "level_base",
+            "offset": [0, 0, 0]
+          },
+          "end": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_a",
+            "level": "level_eaves",
+            "offset": [0, 0, 120]
+          }
+        },
+        "placementIntent": {
+          "role": "portal-column",
+          "host": {
+            "groupId": "group_portal_frame_1",
+            "gridX": "grid_1",
+            "gridY": "grid_a"
+          },
+          "fit": "base-to-eaves-grid-line"
+        },
+        "fabrication": {
+          "partMark": "C1A"
+        },
+        "display": {
+          "color": "#0f6c7a"
+        },
+        "bim": {
+          "name": "Column 1/A",
+          "propertySets": {
+            "Identity": {
+              "mark": "C1A"
+            }
+          }
+        }
+      },
+      "column_1b": {
+        "id": "column_1b",
+        "type": "portal-column",
+        "start": [0, 3000, 0],
+        "end": [0, 3000, 3120],
+        "gridPlacement": {
+          "start": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_b",
+            "level": "level_base",
+            "offset": [0, 0, 0]
+          },
+          "end": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_b",
+            "level": "level_eaves",
+            "offset": [0, 0, 120]
+          }
+        },
+        "placementIntent": {
+          "role": "portal-column",
+          "host": {
+            "groupId": "group_portal_frame_1",
+            "gridX": "grid_1",
+            "gridY": "grid_b"
+          },
+          "fit": "base-to-eaves-grid-line"
+        },
+        "fabrication": {
+          "partMark": "C1B"
+        },
+        "display": {
+          "color": "#0f6c7a"
+        },
+        "bim": {
+          "name": "Column 1/B",
+          "propertySets": {
+            "Identity": {
+              "mark": "C1B"
+            }
+          }
+        }
+      },
+      "column_2a": {
+        "id": "column_2a",
+        "type": "portal-column",
+        "start": [5000, 0, 0],
+        "end": [5000, 0, 3120],
+        "gridPlacement": {
+          "start": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_2",
+            "gridY": "grid_a",
+            "level": "level_base",
+            "offset": [0, 0, 0]
+          },
+          "end": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_2",
+            "gridY": "grid_a",
+            "level": "level_eaves",
+            "offset": [0, 0, 120]
+          }
+        },
+        "placementIntent": {
+          "role": "portal-column",
+          "host": {
+            "groupId": "group_portal_frame_1",
+            "gridX": "grid_2",
+            "gridY": "grid_a"
+          },
+          "fit": "base-to-eaves-grid-line"
+        },
+        "fabrication": {
+          "partMark": "C2A"
+        },
+        "display": {
+          "color": "#0f6c7a"
+        },
+        "bim": {
+          "name": "Column 2/A",
+          "propertySets": {
+            "Identity": {
+              "mark": "C2A"
+            }
+          }
+        }
+      },
+      "column_2b": {
+        "id": "column_2b",
+        "type": "portal-column",
+        "start": [5000, 3000, 0],
+        "end": [5000, 3000, 3120],
+        "gridPlacement": {
+          "start": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_2",
+            "gridY": "grid_b",
+            "level": "level_base",
+            "offset": [0, 0, 0]
+          },
+          "end": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_2",
+            "gridY": "grid_b",
+            "level": "level_eaves",
+            "offset": [0, 0, 120]
+          }
+        },
+        "placementIntent": {
+          "role": "portal-column",
+          "host": {
+            "groupId": "group_portal_frame_1",
+            "gridX": "grid_2",
+            "gridY": "grid_b"
+          },
+          "fit": "base-to-eaves-grid-line"
+        },
+        "fabrication": {
+          "partMark": "C2B"
+        },
+        "display": {
+          "color": "#0f6c7a"
+        },
+        "bim": {
+          "name": "Column 2/B",
+          "propertySets": {
+            "Identity": {
+              "mark": "C2B"
+            }
+          }
+        }
+      },
+      "side_beam_a": {
+        "id": "side_beam_a",
+        "type": "portal-side-beam",
+        "start": [162, 0, 3000],
+        "end": [4838, 0, 3000],
+        "gridPlacement": {
+          "start": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_a",
+            "level": "level_eaves",
+            "offset": [162, 0, 0]
+          },
+          "end": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_2",
+            "gridY": "grid_a",
+            "level": "level_eaves",
+            "offset": [-162, 0, 0]
+          }
+        },
+        "placementIntent": {
+          "role": "portal-side-beam",
+          "host": {
+            "groupId": "group_portal_frame_1",
+            "gridY": "grid_a"
+          },
+          "fit": "between-column-tops"
+        },
+        "fabrication": {
+          "partMark": "B-A"
+        },
+        "display": {
+          "color": "#0c4f6b"
+        },
+        "bim": {
+          "name": "Side Beam A",
+          "propertySets": {
+            "Identity": {
+              "mark": "B-A"
+            }
+          }
+        }
+      },
+      "side_beam_b": {
+        "id": "side_beam_b",
+        "type": "portal-side-beam",
+        "start": [162, 3000, 3000],
+        "end": [4838, 3000, 3000],
+        "gridPlacement": {
+          "start": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_b",
+            "level": "level_eaves",
+            "offset": [162, 0, 0]
+          },
+          "end": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_2",
+            "gridY": "grid_b",
+            "level": "level_eaves",
+            "offset": [-162, 0, 0]
+          }
+        },
+        "placementIntent": {
+          "role": "portal-side-beam",
+          "host": {
+            "groupId": "group_portal_frame_1",
+            "gridY": "grid_b"
+          },
+          "fit": "between-column-tops"
+        },
+        "fabrication": {
+          "partMark": "B-B"
+        },
+        "display": {
+          "color": "#0c4f6b"
+        },
+        "bim": {
+          "name": "Side Beam B",
+          "propertySets": {
+            "Identity": {
+              "mark": "B-B"
+            }
+          }
+        }
+      },
+      "cross_beam_1": {
+        "id": "cross_beam_1",
+        "type": "portal-cross-beam",
+        "start": [2500, 62, 3000],
+        "end": [2500, 2938, 3000],
+        "gridPlacement": {
+          "start": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_a",
+            "level": "level_eaves",
+            "offset": [2500, 62, 0]
+          },
+          "end": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_b",
+            "level": "level_eaves",
+            "offset": [2500, -62, 0]
+          }
+        },
+        "placementIntent": {
+          "role": "portal-cross-beam",
+          "host": {
+            "groupId": "group_portal_frame_1"
+          },
+          "fit": "between-side-beams"
+        },
+        "fabrication": {
+          "partMark": "B-X1"
+        },
+        "display": {
+          "color": "#17395f"
+        },
+        "bim": {
+          "name": "Cross Beam 1",
+          "propertySets": {
+            "Identity": {
+              "mark": "B-X1"
+            }
+          }
+        }
+      }
+    },
+    "plates": {
+      "base_plate_1a": {
+        "id": "base_plate_1a",
+        "type": "base-plate",
+        "center": [0, 0, -6],
+        "placementIntent": {
+          "role": "base-plate",
+          "host": {
+            "objectId": "column_1a",
+            "end": "start"
+          },
+          "fit": "centered-on-column-base"
+        },
+        "fabrication": {
+          "partMark": "BP1A"
+        }
+      },
+      "base_plate_1b": {
+        "id": "base_plate_1b",
+        "type": "base-plate",
+        "center": [0, 3000, -6],
+        "placementIntent": {
+          "role": "base-plate",
+          "host": {
+            "objectId": "column_1b",
+            "end": "start"
+          },
+          "fit": "centered-on-column-base"
+        },
+        "fabrication": {
+          "partMark": "BP1B"
+        }
+      },
+      "base_plate_2a": {
+        "id": "base_plate_2a",
+        "type": "base-plate",
+        "center": [5000, 0, -6],
+        "placementIntent": {
+          "role": "base-plate",
+          "host": {
+            "objectId": "column_2a",
+            "end": "start"
+          },
+          "fit": "centered-on-column-base"
+        },
+        "fabrication": {
+          "partMark": "BP2A"
+        }
+      },
+      "base_plate_2b": {
+        "id": "base_plate_2b",
+        "type": "base-plate",
+        "center": [5000, 3000, -6],
+        "placementIntent": {
+          "role": "base-plate",
+          "host": {
+            "objectId": "column_2b",
+            "end": "start"
+          },
+          "fit": "centered-on-column-base"
+        },
+        "fabrication": {
+          "partMark": "BP2B"
+        }
+      },
+      "end_plate_side_a_start": {
+        "id": "end_plate_side_a_start",
+        "type": "beam-end-plate",
+        "center": [156, 0, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "placementIntent": {
+          "role": "side-beam-to-column-end-plate",
+          "host": {
+            "objectId": "side_beam_a",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "column_1a"
+            }
+          ],
+          "fit": "manual-steel-to-steel"
+        },
+        "fabrication": {
+          "partMark": "P-SA1"
+        }
+      },
+      "end_plate_side_a_end": {
+        "id": "end_plate_side_a_end",
+        "type": "beam-end-plate",
+        "center": [4844, 0, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "placementIntent": {
+          "role": "side-beam-to-column-end-plate",
+          "host": {
+            "objectId": "side_beam_a",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "column_2a"
+            }
+          ],
+          "fit": "manual-steel-to-steel"
+        },
+        "fabrication": {
+          "partMark": "P-SA2"
+        }
+      },
+      "end_plate_side_b_start": {
+        "id": "end_plate_side_b_start",
+        "type": "beam-end-plate",
+        "center": [156, 3000, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "placementIntent": {
+          "role": "side-beam-to-column-end-plate",
+          "host": {
+            "objectId": "side_beam_b",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "column_1b"
+            }
+          ],
+          "fit": "manual-steel-to-steel"
+        },
+        "fabrication": {
+          "partMark": "P-SB1"
+        }
+      },
+      "end_plate_side_b_end": {
+        "id": "end_plate_side_b_end",
+        "type": "beam-end-plate",
+        "center": [4844, 3000, 3000],
+        "normal": [1, 0, 0],
+        "localAxisY": [0, 1, 0],
+        "localAxisZ": [0, 0, 1],
+        "placementIntent": {
+          "role": "side-beam-to-column-end-plate",
+          "host": {
+            "objectId": "side_beam_b",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "column_2b"
+            }
+          ],
+          "fit": "manual-steel-to-steel"
+        },
+        "fabrication": {
+          "partMark": "P-SB2"
+        }
+      },
+      "end_plate_cross_a": {
+        "id": "end_plate_cross_a",
+        "type": "beam-end-plate",
+        "center": [2500, 56, 3000],
+        "normal": [0, 1, 0],
+        "localAxisY": [1, 0, 0],
+        "localAxisZ": [0, 0, 1],
+        "placementIntent": {
+          "role": "cross-beam-to-side-beam-end-plate",
+          "host": {
+            "objectId": "cross_beam_1",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "side_beam_a"
+            }
+          ],
+          "fit": "manual-steel-to-steel"
+        },
+        "fabrication": {
+          "partMark": "P-XA"
+        }
+      },
+      "end_plate_cross_b": {
+        "id": "end_plate_cross_b",
+        "type": "beam-end-plate",
+        "center": [2500, 2944, 3000],
+        "normal": [0, 1, 0],
+        "localAxisY": [1, 0, 0],
+        "localAxisZ": [0, 0, 1],
+        "placementIntent": {
+          "role": "cross-beam-to-side-beam-end-plate",
+          "host": {
+            "objectId": "cross_beam_1",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "side_beam_b"
+            }
+          ],
+          "fit": "manual-steel-to-steel"
+        },
+        "fabrication": {
+          "partMark": "P-XB"
+        }
+      }
+    },
+    "features": {
+      "holes_side_a_start": {
+        "id": "holes_side_a_start",
+        "type": "hole-pattern",
+        "ownerId": "end_plate_side_a_start",
+        "reference": {
+          "kind": "plate-face",
+          "face": "back",
+          "origin": "plate-center",
+          "localAxisY": [0, 1, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "placementIntent": {
+          "role": "connection-hole-pattern",
+          "host": {
+            "objectId": "end_plate_side_a_start",
+            "face": "back"
+          },
+          "fit": "inside-end-plate"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "holes_side_a_end": {
+        "id": "holes_side_a_end",
+        "type": "hole-pattern",
+        "ownerId": "end_plate_side_a_end",
+        "reference": {
+          "kind": "plate-face",
+          "face": "front",
+          "origin": "plate-center",
+          "localAxisY": [0, 1, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "placementIntent": {
+          "role": "connection-hole-pattern",
+          "host": {
+            "objectId": "end_plate_side_a_end",
+            "face": "front"
+          },
+          "fit": "inside-end-plate"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "holes_side_b_start": {
+        "id": "holes_side_b_start",
+        "type": "hole-pattern",
+        "ownerId": "end_plate_side_b_start",
+        "reference": {
+          "kind": "plate-face",
+          "face": "back",
+          "origin": "plate-center",
+          "localAxisY": [0, 1, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "placementIntent": {
+          "role": "connection-hole-pattern",
+          "host": {
+            "objectId": "end_plate_side_b_start",
+            "face": "back"
+          },
+          "fit": "inside-end-plate"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "holes_side_b_end": {
+        "id": "holes_side_b_end",
+        "type": "hole-pattern",
+        "ownerId": "end_plate_side_b_end",
+        "reference": {
+          "kind": "plate-face",
+          "face": "front",
+          "origin": "plate-center",
+          "localAxisY": [0, 1, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "placementIntent": {
+          "role": "connection-hole-pattern",
+          "host": {
+            "objectId": "end_plate_side_b_end",
+            "face": "front"
+          },
+          "fit": "inside-end-plate"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "holes_cross_a": {
+        "id": "holes_cross_a",
+        "type": "hole-pattern",
+        "ownerId": "end_plate_cross_a",
+        "reference": {
+          "kind": "plate-face",
+          "face": "back",
+          "origin": "plate-center",
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "placementIntent": {
+          "role": "connection-hole-pattern",
+          "host": {
+            "objectId": "end_plate_cross_a",
+            "face": "back"
+          },
+          "fit": "inside-end-plate"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "holes_cross_b": {
+        "id": "holes_cross_b",
+        "type": "hole-pattern",
+        "ownerId": "end_plate_cross_b",
+        "reference": {
+          "kind": "plate-face",
+          "face": "front",
+          "origin": "plate-center",
+          "localAxisY": [1, 0, 0],
+          "localAxisZ": [0, 0, 1]
+        },
+        "placementIntent": {
+          "role": "connection-hole-pattern",
+          "host": {
+            "objectId": "end_plate_cross_b",
+            "face": "front"
+          },
+          "fit": "inside-end-plate"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      }
+    },
+    "fastenerGroups": {
+      "fasteners_side_a_start": {
+        "id": "fasteners_side_a_start",
+        "type": "fastener-group",
+        "participants": ["end_plate_side_a_start", "side_beam_a", "column_1a"],
+        "through": {
+          "fromFeatureId": "holes_side_a_start"
+        },
+        "placementIntent": {
+          "role": "manual-steel-to-steel-fasteners",
+          "host": {
+            "objectId": "end_plate_side_a_start"
+          },
+          "fit": "use-stored-hole-pattern"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "fasteners_side_a_end": {
+        "id": "fasteners_side_a_end",
+        "type": "fastener-group",
+        "participants": ["end_plate_side_a_end", "side_beam_a", "column_2a"],
+        "through": {
+          "fromFeatureId": "holes_side_a_end"
+        },
+        "placementIntent": {
+          "role": "manual-steel-to-steel-fasteners",
+          "host": {
+            "objectId": "end_plate_side_a_end"
+          },
+          "fit": "use-stored-hole-pattern"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "fasteners_side_b_start": {
+        "id": "fasteners_side_b_start",
+        "type": "fastener-group",
+        "participants": ["end_plate_side_b_start", "side_beam_b", "column_1b"],
+        "through": {
+          "fromFeatureId": "holes_side_b_start"
+        },
+        "placementIntent": {
+          "role": "manual-steel-to-steel-fasteners",
+          "host": {
+            "objectId": "end_plate_side_b_start"
+          },
+          "fit": "use-stored-hole-pattern"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "fasteners_side_b_end": {
+        "id": "fasteners_side_b_end",
+        "type": "fastener-group",
+        "participants": ["end_plate_side_b_end", "side_beam_b", "column_2b"],
+        "through": {
+          "fromFeatureId": "holes_side_b_end"
+        },
+        "placementIntent": {
+          "role": "manual-steel-to-steel-fasteners",
+          "host": {
+            "objectId": "end_plate_side_b_end"
+          },
+          "fit": "use-stored-hole-pattern"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "fasteners_cross_a": {
+        "id": "fasteners_cross_a",
+        "type": "fastener-group",
+        "participants": ["end_plate_cross_a", "cross_beam_1", "side_beam_a"],
+        "through": {
+          "fromFeatureId": "holes_cross_a"
+        },
+        "placementIntent": {
+          "role": "manual-steel-to-steel-fasteners",
+          "host": {
+            "objectId": "end_plate_cross_a"
+          },
+          "fit": "use-stored-hole-pattern"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      },
+      "fasteners_cross_b": {
+        "id": "fasteners_cross_b",
+        "type": "fastener-group",
+        "participants": ["end_plate_cross_b", "cross_beam_1", "side_beam_b"],
+        "through": {
+          "fromFeatureId": "holes_cross_b"
+        },
+        "placementIntent": {
+          "role": "manual-steel-to-steel-fasteners",
+          "host": {
+            "objectId": "end_plate_cross_b"
+          },
+          "fit": "use-stored-hole-pattern"
+        },
+        "holePatternRef": "hole_pattern_steel_2x2"
+      }
+    },
+    "welds": {},
+    "connections": {
+      "conn_side_a_start": {
+        "id": "conn_side_a_start",
+        "type": "manual-steel-to-steel",
+        "mainMemberId": "column_1a",
+        "secondaryMemberId": "side_beam_a",
+        "connectionZoneId": "cz_side_a_start",
+        "manualParts": {
+          "plateIds": ["end_plate_side_a_start"],
+          "featureIds": ["holes_side_a_start"],
+          "fastenerGroupIds": ["fasteners_side_a_start"],
+          "weldIds": []
+        },
+        "placementIntent": {
+          "role": "beam-to-column-manual-connection",
+          "host": {
+            "groupId": "group_portal_frame_1"
+          },
+          "fit": "manual-steel-to-steel"
+        },
+        "sourcePreset": {
+          "library": "connections",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          },
+          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
+        }
+      },
+      "conn_side_a_end": {
+        "id": "conn_side_a_end",
+        "type": "manual-steel-to-steel",
+        "mainMemberId": "column_2a",
+        "secondaryMemberId": "side_beam_a",
+        "connectionZoneId": "cz_side_a_end",
+        "manualParts": {
+          "plateIds": ["end_plate_side_a_end"],
+          "featureIds": ["holes_side_a_end"],
+          "fastenerGroupIds": ["fasteners_side_a_end"],
+          "weldIds": []
+        },
+        "placementIntent": {
+          "role": "beam-to-column-manual-connection",
+          "host": {
+            "groupId": "group_portal_frame_1"
+          },
+          "fit": "manual-steel-to-steel"
+        },
+        "sourcePreset": {
+          "library": "connections",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          },
+          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
+        }
+      },
+      "conn_side_b_start": {
+        "id": "conn_side_b_start",
+        "type": "manual-steel-to-steel",
+        "mainMemberId": "column_1b",
+        "secondaryMemberId": "side_beam_b",
+        "connectionZoneId": "cz_side_b_start",
+        "manualParts": {
+          "plateIds": ["end_plate_side_b_start"],
+          "featureIds": ["holes_side_b_start"],
+          "fastenerGroupIds": ["fasteners_side_b_start"],
+          "weldIds": []
+        },
+        "placementIntent": {
+          "role": "beam-to-column-manual-connection",
+          "host": {
+            "groupId": "group_portal_frame_1"
+          },
+          "fit": "manual-steel-to-steel"
+        },
+        "sourcePreset": {
+          "library": "connections",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          },
+          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
+        }
+      },
+      "conn_side_b_end": {
+        "id": "conn_side_b_end",
+        "type": "manual-steel-to-steel",
+        "mainMemberId": "column_2b",
+        "secondaryMemberId": "side_beam_b",
+        "connectionZoneId": "cz_side_b_end",
+        "manualParts": {
+          "plateIds": ["end_plate_side_b_end"],
+          "featureIds": ["holes_side_b_end"],
+          "fastenerGroupIds": ["fasteners_side_b_end"],
+          "weldIds": []
+        },
+        "placementIntent": {
+          "role": "beam-to-column-manual-connection",
+          "host": {
+            "groupId": "group_portal_frame_1"
+          },
+          "fit": "manual-steel-to-steel"
+        },
+        "sourcePreset": {
+          "library": "connections",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          },
+          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
+        }
+      },
+      "conn_cross_a": {
+        "id": "conn_cross_a",
+        "type": "manual-steel-to-steel",
+        "mainMemberId": "side_beam_a",
+        "secondaryMemberId": "cross_beam_1",
+        "connectionZoneId": "cz_cross_a",
+        "manualParts": {
+          "plateIds": ["end_plate_cross_a"],
+          "featureIds": ["holes_cross_a"],
+          "fastenerGroupIds": ["fasteners_cross_a"],
+          "weldIds": []
+        },
+        "placementIntent": {
+          "role": "cross-beam-to-side-beam-manual-connection",
+          "host": {
+            "groupId": "group_portal_frame_1"
+          },
+          "fit": "manual-steel-to-steel"
+        },
+        "sourcePreset": {
+          "library": "connections",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          },
+          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
+        }
+      },
+      "conn_cross_b": {
+        "id": "conn_cross_b",
+        "type": "manual-steel-to-steel",
+        "mainMemberId": "side_beam_b",
+        "secondaryMemberId": "cross_beam_1",
+        "connectionZoneId": "cz_cross_b",
+        "manualParts": {
+          "plateIds": ["end_plate_cross_b"],
+          "featureIds": ["holes_cross_b"],
+          "fastenerGroupIds": ["fasteners_cross_b"],
+          "weldIds": []
+        },
+        "placementIntent": {
+          "role": "cross-beam-to-side-beam-manual-connection",
+          "host": {
+            "groupId": "group_portal_frame_1"
+          },
+          "fit": "manual-steel-to-steel"
+        },
+        "sourcePreset": {
+          "library": "connections",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          },
+          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
+        }
+      }
+    },
+    "addonData": {},
+    "holePatterns": {
+      "hole_pattern_steel_2x2": {
+        "id": "hole_pattern_steel_2x2",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "positions": [
+          [-45, -65],
+          [45, -65],
+          [-45, 65],
+          [45, 65]
+        ]
+      }
+    },
+    "objectPatterns": {}
+  },
+  "migrationHistory": [
+    {
+      "id": "mig_0004_authoring_patterns_nc1_data",
+      "description": "Renamed generic patterns to holePatterns, added objectPatterns/authoring provenance, fabrication marks, tolerances, and connection/frame library refs.",
+      "schemaVersion": "0.5.0"
+    }
+  ]
+}

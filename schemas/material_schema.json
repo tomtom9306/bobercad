@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/material_schema.json",
+  "title": "Steel Material Library Schema",
+  "description": "Starter schema for material libraries referenced by steel BIM project files.",
+  "type": "object",
+  "required": ["schema", "schemaVersion", "library", "units", "materials"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": "steel-material-library" },
+    "schemaVersion": { "type": "string" },
+    "library": {
+      "type": "object",
+      "required": ["id", "name", "version"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "status": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "units": {
+      "type": "object",
+      "required": ["density", "stress"],
+      "properties": {
+        "density": { "type": "string" },
+        "stress": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "materials": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/material" }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "material": {
+      "type": "object",
+      "required": ["id", "name", "materialType", "density"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "materialType": { "type": "string" },
+        "density": { "type": "number" },
+        "nominalYieldStrength": { "type": "number" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/connection_library_schema.json",
+  "title": "Steel Connection Library Schema",
+  "description": "Schema for authoring presets for standard steel connections. Presets help create explicit project objects but are not runtime source-of-truth geometry.",
+  "type": "object",
+  "required": ["schema", "schemaVersion", "library", "units", "connections"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": "steel-connection-library" },
+    "schemaVersion": { "type": "string" },
+    "library": {
+      "type": "object",
+      "required": ["id", "name", "version"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "status": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "units": {
+      "type": "object",
+      "required": ["length", "angle"],
+      "properties": {
+        "length": { "type": "string" },
+        "angle": { "const": "deg" }
+      },
+      "additionalProperties": true
+    },
+    "connections": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/connectionPreset" }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "connectionPreset": {
+      "type": "object",
+      "required": ["id", "type", "version", "parameters"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "version": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "inputs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "produces": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}
