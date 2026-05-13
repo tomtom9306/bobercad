@@ -246,7 +246,7 @@
     },
     "connection_1": {
       "collection": "connections",
-      "type": "beam-to-column-end-plate"
+      "type": "moment-end-plate"
     },
     "hole_pattern_1": {
       "collection": "holePatterns",
@@ -392,7 +392,7 @@
             "status": "modeled"
           }
         },
-        "beam-to-column-end-plate": {
+        "moment-end-plate": {
           "bim": {
             "ifcClass": "IfcRelConnectsElements",
             "propertySets": {
@@ -1013,6 +1013,7 @@
         "id": "holes_column_1",
         "type": "hole-pattern",
         "ownerId": "column_1",
+        "depth": 30,
         "reference": {
           "kind": "member-face",
           "faceRef": "positive-x-face",
@@ -1121,7 +1122,7 @@
     "connections": {
       "connection_1": {
         "id": "connection_1",
-        "type": "beam-to-column-end-plate",
+        "type": "moment-end-plate",
         "mainMemberId": "column_1",
         "secondaryMemberId": "beam_1",
         "connectionZoneId": "cz_connection_1",
@@ -1133,22 +1134,59 @@
           "weldIds": ["weld_beam_to_plate_1"]
         },
         "generator": {
-          "status": "not-parametric-yet"
+          "status": "generated",
+          "ownedObjectIds": ["end_plate_1", "hole_pattern_1", "holes_end_plate_1", "holes_column_1", "fasteners_1", "weld_beam_to_plate_1"],
+          "manualObjectIds": ["top_stiffener_front_1", "top_stiffener_back_1", "bottom_stiffener_front_1", "bottom_stiffener_back_1", "haunch_plate_1", "beam_end_stiffener_left_1", "beam_end_stiffener_right_1"],
+          "objectRoles": {
+            "endPlate": "end_plate_1",
+            "holePattern": "hole_pattern_1",
+            "plateHoles": "holes_end_plate_1",
+            "memberHoles": "holes_column_1",
+            "fasteners": "fasteners_1",
+            "weld": "weld_beam_to_plate_1"
+          }
         },
         "referenceParameters": {
-          "plateThickness": 12,
-          "plateWidth": 170,
-          "plateHeight": 390,
-          "topStiffenerPlateThickness": 10,
-          "bottomStiffenerPlateThickness": 10,
-          "haunchPlateThickness": 12,
-          "fastenerRows": 4,
-          "fastenerColumns": 2,
-          "fastenerColumnGauge": 116,
-          "verticalPitch": 80,
-          "fastenerRef": "M16_8_8",
-          "holeDiameter": 18,
-          "weldSize": 6
+          "plate": {
+            "thickness": 12,
+            "width": 170,
+            "height": 390,
+            "offset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 4,
+            "columns": 2,
+            "pitch": 80,
+            "gauge": 116
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 30,
+            "type": "round"
+          },
+          "welds": {
+            "beamWeb": 6,
+            "beamFlanges": 6
+          },
+          "stiffeners": {
+            "column": {
+              "enabled": false,
+              "thickness": 10,
+              "width": 276,
+              "height": 69
+            }
+          },
+          "chamfers": {
+            "enabled": false
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
         },
         "bim": {
           "name": "End Plate Connection 1",

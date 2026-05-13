@@ -7,6 +7,8 @@ Start here, then open the specific docs needed for the task.
 ## Source Of Truth
 
 - Connection sample project: `projects/sample_structure.json`
+- Fin plate sample project: `projects/sample_fin_plate.json`
+- Connection test frame sample project: `projects/sample_connection_test_frame.json`
 - Portal frame sample project: `projects/sample_portal_frame.json`
 - Beam-to-beam end plate sample project: `projects/sample_beam_to_beam_end_plate.json`
 - Authoring and NC1 data-model test project: `projects/sample_authoring_nc1_test.json`

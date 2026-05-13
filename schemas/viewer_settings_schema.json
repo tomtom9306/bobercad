@@ -13,7 +13,18 @@
       "type": "object",
       "required": ["path"],
       "properties": {
-        "path": { "type": "string" }
+        "path": { "type": "string" },
+        "demos": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["path"],
+            "properties": {
+              "path": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        }
       },
       "additionalProperties": true
     },
@@ -46,11 +57,10 @@
     },
     "controls": {
       "type": "object",
-      "required": ["orbitSpeed", "minPitch", "maxPitch", "zoomInFactor", "zoomOutFactor"],
+      "required": ["orbitSpeed", "panSpeed", "zoomInFactor", "zoomOutFactor"],
       "properties": {
         "orbitSpeed": { "type": "number" },
-        "minPitch": { "type": "number" },
-        "maxPitch": { "type": "number" },
+        "panSpeed": { "type": "number" },
         "zoomInFactor": { "type": "number" },
         "zoomOutFactor": { "type": "number" }
       },
@@ -73,15 +83,27 @@
         },
         "edges": {
           "type": "object",
-          "required": ["defaultColor", "plateColor", "holeColor", "fastenerHeadColor", "lineWidth", "fastenerHeadLineWidth", "weldLineWidth"],
+          "required": ["defaultColor", "plateColor", "fastenerHeadColor", "lineWidth"],
           "properties": {
             "defaultColor": { "$ref": "#/$defs/color" },
             "plateColor": { "$ref": "#/$defs/color" },
-            "holeColor": { "$ref": "#/$defs/color" },
             "fastenerHeadColor": { "$ref": "#/$defs/color" },
-            "lineWidth": { "type": "number" },
-            "fastenerHeadLineWidth": { "type": "number" },
-            "weldLineWidth": { "type": "number" }
+            "lineWidth": { "type": "number" }
+          },
+          "additionalProperties": true
+        },
+        "axes": {
+          "type": "object",
+          "required": ["visible", "padding", "minLength", "headSize", "xColor", "yColor", "zColor", "negativeColor"],
+          "properties": {
+            "visible": { "type": "boolean" },
+            "padding": { "type": "number" },
+            "minLength": { "type": "number" },
+            "headSize": { "type": "number" },
+            "xColor": { "$ref": "#/$defs/color" },
+            "yColor": { "$ref": "#/$defs/color" },
+            "zColor": { "$ref": "#/$defs/color" },
+            "negativeColor": { "$ref": "#/$defs/color" }
           },
           "additionalProperties": true
         },

@@ -6,6 +6,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 
 - `projects/sample_structure.json` - sample beam-column connection project and model database.
 - `projects/sample_portal_frame.json` - sample grid-based portal frame project and model database.
+- `projects/sample_connection_test_frame.json` - clean four-column top-frame project for connection add/remove/change workflows.
 - `projects/sample_beam_to_beam_end_plate.json` - beam-to-beam end plate connection sample with a stored top flange notch and web bolt pattern.
 - `projects/sample_authoring_nc1_test.json` - compact regression sample for authoring patterns and NC1-ready data.
 - `libraries/profiles.json` - point-based profile library.
@@ -201,22 +202,28 @@ Keep `placementIntent` compact: role, host object, intended fit, flush faces, av
 
 Use `interfaces` for named stored planes/faces that AI agents, editors, and future QA scripts can reference without guessing.
 
-An interface is not a mesh or generated solid. It is a stored semantic plane with:
+An interface is not a mesh or generated solid. Member-owned interfaces are semantic references to a member face or end, and their runtime plane is derived by the member evaluator from the member axis/path, section placement, profile geometry, and shape modifiers. Do not treat old stored `normal`, local axes, or hand-entered member face extents as authoritative.
+
+A member-owned interface should store:
 
 - `ownerId`
-- `origin`
-- `normal`
-- `localAxisY`
-- `localAxisZ`
-- optional `extents`, `memberEnd`, and `faceRef`
+- `faceRef` such as `section.y-plus`, `section.y-minus`, `section.z-plus`, `section.z-minus`, `web-center-plane`, or `connection-secondary-facing-section-face` for connection-zone support faces
+- `memberEnd` for end faces, `station` for a fixed side-face station, or `stationReference: "connection-secondary-interface-origin"` when a connection-zone side face should be resolved at the selected secondary member interface
+- optional `extents` only for deliberate authoring limits; viewer/export runtime must derive the physical member face extents from the current member evaluator, profile, station, roll/twist intent, and shape modifiers
+
+Non-member interfaces, such as reference-plane interfaces, can still store explicit `origin`, `normal`, `localAxisY`, and `localAxisZ`.
+
+Features that reference a member-owned interface with `stationReference: "connection-secondary-interface-origin"` must also store `reference.stationReferenceInterfaceRef`, so renderers and exporters can resolve the same semantic station without connection-generator context.
 
 Use `connectionZones` to group the logical place where objects connect. A zone names the main object, secondary objects, the relevant interface ids, and the manually stored objects that belong to that connection area. It does not generate plates, holes, fasteners, or welds.
 
-## Manual Connections
+## Generated And Manual Connections
 
-Before connection generators exist, `connections` group manually modeled parts through `manualParts`.
+Connection generators are authoring commands. They may create plates, holes, fasteners, welds, cuts, interfaces, connection zones, assemblies, and connection records, but once generated those objects must be stored explicitly in the project.
 
-`generator.status: "not-parametric-yet"` means the connection does not generate geometry. Its plates, holes, fasteners, and welds are stored as normal model objects and remain the source of truth.
+`connections` group stored parts through `manualParts`. The generated or manual plates, holes, fasteners, and welds are normal model objects and remain the source of truth.
+
+`generator.status: "generated"` means the connection can be regenerated from `sourcePreset` and `referenceParameters`. `generator.status: "not-parametric-yet"` means the connection is manual/provenance-only.
 
 Connection `sourcePreset` is provenance only. Viewers and NC1 exporters must not load `libraries/connections.json` to fill missing plates, holes, fasteners, welds, cuts, or dimensions.
 

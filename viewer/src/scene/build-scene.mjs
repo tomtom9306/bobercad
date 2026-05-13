@@ -1,0 +1,707 @@
+import { v } from "../core/math.mjs";
+import { collectionObjects, objectById } from "../core/model.mjs";
+import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgPolygon, csgSubtract, csgUnion, cutBodyPolygons, geometryError, prismPolygons, projectCoincidentTolerance, requiredArray, requiredNumber, requiredVector, setGeometrySettings, slotOutline2d } from "../geometry/csg.mjs";
+import { memberFrame, resolveInterface, sectionBounds } from "../geometry/member-geometry.mjs?v=weld-fitting-1";
+import { triangulateFace } from "../geometry/polygon.mjs";
+
+let settings = null;
+
+function sectionPoint(origin, frame, point, xOffset = 0) {
+  return v.add(origin, v.add(v.mul(frame.x, xOffset), v.add(v.mul(frame.y, point[0]), v.mul(frame.z, point[1]))));
+}
+
+function addLine(scene, a, b, color, meta = {}) {
+  scene.lines.push({ points: [a, b], color, ...meta });
+}
+
+function addAxisHead(scene, axis, sideA, sideB, length, headSize, color) {
+  const end = v.mul(axis, length);
+  const base = v.mul(axis, length - headSize);
+  const wing = headSize * 0.42;
+  addLine(scene, end, v.add(base, v.mul(sideA, wing)), color);
+  addLine(scene, end, v.add(base, v.mul(sideA, -wing)), color);
+  addLine(scene, end, v.add(base, v.mul(sideB, wing)), color);
+  addLine(scene, end, v.add(base, v.mul(sideB, -wing)), color);
+}
+
+function addViewerAxis(scene, axis, sideA, sideB, color, length, headSize) {
+  const origin = [0, 0, 0];
+  addLine(scene, v.mul(axis, -length), origin, settings.render.axes.negativeColor);
+  addLine(scene, origin, v.mul(axis, length), color);
+  addAxisHead(scene, axis, sideA, sideB, length, headSize, color);
+}
+
+function addViewerAxes(scene) {
+  const axes = settings.render.axes;
+  if (!axes?.visible) return;
+  const maxCoordinate = Math.max(...scene.bounds.min.map(Math.abs), ...scene.bounds.max.map(Math.abs), 1);
+  const length = Math.max(axes.minLength, maxCoordinate * axes.padding);
+  const headSize = axes.headSize || length * 0.035;
+  addViewerAxis(scene, [1, 0, 0], [0, 1, 0], [0, 0, 1], axes.xColor, length, headSize);
+  addViewerAxis(scene, [0, 1, 0], [1, 0, 0], [0, 0, 1], axes.yColor, length, headSize);
+  addViewerAxis(scene, [0, 0, 1], [1, 0, 0], [0, 1, 0], axes.zColor, length, headSize);
+}
+
+function addLoopLines(scene, points, color, meta = {}) {
+  for (let i = 0; i < points.length; i += 1) addLine(scene, points[i], points[(i + 1) % points.length], color, meta);
+}
+
+function addPlaneMarker(scene, plane, display = {}, meta = {}) {
+  const x = v.norm(requiredVector(plane, "axisX", "plane marker"));
+  const y = v.norm(requiredVector(plane, "axisY", "plane marker"));
+  const origin = requiredVector(plane, "origin", "plane marker");
+  const size = requiredArray(plane, "size", "plane marker");
+  if (size.length !== 2 || size.some((value) => typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
+    geometryError("plane marker size must contain two positive numbers");
+  }
+  const color = display.color || "#ef4444";
+  const opacity = display.transparent ? display.opacity ?? 0.18 : 0.18;
+  const points = [
+    v.add(origin, v.add(v.mul(x, -size[0] / 2), v.mul(y, -size[1] / 2))),
+    v.add(origin, v.add(v.mul(x, size[0] / 2), v.mul(y, -size[1] / 2))),
+    v.add(origin, v.add(v.mul(x, size[0] / 2), v.mul(y, size[1] / 2))),
+    v.add(origin, v.add(v.mul(x, -size[0] / 2), v.mul(y, size[1] / 2)))
+  ];
+
+  scene.faces.push({ points, color, opacity, ...meta });
+  addLoopLines(scene, points, color, meta);
+}
+
+function memberFeatures(project, member) {
+  return (member.featureIds || []).map((id) => objectById(project, id)).filter((feature) => feature.ownerId === member.id);
+}
+
+function objectFeatures(project, object) {
+  return (object.featureIds || []).map((id) => objectById(project, id)).filter((feature) => feature.ownerId === object.id);
+}
+
+function holePatternCutters(project, profiles, feature, depth, shared = {}) {
+  if (feature.type !== "hole-pattern") return [];
+  if (!feature.holePatternRef) geometryError(`${feature.id}: hole-pattern missing holePatternRef`);
+  const cutterDepth = feature.depth === undefined ? depth : requiredNumber(feature, "depth", feature.id);
+  if (typeof cutterDepth !== "number" || !Number.isFinite(cutterDepth) || cutterDepth <= 0) geometryError(`${feature.id}: hole-pattern depth must be positive`);
+  const pattern = objectById(project, feature.holePatternRef);
+  const diameter = requiredNumber(pattern, "holeDiameter", `${pattern.id} hole pattern`);
+  const positions = requiredArray(pattern, "positions", `${pattern.id} hole pattern`);
+  const basis = featureOrigin(project, profiles, feature);
+  const radius = diameter / 2;
+  if (radius <= 0) geometryError(`${pattern.id}: holeDiameter must be positive`);
+  let cutters = [];
+
+  for (const position of positions) {
+    if (!Array.isArray(position) || position.length !== 2 || position.some((value) => typeof value !== "number" || !Number.isFinite(value))) {
+      geometryError(`${pattern.id}: hole position must be [y, z]`);
+    }
+    const center = v.add(basis.origin, v.add(v.mul(basis.y, position[0]), v.mul(basis.z, position[1])));
+    cutters = cutters.concat(cutBodyPolygons({
+      type: "cylinder",
+      center,
+      axisX: basis.normal,
+      axisY: basis.y,
+      axisZ: basis.z,
+      radius,
+      depth: cutterDepth
+    }, shared));
+  }
+
+  return cutters;
+}
+
+function slotCutters(project, profiles, feature, depth, shared = {}) {
+  if (feature.type !== "slot-hole") return [];
+  if (!feature.reference) geometryError(`${feature.id}: slot-hole missing reference`);
+  const cutterDepth = feature.depth === undefined ? depth : requiredNumber(feature, "depth", feature.id);
+  if (typeof cutterDepth !== "number" || !Number.isFinite(cutterDepth) || cutterDepth <= 0) geometryError(`${feature.id}: slot-hole depth must be positive`);
+  const basis = featureOrigin(project, profiles, feature);
+  const position = requiredArray(feature, "position", `${feature.id} slot-hole`);
+  if (position.length !== 2 || position.some((value) => typeof value !== "number" || !Number.isFinite(value))) {
+    geometryError(`${feature.id}: slot-hole position must be [y, z]`);
+  }
+  const slot = feature.slot || geometryError(`${feature.id}: slot-hole missing slot`);
+  const length = requiredNumber(slot, "length", `${feature.id} slot`);
+  const width = requiredNumber(slot, "width", `${feature.id} slot`);
+  const orientation = requiredNumber(slot, "orientation", `${feature.id} slot`);
+  const center = v.add(basis.origin, v.add(v.mul(basis.y, position[0]), v.mul(basis.z, position[1])));
+  const outline = slotOutline2d(length, width, orientation * Math.PI / 180);
+  return prismPolygons(center, basis.normal, basis.y, basis.z, cutterDepth, outline, shared);
+}
+
+function holeOrSlotCut(project, profiles, polygons, feature, depth, shared) {
+  if (feature.type === "hole-pattern") return csgSubtract(polygons, holePatternCutters(project, profiles, feature, depth, shared));
+  if (feature.type === "slot-hole") return csgSubtract(polygons, slotCutters(project, profiles, feature, depth, shared));
+  return null;
+}
+
+function endCutFeatures(project, member) {
+  const cuts = { start: null, end: null };
+  for (const feature of memberFeatures(project, member)) {
+    if (!["saw-cut", "miter-cut", "end-cut"].includes(feature.type)) continue;
+    if (!feature.reference) geometryError(`${feature.id}: end cut missing reference`);
+    const memberEnd = feature.reference.memberEnd;
+    if (memberEnd !== "start" && memberEnd !== "end") geometryError(`${feature.id}: end cut must set reference.memberEnd`);
+    cuts[memberEnd] = feature;
+  }
+  return cuts;
+}
+
+function endCutOffset(cut, point, side) {
+  if (!cut) return 0;
+  if (!cut.cut) geometryError(`${cut.id}: end cut missing cut angles`);
+  const angleY = requiredNumber(cut.cut, "angleY", cut.id) * Math.PI / 180;
+  const angleZ = requiredNumber(cut.cut, "angleZ", cut.id) * Math.PI / 180;
+  const offset = point[0] * Math.tan(angleY) + point[1] * Math.tan(angleZ);
+  return side === "start" ? offset : -offset;
+}
+
+function memberStation(member, frame, point) {
+  return v.dot(v.sub(point, member.start), frame.x);
+}
+
+function memberTrimRange(project, member, frame, length) {
+  const range = { start: 0, end: length };
+
+  for (const feature of memberFeatures(project, member)) {
+    if (feature.type !== "cut-plane") continue;
+    if (!feature.plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
+    const normal = v.norm(requiredVector(feature.plane, "normal", feature.id));
+    const station = memberStation(member, frame, requiredVector(feature.plane, "origin", feature.id));
+    const along = v.dot(normal, frame.x);
+    if (along > 0.5) range.start = Math.max(range.start, Math.min(length, station));
+    if (along < -0.5) range.end = Math.min(range.end, Math.max(0, station));
+  }
+
+  return range;
+}
+
+function memberFittingExtension(project, member, frame, profile, length) {
+  const bounds = sectionBounds(profile);
+  const sectionSpan = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
+  const extension = sectionSpan * 2 + projectCoincidentTolerance(project) * 10;
+  const range = { start: 0, end: length };
+
+  for (const feature of memberFeatures(project, member)) {
+    if (feature.type !== "fitting") continue;
+    if (!feature.plane) geometryError(`${feature.id}: fitting missing plane`);
+    const normal = v.norm(requiredVector(feature.plane, "normal", feature.id));
+    const station = memberStation(member, frame, requiredVector(feature.plane, "origin", feature.id));
+    const along = v.dot(normal, frame.x);
+    if (along > 0.5) range.start = Math.min(range.start, station - extension);
+    if (along < -0.5) range.end = Math.max(range.end, station + extension);
+  }
+
+  return range;
+}
+
+function memberContourPoint(member, frame, point, station, length, cuts) {
+  let x = station;
+  if (Math.abs(station) < 0.001) x += endCutOffset(cuts.start, point, "start");
+  if (Math.abs(station - length) < 0.001) x += endCutOffset(cuts.end, point, "end");
+  return sectionPoint(member.start, frame, point, x);
+}
+
+function memberContourPolygons(member, frame, contourPoints, startStation, endStation, length, cuts, shared = {}) {
+  const points = ccwPoints(contourPoints);
+  const start = points.map((point) => memberContourPoint(member, frame, point, startStation, length, cuts));
+  const end = points.map((point) => memberContourPoint(member, frame, point, endStation, length, cuts));
+  const polygons = [];
+  const add = (vertices, triangulate = false) => {
+    const faces = triangulate && vertices.length > 3 ? triangulateFace(vertices) : [vertices];
+    for (const face of faces) {
+      const polygon = csgPolygon(face, { ...shared });
+      if (polygon) polygons.push(polygon);
+    }
+  };
+
+  add([...start].reverse(), true);
+  add(end, true);
+  for (let i = 0; i < points.length; i += 1) {
+    const j = (i + 1) % points.length;
+    add([start[i], start[j], end[j], end[i]]);
+  }
+  return polygons;
+}
+
+function memberBasePolygons(project, member, frame, profile, color, startStation, endStation, length) {
+  const cuts = endCutFeatures(project, member);
+  const overlap = projectCoincidentTolerance(project) * 2;
+  let polygons = [];
+  const shared = { color };
+
+  for (const contour of profile.section.contours) {
+    if (contour.role !== "solid") continue;
+    polygons = polygons.concat(memberContourPolygons(member, frame, contour.points, startStation, endStation, length, cuts, shared));
+  }
+
+  for (const contour of profile.section.contours) {
+    if (contour.role !== "void") continue;
+    const voidPolygons = memberContourPolygons(member, frame, contour.points, startStation - overlap, endStation + overlap, length, { start: null, end: null }, shared);
+    polygons = csgSubtract(polygons, voidPolygons);
+  }
+
+  return polygons;
+}
+
+function planeCutPolygons(member, frame, profile, plane, shared = {}) {
+  if (!plane) geometryError("plane cut missing plane");
+  const length = v.len(v.sub(member.end, member.start));
+  const bounds = sectionBounds(profile);
+  const sectionSpan = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
+  const span = Math.max(length, sectionSpan) * 4 + 1000;
+  const depth = span * 2;
+  const keepNormal = v.norm(requiredVector(plane, "normal", "plane cut"));
+  const discardAxis = v.mul(keepNormal, -1);
+  let axisY = v.norm(requiredVector(plane, "axisX", "plane cut"));
+  axisY = v.norm(v.sub(axisY, v.mul(discardAxis, v.dot(axisY, discardAxis))));
+  if (v.len(axisY) <= CSG_EPSILON) geometryError("plane cut axisX cannot be parallel to normal");
+  const axisZ = v.norm(v.cross(discardAxis, axisY));
+  const center = v.add(requiredVector(plane, "origin", "plane cut"), v.mul(discardAxis, depth / 2));
+
+  return prismPolygons(center, discardAxis, axisY, axisZ, depth, [
+    [-span, -span],
+    [span, -span],
+    [span, span],
+    [-span, span]
+  ], shared);
+}
+
+function memberCsgPolygons(project, profiles, member, profile, color) {
+  const frame = memberFrame(member);
+  const length = v.len(v.sub(member.end, member.start));
+  const range = memberTrimRange(project, member, frame, length);
+  const fittingRange = memberFittingExtension(project, member, frame, profile, length);
+  const shared = { color };
+  let polygons = memberBasePolygons(project, member, frame, profile, color, Math.min(range.start, fittingRange.start), Math.max(range.end, fittingRange.end), length);
+
+  for (const feature of memberFeatures(project, member)) {
+    const cutPolygons = holeOrSlotCut(project, profiles, polygons, feature, null, shared);
+    if (cutPolygons) {
+      polygons = cutPolygons;
+      continue;
+    }
+
+    if (feature.type === "boolean-part") {
+      if (!["BOOLEAN_CUT", "BOOLEAN_ADD", "BOOLEAN_WELDPREP"].includes(feature.booleanType)) geometryError(`${feature.id}: unsupported booleanType ${feature.booleanType}`);
+      const body = cutBodyPolygons(feature.body, shared);
+      polygons = feature.booleanType === "BOOLEAN_ADD" ? csgUnion(polygons, body) : csgSubtract(polygons, body);
+      continue;
+    }
+
+    if (feature.type === "cut-plane" || feature.type === "fitting") {
+      polygons = csgSubtract(polygons, planeCutPolygons(member, frame, profile, feature.plane, shared));
+      continue;
+    }
+
+    if (["saw-cut", "miter-cut", "end-cut"].includes(feature.type)) continue;
+    geometryError(`${member.id}/${feature.id}: unsupported member feature type ${feature.type}`);
+  }
+
+  return polygons;
+}
+
+function meshPointKey(point) {
+  return point.map((value) => Math.round(value / 0.001)).join(",");
+}
+
+function meshEdgeKey(a, b) {
+  const ka = meshPointKey(a);
+  const kb = meshPointKey(b);
+  return ka < kb ? `${ka}|${kb}` : `${kb}|${ka}`;
+}
+
+function addMeshCreaseEdges(scene, polygons, edgeColor, meta = {}) {
+  const edges = new Map();
+  const creaseDot = Math.cos(15 * Math.PI / 180);
+
+  for (const polygon of polygons) {
+    const points = csgCleanPoints(polygon.vertices);
+    if (points.length < 3) continue;
+    for (let i = 0; i < points.length; i += 1) {
+      const a = points[i];
+      const b = points[(i + 1) % points.length];
+      const key = meshEdgeKey(a, b);
+      const edge = edges.get(key) || { a, b, normals: [] };
+      edge.normals.push(polygon.plane.normal);
+      edges.set(key, edge);
+    }
+  }
+
+  for (const edge of edges.values()) {
+    const uniqueNormals = [];
+    for (const normal of edge.normals) {
+      if (!uniqueNormals.some((existing) => Math.abs(v.dot(existing, normal)) > 1 - 0.0001)) uniqueNormals.push(normal);
+    }
+
+    const isCrease = uniqueNormals.some((normal, index) => uniqueNormals.slice(index + 1).some((other) => v.dot(normal, other) < creaseDot));
+    if (isCrease) addLine(scene, edge.a, edge.b, edgeColor, meta);
+  }
+}
+
+function addMember(scene, project, member, profile) {
+  const color = member.display?.color || "#78909c";
+  const edgeColor = member.display?.edgeColor || color || settings.render.edges.defaultColor;
+  const meta = { collection: "members", objectId: member.id };
+  const polygons = memberCsgPolygons(project, scene.profiles, member, profile, color);
+
+  for (const polygon of polygons) {
+    const points = csgCleanPoints(polygon.vertices);
+    if (points.length >= 3) scene.faces.push({ points, color: polygon.shared?.color || color, hideEdges: true, ...meta });
+  }
+  addMeshCreaseEdges(scene, polygons, edgeColor, meta);
+}
+
+function addPlateSolid(scene, midPoints, normal, thickness, color, edgeColor, meta = {}) {
+  const n = v.norm(normal);
+  const hx = thickness / 2;
+  const back = midPoints.map((point) => v.add(point, v.mul(n, -hx)));
+  const front = midPoints.map((point) => v.add(point, v.mul(n, hx)));
+
+  scene.faces.push({ points: back, color, ...meta });
+  scene.faces.push({ points: [...front].reverse(), color, ...meta });
+  addLoopLines(scene, back, edgeColor, meta);
+  addLoopLines(scene, front, edgeColor, meta);
+  for (let i = 0; i < midPoints.length; i += 1) {
+    const j = (i + 1) % midPoints.length;
+    scene.faces.push({ points: [back[i], back[j], front[j], front[i]], color, ...meta });
+    addLine(scene, back[i], front[i], edgeColor, meta);
+  }
+}
+
+function addBentPlate(scene, plate) {
+  const bend = plate.flatPattern?.bendLines?.[0];
+  if (!bend) return false;
+
+  const y = v.norm(plate.localAxisY);
+  const z = v.norm(plate.localAxisZ);
+  const n = v.norm(plate.normal);
+  const color = plate.display?.color || "#a6a6a6";
+  const edgeColor = plate.display?.edgeColor || settings.render.edges.plateColor;
+  const meta = { collection: "plates", objectId: plate.id };
+  const outline = plate.flatPattern.outline;
+  const minY = Math.min(...outline.map((point) => point[0]));
+  const maxY = Math.max(...outline.map((point) => point[0]));
+  const minZ = Math.min(...outline.map((point) => point[1]));
+  const maxZ = Math.max(...outline.map((point) => point[1]));
+  const centerY = (minY + maxY) / 2;
+  const centerZ = (minZ + maxZ) / 2;
+  const direction = bend.direction === "down" ? -1 : 1;
+  const angle = direction * requiredNumber(bend, "angle", `${plate.id} bend`) * Math.PI / 180;
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const flatPoint = (py, pz) => v.add(plate.center, v.add(v.mul(y, py - centerY), v.mul(z, pz - centerZ)));
+
+  if (bend.start[0] === bend.end[0]) {
+    const bendY = bend.start[0];
+    const bentY = v.norm(v.add(v.mul(y, c), v.mul(n, s)));
+    const bentNormal = v.norm(v.cross(bentY, z));
+    const bentPoint = (py, pz) => py <= bendY ? flatPoint(py, pz) : v.add(flatPoint(bendY, pz), v.mul(bentY, py - bendY));
+    const flatPanel = [
+      flatPoint(minY, minZ),
+      flatPoint(bendY, minZ),
+      flatPoint(bendY, maxZ),
+      flatPoint(minY, maxZ)
+    ];
+    const bentPanel = [
+      bentPoint(bendY, minZ),
+      bentPoint(maxY, minZ),
+      bentPoint(maxY, maxZ),
+      bentPoint(bendY, maxZ)
+    ];
+
+    addPlateSolid(scene, flatPanel, n, plate.thickness, color, edgeColor, meta);
+    addPlateSolid(scene, bentPanel, bentNormal, plate.thickness, color, edgeColor, meta);
+    addLine(scene, flatPoint(bendY, minZ), flatPoint(bendY, maxZ), "#111827", meta);
+    return true;
+  }
+
+  if (bend.start[1] === bend.end[1]) {
+    const bendZ = bend.start[1];
+    const bentZ = v.norm(v.add(v.mul(z, c), v.mul(n, s)));
+    const bentNormal = v.norm(v.cross(y, bentZ));
+    const bentPoint = (py, pz) => pz <= bendZ ? flatPoint(py, pz) : v.add(flatPoint(py, bendZ), v.mul(bentZ, pz - bendZ));
+    const flatPanel = [
+      flatPoint(minY, minZ),
+      flatPoint(maxY, minZ),
+      flatPoint(maxY, bendZ),
+      flatPoint(minY, bendZ)
+    ];
+    const bentPanel = [
+      bentPoint(minY, bendZ),
+      bentPoint(maxY, bendZ),
+      bentPoint(maxY, maxZ),
+      bentPoint(minY, maxZ)
+    ];
+
+    addPlateSolid(scene, flatPanel, n, plate.thickness, color, edgeColor, meta);
+    addPlateSolid(scene, bentPanel, bentNormal, plate.thickness, color, edgeColor, meta);
+    addLine(scene, flatPoint(minY, bendZ), flatPoint(maxY, bendZ), "#111827", meta);
+    return true;
+  }
+
+  return false;
+}
+
+function plateOutline(plate) {
+  if (plate.outline) return plate.outline;
+  const width = requiredNumber(plate, "width", plate.id);
+  const height = requiredNumber(plate, "height", plate.id);
+  if (width <= 0 || height <= 0) geometryError(`${plate.id}: plate width and height must be positive`);
+  return [
+    [-width / 2, -height / 2],
+    [width / 2, -height / 2],
+    [width / 2, height / 2],
+    [-width / 2, height / 2]
+  ];
+}
+
+function plateCsgPolygons(project, profiles, plate, color) {
+  const shared = { color };
+  const center = requiredVector(plate, "center", plate.id);
+  const normal = requiredVector(plate, "normal", plate.id);
+  const axisY = requiredVector(plate, "localAxisY", plate.id);
+  const axisZ = requiredVector(plate, "localAxisZ", plate.id);
+  const thickness = requiredNumber(plate, "thickness", plate.id);
+  let polygons = prismPolygons(center, normal, axisY, axisZ, thickness, plateOutline(plate), shared);
+  const cutterDepth = thickness + projectCoincidentTolerance(project) * 4;
+
+  for (const feature of objectFeatures(project, plate)) {
+    const cutPolygons = holeOrSlotCut(project, profiles, polygons, feature, cutterDepth, shared);
+    if (cutPolygons) {
+      polygons = cutPolygons;
+      continue;
+    }
+
+    geometryError(`${plate.id}/${feature.id}: unsupported plate feature type ${feature.type}`);
+  }
+
+  return polygons;
+}
+
+function addPlate(scene, project, plate) {
+  if (plate.flatPattern?.bendLines?.length) {
+    if ((plate.featureIds || []).length) geometryError(`${plate.id}: bent plate features are not implemented in strict evaluator`);
+    if (addBentPlate(scene, plate)) return;
+    geometryError(`${plate.id}: bent plate geometry is unsupported`);
+  }
+
+  const color = plate.display?.color || "#a6a6a6";
+  const edgeColor = plate.display?.edgeColor || settings.render.edges.plateColor;
+  const meta = { collection: "plates", objectId: plate.id };
+  const polygons = plateCsgPolygons(project, scene.profiles, plate, color);
+
+  for (const polygon of polygons) {
+    const points = csgCleanPoints(polygon.vertices);
+    if (points.length >= 3) scene.faces.push({ points, color: polygon.shared?.color || color, hideEdges: true, ...meta });
+  }
+  addMeshCreaseEdges(scene, polygons, edgeColor, meta);
+}
+
+function addDisc(scene, center, axisY, axisZ, radius, color, edgeColor = settings.render.edges.fastenerHeadColor, meta = {}) {
+  const points = [];
+  const segments = settings.render.curves.discSegments;
+  for (let i = 0; i < segments; i += 1) {
+    const a = i / segments * Math.PI * 2;
+    points.push(v.add(center, v.add(v.mul(axisY, Math.cos(a) * radius), v.mul(axisZ, Math.sin(a) * radius))));
+  }
+  scene.faces.push({ points, color, ...meta });
+  addLoopLines(scene, points, edgeColor, meta);
+}
+
+function featureOrigin(project, profiles, feature) {
+  const ref = feature.reference;
+  if (!ref || !ref.kind) geometryError(`${feature.id}: feature missing reference.kind`);
+  if (ref.kind === "plate-face") {
+    const plate = objectById(project, feature.ownerId);
+    const normal = v.norm(requiredVector(plate, "normal", plate.id));
+    if (!["front", "back"].includes(ref.face)) geometryError(`${feature.id}: plate-face reference must set face to front or back`);
+    const faceOffset = ref.face === "front" ? -plate.thickness / 2 : ref.face === "back" ? plate.thickness / 2 : 0;
+    return {
+      origin: v.add(plate.center, v.mul(normal, faceOffset)),
+      normal,
+      y: v.norm(requiredVector(ref, "localAxisY", `${feature.id} reference`)),
+      z: v.norm(requiredVector(ref, "localAxisZ", `${feature.id} reference`))
+    };
+  }
+  if (ref.interfaceRef) {
+    const options = {};
+    if (ref.stationReferenceInterfaceRef) options.referencePoint = resolveInterface(project, profiles, ref.stationReferenceInterfaceRef).origin;
+    const iface = resolveInterface(project, profiles, ref.interfaceRef, options);
+    return {
+      origin: requiredVector(iface, "origin", `${feature.id} resolved interface`),
+      normal: v.norm(requiredVector(iface, "normal", `${feature.id} resolved interface`)),
+      y: v.norm(requiredVector(iface, "localAxisY", `${feature.id} resolved interface`)),
+      z: v.norm(requiredVector(iface, "localAxisZ", `${feature.id} resolved interface`))
+    };
+  }
+  if (!Array.isArray(ref.origin)) geometryError(`${feature.id}: non-plate feature reference must provide numeric origin`);
+  return {
+    origin: requiredVector(ref, "origin", `${feature.id} reference`),
+    normal: v.norm(requiredVector(ref, "normal", `${feature.id} reference`)),
+    y: v.norm(requiredVector(ref, "localAxisY", `${feature.id} reference`)),
+    z: v.norm(requiredVector(ref, "localAxisZ", `${feature.id} reference`))
+  };
+}
+
+function addCutBody(scene, feature) {
+  if (feature.display?.visible === false) return;
+  const meta = { collection: "features", objectId: feature.id };
+  if (feature.type === "cut-plane" || feature.type === "fitting") {
+    if (!feature.plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
+    addPlaneMarker(scene, feature.plane, feature.display || {}, meta);
+    return;
+  }
+  if (feature.type !== "boolean-part") return;
+  if (!["BOOLEAN_CUT", "BOOLEAN_ADD", "BOOLEAN_WELDPREP"].includes(feature.booleanType)) geometryError(`${feature.id}: unsupported booleanType ${feature.booleanType}`);
+  const display = feature.booleanType === "BOOLEAN_CUT"
+    ? { ...(feature.display || {}), color: feature.display?.color || "#ff3366", opacity: Math.min(feature.display?.opacity ?? 0.28, 0.06) }
+    : { ...(feature.display || {}), color: feature.display?.color || "#f59e0b", opacity: feature.display?.opacity ?? 0.16 };
+  const polygons = cutBodyPolygons(feature.body, { color: display.color });
+  for (const polygon of polygons) {
+    const points = csgCleanPoints(polygon.vertices);
+    if (points.length >= 3) scene.faces.push({ points, color: display.color, opacity: display.opacity, hideEdges: true, ...meta });
+  }
+  addMeshCreaseEdges(scene, polygons, display.edgeColor || display.color, meta);
+}
+
+function fastenerDefinition(scene, fastenerGroup) {
+  if (!fastenerGroup.fastenerRef) throw new Error(`${fastenerGroup.id}: missing fastenerRef`);
+  const fastener = scene.fasteners[fastenerGroup.fastenerRef];
+  if (!fastener) throw new Error(`${fastenerGroup.id}: fastenerRef not found in fastener library: ${fastenerGroup.fastenerRef}`);
+  return fastener;
+}
+
+function addFastenerGroups(scene, project) {
+  for (const fastenerGroup of collectionObjects(project, "fastenerGroups")) {
+    if (fastenerGroup.display?.visible === false) continue;
+    const pattern = objectById(project, fastenerGroup.holePatternRef);
+    const feature = objectById(project, fastenerGroup.through.fromFeatureId);
+    const basis = featureOrigin(project, scene.profiles, feature);
+    const radius = fastenerDefinition(scene, fastenerGroup).shank.diameter / 2;
+    const length = settings.render.fasteners.length;
+    const sides = settings.render.fasteners.sides;
+    const color = fastenerGroup.display?.color || "#b7791f";
+    const edgeColor = fastenerGroup.display?.edgeColor || settings.render.edges.fastenerHeadColor;
+    const meta = { collection: "fastenerGroups", objectId: fastenerGroup.id };
+
+    for (const position of pattern.positions) {
+      const center = v.add(basis.origin, v.add(v.mul(basis.y, position[0]), v.mul(basis.z, position[1])));
+      const a = v.add(center, v.mul(basis.normal, -length / 2));
+      const b = v.add(center, v.mul(basis.normal, length / 2));
+      const ringA = [];
+      const ringB = [];
+
+      for (let i = 0; i < sides; i += 1) {
+        const t = i / sides * Math.PI * 2;
+        const offset = v.add(v.mul(basis.y, Math.cos(t) * radius), v.mul(basis.z, Math.sin(t) * radius));
+        ringA.push(v.add(a, offset));
+        ringB.push(v.add(b, offset));
+      }
+
+      scene.faces.push({ points: ringA, color, ...meta });
+      scene.faces.push({ points: [...ringB].reverse(), color, ...meta });
+      addDisc(scene, v.add(center, v.mul(basis.normal, -2)), basis.y, basis.z, radius * settings.render.fasteners.headRadiusFactor, color, edgeColor, meta);
+      for (let i = 0; i < sides; i += 1) {
+        const j = (i + 1) % sides;
+        scene.faces.push({ points: [ringA[i], ringA[j], ringB[j], ringB[i]], color, ...meta });
+      }
+    }
+  }
+}
+
+function addPlateSupportEdgeWeld(scene, project, weld) {
+  const ref = weld.reference;
+  const plate = objectById(project, ref.plateId);
+  const options = {};
+  if (ref.stationReferenceInterfaceRef) options.referencePoint = resolveInterface(project, scene.profiles, ref.stationReferenceInterfaceRef).origin;
+  const supportInterface = resolveInterface(project, scene.profiles, ref.supportInterfaceId, options);
+  const plateCenter = requiredVector(plate, "center", plate.id);
+  const plateAxisY = v.norm(requiredVector(plate, "localAxisY", plate.id));
+  const plateAxisZ = v.norm(requiredVector(plate, "localAxisZ", plate.id));
+  const supportNormal = v.norm(requiredVector(supportInterface, "normal", supportInterface.id));
+  const width = requiredNumber(plate, "width", plate.id);
+  const height = requiredNumber(plate, "height", plate.id);
+  const edgeSide = v.dot(plateAxisY, supportNormal) >= 0 ? -1 : 1;
+  const edgeCenter = v.add(plateCenter, v.mul(plateAxisY, edgeSide * width / 2));
+  const color = weld.display?.color || "#f6e05e";
+  addLine(scene, v.add(edgeCenter, v.mul(plateAxisZ, -height / 2)), v.add(edgeCenter, v.mul(plateAxisZ, height / 2)), color, { collection: "welds", objectId: weld.id });
+}
+
+function memberProfilePointOnPlane(member, frame, planeOrigin, planeNormal, point) {
+  const sectionOrigin = sectionPoint(member.start, frame, point, 0);
+  const denominator = v.dot(planeNormal, frame.x);
+  if (Math.abs(denominator) <= CSG_EPSILON) geometryError(`${member.id}: member axis does not intersect weld fitting plane`);
+  const station = v.dot(planeNormal, v.sub(planeOrigin, sectionOrigin)) / denominator;
+  return sectionPoint(member.start, frame, point, station);
+}
+
+function memberWeldProfilePoints(project, weld, member, profile, frame, contour) {
+  if (weld.reference?.fittingFeatureId) {
+    const feature = objectById(project, weld.reference.fittingFeatureId);
+    if (feature.type !== "fitting" || !feature.plane) geometryError(`${weld.id}: fittingFeatureId must reference a fitting feature`);
+    const planeOrigin = requiredVector(feature.plane, "origin", feature.id);
+    const planeNormal = v.norm(requiredVector(feature.plane, "normal", feature.id));
+    return contour.points.map((point) => memberProfilePointOnPlane(member, frame, planeOrigin, planeNormal, point));
+  }
+
+  const origin = Array.isArray(weld.reference.origin) ? weld.reference.origin : weld.reference.end === "start" ? member.start : member.end;
+  return contour.points.map((point) => sectionPoint(origin, frame, point));
+}
+
+function addWelds(scene, project) {
+  for (const weld of collectionObjects(project, "welds")) {
+    if (weld.display?.visible === false) continue;
+    if (weld.reference?.kind === "plate-support-edge") {
+      addPlateSupportEdgeWeld(scene, project, weld);
+      continue;
+    }
+    if (!weld.reference?.memberId) geometryError(`${weld.id}: unsupported weld reference ${weld.reference?.kind || "missing"}`);
+    const member = objectById(project, weld.reference.memberId);
+    const profile = scene.profiles[member.profile];
+    const frame = memberFrame(member);
+    const color = weld.display?.color || "#f6e05e";
+    const meta = { collection: "welds", objectId: weld.id };
+
+    for (const contour of profile.section.contours) {
+      if (contour.role !== "solid") continue;
+      addLoopLines(scene, memberWeldProfilePoints(project, weld, member, profile, frame, contour), color, meta);
+    }
+  }
+}
+
+export function buildScene(project, profiles, fasteners, viewerSettings) {
+  settings = viewerSettings;
+  setGeometrySettings(viewerSettings);
+  const sceneData = { faces: [], lines: [], vertices: [], profiles: profiles.profiles, fasteners: fasteners.fasteners, project };
+
+  for (const member of collectionObjects(project, "members")) {
+    if (member.display?.visible === false) continue;
+    addMember(sceneData, project, member, profiles.profiles[member.profile]);
+  }
+
+  for (const plate of collectionObjects(project, "plates")) {
+    if (plate.display?.visible === false) continue;
+    addPlate(sceneData, project, plate);
+  }
+
+  for (const feature of collectionObjects(project, "features")) addCutBody(sceneData, feature);
+  addFastenerGroups(sceneData, project);
+  addWelds(sceneData, project);
+
+  for (const face of sceneData.faces) sceneData.vertices.push(...face.points);
+  for (const line of sceneData.lines) sceneData.vertices.push(...line.points);
+  sceneData.bounds = bounds(sceneData.vertices);
+  addViewerAxes(sceneData);
+  return sceneData;
+}
+
+function bounds(points) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (const point of points) {
+    for (let i = 0; i < 3; i += 1) {
+      min[i] = Math.min(min[i], point[i]);
+      max[i] = Math.max(max[i], point[i]);
+    }
+  }
+  const size = v.sub(max, min);
+  return { min, max, center: v.mul(v.add(min, max), 0.5), depthHalf: Math.max(1, v.len(size) / 2) };
+}

@@ -1090,6 +1090,7 @@
         "type": "hole-pattern",
         "ownerId": "beam_1",
         "holePatternRef": "hole_pattern_beam_web_2",
+        "depth": 20,
         "reference": {
           "kind": "member-face",
           "faceRef": "web.left",
@@ -1175,6 +1176,7 @@
         "id": "beam_1_slot_web",
         "type": "slot-hole",
         "ownerId": "beam_1",
+        "depth": 20,
         "reference": {
           "kind": "member-face",
           "faceRef": "web.left",

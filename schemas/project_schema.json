@@ -470,7 +470,7 @@
     },
     "interface": {
       "type": "object",
-      "required": ["id", "type", "ownerId", "origin", "normal", "localAxisY", "localAxisZ"],
+      "required": ["id", "type", "ownerId"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "type": { "type": "string" },
@@ -490,6 +490,8 @@
           "additionalProperties": true
         },
         "memberEnd": { "enum": ["start", "end"] },
+        "station": { "type": "number" },
+        "stationReference": { "enum": ["connection-secondary-interface-origin"] },
         "faceRef": { "type": "string" },
         "notes": { "type": "string" }
       },
@@ -665,6 +667,7 @@
             "face": { "enum": ["front", "back"] },
             "faceRef": { "type": "string" },
             "interfaceRef": { "$ref": "#/$defs/id" },
+            "stationReferenceInterfaceRef": { "$ref": "#/$defs/id" },
             "origin": {
               "anyOf": [
                 { "type": "string" },
@@ -678,6 +681,7 @@
           "additionalProperties": true
         },
         "diameter": { "type": "number" },
+        "depth": { "type": "number", "exclusiveMinimum": 0 },
         "slot": {
           "type": "object",
           "properties": {
@@ -770,6 +774,34 @@
     "connection": {
       "type": "object",
       "required": ["id", "type", "mainMemberId", "secondaryMemberId"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "moment-end-plate" }
+            }
+          },
+          "then": {
+            "required": ["sourcePreset", "referenceParameters"],
+            "properties": {
+              "referenceParameters": { "$ref": "#/$defs/momentEndPlateReferenceParameters" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "fin-plate" }
+            }
+          },
+          "then": {
+            "required": ["sourcePreset", "referenceParameters"],
+            "properties": {
+              "referenceParameters": { "$ref": "#/$defs/finPlateReferenceParameters" }
+            }
+          }
+        }
+      ],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "type": { "type": "string" },
@@ -802,6 +834,16 @@
         },
         "generator": {
           "type": "object",
+          "properties": {
+            "status": { "type": "string" },
+            "definition": { "type": "string" },
+            "version": { "type": "number" },
+            "health": { "enum": ["ok", "error"] },
+            "diagnostics": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/diagnostic" }
+            }
+          },
           "additionalProperties": true
         },
         "referenceParameters": {
@@ -811,6 +853,104 @@
         "authoring": { "$ref": "#/$defs/authoring" },
         "bim": { "$ref": "#/$defs/bim" },
         "tracking": { "$ref": "#/$defs/tracking" }
+      },
+      "additionalProperties": true
+    },
+    "momentEndPlateReferenceParameters": {
+      "type": "object",
+      "required": ["plate", "bolts", "holes", "welds"],
+      "properties": {
+        "plate": {
+          "type": "object",
+          "required": ["thickness", "width", "height"],
+          "properties": {
+            "thickness": { "type": "number", "exclusiveMinimum": 0 },
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 },
+            "offset": { "type": "number" }
+          },
+          "additionalProperties": true
+        },
+        "bolts": {
+          "type": "object",
+          "required": ["fastenerRef", "rows", "columns", "pitch", "gauge"],
+          "properties": {
+            "fastenerRef": { "$ref": "#/$defs/id" },
+            "rows": { "type": "integer", "minimum": 1 },
+            "columns": { "type": "integer", "minimum": 1 },
+            "pitch": { "type": "number", "minimum": 0 },
+            "gauge": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "holes": {
+          "type": "object",
+          "required": ["diameter", "type", "memberDepth"],
+          "properties": {
+            "diameter": { "type": "number", "exclusiveMinimum": 0 },
+            "memberDepth": { "type": "number", "exclusiveMinimum": 0 },
+            "type": { "enum": ["round", "slotted", "countersunk"] }
+          },
+          "additionalProperties": true
+        },
+        "welds": {
+          "type": "object",
+          "properties": {
+            "beamWeb": { "type": "number", "exclusiveMinimum": 0 },
+            "beamFlanges": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "finPlateReferenceParameters": {
+      "type": "object",
+      "required": ["plate", "bolts", "holes", "welds"],
+      "properties": {
+        "plate": {
+          "type": "object",
+          "required": ["thickness", "length", "height", "edgeOffset"],
+          "properties": {
+            "thickness": { "type": "number", "exclusiveMinimum": 0 },
+            "length": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 },
+            "edgeOffset": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "bolts": {
+          "type": "object",
+          "required": ["fastenerRef", "rows", "columns", "pitch", "gauge"],
+          "properties": {
+            "fastenerRef": { "$ref": "#/$defs/id" },
+            "rows": { "type": "integer", "minimum": 1 },
+            "columns": { "type": "integer", "minimum": 1 },
+            "pitch": { "type": "number", "minimum": 0 },
+            "gauge": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "holes": {
+          "type": "object",
+          "required": ["diameter", "type", "memberDepth"],
+          "properties": {
+            "diameter": { "type": "number", "exclusiveMinimum": 0 },
+            "memberDepth": { "type": "number", "exclusiveMinimum": 0 },
+            "type": { "enum": ["round", "slotted", "countersunk"] }
+          },
+          "additionalProperties": true
+        },
+        "welds": {
+          "type": "object",
+          "required": ["support"],
+          "properties": {
+            "support": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "designAssumptions": { "type": "object", "additionalProperties": true },
+        "loads": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true
     },
@@ -945,6 +1085,24 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["error", "warning"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "objectRoles": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "parameters": {
+          "type": "array",
+          "items": { "type": "string" }
         }
       },
       "additionalProperties": true

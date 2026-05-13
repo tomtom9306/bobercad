@@ -1,0 +1,332 @@
+{
+  "$schema": "../schemas/project_schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_boolean_beam_demo_1",
+    "name": "Boolean Beam Demo",
+    "description": "Single I beam with Tekla-style semantic boolean cuts: round part cut, polygon cut, top flange notch, and paired end plane cuts.",
+    "createdWith": "manual-seed-0.5.0",
+    "bim": {
+      "name": "Boolean Beam Demo",
+      "propertySets": {
+        "Identity": {
+          "projectNumber": "PRJ-BOOL-001",
+          "status": "sample"
+        }
+      }
+    }
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [0, 0, 0],
+      "axisX": [1, 0, 0],
+      "axisY": [0, 1, 0],
+      "axisZ": [0, 0, 1]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners.json"
+    },
+    "connections": {
+      "libraryId": "starter-connection-library",
+      "version": "0.1.0",
+      "path": "../libraries/connections.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/frames.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_boolean_demo",
+    "nodes": {
+      "site_boolean_demo": {
+        "id": "site_boolean_demo",
+        "type": "site",
+        "name": "Boolean Demo Site",
+        "children": ["zone_boolean_demo"]
+      },
+      "zone_boolean_demo": {
+        "id": "zone_boolean_demo",
+        "type": "zone",
+        "name": "Boolean Beam Zone",
+        "children": []
+      }
+    }
+  },
+  "gridSystems": {},
+  "levels": {},
+  "phases": {
+    "phase_1": {
+      "id": "phase_1",
+      "name": "Phase 1"
+    }
+  },
+  "lots": {
+    "lot_1": {
+      "id": "lot_1",
+      "name": "Lot 1"
+    }
+  },
+  "objectIndex": {
+    "demo_boolean_beam": {
+      "collection": "members",
+      "type": "boolean-demo-beam"
+    },
+    "demo_round_part_cut": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "demo_rect_polygon_cut": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "demo_top_flange_notch": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "demo_top_end_plane_cut": {
+      "collection": "features",
+      "type": "cut-plane"
+    },
+    "demo_bottom_end_plane_cut": {
+      "collection": "features",
+      "type": "cut-plane"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": ["collectionDefault", "typeDefault", "object"],
+    "collections": {
+      "members": {
+        "*": {
+          "material": "S355",
+          "rotation": 0,
+          "cardinalPoint": "middle-center",
+          "featureIds": [],
+          "display": {
+            "visible": true
+          },
+          "fabrication": {
+            "numberingStatus": "preliminary",
+            "nc1Ready": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_boolean_demo",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "boolean-demo-beam": {
+          "profile": "DEMO_I_200X100X8X12",
+          "bim": {
+            "ifcClass": "IfcBeam",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Boolean demo beam"
+              }
+            }
+          }
+        }
+      },
+      "features": {
+        "*": {
+          "display": {
+            "visible": true,
+            "transparent": true
+          }
+        },
+        "boolean-part": {
+          "teklaClass": "BooleanPart",
+          "booleanType": "BOOLEAN_CUT"
+        },
+        "cut-plane": {
+          "teklaClass": "CutPlane"
+        }
+      }
+    }
+  },
+  "model": {
+    "members": {
+      "demo_boolean_beam": {
+        "id": "demo_boolean_beam",
+        "type": "boolean-demo-beam",
+        "start": [-850, 0, 0],
+        "end": [850, 0, 0],
+        "featureIds": [
+          "demo_round_part_cut",
+          "demo_rect_polygon_cut",
+          "demo_top_flange_notch",
+          "demo_top_end_plane_cut",
+          "demo_bottom_end_plane_cut"
+        ],
+        "fabrication": {
+          "partMark": "B-BOOL-1",
+          "assemblyMark": "A-BOOL-1",
+          "nc1Ready": false
+        },
+        "display": {
+          "color": "#6aa84f"
+        },
+        "authoring": {
+          "source": "manual-reference-image",
+          "notes": "All cuts are semantic runtime operations. Moving a cut means editing its body center, axes, size, outline, radius, depth, or fitting plane."
+        }
+      }
+    },
+    "plates": {},
+    "holePatterns": {},
+    "objectPatterns": {},
+    "features": {
+      "demo_round_part_cut": {
+        "id": "demo_round_part_cut",
+        "type": "boolean-part",
+        "cutKind": "part-cut",
+        "ownerId": "demo_boolean_beam",
+        "body": {
+          "type": "cylinder",
+          "center": [-360, 0, 0],
+          "axisX": [0, 1, 0],
+          "axisY": [1, 0, 0],
+          "axisZ": [0, 0, 1],
+          "radius": 52,
+          "depth": 180
+        },
+        "display": {
+          "opacity": 0.22,
+          "color": "#ff3366"
+        },
+        "fabrication": {
+          "operation": "part-cut-round"
+        }
+      },
+      "demo_rect_polygon_cut": {
+        "id": "demo_rect_polygon_cut",
+        "type": "boolean-part",
+        "cutKind": "polygon-cut",
+        "ownerId": "demo_boolean_beam",
+        "body": {
+          "type": "polygonal-prism",
+          "center": [70, 0, 0],
+          "axisX": [0, 1, 0],
+          "axisY": [1, 0, 0],
+          "axisZ": [0, 0, 1],
+          "depth": 180,
+          "outline": [
+            [-58, -58],
+            [58, -58],
+            [58, 58],
+            [-58, 58]
+          ]
+        },
+        "display": {
+          "opacity": 0.24,
+          "color": "#ff3366"
+        },
+        "fabrication": {
+          "operation": "polygon-cut"
+        }
+      },
+      "demo_top_flange_notch": {
+        "id": "demo_top_flange_notch",
+        "type": "boolean-part",
+        "cutKind": "part-cut",
+        "ownerId": "demo_boolean_beam",
+        "body": {
+          "type": "box",
+          "center": [-835, -46, 108],
+          "axisX": [1, 0, 0],
+          "axisY": [0, 1, 0],
+          "axisZ": [0, 0, 1],
+          "size": [42, 28, 32]
+        },
+        "display": {
+          "opacity": 0.18,
+          "color": "#f59e0b"
+        },
+        "fabrication": {
+          "operation": "top-flange-notch"
+        }
+      },
+      "demo_top_end_plane_cut": {
+        "id": "demo_top_end_plane_cut",
+        "type": "cut-plane",
+        "cutKind": "plane-cut",
+        "ownerId": "demo_boolean_beam",
+        "plane": {
+          "origin": [850, 0, 0],
+          "axisX": [0, 1, 0],
+          "axisY": [0.92, 0, -0.38],
+          "normal": [-0.38, 0, -0.92],
+          "size": [210, 360]
+        },
+        "display": {
+          "opacity": 0.16,
+          "color": "#ef4444"
+        },
+        "fabrication": {
+          "operation": "top-plane-cut"
+        }
+      },
+      "demo_bottom_end_plane_cut": {
+        "id": "demo_bottom_end_plane_cut",
+        "type": "cut-plane",
+        "cutKind": "plane-cut",
+        "ownerId": "demo_boolean_beam",
+        "plane": {
+          "origin": [850, 0, 0],
+          "axisX": [0, 1, 0],
+          "axisY": [0.92, 0, 0.38],
+          "normal": [-0.38, 0, 0.92],
+          "size": [210, 360]
+        },
+        "display": {
+          "opacity": 0.18,
+          "color": "#ef4444"
+        },
+        "fabrication": {
+          "operation": "bottom-plane-cut"
+        }
+      }
+    },
+    "fastenerGroups": {},
+    "welds": {},
+    "connections": {},
+    "assemblies": {}
+  }
+}

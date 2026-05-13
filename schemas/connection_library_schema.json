@@ -40,6 +40,32 @@
     "connectionPreset": {
       "type": "object",
       "required": ["id", "type", "version", "parameters"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "moment-end-plate" }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameters": { "$ref": "#/$defs/momentEndPlateParameters" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "fin-plate" }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameters": { "$ref": "#/$defs/finPlateParameters" }
+            }
+          }
+        }
+      ],
       "properties": {
         "id": { "type": "string" },
         "type": { "type": "string" },
@@ -59,6 +85,116 @@
           "additionalProperties": true
         },
         "notes": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "positiveNumber": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "momentEndPlateParameters": {
+      "type": "object",
+      "required": ["plate", "bolts", "holes", "welds"],
+      "properties": {
+        "plate": {
+          "type": "object",
+          "required": ["thickness", "width", "height"],
+          "properties": {
+            "thickness": { "$ref": "#/$defs/positiveNumber" },
+            "width": { "$ref": "#/$defs/positiveNumber" },
+            "height": { "$ref": "#/$defs/positiveNumber" },
+            "offset": { "type": "number" }
+          },
+          "additionalProperties": true
+        },
+        "bolts": {
+          "type": "object",
+          "required": ["fastenerRef", "rows", "columns", "pitch", "gauge"],
+          "properties": {
+            "fastenerRef": { "type": "string" },
+            "rows": { "$ref": "#/$defs/positiveInteger" },
+            "columns": { "$ref": "#/$defs/positiveInteger" },
+            "pitch": { "$ref": "#/$defs/positiveNumber" },
+            "gauge": { "$ref": "#/$defs/positiveNumber" }
+          },
+          "additionalProperties": true
+        },
+        "holes": {
+          "type": "object",
+          "required": ["diameter", "type", "memberDepth"],
+          "properties": {
+            "diameter": { "$ref": "#/$defs/positiveNumber" },
+            "memberDepth": { "$ref": "#/$defs/positiveNumber" },
+            "type": { "enum": ["round", "slotted", "countersunk"] }
+          },
+          "additionalProperties": true
+        },
+        "welds": {
+          "type": "object",
+          "properties": {
+            "beamWeb": { "$ref": "#/$defs/positiveNumber" },
+            "beamFlanges": { "$ref": "#/$defs/positiveNumber" }
+          },
+          "additionalProperties": true
+        },
+        "stiffeners": { "type": "object", "additionalProperties": true },
+        "chamfers": { "type": "object", "additionalProperties": true },
+        "designAssumptions": { "type": "object", "additionalProperties": true },
+        "loads": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "finPlateParameters": {
+      "type": "object",
+      "required": ["plate", "bolts", "holes", "welds"],
+      "properties": {
+        "plate": {
+          "type": "object",
+          "required": ["thickness", "length", "height", "edgeOffset"],
+          "properties": {
+            "thickness": { "$ref": "#/$defs/positiveNumber" },
+            "length": { "$ref": "#/$defs/positiveNumber" },
+            "height": { "$ref": "#/$defs/positiveNumber" },
+            "edgeOffset": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "bolts": {
+          "type": "object",
+          "required": ["fastenerRef", "rows", "columns", "pitch", "gauge"],
+          "properties": {
+            "fastenerRef": { "type": "string" },
+            "rows": { "$ref": "#/$defs/positiveInteger" },
+            "columns": { "$ref": "#/$defs/positiveInteger" },
+            "pitch": { "type": "number", "minimum": 0 },
+            "gauge": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "holes": {
+          "type": "object",
+          "required": ["diameter", "type", "memberDepth"],
+          "properties": {
+            "diameter": { "$ref": "#/$defs/positiveNumber" },
+            "memberDepth": { "$ref": "#/$defs/positiveNumber" },
+            "type": { "enum": ["round", "slotted", "countersunk"] }
+          },
+          "additionalProperties": true
+        },
+        "welds": {
+          "type": "object",
+          "required": ["support"],
+          "properties": {
+            "support": { "$ref": "#/$defs/positiveNumber" }
+          },
+          "additionalProperties": true
+        },
+        "designAssumptions": { "type": "object", "additionalProperties": true },
+        "loads": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true
     }

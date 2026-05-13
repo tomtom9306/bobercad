@@ -1,0 +1,950 @@
+{
+  "$schema": "../schemas/project_schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_fin_plate_1",
+    "name": "Fin Plate Demo",
+    "description": "Semantic fin plate connection sample generated from the connection framework. It stores no meshes.",
+    "createdWith": "manual-seed-0.3.0",
+    "bim": {
+      "name": "Sample Structure",
+      "propertySets": {
+        "Identity": {
+          "projectNumber": "PRJ-001",
+          "client": "Demo Client",
+          "status": "sample"
+        }
+      }
+    }
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axisX": [
+        1,
+        0,
+        0
+      ],
+      "axisY": [
+        0,
+        1,
+        0
+      ],
+      "axisZ": [
+        0,
+        0,
+        1
+      ]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners.json"
+    },
+    "connections": {
+      "libraryId": "starter-connection-library",
+      "version": "0.1.0",
+      "path": "../libraries/connections.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/frames.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_1",
+    "nodes": {
+      "site_1": {
+        "id": "site_1",
+        "type": "site",
+        "name": "Main Site",
+        "children": [
+          "building_1"
+        ]
+      },
+      "building_1": {
+        "id": "building_1",
+        "type": "building",
+        "name": "Demo Building",
+        "children": [
+          "zone_a"
+        ]
+      },
+      "zone_a": {
+        "id": "zone_a",
+        "type": "zone",
+        "name": "Grid A / 1-2",
+        "children": []
+      }
+    }
+  },
+  "gridSystems": {
+    "main_grid": {
+      "id": "main_grid",
+      "name": "Main Grid",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": 0,
+      "axes": {
+        "x": [
+          {
+            "id": "grid_1",
+            "label": "1",
+            "position": 0
+          },
+          {
+            "id": "grid_2",
+            "label": "2",
+            "position": 6000
+          }
+        ],
+        "y": [
+          {
+            "id": "grid_a",
+            "label": "A",
+            "position": 0
+          },
+          {
+            "id": "grid_b",
+            "label": "B",
+            "position": 5000
+          }
+        ]
+      }
+    }
+  },
+  "levels": {
+    "level_base": {
+      "id": "level_base",
+      "name": "Base",
+      "elevation": 0
+    },
+    "level_connection": {
+      "id": "level_connection",
+      "name": "Connection Level",
+      "elevation": 1500
+    },
+    "level_top": {
+      "id": "level_top",
+      "name": "Top",
+      "elevation": 3000
+    }
+  },
+  "phases": {
+    "phase_1": {
+      "id": "phase_1",
+      "name": "Phase 1"
+    }
+  },
+  "lots": {
+    "lot_1": {
+      "id": "lot_1",
+      "name": "Lot 1"
+    }
+  },
+  "objectIndex": {
+    "group_zone_a": {
+      "collection": "groups",
+      "type": "model-zone"
+    },
+    "if_column_1_x_plus_fin_plate": {
+      "collection": "interfaces",
+      "type": "planar-face"
+    },
+    "if_beam_1_start_web": {
+      "collection": "interfaces",
+      "type": "member-web"
+    },
+    "cz_fin_plate_1": {
+      "collection": "connectionZones",
+      "type": "fin-plate-zone"
+    },
+    "assembly_fin_plate_1": {
+      "collection": "assemblies",
+      "type": "site-assembly"
+    },
+    "assembly_column_1": {
+      "collection": "assemblies",
+      "type": "fabrication-assembly"
+    },
+    "assembly_beam_1": {
+      "collection": "assemblies",
+      "type": "fabrication-assembly"
+    },
+    "column_1": {
+      "collection": "members",
+      "type": "column"
+    },
+    "beam_1": {
+      "collection": "members",
+      "type": "beam"
+    },
+    "connection_fin_plate_1": {
+      "collection": "connections",
+      "type": "fin-plate"
+    },
+    "connection_fin_plate_1_fin_plate": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "connection_fin_plate_1_bolt_grid": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    },
+    "connection_fin_plate_1_holes_plate": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "connection_fin_plate_1_holes_secondary": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "connection_fin_plate_1_bolts": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "connection_fin_plate_1_support_weld": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": [
+      "collectionDefault",
+      "typeDefault",
+      "object"
+    ],
+    "collections": {
+      "members": {
+        "*": {
+          "material": "S355",
+          "rotation": 0,
+          "cardinalPoint": "middle-center",
+          "featureIds": [],
+          "fabrication": {
+            "numberingStatus": "not-numbered"
+          },
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "column": {
+          "profile": "DEMO_I_300X150X8X12",
+          "bim": {
+            "ifcClass": "IfcColumn",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Steel column",
+                "category": "Structural framing"
+              }
+            }
+          }
+        },
+        "beam": {
+          "profile": "DEMO_I_200X100X8X12",
+          "bim": {
+            "ifcClass": "IfcBeam",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Steel beam",
+                "category": "Structural framing"
+              }
+            }
+          }
+        }
+      },
+      "plates": {
+        "*": {
+          "material": "S355",
+          "fabrication": {
+            "numberingStatus": "not-numbered"
+          },
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "rectangular-plate": {
+          "bim": {
+            "ifcClass": "IfcPlate",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Steel plate",
+                "category": "Connection plate"
+              }
+            }
+          }
+        }
+      },
+      "fastenerGroups": {
+        "*": {
+          "fastenerRef": "M16_8_8",
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "shopOrSite": "site",
+            "status": "modeled"
+          }
+        },
+        "fastener-group": {
+          "bim": {
+            "ifcClass": "IfcMechanicalFastener",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Fastener group",
+                "category": "Fasteners"
+              }
+            }
+          }
+        }
+      },
+      "welds": {
+        "*": {
+          "length": "all-around",
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "shopOrSite": "shop",
+            "status": "modeled"
+          }
+        },
+        "fillet-weld": {
+          "bim": {
+            "ifcClass": "IfcFastener",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Fillet weld",
+                "category": "Welds"
+              },
+              "Weld": {
+                "weldType": "fillet"
+              }
+            }
+          }
+        }
+      },
+      "connections": {
+        "*": {
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "moment-end-plate": {
+          "bim": {
+            "ifcClass": "IfcRelConnectsElements",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Beam-to-column end plate connection",
+                "category": "Steel connection"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "model": {
+    "groups": {
+      "group_zone_a": {
+        "id": "group_zone_a",
+        "type": "model-zone",
+        "projectTreeNodeId": "zone_a",
+        "name": "Objects in Zone A",
+        "objectIds": [
+          "if_column_1_x_plus_fin_plate",
+          "if_beam_1_start_web",
+          "cz_fin_plate_1",
+          "assembly_fin_plate_1",
+          "assembly_column_1",
+          "assembly_beam_1",
+          "column_1",
+          "beam_1",
+          "connection_fin_plate_1",
+          "connection_fin_plate_1_fin_plate",
+          "connection_fin_plate_1_bolt_grid",
+          "connection_fin_plate_1_holes_plate",
+          "connection_fin_plate_1_holes_secondary",
+          "connection_fin_plate_1_bolts",
+          "connection_fin_plate_1_support_weld"
+        ]
+      }
+    },
+    "interfaces": {
+      "if_column_1_x_plus_fin_plate": {
+        "id": "if_column_1_x_plus_fin_plate",
+        "type": "planar-face",
+        "ownerId": "column_1",
+        "role": "fin-plate-support-face",
+        "origin": [
+          150,
+          0,
+          1500
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "localAxisY": [
+          0,
+          1,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "width": 160,
+          "height": 300
+        },
+        "faceRef": "x-plus"
+      },
+      "if_beam_1_start_web": {
+        "id": "if_beam_1_start_web",
+        "type": "member-web",
+        "ownerId": "beam_1",
+        "role": "supported-beam-web",
+        "origin": [
+          150,
+          0,
+          1500
+        ],
+        "normal": [
+          0,
+          1,
+          0
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "length": 220,
+          "height": 200
+        },
+        "memberEnd": "start",
+        "faceRef": "web-center-plane"
+      }
+    },
+    "connectionZones": {
+      "cz_fin_plate_1": {
+        "id": "cz_fin_plate_1",
+        "type": "fin-plate-zone",
+        "name": "Beam 1 to column 1 fin plate zone",
+        "mainObjectId": "column_1",
+        "secondaryObjectIds": [
+          "beam_1"
+        ],
+        "interfaceIds": [
+          "if_column_1_x_plus_fin_plate",
+          "if_beam_1_start_web"
+        ],
+        "connectionIds": [
+          "connection_fin_plate_1"
+        ],
+        "objectIds": [
+          "connection_fin_plate_1_fin_plate",
+          "connection_fin_plate_1_bolt_grid",
+          "connection_fin_plate_1_holes_plate",
+          "connection_fin_plate_1_holes_secondary",
+          "connection_fin_plate_1_bolts",
+          "connection_fin_plate_1_support_weld"
+        ]
+      }
+    },
+    "assemblies": {
+      "assembly_fin_plate_1": {
+        "id": "assembly_fin_plate_1",
+        "type": "site-assembly",
+        "mark": "SA-FP1",
+        "name": "Beam-column fin plate connection area",
+        "parentAssemblyId": null,
+        "childAssemblyIds": [
+          "assembly_column_1",
+          "assembly_beam_1"
+        ],
+        "memberIds": [
+          "column_1",
+          "beam_1"
+        ],
+        "plateIds": [
+          "connection_fin_plate_1_fin_plate"
+        ],
+        "fastenerGroupIds": [
+          "connection_fin_plate_1_bolts"
+        ],
+        "weldIds": [
+          "connection_fin_plate_1_support_weld"
+        ],
+        "connectionIds": [
+          "connection_fin_plate_1"
+        ],
+        "tracking": {
+          "projectTreeNodeId": "zone_a",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "modeled"
+        }
+      },
+      "assembly_column_1": {
+        "id": "assembly_column_1",
+        "type": "fabrication-assembly",
+        "mark": "C-A1",
+        "name": "Column assembly",
+        "parentAssemblyId": "assembly_fin_plate_1",
+        "childAssemblyIds": [],
+        "mainPartId": "column_1",
+        "partIds": [
+          "column_1"
+        ],
+        "fastenerGroupIds": [],
+        "weldIds": [],
+        "tracking": {
+          "projectTreeNodeId": "zone_a",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "shopOrSite": "shop",
+          "status": "modeled"
+        }
+      },
+      "assembly_beam_1": {
+        "id": "assembly_beam_1",
+        "type": "fabrication-assembly",
+        "mark": "B-A1",
+        "name": "Supported beam assembly",
+        "parentAssemblyId": "assembly_fin_plate_1",
+        "childAssemblyIds": [],
+        "mainPartId": "beam_1",
+        "partIds": [
+          "beam_1",
+          "connection_fin_plate_1_fin_plate"
+        ],
+        "plateIds": [
+          "connection_fin_plate_1_fin_plate"
+        ],
+        "fastenerGroupIds": [],
+        "weldIds": [
+          "connection_fin_plate_1_support_weld"
+        ],
+        "tracking": {
+          "projectTreeNodeId": "zone_a",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "shopOrSite": "shop",
+          "status": "modeled"
+        }
+      }
+    },
+    "members": {
+      "column_1": {
+        "id": "column_1",
+        "type": "column",
+        "start": [
+          0,
+          0,
+          450
+        ],
+        "end": [
+          0,
+          0,
+          2550
+        ],
+        "assemblyId": "assembly_column_1",
+        "featureIds": [],
+        "fabrication": {
+          "partMark": "C1"
+        },
+        "display": {
+          "color": "#406b85"
+        },
+        "bim": {
+          "name": "Column C1",
+          "description": "Primary steel column supporting a fin plate connection."
+        }
+      },
+      "beam_1": {
+        "id": "beam_1",
+        "type": "beam",
+        "start": [
+          150,
+          0,
+          1500
+        ],
+        "end": [
+          2300,
+          0,
+          1500
+        ],
+        "assemblyId": "assembly_beam_1",
+        "featureIds": [
+          "connection_fin_plate_1_holes_secondary"
+        ],
+        "fabrication": {
+          "partMark": "B1"
+        },
+        "display": {
+          "color": "#3f657d"
+        },
+        "bim": {
+          "name": "Supported Beam B1",
+          "description": "Beam supported by a fin plate connection."
+        }
+      }
+    },
+    "plates": {
+      "connection_fin_plate_1_fin_plate": {
+        "id": "connection_fin_plate_1_fin_plate",
+        "type": "rectangular-plate",
+        "thickness": 10,
+        "width": 180,
+        "height": 280,
+        "center": [
+          240,
+          0,
+          1500
+        ],
+        "normal": [
+          0,
+          1,
+          0
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "featureIds": [
+          "connection_fin_plate_1_holes_plate"
+        ],
+        "assemblyId": "assembly_fin_plate_1",
+        "placementIntent": {
+          "role": "fin-plate",
+          "host": {
+            "objectId": "column_1",
+            "interfaceId": "if_column_1_x_plus_fin_plate"
+          },
+          "references": [
+            {
+              "objectId": "beam_1",
+              "end": "start"
+            }
+          ],
+          "fit": "support-face-to-secondary-web"
+        },
+        "display": {
+          "color": "#4f6f83"
+        },
+        "fabrication": {
+          "partMark": "FP1"
+        }
+      }
+    },
+    "holePatterns": {
+      "connection_fin_plate_1_bolt_grid": {
+        "id": "connection_fin_plate_1_bolt_grid",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "holeType": "round",
+        "positions": [
+          [
+            0,
+            -80
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            80
+          ]
+        ]
+      }
+    },
+    "objectPatterns": {},
+    "features": {
+      "connection_fin_plate_1_holes_plate": {
+        "id": "connection_fin_plate_1_holes_plate",
+        "type": "hole-pattern",
+        "ownerId": "connection_fin_plate_1_fin_plate",
+        "holePatternRef": "connection_fin_plate_1_bolt_grid",
+        "reference": {
+          "kind": "plate-face",
+          "face": "back",
+          "origin": "plate-center",
+          "localAxisY": [
+            1,
+            0,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            1
+          ]
+        },
+        "fabrication": {
+          "operation": "drill"
+        }
+      },
+      "connection_fin_plate_1_holes_secondary": {
+        "id": "connection_fin_plate_1_holes_secondary",
+        "type": "hole-pattern",
+        "ownerId": "beam_1",
+        "holePatternRef": "connection_fin_plate_1_bolt_grid",
+        "depth": 24,
+        "reference": {
+          "kind": "member-web",
+          "interfaceRef": "if_beam_1_start_web",
+          "origin": [
+            240,
+            0,
+            1500
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "localAxisY": [
+            1,
+            0,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            1
+          ]
+        },
+        "fabrication": {
+          "operation": "drill"
+        }
+      }
+    },
+    "fastenerGroups": {
+      "connection_fin_plate_1_bolts": {
+        "id": "connection_fin_plate_1_bolts",
+        "type": "fastener-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "connection_fin_plate_1_bolt_grid",
+        "participants": [
+          "connection_fin_plate_1_fin_plate",
+          "beam_1"
+        ],
+        "through": {
+          "fromFeatureId": "connection_fin_plate_1_holes_plate",
+          "toFeatureId": "connection_fin_plate_1_holes_secondary"
+        },
+        "orientation": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "headSide": "fin-plate-side"
+        }
+      }
+    },
+    "welds": {
+      "connection_fin_plate_1_support_weld": {
+        "id": "connection_fin_plate_1_support_weld",
+        "type": "fillet-weld",
+        "size": 6,
+        "participants": [
+          "column_1",
+          "connection_fin_plate_1_fin_plate"
+        ],
+        "reference": {
+          "kind": "plate-support-edge",
+          "plateId": "connection_fin_plate_1_fin_plate",
+          "supportInterfaceId": "if_column_1_x_plus_fin_plate"
+        }
+      }
+    },
+    "connections": {
+      "connection_fin_plate_1": {
+        "id": "connection_fin_plate_1",
+        "type": "fin-plate",
+        "mainMemberId": "column_1",
+        "secondaryMemberId": "beam_1",
+        "connectionZoneId": "cz_fin_plate_1",
+        "assemblyId": "assembly_fin_plate_1",
+        "manualParts": {
+          "plateIds": [
+            "connection_fin_plate_1_fin_plate"
+          ],
+          "featureIds": [
+            "connection_fin_plate_1_holes_plate",
+            "connection_fin_plate_1_holes_secondary"
+          ],
+          "fastenerGroupIds": [
+            "connection_fin_plate_1_bolts"
+          ],
+          "weldIds": [
+            "connection_fin_plate_1_support_weld"
+          ]
+        },
+        "generator": {
+          "status": "generated",
+          "ownedObjectIds": [
+            "connection_fin_plate_1_fin_plate",
+            "connection_fin_plate_1_bolt_grid",
+            "connection_fin_plate_1_holes_plate",
+            "connection_fin_plate_1_holes_secondary",
+            "connection_fin_plate_1_bolts",
+            "connection_fin_plate_1_support_weld"
+          ],
+          "manualObjectIds": [],
+          "objectRoles": {
+            "finPlate": "connection_fin_plate_1_fin_plate",
+            "holePattern": "connection_fin_plate_1_bolt_grid",
+            "plateHoles": "connection_fin_plate_1_holes_plate",
+            "memberHoles": "connection_fin_plate_1_holes_secondary",
+            "fasteners": "connection_fin_plate_1_bolts",
+            "weld": "connection_fin_plate_1_support_weld"
+          },
+          "definition": "fin-plate",
+          "version": 1
+        },
+        "referenceParameters": {
+          "plate": {
+            "thickness": 10,
+            "length": 180,
+            "height": 280,
+            "edgeOffset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 3,
+            "columns": 1,
+            "pitch": 80,
+            "gauge": 0
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 24,
+            "type": "round"
+          },
+          "welds": {
+            "support": 6
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
+        "sourcePreset": {
+          "library": "connections",
+          "id": "beam_to_column_fin_plate_m16_1x3",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "beam_to_column_fin_plate_m16_1x3",
+            "version": "0.1.0"
+          },
+          "notes": "Generated by the minimal connection framework from semantic parameters."
+        },
+        "bim": {
+          "name": "Fin Plate Connection 1",
+          "description": "Beam-to-column fin plate connection."
+        }
+      }
+    },
+    "addonData": {}
+  },
+  "migrationHistory": [
+    {
+      "id": "mig_0004_authoring_patterns_nc1_data",
+      "description": "Renamed generic patterns to holePatterns, added objectPatterns/authoring provenance, fabrication marks, tolerances, and connection/frame library refs.",
+      "schemaVersion": "0.5.0"
+    },
+    {
+      "id": "mig_fin_plate_demo_framework",
+      "description": "Added generated fin plate demo using the minimal connection framework.",
+      "schemaVersion": "0.5.0"
+    }
+  ]
+}

@@ -42,5 +42,5 @@ Build the first web viewer for `projects/sample_structure.json`.
 
 - Static entrypoint: `viewer/index.html`
 - Styles: `viewer/style.css`
-- Runtime renderer: `viewer/viewer.js`
+- Runtime entrypoint: `viewer/src/app.mjs`
 - No viewer geometry is written back to project JSON.

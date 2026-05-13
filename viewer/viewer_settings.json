@@ -3,24 +3,40 @@
   "schema": "steel-bim-viewer-settings",
   "schemaVersion": "0.1.0",
   "project": {
-    "path": "../projects/sample_beam_to_beam_end_plate.json"
+    "path": "../projects/sample_boolean_beam.json",
+    "demos": {
+      "boolean-beam-1": {
+        "path": "../projects/sample_boolean_beam.json"
+      },
+      "moment-end-plate-1": {
+        "path": "../projects/sample_structure.json"
+      },
+      "fin-plate-1": {
+        "path": "../projects/sample_fin_plate.json"
+      },
+      "connection-test-frame-1": {
+        "path": "../projects/sample_connection_test_frame.json"
+      },
+      "beam-to-beam-end-plate-1": {
+        "path": "../projects/sample_beam_to_beam_end_plate.json"
+      }
+    }
   },
   "camera": {
     "home": {
-      "yaw": -1.15,
-      "pitch": -0.55,
+      "yaw": -0.55,
+      "pitch": -0.62,
       "scale": 0.04,
       "pan": [0, 0]
     },
     "fit": {
-      "padding": 0.74,
+      "padding": 0.64,
       "minDepthHalf": 1
     }
   },
   "controls": {
     "orbitSpeed": 0.008,
-    "minPitch": -1.35,
-    "maxPitch": 1.35,
+    "panSpeed": 1,
     "zoomInFactor": 1.1,
     "zoomOutFactor": 0.9
   },
@@ -34,11 +50,18 @@
     "edges": {
       "defaultColor": "#516070",
       "plateColor": "#4b5563",
-      "holeColor": "#111827",
       "fastenerHeadColor": "#facc15",
-      "lineWidth": 1,
-      "fastenerHeadLineWidth": 2,
-      "weldLineWidth": 2
+      "lineWidth": 1
+    },
+    "axes": {
+      "visible": true,
+      "padding": 1.12,
+      "minLength": 1200,
+      "headSize": 90,
+      "xColor": "#dc2626",
+      "yColor": "#16a34a",
+      "zColor": "#2563eb",
+      "negativeColor": "#94a3b8"
     },
     "fasteners": {
       "length": 70,

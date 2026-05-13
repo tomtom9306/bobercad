@@ -16,6 +16,7 @@ REQUIRED_FILES = [
     "docs/exec-plans/active/0001-viewer-mvp.md",
     "projects/sample_structure.json",
     "projects/sample_portal_frame.json",
+    "projects/sample_connection_test_frame.json",
     "projects/sample_beam_to_beam_end_plate.json",
     "projects/sample_authoring_nc1_test.json",
     "libraries/profiles.json",
@@ -35,13 +36,14 @@ REQUIRED_FILES = [
     "requirements.txt",
     "viewer/index.html",
     "viewer/style.css",
-    "viewer/viewer.js",
+    "viewer/src/app.mjs",
     "viewer/viewer_settings.json"
 ]
 
 JSON_FILES = [
     "projects/sample_structure.json",
     "projects/sample_portal_frame.json",
+    "projects/sample_connection_test_frame.json",
     "projects/sample_beam_to_beam_end_plate.json",
     "projects/sample_authoring_nc1_test.json",
     "libraries/profiles.json",
@@ -62,6 +64,7 @@ JSON_FILES = [
 PROJECT_FILES = [
     "projects/sample_structure.json",
     "projects/sample_portal_frame.json",
+    "projects/sample_connection_test_frame.json",
     "projects/sample_beam_to_beam_end_plate.json",
     "projects/sample_authoring_nc1_test.json"
 ]
@@ -101,6 +104,7 @@ def main():
         required_mentions = [
             "projects/sample_structure.json",
             "projects/sample_portal_frame.json",
+            "projects/sample_connection_test_frame.json",
             "projects/sample_beam_to_beam_end_plate.json",
             "projects/sample_authoring_nc1_test.json",
             "libraries/profiles.json",
