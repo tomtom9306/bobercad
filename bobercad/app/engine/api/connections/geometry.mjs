@@ -1,5 +1,11 @@
 import { v } from "../../core/math.mjs";
-import { memberFrame, sectionWebBounds } from "../../geometry/member-geometry.mjs";
+import {
+  memberFrame,
+  memberFrameAt,
+  memberLength,
+  sectionBounds,
+  sectionWebBounds
+} from "../../geometry/member-geometry.mjs";
 
 const EPSILON = 1e-9;
 
@@ -217,6 +223,11 @@ export function createGeometryApi() {
     rectangleOutline,
     endPlateAxes,
     plateAxes,
+    memberFrame,
+    memberFrameAt,
+    memberLength,
+    sectionBounds,
+    sectionWebBounds,
     secondaryBeamDirection,
     secondaryWebReference,
     webHeight,

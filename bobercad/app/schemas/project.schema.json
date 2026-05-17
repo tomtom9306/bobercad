@@ -1390,6 +1390,75 @@
           "type": "object",
           "additionalProperties": true
         },
+        "kind": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "memberId": {
+              "$ref": "#/$defs/id"
+            },
+            "interfaceId": {
+              "$ref": "#/$defs/id"
+            },
+            "region": {
+              "type": "string"
+            },
+            "station": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "memberId": {
+              "$ref": "#/$defs/id"
+            },
+            "end": {
+              "enum": [
+                "start",
+                "end"
+              ]
+            }
+          },
+          "additionalProperties": true
+        },
+        "offsets": {
+          "type": "object",
+          "properties": {
+            "xMinus": {
+              "type": "number",
+              "minimum": 0
+            },
+            "xPlus": {
+              "type": "number",
+              "minimum": 0
+            },
+            "yMinus": {
+              "type": "number",
+              "minimum": 0
+            },
+            "yPlus": {
+              "type": "number",
+              "minimum": 0
+            },
+            "zMinus": {
+              "type": "number",
+              "minimum": 0
+            },
+            "zPlus": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
         "body": {
           "$ref": "#/$defs/cutBody"
         },
@@ -2036,6 +2105,84 @@
             },
             "clipBeam": {
               "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
+        "notch": {
+          "type": "object",
+          "properties": {
+            "topMode": {
+              "enum": [
+                "auto",
+                "off"
+              ]
+            },
+            "bottomMode": {
+              "enum": [
+                "auto",
+                "off"
+              ]
+            },
+            "topOffsets": {
+              "type": "object",
+              "properties": {
+                "xMinus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "xPlus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "yMinus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "yPlus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "zMinus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "zPlus": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": true
+            },
+            "bottomOffsets": {
+              "type": "object",
+              "properties": {
+                "xMinus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "xPlus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "yMinus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "yPlus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "zMinus": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "zPlus": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": true
             }
           },
           "additionalProperties": true

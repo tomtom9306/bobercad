@@ -421,6 +421,52 @@
       "returns": "[x,y,z] or null"
     },
     {
+      "id": "ctx.geometry.memberFrameAt",
+      "module": "./connections/geometry.mjs",
+      "description": "Read a member local frame at a station for connection geometry.",
+      "parameters": {
+        "member": "member object",
+        "station": "distance from member start"
+      },
+      "returns": "origin, x, y and z axes"
+    },
+    {
+      "id": "ctx.geometry.memberFrame",
+      "module": "./connections/geometry.mjs",
+      "description": "Read a member start local frame.",
+      "parameters": {
+        "member": "member object"
+      },
+      "returns": "origin, x, y and z axes"
+    },
+    {
+      "id": "ctx.geometry.memberLength",
+      "module": "./connections/geometry.mjs",
+      "description": "Measure member axis length.",
+      "parameters": {
+        "member": "member object"
+      },
+      "returns": "length"
+    },
+    {
+      "id": "ctx.geometry.sectionBounds",
+      "module": "./connections/geometry.mjs",
+      "description": "Read profile section y/z bounds.",
+      "parameters": {
+        "profile": "profile object"
+      },
+      "returns": "minY, maxY, minZ, maxZ"
+    },
+    {
+      "id": "ctx.geometry.sectionWebBounds",
+      "module": "./connections/geometry.mjs",
+      "description": "Read profile web y/z bounds.",
+      "parameters": {
+        "profile": "profile object"
+      },
+      "returns": "minY, maxY, minZ, maxZ"
+    },
+    {
       "id": "ctx.check.requireMemberEnd",
       "module": "./connections/checks.mjs",
       "description": "Require an interface to identify a member end.",
@@ -534,6 +580,26 @@
       "parameters": {
         "role": "role key",
         "data": "ownerId, plane and metadata"
+      },
+      "returns": "feature object"
+    },
+    {
+      "id": "ctx.feature.booleanPart",
+      "module": "./connections/builders.mjs",
+      "description": "Create a Tekla-style boolean part feature for cuts such as beam notches.",
+      "parameters": {
+        "role": "role key",
+        "data": "ownerId, booleanType, cutKind, semantic cut intent, optional body and metadata"
+      },
+      "returns": "feature object"
+    },
+    {
+      "id": "ctx.feature.clearanceCut",
+      "module": "./connections/builders.mjs",
+      "description": "Create a semantic clearance-cut feature. The project stores references and offsets; cutter geometry is derived by viewer/exporter code.",
+      "parameters": {
+        "role": "role key",
+        "data": "ownerId, kind, source member region, target member/end, offsets and metadata"
       },
       "returns": "feature object"
     },

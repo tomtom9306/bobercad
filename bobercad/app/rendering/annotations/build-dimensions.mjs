@@ -1,6 +1,7 @@
 import { optionalPath } from "../../engine/modules/connections/connection-schema.mjs";
 import { v } from "../../engine/core/math.mjs";
 import { objectById } from "../../engine/core/model.mjs";
+import { clearanceCutGeometry } from "../../engine/geometry/cut-features.mjs";
 import { resolveInterface, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
 
 const EPSILON = 1e-6;
@@ -1158,6 +1159,59 @@ function featurePlaneOffsetDimension(ctx, spec) {
   });
 }
 
+function clearanceAnnotationBasis(geometry) {
+  return {
+    origin: geometry.basis.origin,
+    normal: geometry.basis.y,
+    localAxisY: geometry.basis.x,
+    localAxisZ: geometry.basis.z
+  };
+}
+
+function rangeMid(ranges, axis) {
+  return (ranges[`${axis}Min`] + ranges[`${axis}Max`]) / 2;
+}
+
+function clearanceCutOffsetDimension(ctx, spec) {
+  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
+  if (!feature || feature.operationEnabled === false) return null;
+  const geometry = clearanceCutGeometry(ctx.project, ctx.profiles, feature);
+  if (!geometry) return null;
+
+  const key = spec.reference.offsetKey;
+  const axes = {
+    xMinus: { axis: "x", side: "Min" },
+    xPlus: { axis: "x", side: "Max" },
+    yMinus: { axis: "y", side: "Min" },
+    yPlus: { axis: "y", side: "Max" },
+    zMinus: { axis: "z", side: "Min" },
+    zPlus: { axis: "z", side: "Max" }
+  };
+  const info = axes[key];
+  if (!info) return null;
+
+  const coord = {
+    x: rangeMid(geometry.baseRanges, "x"),
+    y: rangeMid(geometry.baseRanges, "y"),
+    z: rangeMid(geometry.baseRanges, "z")
+  };
+  const rangeKey = `${info.axis}${info.side}`;
+  const measured = Math.abs(geometry.ranges[rangeKey] - geometry.baseRanges[rangeKey]);
+  coord[info.axis] = geometry.baseRanges[rangeKey];
+  const a = geometry.pointAt(coord.x, coord.y, coord.z);
+  coord[info.axis] = geometry.ranges[rangeKey];
+  const b = geometry.pointAt(coord.x, coord.y, coord.z);
+  const basis = clearanceAnnotationBasis(geometry);
+
+  return spacingDimension(ctx, {
+    spec,
+    a,
+    b,
+    offset: dimensionOffset(ctx, basis, spec.reference.offset, { clampNormal: false }),
+    measured
+  });
+}
+
 function weldSizeDimension(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
   const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.connection, spec.reference.interfaceRole);
@@ -1227,6 +1281,7 @@ function buildOne(ctx, spec) {
   if (spec.reference.kind === "fastener-length") return fastenerLengthDimension(nextCtx, spec);
   if (spec.reference.kind === "interface-offset") return interfaceOffsetDimension(nextCtx, spec);
   if (spec.reference.kind === "feature-plane-offset") return featurePlaneOffsetDimension(nextCtx, spec);
+  if (spec.reference.kind === "clearance-cut-offset") return clearanceCutOffsetDimension(nextCtx, spec);
   if (spec.reference.kind === "weld-size") return weldSizeDimension(nextCtx, spec);
   return null;
 }

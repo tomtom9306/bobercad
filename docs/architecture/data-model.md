@@ -7,7 +7,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - `bobercad/data/projects/sample_structure.json` - sample beam-column connection project and model database.
 - `bobercad/data/projects/sample_portal_frame.json` - sample grid-based portal frame project and model database.
 - `bobercad/data/projects/sample_connection_test_frame.json` - clean four-column top-frame project for connection add/remove/change workflows.
-- `bobercad/data/projects/sample_beam_to_beam_fin_plate.json` - horizontal beam-to-beam fin plate connection sample for notch development.
+- `bobercad/data/projects/sample_beam_to_beam_fin_plate.json` - horizontal beam-to-beam fin plate connection sample with generated flange notches.
 - `bobercad/data/projects/sample_beam_to_beam_end_plate.json` - beam-to-beam end plate connection sample with a stored top flange notch and web bolt pattern.
 - `bobercad/data/projects/sample_authoring_nc1_test.json` - compact regression sample for authoring patterns and NC1-ready data.
 - `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json` - point-based profile library.
@@ -36,6 +36,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - Connection presets live in `bobercad/data/libraries/connections/connection-register.json`; project connections may keep `sourcePreset` provenance, but stored `manualParts` remain the source of truth.
 - Frame templates live in `bobercad/data/libraries/model-library/model-register.json`; project groups/assemblies may keep `sourceTemplate` provenance, but stored project objects remain the source of truth.
 - Hole and slot positions live in `model.holePatterns`; repeated object authoring lives in `model.objectPatterns`.
+- Notches and other generated trims should be stored as semantic `clearance-cut` / cut-feature intent. The viewer/exporter derives temporary cutter geometry from the referenced member region and per-surface offsets.
 - Repeated object values live in `modelDefaults`; objects only store fields that differ from those defaults.
 - BIM metadata lives on the object in a `bim` block.
 - Viewer camera, UI, and render preferences do not belong in project JSON; keep them in `bobercad/app/ui/viewer/viewer-settings.json`.

@@ -53,6 +53,48 @@ function memberEndPoint(member, iface) {
   return member.start;
 }
 
+function isBeam(member) {
+  return String(member.type || "").includes("beam");
+}
+
+function notchOffsets(ctx, path) {
+  return {
+    xMinus: Math.max(0, ctx.optionalParam(`${path}.xMinus`, 5)),
+    xPlus: Math.max(0, ctx.optionalParam(`${path}.xPlus`, 5)),
+    yMinus: Math.max(0, ctx.optionalParam(`${path}.yMinus`, 5)),
+    yPlus: Math.max(0, ctx.optionalParam(`${path}.yPlus`, 5)),
+    zMinus: Math.max(0, ctx.optionalParam(`${path}.zMinus`, 5)),
+    zPlus: Math.max(0, ctx.optionalParam(`${path}.zPlus`, 5))
+  };
+}
+
+function supportFlangeNotch(ctx, { region, modePath, offsetsPath, supportMember, supportProfile, supportedBeam, supportedBeamProfile, supportInterface, beamInterface }) {
+  if (!isBeam(supportMember)) return null;
+  if (supportProfile.profileType !== "i-section" || supportedBeamProfile.profileType !== "i-section") return null;
+
+  const supportFrame = ctx.geometry.memberFrame(supportMember);
+  const supportStation = Math.max(0, Math.min(
+    ctx.geometry.memberLength(supportMember),
+    ctx.geometry.v.dot(ctx.geometry.v.sub(supportInterface.origin, supportMember.start), supportFrame.x)
+  ));
+
+  return {
+    operationEnabled: ctx.optionalParam(modePath, "auto") !== "off",
+    source: {
+      kind: "member-region",
+      memberId: supportMember.id,
+      interfaceId: supportInterface.id,
+      region,
+      station: supportStation
+    },
+    target: {
+      memberId: supportedBeam.id,
+      end: beamInterface.memberEnd
+    },
+    offsets: notchOffsets(ctx, offsetsPath)
+  };
+}
+
 function fastenerDefinition(ctx, fastenerRef) {
   const fastener = ctx.fasteners?.fasteners?.[fastenerRef];
   if (!fastener) ctx.fail(`fastener not found: ${fastenerRef}`);
@@ -176,6 +218,7 @@ export function build(ctx) {
   const beamInterface = ctx.interface("secondary");
   const supportMember = ctx.member("main");
   const supportedBeam = ctx.member("secondary");
+  const supportProfile = ctx.profile("main");
   const supportedBeamProfile = ctx.profile("secondary");
   ctx.check.requireMemberEnd(beamInterface, "secondary interface missing memberEnd");
 
@@ -408,6 +451,87 @@ export function build(ctx) {
     },
     fabrication: { operation: "drill" }
   });
+
+  for (const spec of [
+    {
+      region: "top-flange",
+      modePath: "notch.topMode",
+      offsetsPath: "notch.topOffsets",
+      memberRole: "topNotch",
+      plateRole: "topPlateNotch",
+      memberPlacementRole: "clear-supporting-beam-top-flange",
+      platePlacementRole: "trim-fin-plate-for-supporting-beam-top-flange",
+      operation: "top-flange-notch",
+      plateOperation: "top-flange-plate-trim",
+      name: "Top flange notch",
+      plateName: "Top flange fin plate trim"
+    },
+    {
+      region: "bottom-flange",
+      modePath: "notch.bottomMode",
+      offsetsPath: "notch.bottomOffsets",
+      memberRole: "bottomNotch",
+      plateRole: "bottomPlateNotch",
+      memberPlacementRole: "clear-supporting-beam-bottom-flange",
+      platePlacementRole: "trim-fin-plate-for-supporting-beam-bottom-flange",
+      operation: "bottom-flange-notch",
+      plateOperation: "bottom-flange-plate-trim",
+      name: "Bottom flange notch",
+      plateName: "Bottom flange fin plate trim"
+    }
+  ]) {
+    const notch = supportFlangeNotch(ctx, {
+      region: spec.region,
+      modePath: spec.modePath,
+      offsetsPath: spec.offsetsPath,
+      supportMember,
+      supportProfile,
+      supportedBeam,
+      supportedBeamProfile,
+      supportInterface,
+      beamInterface
+    });
+    if (!notch) continue;
+
+    const common = {
+      kind: "support-flange-notch",
+      operationEnabled: notch.operationEnabled,
+      cutKind: "part-cut",
+      source: notch.source,
+      target: notch.target,
+      offsets: notch.offsets,
+      display: { visible: false, color: "#ff3366", transparent: true, opacity: 0.08 }
+    };
+    const references = [
+      { objectId: supportMember.id, interfaceId: supportInterface.id },
+      { objectId: supportedBeam.id, end: beamInterface.memberEnd }
+    ];
+
+    ctx.feature.clearanceCut(spec.memberRole, {
+      ...common,
+      ownerId: supportedBeam.id,
+      fabrication: { operation: spec.operation },
+      placementIntent: {
+        role: spec.memberPlacementRole,
+        host: { objectId: supportedBeam.id, end: beamInterface.memberEnd },
+        references: [references[0]],
+        source: "support-flange-clearance-cut"
+      },
+      bim: { name: spec.name }
+    });
+    ctx.feature.clearanceCut(spec.plateRole, {
+      ...common,
+      ownerId: finPlate.id,
+      fabrication: { operation: spec.plateOperation },
+      placementIntent: {
+        role: spec.platePlacementRole,
+        host: { objectId: finPlate.id },
+        references,
+        source: "support-flange-clearance-cut"
+      },
+      bim: { name: spec.plateName }
+    });
+  }
 
   const assembly = { length: boltLength, gripLength, washers };
   if (nutPositionMode === "custom") assembly.nutOffset = nutOffset;

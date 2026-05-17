@@ -1,0 +1,171 @@
+import { objectById } from "../core/model.mjs";
+import { v } from "../core/math.mjs";
+import { memberFrame, memberFrameAt, memberLength, resolveInterface, sectionBounds, sectionWebBounds } from "./member-geometry.mjs";
+
+const EPSILON = 1e-9;
+
+function fail(message) {
+  throw new Error(`cut feature: ${message}`);
+}
+
+function finiteOffset(value, fallback = 0) {
+  return typeof value === "number" && Number.isFinite(value) ? Math.max(0, value) : fallback;
+}
+
+function profileForMember(profiles, member) {
+  const profile = profiles?.[member.profile] || profiles?.profiles?.[member.profile];
+  if (!profile) fail(`${member.id}: profile not found ${member.profile}`);
+  return profile;
+}
+
+function clearanceIntent(feature) {
+  if (feature?.type === "clearance-cut") return feature;
+  if (feature?.cut?.type === "clearance-cut") {
+    return {
+      ...feature.cut,
+      id: feature.id,
+      ownerId: feature.ownerId,
+      operationEnabled: feature.operationEnabled
+    };
+  }
+  return null;
+}
+
+function cutStation(project, profiles, intent, sourceMember, sourceFrame) {
+  if (typeof intent.source?.station === "number" && Number.isFinite(intent.source.station)) {
+    return Math.max(0, Math.min(memberLength(sourceMember), intent.source.station));
+  }
+  if (intent.source?.interfaceId) {
+    const iface = resolveInterface(project, profiles, intent.source.interfaceId);
+    return Math.max(0, Math.min(memberLength(sourceMember), v.dot(v.sub(iface.origin, sourceMember.start), sourceFrame.x)));
+  }
+  return 0;
+}
+
+function legacyOffsets(intent) {
+  const lateral = finiteOffset(intent.clearances?.lateral ?? intent.clearances?.length);
+  const depth = finiteOffset(intent.clearances?.depth);
+  const top = intent.source?.region === "top-flange";
+  const bottom = intent.source?.region === "bottom-flange";
+  return {
+    xMinus: lateral,
+    xPlus: lateral,
+    yMinus: lateral,
+    yPlus: lateral,
+    zMinus: top ? depth : 0,
+    zPlus: bottom ? depth : 0
+  };
+}
+
+function cutOffsets(intent) {
+  const fallback = legacyOffsets(intent);
+  const offsets = intent.offsets || {};
+  return {
+    xMinus: finiteOffset(offsets.xMinus, fallback.xMinus),
+    xPlus: finiteOffset(offsets.xPlus, fallback.xPlus),
+    yMinus: finiteOffset(offsets.yMinus, fallback.yMinus),
+    yPlus: finiteOffset(offsets.yPlus, fallback.yPlus),
+    zMinus: finiteOffset(offsets.zMinus, fallback.zMinus),
+    zPlus: finiteOffset(offsets.zPlus, fallback.zPlus)
+  };
+}
+
+function regionZRange(intent, sourceBounds, sourceWeb) {
+  if (intent.source?.region === "top-flange") {
+    return { min: sourceWeb.maxZ, max: sourceBounds.maxZ };
+  }
+  if (intent.source?.region === "bottom-flange") {
+    return { min: sourceBounds.minZ, max: sourceWeb.minZ };
+  }
+  fail(`${intent.id || "clearance-cut"}: unsupported source region ${intent.source?.region || "missing"}`);
+}
+
+function pointAt(basis, x, y, z) {
+  return v.add(basis.origin, v.add(v.mul(basis.x, x), v.add(v.mul(basis.y, y), v.mul(basis.z, z))));
+}
+
+export function clearanceCutGeometry(project, profiles, feature) {
+  const intent = clearanceIntent(feature);
+  if (!intent) return null;
+  if (intent.kind !== "support-flange-notch") fail(`${feature.id}: unsupported clearance cut kind ${intent.kind || "missing"}`);
+  if (!intent.source?.memberId) fail(`${feature.id}: clearance cut missing source.memberId`);
+
+  const sourceMember = objectById(project, intent.source.memberId);
+  const targetMember = objectById(project, intent.target?.memberId || intent.ownerId || feature.ownerId);
+  const sourceProfile = profileForMember(profiles, sourceMember);
+  const targetProfile = profileForMember(profiles, targetMember);
+  const sourceFrame = memberFrame(sourceMember);
+  const station = cutStation(project, profiles, intent, sourceMember, sourceFrame);
+  const sourceAt = memberFrameAt(sourceMember, station);
+  const targetEnd = intent.target?.end === "start" ? "start" : "end";
+  const targetAt = memberFrameAt(targetMember, targetEnd === "end" ? memberLength(targetMember) : 0);
+  const targetDirection = targetEnd === "end" ? v.mul(targetAt.x, -1) : targetAt.x;
+  const sourceBounds = sectionBounds(sourceProfile);
+  const sourceWeb = sectionWebBounds(sourceProfile);
+  const targetBounds = sectionBounds(targetProfile);
+  const region = regionZRange(intent, sourceBounds, sourceWeb);
+  const offsets = cutOffsets(intent);
+
+  const baseYMin = sourceBounds.minY;
+  const baseYMax = sourceBounds.maxY;
+  const baseFlangeWidth = baseYMax - baseYMin;
+  const targetWidth = targetBounds.maxY - targetBounds.minY;
+  const projectedTargetWidth = Math.abs(v.dot(targetAt.y, sourceAt.x)) * targetWidth;
+  const projectedFlangeSweep = Math.abs(v.dot(targetDirection, sourceAt.x)) * baseFlangeWidth;
+  const baseXSpan = Math.max(projectedTargetWidth + projectedFlangeSweep, targetWidth, EPSILON);
+
+  const baseRanges = {
+    xMin: -baseXSpan / 2,
+    xMax: baseXSpan / 2,
+    yMin: baseYMin,
+    yMax: baseYMax,
+    zMin: region.min,
+    zMax: region.max
+  };
+  const ranges = {
+    xMin: baseRanges.xMin - offsets.xMinus,
+    xMax: baseRanges.xMax + offsets.xPlus,
+    yMin: baseRanges.yMin - offsets.yMinus,
+    yMax: baseRanges.yMax + offsets.yPlus,
+    zMin: baseRanges.zMin - offsets.zMinus,
+    zMax: baseRanges.zMax + offsets.zPlus
+  };
+  const size = [
+    ranges.xMax - ranges.xMin,
+    ranges.yMax - ranges.yMin,
+    ranges.zMax - ranges.zMin
+  ];
+  if (size.some((value) => !Number.isFinite(value) || value <= EPSILON)) fail(`${feature.id}: invalid clearance cut size`);
+
+  const basis = {
+    origin: sourceAt.origin,
+    x: sourceAt.x,
+    y: sourceAt.y,
+    z: sourceAt.z
+  };
+  return {
+    basis,
+    baseRanges,
+    ranges,
+    offsets,
+    pointAt: (x, y, z) => pointAt(basis, x, y, z),
+    body: {
+      type: "box",
+      center: pointAt(
+        basis,
+        (ranges.xMin + ranges.xMax) / 2,
+        (ranges.yMin + ranges.yMax) / 2,
+        (ranges.zMin + ranges.zMax) / 2
+      ),
+      axisX: basis.x,
+      axisY: basis.y,
+      axisZ: basis.z,
+      size
+    }
+  };
+}
+
+export function cutBodyForFeature(project, profiles, feature) {
+  if (feature?.body) return feature.body;
+  return clearanceCutGeometry(project, profiles, feature)?.body || null;
+}

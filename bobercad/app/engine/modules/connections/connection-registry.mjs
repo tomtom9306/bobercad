@@ -7,6 +7,13 @@ let libraryUi = null;
 const registerUrl = new URL("../../../../data/libraries/connections/connection-register.json", import.meta.url);
 
 async function loadJson(url) {
+  if (url.protocol === "file:") {
+    const [{ readFile }, { fileURLToPath }] = await Promise.all([
+      import("node:fs/promises"),
+      import("node:url")
+    ]);
+    return JSON.parse(await readFile(fileURLToPath(url), "utf8"));
+  }
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new Error(`${url.pathname}: ${response.status}`);
   return response.json();

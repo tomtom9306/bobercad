@@ -94,6 +94,52 @@ export function createSemanticBuilders(ctx) {
         ctx.attachFeature(data.ownerId, id);
         ctx.role(role, id);
         return feature;
+      },
+
+      booleanPart(role, data) {
+        const id = ctx.id(role);
+        const feature = {
+          id,
+          type: "boolean-part",
+          teklaClass: data.teklaClass || "BooleanPart",
+          booleanType: data.booleanType,
+          cutKind: data.cutKind,
+          ownerId: data.ownerId,
+          operationEnabled: data.operationEnabled,
+          placementIntent: data.placementIntent,
+          fabrication: data.fabrication,
+          display: data.display,
+          bim: data.bim
+        };
+        if (data.cut !== undefined) feature.cut = data.cut;
+        if (data.body !== undefined) feature.body = data.body;
+        ctx.add("features", id, feature);
+        ctx.attachFeature(data.ownerId, id);
+        ctx.role(role, id);
+        return feature;
+      },
+
+      clearanceCut(role, data) {
+        const id = ctx.id(role);
+        const feature = {
+          id,
+          type: "clearance-cut",
+          kind: data.kind,
+          cutKind: data.cutKind || "part-cut",
+          ownerId: data.ownerId,
+          operationEnabled: data.operationEnabled,
+          source: data.source,
+          target: data.target,
+          offsets: data.offsets,
+          placementIntent: data.placementIntent,
+          fabrication: data.fabrication,
+          display: data.display,
+          bim: data.bim
+        };
+        ctx.add("features", id, feature);
+        ctx.attachFeature(data.ownerId, id);
+        ctx.role(role, id);
+        return feature;
       }
     },
 

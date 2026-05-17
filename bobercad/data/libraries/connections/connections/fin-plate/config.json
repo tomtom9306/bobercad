@@ -7,6 +7,10 @@
     "holePattern": "_bolt_grid",
     "plateHoles": "_holes_plate",
     "memberHoles": "_holes_secondary",
+    "topNotch": "_top_flange_notch",
+    "bottomNotch": "_bottom_flange_notch",
+    "topPlateNotch": "_fin_plate_top_flange_trim",
+    "bottomPlateNotch": "_fin_plate_bottom_flange_trim",
     "fasteners": "_bolts",
     "weld": "_support_weld",
     "beamFitting": "_beam_gap_fitting"
@@ -69,6 +73,26 @@
           "customDiameter": 18,
           "type": "round"
         },
+        "notch": {
+          "topMode": "auto",
+          "bottomMode": "auto",
+          "topOffsets": {
+            "xMinus": 5,
+            "xPlus": 5,
+            "yMinus": 5,
+            "yPlus": 5,
+            "zMinus": 5,
+            "zPlus": 5
+          },
+          "bottomOffsets": {
+            "xMinus": 5,
+            "xPlus": 5,
+            "yMinus": 5,
+            "yPlus": 5,
+            "zMinus": 5,
+            "zPlus": 5
+          }
+        },
         "welds": {
           "front": 6,
           "back": 6,
@@ -118,6 +142,110 @@
       "label": "Clip beam",
       "required": false,
       "default": true
+    },
+    "notch.topMode": {
+      "kind": "enum",
+      "values": [
+        "auto",
+        "off"
+      ],
+      "label": "Top notch",
+      "required": false,
+      "default": "auto"
+    },
+    "notch.bottomMode": {
+      "kind": "enum",
+      "values": [
+        "auto",
+        "off"
+      ],
+      "label": "Bottom notch",
+      "required": false,
+      "default": "auto"
+    },
+    "notch.topOffsets.xMinus": {
+      "kind": "nonNegativeNumber",
+      "label": "Top along -",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.topOffsets.xPlus": {
+      "kind": "nonNegativeNumber",
+      "label": "Top along +",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.topOffsets.yMinus": {
+      "kind": "nonNegativeNumber",
+      "label": "Top side -",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.topOffsets.yPlus": {
+      "kind": "nonNegativeNumber",
+      "label": "Top side +",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.topOffsets.zMinus": {
+      "kind": "nonNegativeNumber",
+      "label": "Top below",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.topOffsets.zPlus": {
+      "kind": "nonNegativeNumber",
+      "label": "Top above",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.bottomOffsets.xMinus": {
+      "kind": "nonNegativeNumber",
+      "label": "Bottom along -",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.bottomOffsets.xPlus": {
+      "kind": "nonNegativeNumber",
+      "label": "Bottom along +",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.bottomOffsets.yMinus": {
+      "kind": "nonNegativeNumber",
+      "label": "Bottom side -",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.bottomOffsets.yPlus": {
+      "kind": "nonNegativeNumber",
+      "label": "Bottom side +",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.bottomOffsets.zMinus": {
+      "kind": "nonNegativeNumber",
+      "label": "Bottom below",
+      "unit": "mm",
+      "required": false,
+      "default": 5
+    },
+    "notch.bottomOffsets.zPlus": {
+      "kind": "nonNegativeNumber",
+      "label": "Bottom above",
+      "unit": "mm",
+      "required": false,
+      "default": 5
     },
     "bolts.fastenerRef": {
       "kind": "catalogRef",
@@ -448,6 +576,174 @@
       }
     },
     {
+      "id": "top-notch-along-minus",
+      "parameter": "notch.topOffsets.xMinus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "topNotch",
+        "offsetKey": "xMinus",
+        "offset": {
+          "localAxisZ": 24,
+          "normal": 12
+        }
+      }
+    },
+    {
+      "id": "top-notch-along-plus",
+      "parameter": "notch.topOffsets.xPlus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "topNotch",
+        "offsetKey": "xPlus",
+        "offset": {
+          "localAxisZ": 34,
+          "normal": 12
+        }
+      }
+    },
+    {
+      "id": "top-notch-side-minus",
+      "parameter": "notch.topOffsets.yMinus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "topNotch",
+        "offsetKey": "yMinus",
+        "offset": {
+          "localAxisZ": 18,
+          "normal": 20
+        }
+      }
+    },
+    {
+      "id": "top-notch-side-plus",
+      "parameter": "notch.topOffsets.yPlus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "topNotch",
+        "offsetKey": "yPlus",
+        "offset": {
+          "localAxisZ": 28,
+          "normal": 20
+        }
+      }
+    },
+    {
+      "id": "top-notch-below",
+      "parameter": "notch.topOffsets.zMinus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "topNotch",
+        "offsetKey": "zMinus",
+        "offset": {
+          "localAxisY": 24,
+          "normal": 16
+        }
+      }
+    },
+    {
+      "id": "top-notch-above",
+      "parameter": "notch.topOffsets.zPlus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "topNotch",
+        "offsetKey": "zPlus",
+        "offset": {
+          "localAxisY": 34,
+          "normal": 16
+        }
+      }
+    },
+    {
+      "id": "bottom-notch-along-minus",
+      "parameter": "notch.bottomOffsets.xMinus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "bottomNotch",
+        "offsetKey": "xMinus",
+        "offset": {
+          "localAxisZ": -24,
+          "normal": 12
+        }
+      }
+    },
+    {
+      "id": "bottom-notch-along-plus",
+      "parameter": "notch.bottomOffsets.xPlus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "bottomNotch",
+        "offsetKey": "xPlus",
+        "offset": {
+          "localAxisZ": -34,
+          "normal": 12
+        }
+      }
+    },
+    {
+      "id": "bottom-notch-side-minus",
+      "parameter": "notch.bottomOffsets.yMinus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "bottomNotch",
+        "offsetKey": "yMinus",
+        "offset": {
+          "localAxisZ": -18,
+          "normal": 20
+        }
+      }
+    },
+    {
+      "id": "bottom-notch-side-plus",
+      "parameter": "notch.bottomOffsets.yPlus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "bottomNotch",
+        "offsetKey": "yPlus",
+        "offset": {
+          "localAxisZ": -28,
+          "normal": 20
+        }
+      }
+    },
+    {
+      "id": "bottom-notch-below",
+      "parameter": "notch.bottomOffsets.zMinus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "bottomNotch",
+        "offsetKey": "zMinus",
+        "offset": {
+          "localAxisY": 24,
+          "normal": 16
+        }
+      }
+    },
+    {
+      "id": "bottom-notch-above",
+      "parameter": "notch.bottomOffsets.zPlus",
+      "label": "notch",
+      "reference": {
+        "kind": "clearance-cut-offset",
+        "featureRole": "bottomNotch",
+        "offsetKey": "zPlus",
+        "offset": {
+          "localAxisY": 34,
+          "normal": 16
+        }
+      }
+    },
+    {
       "id": "bolt-pattern",
       "parameter": "bolts.rows",
       "label": "bolts",
@@ -479,8 +775,14 @@
           "path": "bolts.verticalPositionMode",
           "label": "Vertical",
           "options": [
-            { "value": "centered", "label": "Centered" },
-            { "value": "custom", "label": "Custom" }
+            {
+              "value": "centered",
+              "label": "Centered"
+            },
+            {
+              "value": "custom",
+              "label": "Custom"
+            }
           ]
         },
         "editOnCommit": {
@@ -510,8 +812,14 @@
           "path": "bolts.verticalPositionMode",
           "label": "Vertical",
           "options": [
-            { "value": "centered", "label": "Centered" },
-            { "value": "custom", "label": "Custom" }
+            {
+              "value": "centered",
+              "label": "Centered"
+            },
+            {
+              "value": "custom",
+              "label": "Custom"
+            }
           ]
         },
         "editOnCommit": {
@@ -540,8 +848,14 @@
           "path": "bolts.verticalPositionMode",
           "label": "Vertical",
           "options": [
-            { "value": "centered", "label": "Centered" },
-            { "value": "custom", "label": "Custom" }
+            {
+              "value": "centered",
+              "label": "Centered"
+            },
+            {
+              "value": "custom",
+              "label": "Custom"
+            }
           ]
         },
         "editOnCommit": {
@@ -570,8 +884,14 @@
           "path": "bolts.horizontalPositionMode",
           "label": "Horizontal",
           "options": [
-            { "value": "centered", "label": "Centered" },
-            { "value": "custom", "label": "Custom" }
+            {
+              "value": "centered",
+              "label": "Centered"
+            },
+            {
+              "value": "custom",
+              "label": "Custom"
+            }
           ]
         },
         "editOnCommit": {
@@ -599,8 +919,14 @@
           "path": "bolts.rowSpacingMode",
           "label": "Rows",
           "options": [
-            { "value": "equal", "label": "Equal" },
-            { "value": "custom", "label": "Custom" }
+            {
+              "value": "equal",
+              "label": "Equal"
+            },
+            {
+              "value": "custom",
+              "label": "Custom"
+            }
           ]
         },
         "pairOffset": {
@@ -629,8 +955,14 @@
           "path": "bolts.columnSpacingMode",
           "label": "Columns",
           "options": [
-            { "value": "equal", "label": "Equal" },
-            { "value": "custom", "label": "Custom" }
+            {
+              "value": "equal",
+              "label": "Equal"
+            },
+            {
+              "value": "custom",
+              "label": "Custom"
+            }
           ]
         },
         "pairOffset": {
@@ -722,6 +1054,34 @@
           "plate.edgeOffset",
           "fit.beamGap",
           "fit.clipBeam",
+          "notch.topMode",
+          "notch.bottomMode",
+          {
+            "kind": "section",
+            "id": "top-notch-offsets",
+            "label": "Top notch offsets",
+            "items": [
+              "notch.topOffsets.xMinus",
+              "notch.topOffsets.xPlus",
+              "notch.topOffsets.yMinus",
+              "notch.topOffsets.yPlus",
+              "notch.topOffsets.zMinus",
+              "notch.topOffsets.zPlus"
+            ]
+          },
+          {
+            "kind": "section",
+            "id": "bottom-notch-offsets",
+            "label": "Bottom notch offsets",
+            "items": [
+              "notch.bottomOffsets.xMinus",
+              "notch.bottomOffsets.xPlus",
+              "notch.bottomOffsets.yMinus",
+              "notch.bottomOffsets.yPlus",
+              "notch.bottomOffsets.zMinus",
+              "notch.bottomOffsets.zPlus"
+            ]
+          },
           {
             "kind": "connectionPlates"
           }

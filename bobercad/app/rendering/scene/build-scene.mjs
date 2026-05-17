@@ -1,6 +1,7 @@
 import { v } from "../../engine/core/math.mjs";
 import { collectionObjects, objectById } from "../../engine/core/model.mjs";
 import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgPolygon, csgSubtract, csgUnion, cutBodyPolygons, geometryError, prismPolygons, projectCoincidentTolerance, requiredArray, requiredNumber, requiredVector, setGeometrySettings, slotOutline2d } from "../../engine/geometry/csg.mjs";
+import { clearanceCutGeometry, cutBodyForFeature } from "../../engine/geometry/cut-features.mjs";
 import { memberFrame, resolveInterface, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
 import { triangulateFace } from "../../engine/geometry/polygon.mjs";
 
@@ -72,7 +73,7 @@ function memberFeatures(project, member) {
 }
 
 function objectFeatures(project, object) {
-  return (object.featureIds || []).map((id) => objectById(project, id)).filter((feature) => feature.ownerId === object.id);
+  return (object.featureIds || []).map((id) => objectById(project, id)).filter((feature) => feature.ownerId === object.id && feature.operationEnabled !== false);
 }
 
 function holePatternCutters(project, profiles, feature, depth, shared = {}) {
@@ -279,9 +280,18 @@ function memberCsgPolygons(project, profiles, member, profile, color) {
       continue;
     }
 
+    if (feature.type === "clearance-cut") {
+      const body = cutBodyForFeature(project, profiles, feature);
+      if (!body) geometryError(`${feature.id}: clearance-cut missing derivable body`);
+      polygons = csgSubtract(polygons, cutBodyPolygons(body, shared));
+      continue;
+    }
+
     if (feature.type === "boolean-part") {
       if (!["BOOLEAN_CUT", "BOOLEAN_ADD", "BOOLEAN_WELDPREP"].includes(feature.booleanType)) geometryError(`${feature.id}: unsupported booleanType ${feature.booleanType}`);
-      const body = cutBodyPolygons(feature.body, shared);
+      const bodyDefinition = cutBodyForFeature(project, profiles, feature);
+      if (!bodyDefinition) geometryError(`${feature.id}: boolean-part missing derivable body`);
+      const body = cutBodyPolygons(bodyDefinition, shared);
       polygons = feature.booleanType === "BOOLEAN_ADD" ? csgUnion(polygons, body) : csgSubtract(polygons, body);
       continue;
     }
@@ -470,6 +480,14 @@ function plateCsgPolygons(project, profiles, plate, color) {
       continue;
     }
 
+    if (feature.type === "clearance-cut") {
+      const body = cutBodyForFeature(project, profiles, feature);
+      if (body) {
+        polygons = csgSubtract(polygons, cutBodyPolygons(body, shared));
+        continue;
+      }
+    }
+
     geometryError(`${plate.id}/${feature.id}: unsupported plate feature type ${feature.type}`);
   }
 
@@ -592,7 +610,8 @@ function featureOrigin(project, profiles, feature) {
   };
 }
 
-function addCutBody(scene, feature) {
+function addCutBody(scene, project, profiles, feature) {
+  if (feature.operationEnabled === false) return;
   if (feature.display?.visible === false) return;
   const meta = { collection: "features", objectId: feature.id };
   if (feature.type === "cut-plane" || feature.type === "fitting") {
@@ -600,12 +619,15 @@ function addCutBody(scene, feature) {
     addPlaneMarker(scene, feature.plane, feature.display || {}, meta);
     return;
   }
-  if (feature.type !== "boolean-part") return;
-  if (!["BOOLEAN_CUT", "BOOLEAN_ADD", "BOOLEAN_WELDPREP"].includes(feature.booleanType)) geometryError(`${feature.id}: unsupported booleanType ${feature.booleanType}`);
-  const display = feature.booleanType === "BOOLEAN_CUT"
+  if (feature.type !== "boolean-part" && feature.type !== "clearance-cut") return;
+  if (feature.type === "boolean-part" && !["BOOLEAN_CUT", "BOOLEAN_ADD", "BOOLEAN_WELDPREP"].includes(feature.booleanType)) geometryError(`${feature.id}: unsupported booleanType ${feature.booleanType}`);
+  const isCut = feature.type === "clearance-cut" || feature.booleanType === "BOOLEAN_CUT";
+  const display = isCut
     ? { ...(feature.display || {}), color: feature.display?.color || "#ff3366", opacity: Math.min(feature.display?.opacity ?? 0.28, 0.06) }
     : { ...(feature.display || {}), color: feature.display?.color || "#f59e0b", opacity: feature.display?.opacity ?? 0.16 };
-  const polygons = cutBodyPolygons(feature.body, { color: display.color });
+  const body = cutBodyForFeature(project, profiles, feature);
+  if (!body) geometryError(`${feature.id}: feature missing derivable body`);
+  const polygons = cutBodyPolygons(body, { color: display.color });
   for (const polygon of polygons) {
     const points = csgCleanPoints(polygon.vertices);
     if (points.length >= 3) scene.faces.push({ points, color: display.color, opacity: display.opacity, hideEdges: true, ...meta });
@@ -749,6 +771,115 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
   };
   const supportEdge = clippedSupportEdge() || rectangularSupportEdge;
 
+  const clearanceCutInterval = (geometry, a, b) => {
+    const local = (point) => {
+      const delta = v.sub(point, geometry.basis.origin);
+      return {
+        x: v.dot(delta, geometry.basis.x),
+        y: v.dot(delta, geometry.basis.y),
+        z: v.dot(delta, geometry.basis.z)
+      };
+    };
+    const start = local(a);
+    const end = local(b);
+    let t0 = 0;
+    let t1 = 1;
+
+    for (const axis of ["x", "y", "z"]) {
+      const min = geometry.ranges[`${axis}Min`] - CSG_EPSILON;
+      const max = geometry.ranges[`${axis}Max`] + CSG_EPSILON;
+      const delta = end[axis] - start[axis];
+      if (Math.abs(delta) <= CSG_EPSILON) {
+        if (start[axis] < min || start[axis] > max) return null;
+        continue;
+      }
+      let enter = (min - start[axis]) / delta;
+      let exit = (max - start[axis]) / delta;
+      if (enter > exit) [enter, exit] = [exit, enter];
+      t0 = Math.max(t0, enter);
+      t1 = Math.min(t1, exit);
+      if (t0 > t1) return null;
+    }
+
+    if (t1 <= CSG_EPSILON || t0 >= 1 - CSG_EPSILON) return null;
+    return [Math.max(0, t0), Math.min(1, t1)];
+  };
+
+  const connectionClearanceCuts = () => {
+    const features = new Map();
+    const addFeature = (id) => {
+      const entry = project.objectIndex?.[id];
+      if (entry?.collection !== "features") return;
+      const feature = objectById(project, id);
+      if (feature.type === "clearance-cut" && feature.operationEnabled !== false) features.set(feature.id, feature);
+    };
+
+    for (const feature of objectFeatures(project, plate)) addFeature(feature.id);
+    for (const connection of collectionObjects(project, "connections")) {
+      const manualParts = connection.manualParts || {};
+      const generator = connection.generator || {};
+      const ownsWeld = (manualParts.weldIds || []).includes(weld.id)
+        || generator.objectRoles?.weld === weld.id
+        || (generator.ownedObjectIds || []).includes(weld.id);
+      if (!ownsWeld) continue;
+      for (const id of manualParts.featureIds || []) addFeature(id);
+      for (const id of generator.ownedObjectIds || []) addFeature(id);
+    }
+
+    return [...features.values()]
+      .map((feature) => clearanceCutGeometry(project, scene.profiles, feature))
+      .filter(Boolean);
+  };
+  const clearanceCuts = connectionClearanceCuts();
+
+  const mergeIntervals = (intervals) => {
+    const sorted = intervals
+      .filter((interval) => interval && interval[1] - interval[0] > CSG_EPSILON)
+      .sort((a, b) => a[0] - b[0]);
+    const merged = [];
+    for (const interval of sorted) {
+      const last = merged[merged.length - 1];
+      if (!last || interval[0] > last[1] + CSG_EPSILON) {
+        merged.push([...interval]);
+      } else {
+        last[1] = Math.max(last[1], interval[1]);
+      }
+    }
+    return merged;
+  };
+
+  const supportEdgeSegments = (bead) => {
+    if (!clearanceCuts.length) return [supportEdge];
+    const cutLines = [
+      [supportEdge.a, supportEdge.b],
+      [v.add(supportEdge.a, v.mul(supportEdge.inward, bead / 2)), v.add(supportEdge.b, v.mul(supportEdge.inward, bead / 2))],
+      [v.add(supportEdge.a, v.mul(supportEdge.inward, bead)), v.add(supportEdge.b, v.mul(supportEdge.inward, bead))]
+    ];
+    const intervals = mergeIntervals(clearanceCuts.flatMap((geometry) => {
+      return cutLines.map(([a, b]) => clearanceCutInterval(geometry, a, b));
+    }));
+    if (!intervals.length) return [supportEdge];
+
+    const edgeVector = v.sub(supportEdge.b, supportEdge.a);
+    const pointAt = (t) => v.add(supportEdge.a, v.mul(edgeVector, t));
+    const segments = [];
+    let cursor = 0;
+    for (const [start, end] of intervals) {
+      if (start > cursor + CSG_EPSILON) {
+        const a = pointAt(cursor);
+        const b = pointAt(start);
+        segments.push({ ...supportEdge, a, b, beadLimit: Math.max(1, v.len(v.sub(b, a)) / 5) });
+      }
+      cursor = Math.max(cursor, end);
+    }
+    if (cursor < 1 - CSG_EPSILON) {
+      const a = pointAt(cursor);
+      const b = supportEdge.b;
+      segments.push({ ...supportEdge, a, b, beadLimit: Math.max(1, v.len(v.sub(b, a)) / 5) });
+    }
+    return segments.filter((segment) => v.len(v.sub(segment.b, segment.a)) > CSG_EPSILON);
+  };
+
   const addWeldFace = (points, runColor = color) => {
     scene.faces.push({ points, color: runColor, opacity: 0.9, ...meta });
     addLoopLines(scene, points, runColor, meta);
@@ -760,12 +891,15 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
     const bead = Math.min(runSize, supportEdge.beadLimit);
     if (run.edge === "support") {
       const sides = run.side ? [run.side] : ["front", "back"];
-      for (const sideName of sides) {
-        const side = sideName === "back" ? -1 : 1;
-        const faceOffset = v.mul(plateNormal, side * (thickness / 2 + 0.25));
-        const bottom = v.add(supportEdge.a, faceOffset);
-        const top = v.add(supportEdge.b, faceOffset);
-        addWeldFace([bottom, top, v.add(top, v.mul(supportEdge.inward, bead)), v.add(bottom, v.mul(supportEdge.inward, bead))]);
+      for (const edgeSegment of supportEdgeSegments(bead)) {
+        const segmentBead = Math.min(runSize, edgeSegment.beadLimit);
+        for (const sideName of sides) {
+          const side = sideName === "back" ? -1 : 1;
+          const faceOffset = v.mul(plateNormal, side * (thickness / 2 + 0.25));
+          const bottom = v.add(edgeSegment.a, faceOffset);
+          const top = v.add(edgeSegment.b, faceOffset);
+          addWeldFace([bottom, top, v.add(top, v.mul(edgeSegment.inward, segmentBead)), v.add(bottom, v.mul(edgeSegment.inward, segmentBead))]);
+        }
       }
       continue;
     }
@@ -841,7 +975,7 @@ export function buildScene(project, profiles, fasteners, viewerSettings) {
     addPlate(sceneData, project, plate);
   }
 
-  for (const feature of collectionObjects(project, "features")) addCutBody(sceneData, feature);
+  for (const feature of collectionObjects(project, "features")) addCutBody(sceneData, project, profiles.profiles, feature);
   addFastenerGroups(sceneData, project);
   addWelds(sceneData, project);
 

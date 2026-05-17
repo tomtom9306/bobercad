@@ -5,7 +5,7 @@
   "project": {
     "id": "project_beam_to_beam_fin_plate_1",
     "name": "Sample Beam To Beam Fin Plate",
-    "description": "Horizontal beam-to-beam fin plate scenario. The supported beam is top-flush with the supporting beam and intentionally has no notch yet, so it can be used as the notch development test bed.",
+    "description": "Horizontal beam-to-beam fin plate scenario with flange-driven notches on the supported beam.",
     "createdWith": "connection-engine-seed-0.5.0",
     "bim": {
       "name": "Sample Beam To Beam Fin Plate",
@@ -274,6 +274,22 @@
     "connection_beam_to_beam_fin_plate_1": {
       "collection": "connections",
       "type": "fin-plate"
+    },
+    "connection_beam_to_beam_fin_plate_1_top_flange_notch": {
+      "collection": "features",
+      "type": "clearance-cut"
+    },
+    "connection_beam_to_beam_fin_plate_1_bottom_flange_notch": {
+      "collection": "features",
+      "type": "clearance-cut"
+    },
+    "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim": {
+      "collection": "features",
+      "type": "clearance-cut"
+    },
+    "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim": {
+      "collection": "features",
+      "type": "clearance-cut"
     }
   },
   "modelDefaults": {
@@ -605,9 +621,13 @@
           "connection_beam_to_beam_fin_plate_1_holes_plate",
           "connection_beam_to_beam_fin_plate_1_holes_secondary",
           "connection_beam_to_beam_fin_plate_1_bolts",
-          "connection_beam_to_beam_fin_plate_1_support_weld"
+          "connection_beam_to_beam_fin_plate_1_support_weld",
+          "connection_beam_to_beam_fin_plate_1_top_flange_notch",
+          "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
+          "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
+          "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim"
         ],
-        "notes": "Incoming supported beam top is flush with supporting beam top. No notch feature is stored yet."
+        "notes": "Incoming supported beam top is flush with supporting beam top. The generated notch clears the supporting beam top flange with configured clearances."
       }
     },
     "assemblies": {
@@ -712,7 +732,9 @@
         "referencePlaneId": "rp_supported_end_plane",
         "featureIds": [
           "connection_beam_to_beam_fin_plate_1_beam_gap_fitting",
-          "connection_beam_to_beam_fin_plate_1_holes_secondary"
+          "connection_beam_to_beam_fin_plate_1_holes_secondary",
+          "connection_beam_to_beam_fin_plate_1_top_flange_notch",
+          "connection_beam_to_beam_fin_plate_1_bottom_flange_notch"
         ],
         "fabrication": {
           "partMark": "SB1",
@@ -771,7 +793,9 @@
           1
         ],
         "featureIds": [
-          "connection_beam_to_beam_fin_plate_1_holes_plate"
+          "connection_beam_to_beam_fin_plate_1_holes_plate",
+          "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
+          "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim"
         ],
         "assemblyId": "asm_beam_to_beam_connection",
         "placementIntent": {
@@ -929,6 +953,224 @@
         "fabrication": {
           "operation": "drill"
         }
+      },
+      "connection_beam_to_beam_fin_plate_1_top_flange_notch": {
+        "id": "connection_beam_to_beam_fin_plate_1_top_flange_notch",
+        "type": "clearance-cut",
+        "kind": "support-flange-notch",
+        "cutKind": "part-cut",
+        "ownerId": "supported_beam",
+        "operationEnabled": true,
+        "source": {
+          "kind": "member-region",
+          "memberId": "main_beam",
+          "interfaceId": "if_main_beam_web",
+          "region": "top-flange",
+          "station": 1000
+        },
+        "target": {
+          "memberId": "supported_beam",
+          "end": "end"
+        },
+        "offsets": {
+          "xMinus": 5,
+          "xPlus": 5,
+          "yMinus": 5,
+          "yPlus": 5,
+          "zMinus": 5,
+          "zPlus": 5
+        },
+        "placementIntent": {
+          "role": "clear-supporting-beam-top-flange",
+          "host": {
+            "objectId": "supported_beam",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "main_beam",
+              "interfaceId": "if_main_beam_web"
+            }
+          ],
+          "source": "support-flange-clearance-cut"
+        },
+        "fabrication": {
+          "operation": "top-flange-notch"
+        },
+        "display": {
+          "visible": false,
+          "color": "#ff3366",
+          "transparent": true,
+          "opacity": 0.08
+        },
+        "bim": {
+          "name": "Top flange notch"
+        }
+      },
+      "connection_beam_to_beam_fin_plate_1_bottom_flange_notch": {
+        "id": "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
+        "type": "clearance-cut",
+        "kind": "support-flange-notch",
+        "cutKind": "part-cut",
+        "ownerId": "supported_beam",
+        "operationEnabled": true,
+        "source": {
+          "kind": "member-region",
+          "memberId": "main_beam",
+          "interfaceId": "if_main_beam_web",
+          "region": "bottom-flange",
+          "station": 1000
+        },
+        "target": {
+          "memberId": "supported_beam",
+          "end": "end"
+        },
+        "offsets": {
+          "xMinus": 5,
+          "xPlus": 5,
+          "yMinus": 5,
+          "yPlus": 5,
+          "zMinus": 5,
+          "zPlus": 5
+        },
+        "placementIntent": {
+          "role": "clear-supporting-beam-bottom-flange",
+          "host": {
+            "objectId": "supported_beam",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "main_beam",
+              "interfaceId": "if_main_beam_web"
+            }
+          ],
+          "source": "support-flange-clearance-cut"
+        },
+        "fabrication": {
+          "operation": "bottom-flange-notch"
+        },
+        "display": {
+          "visible": false,
+          "color": "#ff3366",
+          "transparent": true,
+          "opacity": 0.08
+        },
+        "bim": {
+          "name": "Bottom flange notch"
+        }
+      },
+      "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim": {
+        "id": "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
+        "type": "clearance-cut",
+        "kind": "support-flange-notch",
+        "cutKind": "part-cut",
+        "ownerId": "connection_beam_to_beam_fin_plate_1_fin_plate",
+        "operationEnabled": true,
+        "source": {
+          "kind": "member-region",
+          "memberId": "main_beam",
+          "interfaceId": "if_main_beam_web",
+          "region": "top-flange",
+          "station": 1000
+        },
+        "target": {
+          "memberId": "supported_beam",
+          "end": "end"
+        },
+        "offsets": {
+          "xMinus": 5,
+          "xPlus": 5,
+          "yMinus": 5,
+          "yPlus": 5,
+          "zMinus": 5,
+          "zPlus": 5
+        },
+        "placementIntent": {
+          "role": "trim-fin-plate-for-supporting-beam-top-flange",
+          "host": {
+            "objectId": "connection_beam_to_beam_fin_plate_1_fin_plate"
+          },
+          "references": [
+            {
+              "objectId": "main_beam",
+              "interfaceId": "if_main_beam_web"
+            },
+            {
+              "objectId": "supported_beam",
+              "end": "end"
+            }
+          ],
+          "source": "support-flange-clearance-cut"
+        },
+        "fabrication": {
+          "operation": "top-flange-plate-trim"
+        },
+        "display": {
+          "visible": false,
+          "color": "#ff3366",
+          "transparent": true,
+          "opacity": 0.08
+        },
+        "bim": {
+          "name": "Top flange fin plate trim"
+        }
+      },
+      "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim": {
+        "id": "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim",
+        "type": "clearance-cut",
+        "kind": "support-flange-notch",
+        "cutKind": "part-cut",
+        "ownerId": "connection_beam_to_beam_fin_plate_1_fin_plate",
+        "operationEnabled": true,
+        "source": {
+          "kind": "member-region",
+          "memberId": "main_beam",
+          "interfaceId": "if_main_beam_web",
+          "region": "bottom-flange",
+          "station": 1000
+        },
+        "target": {
+          "memberId": "supported_beam",
+          "end": "end"
+        },
+        "offsets": {
+          "xMinus": 5,
+          "xPlus": 5,
+          "yMinus": 5,
+          "yPlus": 5,
+          "zMinus": 5,
+          "zPlus": 5
+        },
+        "placementIntent": {
+          "role": "trim-fin-plate-for-supporting-beam-bottom-flange",
+          "host": {
+            "objectId": "connection_beam_to_beam_fin_plate_1_fin_plate"
+          },
+          "references": [
+            {
+              "objectId": "main_beam",
+              "interfaceId": "if_main_beam_web"
+            },
+            {
+              "objectId": "supported_beam",
+              "end": "end"
+            }
+          ],
+          "source": "support-flange-clearance-cut"
+        },
+        "fabrication": {
+          "operation": "bottom-flange-plate-trim"
+        },
+        "display": {
+          "visible": false,
+          "color": "#ff3366",
+          "transparent": true,
+          "opacity": 0.08
+        },
+        "bim": {
+          "name": "Bottom flange fin plate trim"
+        }
       }
     },
     "fastenerGroups": {
@@ -1007,7 +1249,11 @@
           "featureIds": [
             "connection_beam_to_beam_fin_plate_1_beam_gap_fitting",
             "connection_beam_to_beam_fin_plate_1_holes_plate",
-            "connection_beam_to_beam_fin_plate_1_holes_secondary"
+            "connection_beam_to_beam_fin_plate_1_holes_secondary",
+            "connection_beam_to_beam_fin_plate_1_top_flange_notch",
+            "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
+            "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
+            "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim"
           ],
           "fastenerGroupIds": [
             "connection_beam_to_beam_fin_plate_1_bolts"
@@ -1026,6 +1272,10 @@
             "connection_beam_to_beam_fin_plate_1_bolt_grid",
             "connection_beam_to_beam_fin_plate_1_holes_plate",
             "connection_beam_to_beam_fin_plate_1_holes_secondary",
+            "connection_beam_to_beam_fin_plate_1_top_flange_notch",
+            "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
+            "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
+            "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim",
             "connection_beam_to_beam_fin_plate_1_bolts",
             "connection_beam_to_beam_fin_plate_1_support_weld"
           ],
@@ -1036,11 +1286,16 @@
             "holePattern": "connection_beam_to_beam_fin_plate_1_bolt_grid",
             "plateHoles": "connection_beam_to_beam_fin_plate_1_holes_plate",
             "memberHoles": "connection_beam_to_beam_fin_plate_1_holes_secondary",
+            "topNotch": "connection_beam_to_beam_fin_plate_1_top_flange_notch",
+            "topPlateNotch": "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
+            "bottomNotch": "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
+            "bottomPlateNotch": "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim",
             "fasteners": "connection_beam_to_beam_fin_plate_1_bolts",
             "weld": "connection_beam_to_beam_fin_plate_1_support_weld"
           },
           "health": "ok",
-          "diagnostics": []
+          "diagnostics": [],
+          "description": "Horizontal beam-to-beam fin plate connection with generated flange notches."
         },
         "referenceParameters": {
           "plate": {
@@ -1088,6 +1343,26 @@
           },
           "loads": {
             "status": "not-defined"
+          },
+          "notch": {
+            "topMode": "auto",
+            "bottomMode": "auto",
+            "topOffsets": {
+              "xMinus": 5,
+              "xPlus": 5,
+              "yMinus": 5,
+              "yPlus": 5,
+              "zMinus": 5,
+              "zPlus": 5
+            },
+            "bottomOffsets": {
+              "xMinus": 5,
+              "xPlus": 5,
+              "yMinus": 5,
+              "yPlus": 5,
+              "zMinus": 5,
+              "zPlus": 5
+            }
           }
         },
         "sourcePreset": {
@@ -1106,7 +1381,7 @@
         },
         "bim": {
           "name": "Beam To Beam Fin Plate 1",
-          "description": "Horizontal beam-to-beam fin plate connection without notch."
+          "description": "Horizontal beam-to-beam fin plate connection with generated flange notches."
         }
       }
     }
