@@ -16,8 +16,8 @@ Implemented in schema/model baseline `0.5.0`:
 - `sourcePreset` for connection provenance
 - `sourceTemplate` for frame/template provenance
 - `settings.tolerances`
-- starter `libraries/connections.json`
-- starter `libraries/frames.json`
+- starter `bobercad/data/libraries/connections/connection-register.json`
+- starter `bobercad/data/libraries/model-library/model-register.json`
 - sample beam-to-beam end plate connection with stored hole patterns, web bolts, weld, and top flange notch feature
 
 ## Non-Goals
@@ -236,8 +236,8 @@ Members still keep explicit `start` and `end`. Work point refs are review and au
 Add:
 
 ```text
-libraries/connections.json
-schemas/connection_library_schema.json
+bobercad/data/libraries/connections/connection-register.json
+bobercad/app/schemas/connection.schema.json
 ```
 
 Connection library entries are presets for authoring standard connections.
@@ -274,8 +274,8 @@ But the actual plates, holes, fasteners, and welds must be stored in the project
 Add:
 
 ```text
-libraries/frames.json
-schemas/frame_library_schema.json
+bobercad/data/libraries/model-library/model-register.json
+bobercad/app/schemas/model-library.schema.json
 ```
 
 Frame library entries are templates for common arrangements:
@@ -350,7 +350,7 @@ Useful future checks:
 
 ## Acceptance Checks
 
-- Project JSON files still validate against `schemas/project_schema.json`.
+- Project JSON files still validate against `bobercad/app/schemas/project.schema.json`.
 - `scripts/check_repo.py` passes.
 - Viewer still renders existing samples.
 - No generated geometry is written to project JSON.

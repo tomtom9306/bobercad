@@ -1,0 +1,207 @@
+{
+  "type": "moment-end-plate",
+  "title": "Moment End Plate",
+  "version": 1,
+  "roles": {
+    "endPlate": "_end_plate",
+    "holePattern": "_bolt_grid",
+    "plateHoles": "_holes_plate",
+    "memberHoles": "_holes_main",
+    "fasteners": "_bolts",
+    "weld": "_beam_weld",
+    "beamFitting": "_beam_fitting"
+  },
+  "interfaces": [
+    {
+      "role": "main",
+      "auto": {
+        "type": "planar-face",
+        "faceRef": "connection-secondary-facing-section-face"
+      }
+    },
+    {
+      "role": "secondary",
+      "auto": {
+        "type": "member-end-face"
+      }
+    }
+  ],
+  "presets": {
+    "beam_to_column_end_plate_m16_2x4": {
+      "id": "beam_to_column_end_plate_m16_2x4",
+      "version": "0.1.0",
+      "name": "Moment end plate, M16 2x4",
+      "parameters": {
+        "plate": {
+          "thickness": 12,
+          "width": 170,
+          "height": 390,
+          "offset": 0
+        },
+        "bolts": {
+          "fastenerRef": "M16_8_8",
+          "rows": 4,
+          "columns": 2,
+          "pitch": 80,
+          "gauge": 116
+        },
+        "holes": {
+          "diameter": 18,
+          "memberDepth": 30,
+          "type": "round"
+        },
+        "welds": {
+          "beamWeb": 6,
+          "beamFlanges": 6
+        },
+        "designAssumptions": {
+          "standard": "EN 1993-1-8",
+          "status": "not-calculated"
+        },
+        "loads": {
+          "status": "not-defined"
+        }
+      }
+    }
+  },
+  "parameters": {
+    "plate.thickness": {
+      "kind": "positiveNumber",
+      "label": "Plate thickness",
+      "unit": "mm"
+    },
+    "plate.width": {
+      "kind": "positiveNumber",
+      "label": "Plate width",
+      "unit": "mm"
+    },
+    "plate.height": {
+      "kind": "positiveNumber",
+      "label": "Plate height",
+      "unit": "mm"
+    },
+    "plate.offset": {
+      "kind": "number",
+      "label": "Plate offset",
+      "unit": "mm"
+    },
+    "bolts.fastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Fastener",
+      "readOnly": true
+    },
+    "bolts.rows": {
+      "kind": "positiveInteger",
+      "label": "Rows",
+      "unit": "pcs"
+    },
+    "bolts.columns": {
+      "kind": "positiveInteger",
+      "label": "Columns",
+      "unit": "pcs"
+    },
+    "bolts.pitch": {
+      "kind": "nonNegativeNumber",
+      "label": "Pitch",
+      "unit": "mm"
+    },
+    "bolts.gauge": {
+      "kind": "nonNegativeNumber",
+      "label": "Gauge",
+      "unit": "mm"
+    },
+    "holes.diameter": {
+      "kind": "positiveNumber",
+      "label": "Hole diameter",
+      "unit": "mm"
+    },
+    "holes.memberDepth": {
+      "kind": "positiveNumber",
+      "label": "Member depth",
+      "unit": "mm"
+    },
+    "holes.type": {
+      "kind": "enum",
+      "values": [
+        "round",
+        "slotted",
+        "countersunk"
+      ],
+      "label": "Hole type",
+      "readOnly": true
+    },
+    "welds.beamWeb": {
+      "kind": "positiveNumber",
+      "label": "Web weld",
+      "unit": "mm"
+    },
+    "welds.beamFlanges": {
+      "kind": "positiveNumber",
+      "label": "Flange weld",
+      "unit": "mm"
+    },
+    "designAssumptions.standard": {
+      "kind": "text",
+      "label": "Standard",
+      "readOnly": true
+    },
+    "designAssumptions.status": {
+      "kind": "text",
+      "label": "Calculation",
+      "readOnly": true
+    },
+    "loads.status": {
+      "kind": "text",
+      "label": "Loads",
+      "readOnly": true
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "parts",
+        "label": "Parts",
+        "items": [
+          "plate.thickness",
+          "plate.width",
+          "plate.height",
+          {
+            "kind": "connectionPlates"
+          }
+        ]
+      },
+      {
+        "id": "bolts",
+        "label": "Bolts",
+        "items": [
+          "bolts.fastenerRef",
+          "bolts.rows",
+          "bolts.columns",
+          "bolts.pitch",
+          "bolts.gauge",
+          "holes.diameter",
+          "holes.memberDepth"
+        ]
+      },
+      {
+        "id": "welds",
+        "label": "Welds",
+        "items": [
+          "welds.beamWeb",
+          "welds.beamFlanges"
+        ]
+      },
+      {
+        "id": "design",
+        "label": "Design",
+        "items": [
+          "designAssumptions.standard",
+          "designAssumptions.status",
+          "loads.status"
+        ]
+      }
+    ]
+  },
+  "$schema": "../../../../../app/schemas/connection.schema.json"
+}

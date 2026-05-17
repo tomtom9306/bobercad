@@ -4,24 +4,25 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 
 ## Files
 
-- `projects/sample_structure.json` - sample beam-column connection project and model database.
-- `projects/sample_portal_frame.json` - sample grid-based portal frame project and model database.
-- `projects/sample_connection_test_frame.json` - clean four-column top-frame project for connection add/remove/change workflows.
-- `projects/sample_beam_to_beam_end_plate.json` - beam-to-beam end plate connection sample with a stored top flange notch and web bolt pattern.
-- `projects/sample_authoring_nc1_test.json` - compact regression sample for authoring patterns and NC1-ready data.
-- `libraries/profiles.json` - point-based profile library.
-- `libraries/materials.json` - material library.
-- `libraries/fasteners.json` - bolt, blind bolt, hook bolt, anchor, stud, nut, and washer catalog library.
-- `libraries/connections.json` - connection preset authoring library.
-- `libraries/frames.json` - frame template authoring library.
-- `viewer/viewer_settings.json` - viewer-only camera, UI, control, and render settings.
-- `schemas/project_schema.json` - schema for project files.
-- `schemas/profile_schema.json` - schema for profile libraries.
-- `schemas/material_schema.json` - schema for material libraries.
-- `schemas/fastener_schema.json` - schema for fastener libraries.
-- `schemas/connection_library_schema.json` - schema for connection preset libraries.
-- `schemas/frame_library_schema.json` - schema for frame template libraries.
-- `schemas/viewer_settings_schema.json` - schema for viewer settings.
+- `bobercad/data/projects/sample_structure.json` - sample beam-column connection project and model database.
+- `bobercad/data/projects/sample_portal_frame.json` - sample grid-based portal frame project and model database.
+- `bobercad/data/projects/sample_connection_test_frame.json` - clean four-column top-frame project for connection add/remove/change workflows.
+- `bobercad/data/projects/sample_beam_to_beam_fin_plate.json` - horizontal beam-to-beam fin plate connection sample for notch development.
+- `bobercad/data/projects/sample_beam_to_beam_end_plate.json` - beam-to-beam end plate connection sample with a stored top flange notch and web bolt pattern.
+- `bobercad/data/projects/sample_authoring_nc1_test.json` - compact regression sample for authoring patterns and NC1-ready data.
+- `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json` - point-based profile library.
+- `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json` - material library.
+- `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json` - bolt, blind bolt, hook bolt, anchor, stud, nut, and washer catalog library.
+- `bobercad/data/libraries/connections/connection-register.json` - connection preset authoring library.
+- `bobercad/data/libraries/model-library/model-register.json` - frame template authoring library.
+- `bobercad/app/ui/viewer/viewer-settings.json` - viewer-only camera, UI, control, and render settings.
+- `bobercad/app/schemas/project.schema.json` - schema for project files.
+- `bobercad/app/schemas/profile-library.schema.json` - schema for profile libraries.
+- `bobercad/app/schemas/material-library.schema.json` - schema for material libraries.
+- `bobercad/app/schemas/fastener-library.schema.json` - schema for fastener libraries.
+- `bobercad/app/schemas/connection.schema.json` - schema for connection preset libraries.
+- `bobercad/app/schemas/model-library.schema.json` - schema for frame template libraries.
+- `bobercad/app/schemas/viewer-settings.schema.json` - schema for viewer settings.
 
 ## Non-Negotiable Model Rules
 
@@ -29,15 +30,15 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - Do not store meshes, vertices, triangle indexes, B-reps, display geometry, generated solids, NC1 output, IFC output, STEP output, or drawing linework.
 - Viewer/editor/exporter geometry is always derived.
 - `objectIndex` is stored and authoritative for now. Keep it in sync manually until app commands can maintain it.
-- Materials live in `libraries/materials.json`; project objects reference them with `"material": "S355"`.
-- Profiles live in `libraries/profiles.json`; members reference them with `"profile": "PROFILE_ID"`.
-- Fasteners live in `libraries/fasteners.json`; fastener groups reference catalog entries with `"fastenerRef": "M16_8_8"` directly or through `modelDefaults`.
-- Connection presets live in `libraries/connections.json`; project connections may keep `sourcePreset` provenance, but stored `manualParts` remain the source of truth.
-- Frame templates live in `libraries/frames.json`; project groups/assemblies may keep `sourceTemplate` provenance, but stored project objects remain the source of truth.
+- Materials live in `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json`; project objects reference them with `"material": "S355"`.
+- Profiles live in `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json`; members reference them with `"profile": "PROFILE_ID"`.
+- Fasteners live in `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json`; fastener groups reference catalog entries with `"fastenerRef": "M16_8_8"` directly or through `modelDefaults`.
+- Connection presets live in `bobercad/data/libraries/connections/connection-register.json`; project connections may keep `sourcePreset` provenance, but stored `manualParts` remain the source of truth.
+- Frame templates live in `bobercad/data/libraries/model-library/model-register.json`; project groups/assemblies may keep `sourceTemplate` provenance, but stored project objects remain the source of truth.
 - Hole and slot positions live in `model.holePatterns`; repeated object authoring lives in `model.objectPatterns`.
 - Repeated object values live in `modelDefaults`; objects only store fields that differ from those defaults.
 - BIM metadata lives on the object in a `bim` block.
-- Viewer camera, UI, and render preferences do not belong in project JSON; keep them in `viewer/viewer_settings.json`.
+- Viewer camera, UI, and render preferences do not belong in project JSON; keep them in `bobercad/app/ui/viewer/viewer-settings.json`.
 
 ## Default Resolution
 
@@ -53,7 +54,7 @@ Keep defaults semantic. They can store repeated project data such as material, p
 
 ## Member Geometry Convention
 
-Defined in `projects/sample_structure.json/settings/modelingConvention`:
+Defined in `bobercad/data/projects/sample_structure.json/settings/modelingConvention`:
 
 - `memberLocalX`: start-to-end
 - `memberLocalY`: profile-section-y-width-axis
@@ -63,6 +64,8 @@ Defined in `projects/sample_structure.json/settings/modelingConvention`:
 - `objectIndex`: stored-and-authoritative
 
 Viewer and editor work must follow these conventions.
+
+`member.start` and `member.end` are the physical member axis used for geometry. A member may also store `layoutAxis.start` and `layoutAxis.end` as its virtual/layout axis for authoring; when omitted, the physical axis is also the layout axis. Automatic connection creation uses layout axes to find the intended joint, then creates stored interfaces, a connection zone, and a connection assembly against the physical member geometry.
 
 ## Work Points And Reference Planes
 
@@ -175,6 +178,14 @@ Simple rectangular plates can use `width` and `height`.
 
 Non-rectangular plates use `outline` as local `[y, z]` points in the plate plane, with `center`, `normal`, `localAxisY`, `localAxisZ`, and `thickness` defining placement and extrusion. This is still semantic plate geometry, not a stored mesh.
 
+Connection generators should trim flat plates by producing a semantic `outline`, not by storing generated mesh data. For example, a sloped fin plate may clip its local outline against the support face and secondary-member trim plane while keeping the same plate placement axes.
+
+Fin plate generators should start from an oversized semantic outline when slope trimming would otherwise shorten the support edge. `fit.beamGap` is the support-face-to-beam-end clearance; generated fin plate geometry should span that gap plus the configured plate length into the beam. `fit.clipBeam` controls whether the generated beam fitting actively trims the secondary member to the support face plane; when disabled, the fitting can stay stored with `operationEnabled: false` for traceability. `bolts.parallelToSupport` may align the hole pattern axis to the support/column axis without rotating the plate. When `bolts.columns` is greater than one and `bolts.gauge` is zero, generators should report a diagnostic instead of inventing a gauge value.
+
+Hole diameter should be derived from the selected fastener catalog entry and `holes.tolerance` (`tight`, `normal`, `loose`, or `custom`). `normal` uses `fastener.hole.defaultDiameter`; catalog entries may provide explicit `fastener.hole.tolerances`. `custom` uses `holes.customDiameter`. Generators should not overwrite user parameters with derived hole sizes.
+
+Fastener groups may store semantic assembly options such as `assembly.length`, `assembly.washers.head`, and `assembly.washers.nut`. Bolt length should normally be chosen from the selected fastener catalog `lengths` list, with custom values stored as the same numeric `assembly.length`. The viewer should combine those options with fastener catalog dimensions for heads, nuts, shanks, and washers; projects should not store generated bolt meshes.
+
 Bent plates use `flatPattern` with a stored outline and `bendLines`. This is fabrication geometry, not a mesh.
 
 Each bend line should store:
@@ -217,15 +228,21 @@ Features that reference a member-owned interface with `stationReference: "connec
 
 Use `connectionZones` to group the logical place where objects connect. A zone names the main object, secondary objects, the relevant interface ids, and the manually stored objects that belong to that connection area. It does not generate plates, holes, fasteners, or welds.
 
+Connection commands may create helper interfaces, a helper connection zone, and a helper connection assembly when selected member layout axes intersect and no stored zone already exists. Those helper objects must carry `authoring.lifecycle: "delete-with-connection"` and `authoring.generatedBy`, so deleting the connection removes only those generated helpers and leaves manually authored zones alone.
+
 ## Generated And Manual Connections
 
 Connection generators are authoring commands. They may create plates, holes, fasteners, welds, cuts, interfaces, connection zones, assemblies, and connection records, but once generated those objects must be stored explicitly in the project.
 
 `connections` group stored parts through `manualParts`. The generated or manual plates, holes, fasteners, and welds are normal model objects and remain the source of truth.
 
+Weld objects may split a physical weld into explicit `reference.runs`. For a fin plate `plate-support-edge` weld, each run stores an `edge` (`support`, `top`, or `bottom`), optional `side` (`front` or `back`), and `size`. A zero-size parameter means the generator should omit that run, so connection UIs can support one-sided welds and top/bottom return welds without adding special viewer code.
+
+Fin plate connections should store the secondary member assembly clearance as `fit.beamGap`. The generator enforces it with a stored, hidden `fitting` feature on the secondary member, so the gap is explicit model data and the physical member end remains correct for rendering/export.
+
 `generator.status: "generated"` means the connection can be regenerated from `sourcePreset` and `referenceParameters`. `generator.status: "not-parametric-yet"` means the connection is manual/provenance-only.
 
-Connection `sourcePreset` is provenance only. Viewers and NC1 exporters must not load `libraries/connections.json` to fill missing plates, holes, fasteners, welds, cuts, or dimensions.
+Connection `sourcePreset` is provenance only. Viewers and NC1 exporters must not load `bobercad/data/libraries/connections/connection-register.json` to fill missing plates, holes, fasteners, welds, cuts, or dimensions.
 
 ## NC1-Ready Data
 

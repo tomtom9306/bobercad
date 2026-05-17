@@ -1,0 +1,1633 @@
+{
+  "$schema": "../../app/schemas/project.schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_1",
+    "name": "Sample Structure",
+    "description": "Seed project for a Tekla-like JSON model database. It stores project structure, grids, levels, assemblies, physical objects, BIM metadata, and connection data. It does not store meshes.",
+    "createdWith": "manual-seed-0.3.0",
+    "bim": {
+      "name": "Sample Structure",
+      "propertySets": {
+        "Identity": {
+          "projectNumber": "PRJ-001",
+          "client": "Demo Client",
+          "status": "sample"
+        }
+      }
+    }
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axisX": [
+        1,
+        0,
+        0
+      ],
+      "axisY": [
+        0,
+        1,
+        0
+      ],
+      "axisZ": [
+        0,
+        0,
+        1
+      ]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles/profile-libraries/starter-profiles/config.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials/material-libraries/starter-materials/config.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
+    },
+    "connections": {
+      "libraryId": "starter-connection-library",
+      "version": "0.1.0",
+      "path": "../libraries/connections/connection-register.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/model-library/model-register.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_1",
+    "nodes": {
+      "site_1": {
+        "id": "site_1",
+        "type": "site",
+        "name": "Main Site",
+        "children": [
+          "building_1"
+        ]
+      },
+      "building_1": {
+        "id": "building_1",
+        "type": "building",
+        "name": "Demo Building",
+        "children": [
+          "zone_a"
+        ]
+      },
+      "zone_a": {
+        "id": "zone_a",
+        "type": "zone",
+        "name": "Grid A / 1-2",
+        "children": []
+      }
+    }
+  },
+  "gridSystems": {
+    "main_grid": {
+      "id": "main_grid",
+      "name": "Main Grid",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": 0,
+      "axes": {
+        "x": [
+          {
+            "id": "grid_1",
+            "label": "1",
+            "position": 0
+          },
+          {
+            "id": "grid_2",
+            "label": "2",
+            "position": 6000
+          }
+        ],
+        "y": [
+          {
+            "id": "grid_a",
+            "label": "A",
+            "position": 0
+          },
+          {
+            "id": "grid_b",
+            "label": "B",
+            "position": 5000
+          }
+        ]
+      }
+    }
+  },
+  "levels": {
+    "level_base": {
+      "id": "level_base",
+      "name": "Base",
+      "elevation": 0
+    },
+    "level_connection": {
+      "id": "level_connection",
+      "name": "Connection Level",
+      "elevation": 1500
+    },
+    "level_top": {
+      "id": "level_top",
+      "name": "Top",
+      "elevation": 3000
+    }
+  },
+  "phases": {
+    "phase_1": {
+      "id": "phase_1",
+      "name": "Phase 1"
+    }
+  },
+  "lots": {
+    "lot_1": {
+      "id": "lot_1",
+      "name": "Lot 1"
+    }
+  },
+  "objectIndex": {
+    "group_zone_a": {
+      "collection": "groups",
+      "type": "model-zone"
+    },
+    "if_column_1_x_plus_connection": {
+      "collection": "interfaces",
+      "type": "planar-face"
+    },
+    "if_beam_1_start_face": {
+      "collection": "interfaces",
+      "type": "member-end-face"
+    },
+    "cz_connection_1": {
+      "collection": "connectionZones",
+      "type": "manual-steel-to-steel-zone"
+    },
+    "assembly_connection_1": {
+      "collection": "assemblies",
+      "type": "site-assembly"
+    },
+    "assembly_column_1": {
+      "collection": "assemblies",
+      "type": "fabrication-assembly"
+    },
+    "assembly_beam_1": {
+      "collection": "assemblies",
+      "type": "fabrication-assembly"
+    },
+    "column_1": {
+      "collection": "members",
+      "type": "column"
+    },
+    "beam_1": {
+      "collection": "members",
+      "type": "beam"
+    },
+    "end_plate_1": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "top_stiffener_front_1": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "top_stiffener_back_1": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "bottom_stiffener_front_1": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "bottom_stiffener_back_1": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "haunch_plate_1": {
+      "collection": "plates",
+      "type": "polygonal-plate"
+    },
+    "beam_end_stiffener_left_1": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "beam_end_stiffener_right_1": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "holes_end_plate_1": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "holes_column_1": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "fasteners_1": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "weld_beam_to_plate_1": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    },
+    "connection_1": {
+      "collection": "connections",
+      "type": "moment-end-plate"
+    },
+    "hole_pattern_1": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": [
+      "collectionDefault",
+      "typeDefault",
+      "object"
+    ],
+    "collections": {
+      "members": {
+        "*": {
+          "material": "S355",
+          "rotation": 0,
+          "cardinalPoint": "middle-center",
+          "featureIds": [],
+          "fabrication": {
+            "numberingStatus": "not-numbered"
+          },
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "column": {
+          "profile": "DEMO_I_300X150X8X12",
+          "bim": {
+            "ifcClass": "IfcColumn",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Steel column",
+                "category": "Structural framing"
+              }
+            }
+          }
+        },
+        "beam": {
+          "profile": "DEMO_I_200X100X8X12",
+          "bim": {
+            "ifcClass": "IfcBeam",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Steel beam",
+                "category": "Structural framing"
+              }
+            }
+          }
+        }
+      },
+      "plates": {
+        "*": {
+          "material": "S355",
+          "fabrication": {
+            "numberingStatus": "not-numbered"
+          },
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "rectangular-plate": {
+          "bim": {
+            "ifcClass": "IfcPlate",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Steel plate",
+                "category": "Connection plate"
+              }
+            }
+          }
+        }
+      },
+      "fastenerGroups": {
+        "*": {
+          "fastenerRef": "M16_8_8",
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "shopOrSite": "site",
+            "status": "modeled"
+          }
+        },
+        "fastener-group": {
+          "bim": {
+            "ifcClass": "IfcMechanicalFastener",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Fastener group",
+                "category": "Fasteners"
+              }
+            }
+          }
+        }
+      },
+      "welds": {
+        "*": {
+          "length": "all-around",
+          "display": {
+            "visible": true
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "shopOrSite": "shop",
+            "status": "modeled"
+          }
+        },
+        "fillet-weld": {
+          "bim": {
+            "ifcClass": "IfcFastener",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Fillet weld",
+                "category": "Welds"
+              },
+              "Weld": {
+                "weldType": "fillet"
+              }
+            }
+          }
+        }
+      },
+      "connections": {
+        "*": {
+          "tracking": {
+            "projectTreeNodeId": "zone_a",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          }
+        },
+        "moment-end-plate": {
+          "bim": {
+            "ifcClass": "IfcRelConnectsElements",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Beam-to-column end plate connection",
+                "category": "Steel connection"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "model": {
+    "groups": {
+      "group_zone_a": {
+        "id": "group_zone_a",
+        "type": "model-zone",
+        "projectTreeNodeId": "zone_a",
+        "name": "Objects in Zone A",
+        "objectIds": [
+          "column_1",
+          "beam_1",
+          "end_plate_1",
+          "top_stiffener_front_1",
+          "top_stiffener_back_1",
+          "bottom_stiffener_front_1",
+          "bottom_stiffener_back_1",
+          "haunch_plate_1",
+          "beam_end_stiffener_left_1",
+          "beam_end_stiffener_right_1",
+          "holes_end_plate_1",
+          "holes_column_1",
+          "fasteners_1",
+          "weld_beam_to_plate_1",
+          "connection_1"
+        ]
+      }
+    },
+    "interfaces": {
+      "if_column_1_x_plus_connection": {
+        "id": "if_column_1_x_plus_connection",
+        "type": "planar-face",
+        "ownerId": "column_1",
+        "role": "beam-bearing-face",
+        "origin": [
+          150,
+          0,
+          1500
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "localAxisY": [
+          0,
+          1,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "width": 170,
+          "height": 390
+        },
+        "faceRef": "x-plus"
+      },
+      "if_beam_1_start_face": {
+        "id": "if_beam_1_start_face",
+        "type": "member-end-face",
+        "ownerId": "beam_1",
+        "role": "connection-end-face",
+        "origin": [
+          162,
+          0,
+          1500
+        ],
+        "normal": [
+          -1,
+          0,
+          0
+        ],
+        "localAxisY": [
+          0,
+          1,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "width": 100,
+          "height": 200
+        },
+        "memberEnd": "start"
+      }
+    },
+    "connectionZones": {
+      "cz_connection_1": {
+        "id": "cz_connection_1",
+        "type": "manual-steel-to-steel-zone",
+        "name": "Beam 1 to column 1 end plate zone",
+        "mainObjectId": "column_1",
+        "secondaryObjectIds": [
+          "beam_1"
+        ],
+        "interfaceIds": [
+          "if_column_1_x_plus_connection",
+          "if_beam_1_start_face"
+        ],
+        "connectionIds": [
+          "connection_1"
+        ],
+        "objectIds": [
+          "end_plate_1",
+          "holes_end_plate_1",
+          "holes_column_1",
+          "fasteners_1",
+          "weld_beam_to_plate_1"
+        ]
+      }
+    },
+    "assemblies": {
+      "assembly_connection_1": {
+        "id": "assembly_connection_1",
+        "type": "site-assembly",
+        "mark": "SA1",
+        "name": "Beam-column connection area",
+        "parentAssemblyId": null,
+        "childAssemblyIds": [
+          "assembly_column_1",
+          "assembly_beam_1"
+        ],
+        "memberIds": [
+          "column_1",
+          "beam_1"
+        ],
+        "plateIds": [
+          "end_plate_1",
+          "top_stiffener_front_1",
+          "top_stiffener_back_1",
+          "bottom_stiffener_front_1",
+          "bottom_stiffener_back_1",
+          "haunch_plate_1",
+          "beam_end_stiffener_left_1",
+          "beam_end_stiffener_right_1"
+        ],
+        "fastenerGroupIds": [
+          "fasteners_1"
+        ],
+        "weldIds": [
+          "weld_beam_to_plate_1"
+        ],
+        "connectionZoneIds": [
+          "cz_connection_1"
+        ],
+        "connectionIds": [
+          "connection_1"
+        ],
+        "tracking": {
+          "projectTreeNodeId": "zone_a",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "modeled"
+        }
+      },
+      "assembly_column_1": {
+        "id": "assembly_column_1",
+        "type": "fabrication-assembly",
+        "mark": "C-A1",
+        "name": "Column assembly",
+        "parentAssemblyId": "assembly_connection_1",
+        "childAssemblyIds": [],
+        "mainPartId": "column_1",
+        "partIds": [
+          "column_1"
+        ],
+        "fastenerGroupIds": [],
+        "weldIds": [],
+        "tracking": {
+          "projectTreeNodeId": "zone_a",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "shopOrSite": "shop",
+          "status": "modeled"
+        }
+      },
+      "assembly_beam_1": {
+        "id": "assembly_beam_1",
+        "type": "fabrication-assembly",
+        "mark": "B-A1",
+        "name": "Beam with welded end plate",
+        "parentAssemblyId": "assembly_connection_1",
+        "childAssemblyIds": [],
+        "mainPartId": "beam_1",
+        "partIds": [
+          "beam_1",
+          "end_plate_1",
+          "top_stiffener_front_1",
+          "top_stiffener_back_1",
+          "bottom_stiffener_front_1",
+          "bottom_stiffener_back_1",
+          "haunch_plate_1",
+          "beam_end_stiffener_left_1",
+          "beam_end_stiffener_right_1"
+        ],
+        "plateIds": [
+          "end_plate_1",
+          "top_stiffener_front_1",
+          "top_stiffener_back_1",
+          "bottom_stiffener_front_1",
+          "bottom_stiffener_back_1",
+          "haunch_plate_1",
+          "beam_end_stiffener_left_1",
+          "beam_end_stiffener_right_1"
+        ],
+        "fastenerGroupIds": [],
+        "weldIds": [
+          "weld_beam_to_plate_1"
+        ],
+        "tracking": {
+          "projectTreeNodeId": "zone_a",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "shopOrSite": "shop",
+          "status": "modeled"
+        }
+      }
+    },
+    "members": {
+      "column_1": {
+        "id": "column_1",
+        "type": "column",
+        "start": [
+          0,
+          0,
+          450
+        ],
+        "end": [
+          0,
+          0,
+          2550
+        ],
+        "assemblyId": "assembly_column_1",
+        "featureIds": [
+          "holes_column_1"
+        ],
+        "gridPlacement": {
+          "start": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_a",
+            "level": "level_base",
+            "offset": [
+              0,
+              0,
+              0
+            ]
+          },
+          "end": {
+            "gridSystem": "main_grid",
+            "gridX": "grid_1",
+            "gridY": "grid_a",
+            "level": "level_top",
+            "offset": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "fabrication": {
+          "partMark": "C1"
+        },
+        "display": {
+          "color": "#406b85"
+        },
+        "bim": {
+          "name": "Column C1",
+          "description": "Primary steel column at grid 1/A.",
+          "propertySets": {
+            "Identity": {
+              "mark": "C1"
+            },
+            "Location": {
+              "site": "site_1",
+              "building": "building_1",
+              "zone": "zone_a",
+              "gridSystem": "main_grid",
+              "gridX": "grid_1",
+              "gridY": "grid_a",
+              "baseLevel": "level_base",
+              "topLevel": "level_top"
+            }
+          }
+        }
+      },
+      "beam_1": {
+        "id": "beam_1",
+        "type": "beam",
+        "start": [
+          162,
+          0,
+          1500
+        ],
+        "end": [
+          2300,
+          0,
+          1500
+        ],
+        "assemblyId": "assembly_beam_1",
+        "gridPlacement": {
+          "referenceLevel": "level_connection",
+          "referenceGridY": "grid_a",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "fabrication": {
+          "partMark": "B1"
+        },
+        "display": {
+          "color": "#3f657d"
+        },
+        "bim": {
+          "name": "Beam B1",
+          "description": "Secondary steel beam framing into column_1 with welded end plate.",
+          "propertySets": {
+            "Identity": {
+              "mark": "B1"
+            },
+            "Location": {
+              "site": "site_1",
+              "building": "building_1",
+              "zone": "zone_a",
+              "gridSystem": "main_grid",
+              "referenceGridY": "grid_a",
+              "referenceLevel": "level_connection"
+            }
+          }
+        }
+      }
+    },
+    "plates": {
+      "end_plate_1": {
+        "id": "end_plate_1",
+        "type": "rectangular-plate",
+        "thickness": 12,
+        "width": 170,
+        "height": 390,
+        "center": [
+          156,
+          0,
+          1500
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "localAxisY": [
+          0,
+          1,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "assemblyId": "assembly_beam_1",
+        "featureIds": [
+          "holes_end_plate_1"
+        ],
+        "placementIntent": {
+          "role": "end-plate",
+          "host": {
+            "objectId": "beam_1",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "column_1",
+              "faceRef": "positive-x-face"
+            }
+          ],
+          "fit": "manual-stored-geometry",
+          "flush": [
+            {
+              "to": "beam_1.start"
+            },
+            {
+              "to": "column_1.positive-x-face"
+            }
+          ]
+        },
+        "fabrication": {
+          "partMark": "P1"
+        },
+        "display": {
+          "color": "#355a70"
+        },
+        "bim": {
+          "name": "End Plate P1",
+          "description": "Welded end plate for beam_1.",
+          "propertySets": {
+            "Identity": {
+              "mark": "P1"
+            }
+          }
+        }
+      },
+      "top_stiffener_front_1": {
+        "id": "top_stiffener_front_1",
+        "type": "rectangular-plate",
+        "thickness": 10,
+        "width": 276,
+        "height": 69,
+        "center": [
+          0,
+          -40.5,
+          1610
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "assemblyId": "assembly_beam_1",
+        "placementIntent": {
+          "role": "column-continuity-stiffener",
+          "host": {
+            "objectId": "column_1",
+            "zone": "front-of-web",
+            "level": "top-beam-flange"
+          },
+          "fit": "between-inner-flange-faces",
+          "avoid": [
+            "column-web",
+            "column-flanges"
+          ],
+          "split": {
+            "axis": "member-local-y",
+            "part": "front",
+            "clearOf": "web"
+          }
+        },
+        "fabrication": {
+          "partMark": "P2A"
+        },
+        "display": {
+          "color": "#365d74"
+        },
+        "bim": {
+          "name": "Top Front Stiffener P2A",
+          "description": "Top front continuity stiffener plate inside column_1. It stops clear of the column web.",
+          "propertySets": {
+            "Identity": {
+              "mark": "P2A"
+            }
+          }
+        }
+      },
+      "top_stiffener_back_1": {
+        "id": "top_stiffener_back_1",
+        "type": "rectangular-plate",
+        "thickness": 10,
+        "width": 276,
+        "height": 69,
+        "center": [
+          0,
+          40.5,
+          1610
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "assemblyId": "assembly_beam_1",
+        "placementIntent": {
+          "role": "column-continuity-stiffener",
+          "host": {
+            "objectId": "column_1",
+            "zone": "back-of-web",
+            "level": "top-beam-flange"
+          },
+          "fit": "between-inner-flange-faces",
+          "avoid": [
+            "column-web",
+            "column-flanges"
+          ],
+          "split": {
+            "axis": "member-local-y",
+            "part": "back",
+            "clearOf": "web"
+          }
+        },
+        "fabrication": {
+          "partMark": "P2B"
+        },
+        "display": {
+          "color": "#365d74"
+        },
+        "bim": {
+          "name": "Top Back Stiffener P2B",
+          "description": "Top back continuity stiffener plate inside column_1. It stops clear of the column web.",
+          "propertySets": {
+            "Identity": {
+              "mark": "P2B"
+            }
+          }
+        }
+      },
+      "bottom_stiffener_front_1": {
+        "id": "bottom_stiffener_front_1",
+        "type": "rectangular-plate",
+        "thickness": 10,
+        "width": 276,
+        "height": 69,
+        "center": [
+          0,
+          -40.5,
+          1390
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "assemblyId": "assembly_beam_1",
+        "placementIntent": {
+          "role": "column-continuity-stiffener",
+          "host": {
+            "objectId": "column_1",
+            "zone": "front-of-web",
+            "level": "bottom-beam-flange"
+          },
+          "fit": "between-inner-flange-faces",
+          "avoid": [
+            "column-web",
+            "column-flanges"
+          ],
+          "split": {
+            "axis": "member-local-y",
+            "part": "front",
+            "clearOf": "web"
+          }
+        },
+        "fabrication": {
+          "partMark": "P3A"
+        },
+        "display": {
+          "color": "#365d74"
+        },
+        "bim": {
+          "name": "Bottom Front Stiffener P3A",
+          "description": "Bottom front continuity stiffener plate inside column_1. It stops clear of the column web.",
+          "propertySets": {
+            "Identity": {
+              "mark": "P3A"
+            }
+          }
+        }
+      },
+      "bottom_stiffener_back_1": {
+        "id": "bottom_stiffener_back_1",
+        "type": "rectangular-plate",
+        "thickness": 10,
+        "width": 276,
+        "height": 69,
+        "center": [
+          0,
+          40.5,
+          1390
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "assemblyId": "assembly_beam_1",
+        "placementIntent": {
+          "role": "column-continuity-stiffener",
+          "host": {
+            "objectId": "column_1",
+            "zone": "back-of-web",
+            "level": "bottom-beam-flange"
+          },
+          "fit": "between-inner-flange-faces",
+          "avoid": [
+            "column-web",
+            "column-flanges"
+          ],
+          "split": {
+            "axis": "member-local-y",
+            "part": "back",
+            "clearOf": "web"
+          }
+        },
+        "fabrication": {
+          "partMark": "P3B"
+        },
+        "display": {
+          "color": "#365d74"
+        },
+        "bim": {
+          "name": "Bottom Back Stiffener P3B",
+          "description": "Bottom back continuity stiffener plate inside column_1. It stops clear of the column web.",
+          "propertySets": {
+            "Identity": {
+              "mark": "P3B"
+            }
+          }
+        }
+      },
+      "haunch_plate_1": {
+        "id": "haunch_plate_1",
+        "type": "polygonal-plate",
+        "thickness": 12,
+        "outline": [
+          [
+            -1058,
+            45
+          ],
+          [
+            1058,
+            45
+          ],
+          [
+            -1058,
+            -45
+          ]
+        ],
+        "center": [
+          1220,
+          0,
+          1355
+        ],
+        "normal": [
+          0,
+          1,
+          0
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "assemblyId": "assembly_beam_1",
+        "placementIntent": {
+          "role": "triangular-haunch-plate",
+          "host": {
+            "objectId": "beam_1",
+            "side": "underside",
+            "nearEnd": "start"
+          },
+          "references": [
+            {
+              "objectId": "end_plate_1",
+              "edge": "bottom-zone"
+            }
+          ],
+          "fit": "manual-outline-to-beam-underside",
+          "flush": [
+            {
+              "to": "beam_1.start-side"
+            }
+          ],
+          "avoid": [
+            "beam-web"
+          ]
+        },
+        "fabrication": {
+          "partMark": "P4"
+        },
+        "display": {
+          "color": "#3f657d"
+        },
+        "bim": {
+          "name": "Haunch Plate P4",
+          "description": "Sloped underside plate approximating the triangular haunch from the reference image.",
+          "propertySets": {
+            "Identity": {
+              "mark": "P4"
+            }
+          }
+        }
+      },
+      "beam_end_stiffener_left_1": {
+        "id": "beam_end_stiffener_left_1",
+        "type": "rectangular-plate",
+        "thickness": 12,
+        "width": 46,
+        "height": 176,
+        "center": [
+          2294,
+          -27,
+          1500
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "localAxisY": [
+          0,
+          1,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "assemblyId": "assembly_beam_1",
+        "placementIntent": {
+          "role": "beam-end-stiffener",
+          "host": {
+            "objectId": "beam_1",
+            "zone": "left-of-web",
+            "end": "end"
+          },
+          "fit": "inside-profile-zone",
+          "flush": [
+            {
+              "to": "beam_1.end"
+            }
+          ],
+          "avoid": [
+            "beam-web",
+            "beam-flanges"
+          ],
+          "split": {
+            "axis": "profile-y",
+            "part": "left",
+            "clearOf": "web"
+          }
+        },
+        "fabrication": {
+          "partMark": "P5A"
+        },
+        "display": {
+          "color": "#79b8af"
+        },
+        "bim": {
+          "name": "Beam End Stiffener P5A",
+          "description": "Left end stiffener plate at the far end of beam_1.",
+          "propertySets": {
+            "Identity": {
+              "mark": "P5A"
+            }
+          }
+        }
+      },
+      "beam_end_stiffener_right_1": {
+        "id": "beam_end_stiffener_right_1",
+        "type": "rectangular-plate",
+        "thickness": 12,
+        "width": 46,
+        "height": 176,
+        "center": [
+          2294,
+          27,
+          1500
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "localAxisY": [
+          0,
+          1,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "assemblyId": "assembly_beam_1",
+        "placementIntent": {
+          "role": "beam-end-stiffener",
+          "host": {
+            "objectId": "beam_1",
+            "zone": "right-of-web",
+            "end": "end"
+          },
+          "fit": "inside-profile-zone",
+          "flush": [
+            {
+              "to": "beam_1.end"
+            }
+          ],
+          "avoid": [
+            "beam-web",
+            "beam-flanges"
+          ],
+          "split": {
+            "axis": "profile-y",
+            "part": "right",
+            "clearOf": "web"
+          }
+        },
+        "fabrication": {
+          "partMark": "P5B"
+        },
+        "display": {
+          "color": "#79b8af"
+        },
+        "bim": {
+          "name": "Beam End Stiffener P5B",
+          "description": "Right end stiffener plate at the far end of beam_1.",
+          "propertySets": {
+            "Identity": {
+              "mark": "P5B"
+            }
+          }
+        }
+      }
+    },
+    "features": {
+      "holes_end_plate_1": {
+        "id": "holes_end_plate_1",
+        "type": "hole-pattern",
+        "ownerId": "end_plate_1",
+        "reference": {
+          "kind": "plate-face",
+          "face": "back",
+          "origin": "plate-center",
+          "localAxisY": [
+            0,
+            1,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            1
+          ]
+        },
+        "placementIntent": {
+          "role": "fastener-hole-pattern",
+          "host": {
+            "objectId": "end_plate_1",
+            "face": "back"
+          },
+          "fit": "inside-plate-face"
+        },
+        "holePatternRef": "hole_pattern_1"
+      },
+      "holes_column_1": {
+        "id": "holes_column_1",
+        "type": "hole-pattern",
+        "ownerId": "column_1",
+        "depth": 30,
+        "reference": {
+          "kind": "member-face",
+          "faceRef": "positive-x-face",
+          "interfaceRef": "if_column_1_x_plus_connection",
+          "origin": [
+            150,
+            0,
+            1500
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "localAxisY": [
+            0,
+            1,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            1
+          ]
+        },
+        "placementIntent": {
+          "role": "matching-fastener-hole-pattern",
+          "host": {
+            "objectId": "column_1",
+            "faceRef": "positive-x-face"
+          },
+          "references": [
+            {
+              "objectId": "holes_end_plate_1",
+              "relation": "matching-pattern"
+            }
+          ],
+          "fit": "aligned-with-end-plate-holes"
+        },
+        "holePatternRef": "hole_pattern_1"
+      }
+    },
+    "fastenerGroups": {
+      "fasteners_1": {
+        "id": "fasteners_1",
+        "type": "fastener-group",
+        "participants": [
+          "end_plate_1",
+          "column_1"
+        ],
+        "through": {
+          "fromFeatureId": "holes_end_plate_1",
+          "toFeatureId": "holes_column_1"
+        },
+        "placementIntent": {
+          "role": "through-fastener-group",
+          "host": {
+            "objectId": "end_plate_1",
+            "face": "back"
+          },
+          "references": [
+            {
+              "objectId": "column_1",
+              "faceRef": "positive-x-face"
+            }
+          ],
+          "fit": "use-stored-hole-pattern"
+        },
+        "display": {
+          "color": "#0f766e"
+        },
+        "bim": {
+          "name": "Fastener Group 1",
+          "description": "Eight M16 fasteners connecting end_plate_1 to column_1.",
+          "propertySets": {
+            "Fastener": {
+              "fastenerRef": "M16_8_8",
+              "holeDiameter": 18,
+              "fastenerCount": 8
+            }
+          }
+        },
+        "holePatternRef": "hole_pattern_1"
+      }
+    },
+    "welds": {
+      "weld_beam_to_plate_1": {
+        "id": "weld_beam_to_plate_1",
+        "type": "fillet-weld",
+        "size": 6,
+        "participants": [
+          "beam_1",
+          "end_plate_1"
+        ],
+        "reference": {
+          "kind": "member-end-profile-edge-loop",
+          "memberId": "beam_1",
+          "end": "start"
+        },
+        "placementIntent": {
+          "role": "beam-to-end-plate-weld",
+          "host": {
+            "objectId": "beam_1",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "end_plate_1"
+            }
+          ],
+          "fit": "around-member-end-profile"
+        },
+        "display": {
+          "color": "#cbd5e1"
+        },
+        "bim": {
+          "name": "Beam To End Plate Weld",
+          "description": "All-around fillet weld between the beam start and end_plate_1.",
+          "propertySets": {
+            "Weld": {
+              "size": 6,
+              "length": "all-around"
+            }
+          }
+        }
+      }
+    },
+    "connections": {
+      "connection_1": {
+        "id": "connection_1",
+        "type": "moment-end-plate",
+        "mainMemberId": "column_1",
+        "secondaryMemberId": "beam_1",
+        "connectionZoneId": "cz_connection_1",
+        "assemblyId": "assembly_connection_1",
+        "manualParts": {
+          "plateIds": [
+            "end_plate_1",
+            "top_stiffener_front_1",
+            "top_stiffener_back_1",
+            "bottom_stiffener_front_1",
+            "bottom_stiffener_back_1",
+            "haunch_plate_1",
+            "beam_end_stiffener_left_1",
+            "beam_end_stiffener_right_1"
+          ],
+          "featureIds": [
+            "holes_end_plate_1",
+            "holes_column_1"
+          ],
+          "fastenerGroupIds": [
+            "fasteners_1"
+          ],
+          "weldIds": [
+            "weld_beam_to_plate_1"
+          ]
+        },
+        "generator": {
+          "status": "generated",
+          "ownedObjectIds": [
+            "end_plate_1",
+            "hole_pattern_1",
+            "holes_end_plate_1",
+            "holes_column_1",
+            "fasteners_1",
+            "weld_beam_to_plate_1"
+          ],
+          "manualObjectIds": [
+            "top_stiffener_front_1",
+            "top_stiffener_back_1",
+            "bottom_stiffener_front_1",
+            "bottom_stiffener_back_1",
+            "haunch_plate_1",
+            "beam_end_stiffener_left_1",
+            "beam_end_stiffener_right_1"
+          ],
+          "objectRoles": {
+            "endPlate": "end_plate_1",
+            "holePattern": "hole_pattern_1",
+            "plateHoles": "holes_end_plate_1",
+            "memberHoles": "holes_column_1",
+            "fasteners": "fasteners_1",
+            "weld": "weld_beam_to_plate_1"
+          }
+        },
+        "referenceParameters": {
+          "plate": {
+            "thickness": 12,
+            "width": 170,
+            "height": 390,
+            "offset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 4,
+            "columns": 2,
+            "pitch": 80,
+            "gauge": 116
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 30,
+            "type": "round"
+          },
+          "welds": {
+            "beamWeb": 6,
+            "beamFlanges": 6
+          },
+          "stiffeners": {
+            "column": {
+              "enabled": false,
+              "thickness": 10,
+              "width": 276,
+              "height": 69
+            }
+          },
+          "chamfers": {
+            "enabled": false
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
+        "bim": {
+          "name": "End Plate Connection 1",
+          "description": "Beam-to-column end plate connection between beam_1 and column_1.",
+          "propertySets": {}
+        },
+        "sourcePreset": {
+          "library": "connections",
+          "id": "beam_to_column_end_plate_m16_2x4",
+          "version": "0.1.0"
+        },
+        "authoring": {
+          "source": "connection-preset",
+          "sourcePreset": {
+            "library": "connections",
+            "id": "beam_to_column_end_plate_m16_2x4",
+            "version": "0.1.0"
+          },
+          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
+        }
+      }
+    },
+    "addonData": {},
+    "holePatterns": {
+      "hole_pattern_1": {
+        "id": "hole_pattern_1",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "positions": [
+          [
+            -58,
+            -120
+          ],
+          [
+            58,
+            -120
+          ],
+          [
+            -58,
+            -40
+          ],
+          [
+            58,
+            -40
+          ],
+          [
+            -58,
+            40
+          ],
+          [
+            58,
+            40
+          ],
+          [
+            -58,
+            120
+          ],
+          [
+            58,
+            120
+          ]
+        ]
+      }
+    },
+    "objectPatterns": {}
+  },
+  "migrationHistory": [
+    {
+      "id": "mig_0004_authoring_patterns_nc1_data",
+      "description": "Renamed generic patterns to holePatterns, added objectPatterns/authoring provenance, fabrication marks, tolerances, and connection/frame library refs.",
+      "schemaVersion": "0.5.0"
+    }
+  ]
+}

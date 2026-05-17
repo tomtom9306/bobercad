@@ -1,0 +1,562 @@
+{
+  "schema": "bobercad-api-register",
+  "schemaVersion": "0.1.0",
+  "apis": [
+    {
+      "id": "createProjectStore",
+      "module": "../store/project-store.mjs",
+      "description": "Create the headless project API used by UI and scripts.",
+      "parameters": {
+        "project": "project JSON",
+        "profiles": "profile map",
+        "connectionCatalog": "loaded connection catalog",
+        "fasteners": "fastener library"
+      },
+      "returns": "project API object"
+    },
+    {
+      "id": "store.subscribe",
+      "module": "../store/project-store.mjs",
+      "description": "Listen for project changes.",
+      "parameters": {
+        "listener": "function(project)"
+      },
+      "returns": "unsubscribe function"
+    },
+    {
+      "id": "store.project",
+      "module": "../store/project-store.mjs",
+      "description": "Read the current project.",
+      "parameters": {},
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.object",
+      "module": "../store/project-store.mjs",
+      "description": "Read any indexed model object.",
+      "parameters": {
+        "objectId": "string"
+      },
+      "returns": "model object"
+    },
+    {
+      "id": "store.member",
+      "module": "../store/project-store.mjs",
+      "description": "Read a member by id.",
+      "parameters": {
+        "memberId": "string"
+      },
+      "returns": "member object"
+    },
+    {
+      "id": "store.connection",
+      "module": "../store/project-store.mjs",
+      "description": "Read a connection by id.",
+      "parameters": {
+        "connectionId": "string"
+      },
+      "returns": "connection object"
+    },
+    {
+      "id": "store.connectionForObject",
+      "module": "../store/project-store.mjs",
+      "description": "Find the connection that owns or references an object.",
+      "parameters": {
+        "objectId": "string"
+      },
+      "returns": "connection object or null"
+    },
+    {
+      "id": "store.connectionObjectIds",
+      "module": "../store/project-store.mjs",
+      "description": "List objects owned by a connection.",
+      "parameters": {
+        "connectionId": "string"
+      },
+      "returns": "array of object ids"
+    },
+    {
+      "id": "store.definition",
+      "module": "../store/project-store.mjs",
+      "description": "Read the loaded definition for a connection.",
+      "parameters": {
+        "connectionId": "string"
+      },
+      "returns": "connection definition"
+    },
+    {
+      "id": "store.supportedConnections",
+      "module": "../store/project-store.mjs",
+      "description": "List project connections supported by loaded definitions.",
+      "parameters": {},
+      "returns": "array of connections"
+    },
+    {
+      "id": "store.connectionPresets",
+      "module": "../store/project-store.mjs",
+      "description": "List available connection presets.",
+      "parameters": {},
+      "returns": "array of presets"
+    },
+    {
+      "id": "store.catalogEntries",
+      "module": "../store/project-store.mjs",
+      "description": "Read entries from a loaded project catalog, such as fasteners.",
+      "parameters": {
+        "catalog": "catalog id, for example fasteners"
+      },
+      "returns": "map of catalog entries"
+    },
+    {
+      "id": "store.createConnectionFromPreset",
+      "module": "../store/project-store.mjs",
+      "description": "Create and generate a connection from selected members.",
+      "parameters": {
+        "presetId": "string",
+        "memberIds": "two member ids"
+      },
+      "returns": "project and connectionId"
+    },
+    {
+      "id": "store.deleteConnection",
+      "module": "../store/project-store.mjs",
+      "description": "Delete a connection and its generated objects.",
+      "parameters": {
+        "connectionId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.connectionPlateOptions",
+      "module": "../store/project-store.mjs",
+      "description": "List optional plates for a connection.",
+      "parameters": {
+        "connectionId": "string"
+      },
+      "returns": "array of plate options"
+    },
+    {
+      "id": "store.setConnectionPlateIncluded",
+      "module": "../store/project-store.mjs",
+      "description": "Toggle an optional connection plate.",
+      "parameters": {
+        "connectionId": "string",
+        "plateId": "string",
+        "included": "boolean"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateConnection",
+      "module": "../store/project-store.mjs",
+      "description": "Regenerate a connection with new parameters.",
+      "parameters": {
+        "connectionId": "string",
+        "parameters": "connection parameter object"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateMember",
+      "module": "../store/project-store.mjs",
+      "description": "Patch a member and regenerate affected connections.",
+      "parameters": {
+        "memberId": "string",
+        "patch": "member fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberProfile",
+      "module": "../store/project-store.mjs",
+      "description": "Change a member profile.",
+      "parameters": {
+        "memberId": "string",
+        "profileId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberRotation",
+      "module": "../store/project-store.mjs",
+      "description": "Set member rotation in degrees.",
+      "parameters": {
+        "memberId": "string",
+        "rotation": "number"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.rotateMember",
+      "module": "../store/project-store.mjs",
+      "description": "Add a rotation delta to a member.",
+      "parameters": {
+        "memberId": "string",
+        "deltaDegrees": "number"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberEndpoints",
+      "module": "../store/project-store.mjs",
+      "description": "Set member start and end points.",
+      "parameters": {
+        "memberId": "string",
+        "start": "[x,y,z]",
+        "end": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.moveMember",
+      "module": "../store/project-store.mjs",
+      "description": "Move a member by a vector.",
+      "parameters": {
+        "memberId": "string",
+        "delta": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberCenter",
+      "module": "../store/project-store.mjs",
+      "description": "Move a member to a target center point.",
+      "parameters": {
+        "memberId": "string",
+        "center": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.moveMemberWithLayout",
+      "module": "../store/project-store.mjs",
+      "description": "Move a member and its explicit virtual layout axis by a vector.",
+      "parameters": {
+        "memberId": "string",
+        "delta": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberPhysicalEndpoint",
+      "module": "../store/project-store.mjs",
+      "description": "Move one physical member endpoint and keep a matching layout endpoint in sync.",
+      "parameters": {
+        "memberId": "string",
+        "endpoint": "start | end",
+        "point": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberLayoutEndpoint",
+      "module": "../store/project-store.mjs",
+      "description": "Move one virtual layout-axis endpoint without forcing the physical member endpoint.",
+      "parameters": {
+        "memberId": "string",
+        "endpoint": "start | end",
+        "point": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "project.memberLayoutAxis",
+      "module": "./project/members.mjs",
+      "description": "Read the explicit or physical fallback virtual axis for a member.",
+      "parameters": {
+        "member": "member object"
+      },
+      "returns": "layout axis start/end"
+    },
+    {
+      "id": "project.memberAuthoringPoints",
+      "module": "./project/members.mjs",
+      "description": "Read center, physical endpoints, and layout endpoints used by member authoring handles.",
+      "parameters": {
+        "member": "member object"
+      },
+      "returns": "authoring point map"
+    },
+    {
+      "id": "project.snapCandidates",
+      "module": "./project/snapping.mjs",
+      "description": "List headless snapping targets from project members, layout axes, work points, and grids.",
+      "parameters": {
+        "project": "project JSON",
+        "options": "optional includeLayoutAxis flag"
+      },
+      "returns": "array of snap candidates"
+    },
+    {
+      "id": "project.nearestSnapPoint",
+      "module": "./project/snapping.mjs",
+      "description": "Find the nearest world-space snap candidate inside a tolerance.",
+      "parameters": {
+        "project": "project JSON",
+        "point": "[x,y,z]",
+        "options": "optional tolerance and excludeObjectId"
+      },
+      "returns": "snap candidate or null"
+    },
+    {
+      "id": "ctx.param",
+      "module": "../modules/connections/connection-generator.mjs",
+      "description": "Read a connection preset parameter by dotted path.",
+      "parameters": {
+        "path": "string, for example plate.thickness"
+      },
+      "returns": "parameter value"
+    },
+    {
+      "id": "ctx.optionalParam",
+      "module": "../modules/connections/connection-generator.mjs",
+      "description": "Read an optional connection preset parameter by dotted path.",
+      "parameters": {
+        "path": "string, for example welds.top",
+        "fallback": "value returned when the parameter is missing"
+      },
+      "returns": "parameter value or fallback"
+    },
+    {
+      "id": "ctx.params",
+      "module": "../modules/connections/connection-generator.mjs",
+      "description": "Read several connection parameters into a flat object.",
+      "parameters": {
+        "paths": "object mapping output keys to dotted parameter paths"
+      },
+      "returns": "object"
+    },
+    {
+      "id": "ctx.member",
+      "module": "../modules/connections/connection-generator.mjs",
+      "description": "Read the resolved main or secondary connection member.",
+      "parameters": {
+        "role": "main | secondary"
+      },
+      "returns": "member object"
+    },
+    {
+      "id": "ctx.profile",
+      "module": "../modules/connections/connection-generator.mjs",
+      "description": "Read the profile for a connection member.",
+      "parameters": {
+        "role": "main | secondary"
+      },
+      "returns": "profile object"
+    },
+    {
+      "id": "ctx.interface",
+      "module": "../modules/connections/connection-generator.mjs",
+      "description": "Resolve a stored connection-zone interface.",
+      "parameters": {
+        "role": "interface role declared by the connection definition"
+      },
+      "returns": "resolved interface"
+    },
+    {
+      "id": "ctx.error",
+      "module": "../modules/connections/connection-generator.mjs",
+      "description": "Attach a validation diagnostic to generated output.",
+      "parameters": {
+        "code": "stable diagnostic code",
+        "message": "human-readable issue",
+        "details": "optional objectRoles and parameters arrays"
+      },
+      "returns": "void"
+    },
+    {
+      "id": "ctx.geometry",
+      "module": "./connections/geometry.mjs",
+      "description": "Geometry helpers for API consumers and connection builders.",
+      "parameters": {},
+      "returns": "geometry helper object"
+    },
+    {
+      "id": "ctx.geometry.rectangleOutline",
+      "module": "./connections/geometry.mjs",
+      "description": "Create a local [y,z] rectangular plate outline.",
+      "parameters": {
+        "width": "number",
+        "height": "number"
+      },
+      "returns": "outline points"
+    },
+    {
+      "id": "ctx.geometry.clipPlateOutlineByPlane",
+      "module": "./connections/geometry.mjs",
+      "description": "Clip a flat plate outline by a 3D plane in plate-local coordinates.",
+      "parameters": {
+        "outline": "array of [y,z] points",
+        "plateCenter": "[x,y,z]",
+        "localAxisY": "plate local y axis",
+        "localAxisZ": "plate local z axis",
+        "planeOrigin": "[x,y,z]",
+        "planeNormal": "trim plane normal",
+        "keepPoint": "optional world point on the side to keep"
+      },
+      "returns": "clipped outline points"
+    },
+    {
+      "id": "ctx.geometry.plateAxes",
+      "module": "./connections/geometry.mjs",
+      "description": "Resolve planar local axes from a web normal, beam direction, and optional preferred vertical axis.",
+      "parameters": {
+        "webNormal": "plate normal",
+        "beamDirection": "default local y direction",
+        "defaultAxisZ": "default local z direction",
+        "preferredAxisZ": "optional axis to align holes or plate height"
+      },
+      "returns": "localAxisY and localAxisZ"
+    },
+    {
+      "id": "ctx.geometry.linePlaneIntersection",
+      "module": "./connections/geometry.mjs",
+      "description": "Find where a line intersects a plane, or return null when parallel.",
+      "parameters": {
+        "point": "point on line",
+        "direction": "line direction",
+        "planeOrigin": "point on plane",
+        "normal": "plane normal"
+      },
+      "returns": "[x,y,z] or null"
+    },
+    {
+      "id": "ctx.check.requireMemberEnd",
+      "module": "./connections/checks.mjs",
+      "description": "Require an interface to identify a member end.",
+      "parameters": {
+        "iface": "resolved interface",
+        "message": "optional error message"
+      },
+      "returns": "void"
+    },
+    {
+      "id": "ctx.check.gridFitsPlate",
+      "module": "./connections/checks.mjs",
+      "description": "Report if a hole grid falls outside a rectangular or outlined plate.",
+      "parameters": {
+        "pattern": "hole pattern",
+        "plateOrWidth": "plate object with outline or width number",
+        "height": "number when checking a rectangle",
+        "diagnostic": "code, message, objectRoles, parameters"
+      },
+      "returns": "void"
+    },
+    {
+      "id": "ctx.check.plateOutlineValid",
+      "module": "./connections/checks.mjs",
+      "description": "Report if a generated plate outline has fewer than three usable points or zero area.",
+      "parameters": {
+        "outline": "array of [y,z] points",
+        "diagnostic": "code, message, objectRoles, parameters"
+      },
+      "returns": "void"
+    },
+    {
+      "id": "ctx.check.plateFitsInterface",
+      "module": "./connections/checks.mjs",
+      "description": "Report if a plate exceeds an interface length or height.",
+      "parameters": {
+        "iface": "resolved interface",
+        "width": "number",
+        "height": "number",
+        "options": "offset and diagnostic messages"
+      },
+      "returns": "void"
+    },
+    {
+      "id": "ctx.check.gridFitsInterface",
+      "module": "./connections/checks.mjs",
+      "description": "Report if a stationed hole grid falls outside an interface.",
+      "parameters": {
+        "pattern": "hole pattern",
+        "iface": "resolved interface",
+        "options": "centerStation, code, message, objectRoles, parameters"
+      },
+      "returns": "void"
+    },
+    {
+      "id": "ctx.check.gridFitsCenteredInterface",
+      "module": "./connections/checks.mjs",
+      "description": "Report if a centered hole grid falls outside an interface.",
+      "parameters": {
+        "pattern": "hole pattern",
+        "iface": "resolved interface",
+        "options": "code, message, objectRoles, parameters"
+      },
+      "returns": "void"
+    },
+    {
+      "id": "ctx.check.vectorsAligned",
+      "module": "./connections/checks.mjs",
+      "description": "Report if two vectors are not aligned enough.",
+      "parameters": {
+        "a": "vector",
+        "b": "vector",
+        "options": "minDot, code, message, objectRoles, parameters"
+      },
+      "returns": "void"
+    },
+    {
+      "id": "ctx.part.plate",
+      "module": "./connections/builders.mjs",
+      "description": "Create a semantic plate object and assign it to a role.",
+      "parameters": {
+        "role": "role key",
+        "data": "plate fields"
+      },
+      "returns": "plate object"
+    },
+    {
+      "id": "ctx.pattern.rectangularGrid",
+      "module": "./connections/builders.mjs",
+      "description": "Create a rectangular hole pattern.",
+      "parameters": {
+        "role": "role key",
+        "data": "rows, columns, pitch, gauge, holeDiameter, holeType"
+      },
+      "returns": "hole pattern object"
+    },
+    {
+      "id": "ctx.feature.holePattern",
+      "module": "./connections/builders.mjs",
+      "description": "Create a hole-pattern feature.",
+      "parameters": {
+        "role": "role key",
+        "data": "ownerId, holePatternRef, depth, reference and metadata"
+      },
+      "returns": "feature object"
+    },
+    {
+      "id": "ctx.feature.fitting",
+      "module": "./connections/builders.mjs",
+      "description": "Create a fitting feature.",
+      "parameters": {
+        "role": "role key",
+        "data": "ownerId, plane and metadata"
+      },
+      "returns": "feature object"
+    },
+    {
+      "id": "ctx.fastener.group",
+      "module": "./connections/builders.mjs",
+      "description": "Create a fastener group through a stored hole pattern.",
+      "parameters": {
+        "role": "role key",
+        "data": "fastenerRef, holePatternRef, participants, through, optional assembly and metadata"
+      },
+      "returns": "fastener group object"
+    },
+    {
+      "id": "ctx.weld.fillet",
+      "module": "./connections/builders.mjs",
+      "description": "Create a fillet weld.",
+      "parameters": {
+        "role": "role key",
+        "data": "size, participants, reference/runs and metadata"
+      },
+      "returns": "weld object"
+    }
+  ],
+  "$schema": "../../schemas/api-register.schema.json"
+}

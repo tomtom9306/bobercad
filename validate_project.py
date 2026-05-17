@@ -178,7 +178,7 @@ def validate(value, schema, root_schema, path=(), schema_path=()):
 
 def main():
     parser = argparse.ArgumentParser(description="Validate a project JSON file against its $schema.")
-    parser.add_argument("project", nargs="?", default="projects/sample_structure.json", help="Project JSON file to validate.")
+    parser.add_argument("project", nargs="?", default="bobercad/data/projects/sample_structure.json", help="Project JSON file to validate.")
     args = parser.parse_args()
 
     project_path = Path(args.project).resolve()

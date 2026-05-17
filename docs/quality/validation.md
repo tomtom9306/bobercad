@@ -24,7 +24,7 @@ This checks:
 Use:
 
 ```powershell
-python .\validate_project.py .\projects\sample_structure.json
+python .\validate_project.py .\bobercad\data\projects\sample_structure.json
 ```
 
 This validates the project file against the schema referenced by its `$schema` field. It has no third-party Python package requirement.

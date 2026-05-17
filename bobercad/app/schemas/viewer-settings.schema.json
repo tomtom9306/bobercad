@@ -1,0 +1,381 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bobercad/app/schemas/viewer-settings.schema.json",
+  "title": "Steel BIM Viewer Settings Schema",
+  "description": "Schema for viewer-only settings such as camera, UI, controls, and render preferences.",
+  "type": "object",
+  "required": [
+    "schema",
+    "schemaVersion",
+    "project",
+    "camera",
+    "controls",
+    "render",
+    "ui"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "steel-bim-viewer-settings"
+    },
+    "schemaVersion": {
+      "type": "string"
+    },
+    "project": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "demos": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "camera": {
+      "type": "object",
+      "required": [
+        "home",
+        "fit"
+      ],
+      "properties": {
+        "home": {
+          "type": "object",
+          "required": [
+            "yaw",
+            "pitch",
+            "scale",
+            "pan"
+          ],
+          "properties": {
+            "yaw": {
+              "type": "number"
+            },
+            "pitch": {
+              "type": "number"
+            },
+            "scale": {
+              "type": "number"
+            },
+            "pan": {
+              "$ref": "#/$defs/vec2"
+            }
+          },
+          "additionalProperties": true
+        },
+        "fit": {
+          "type": "object",
+          "required": [
+            "padding",
+            "minDepthHalf"
+          ],
+          "properties": {
+            "padding": {
+              "type": "number"
+            },
+            "minDepthHalf": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "controls": {
+      "type": "object",
+      "required": [
+        "orbitSpeed",
+        "panSpeed",
+        "zoomInFactor",
+        "zoomOutFactor"
+      ],
+      "properties": {
+        "orbitSpeed": {
+          "type": "number"
+        },
+        "panSpeed": {
+          "type": "number"
+        },
+        "zoomInFactor": {
+          "type": "number"
+        },
+        "zoomOutFactor": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": true
+    },
+    "render": {
+      "type": "object",
+      "required": [
+        "background",
+        "lighting",
+        "edges",
+        "dimensions",
+        "fasteners",
+        "curves"
+      ],
+      "properties": {
+        "background": {
+          "$ref": "#/$defs/color"
+        },
+        "lighting": {
+          "type": "object",
+          "required": [
+            "direction",
+            "ambient",
+            "diffuse"
+          ],
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/vec3"
+            },
+            "ambient": {
+              "type": "number"
+            },
+            "diffuse": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "edges": {
+          "type": "object",
+          "required": [
+            "defaultColor",
+            "plateColor",
+            "fastenerHeadColor",
+            "lineWidth"
+          ],
+          "properties": {
+            "defaultColor": {
+              "$ref": "#/$defs/color"
+            },
+            "plateColor": {
+              "$ref": "#/$defs/color"
+            },
+            "fastenerHeadColor": {
+              "$ref": "#/$defs/color"
+            },
+            "lineWidth": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "dimensions": {
+          "type": "object",
+          "required": [
+            "fontFamily",
+            "fontWeight",
+            "activeFontWeight",
+            "textHeight",
+            "minFontPx"
+          ],
+          "properties": {
+            "fontFamily": {
+              "type": "string"
+            },
+            "fontWeight": {
+              "$ref": "#/$defs/fontWeight"
+            },
+            "activeFontWeight": {
+              "$ref": "#/$defs/fontWeight"
+            },
+            "textHeight": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "minFontPx": {
+              "type": "number",
+              "minimum": 0
+            },
+            "surfaceLift": {
+              "type": "number",
+              "minimum": 0
+            },
+            "tooltipDelayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "tooltipFontPx": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tooltipMaxWidthPx": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "axes": {
+          "type": "object",
+          "required": [
+            "visible",
+            "padding",
+            "minLength",
+            "headSize",
+            "xColor",
+            "yColor",
+            "zColor",
+            "negativeColor"
+          ],
+          "properties": {
+            "visible": {
+              "type": "boolean"
+            },
+            "padding": {
+              "type": "number"
+            },
+            "minLength": {
+              "type": "number"
+            },
+            "headSize": {
+              "type": "number"
+            },
+            "xColor": {
+              "$ref": "#/$defs/color"
+            },
+            "yColor": {
+              "$ref": "#/$defs/color"
+            },
+            "zColor": {
+              "$ref": "#/$defs/color"
+            },
+            "negativeColor": {
+              "$ref": "#/$defs/color"
+            }
+          },
+          "additionalProperties": true
+        },
+        "fasteners": {
+          "type": "object",
+          "required": [
+            "length",
+            "sides",
+            "headRadiusFactor"
+          ],
+          "properties": {
+            "length": {
+              "type": "number"
+            },
+            "sides": {
+              "type": "number"
+            },
+            "headRadiusFactor": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "curves": {
+          "type": "object",
+          "required": [
+            "circleSegments",
+            "discSegments"
+          ],
+          "properties": {
+            "circleSegments": {
+              "type": "number"
+            },
+            "discSegments": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "ui": {
+      "type": "object",
+      "required": [
+        "showHud",
+        "showMeta",
+        "showResetButton",
+        "title"
+      ],
+      "properties": {
+        "showHud": {
+          "type": "boolean"
+        },
+        "showMeta": {
+          "type": "boolean"
+        },
+        "showResetButton": {
+          "type": "boolean"
+        },
+        "title": {
+          "enum": [
+            "project-name"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "fontWeight": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "vec2": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false
+    },
+    "vec3": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false
+    }
+  }
+}

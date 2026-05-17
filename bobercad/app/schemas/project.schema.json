@@ -1,0 +1,2357 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bobercad/app/schemas/project.schema.json",
+  "title": "Steel BIM Project Schema",
+  "description": "Starter schema for the JSON-first steel BIM project model. It validates the main database layout while leaving room for the model to evolve.",
+  "type": "object",
+  "required": [
+    "schema",
+    "schemaVersion",
+    "project",
+    "settings",
+    "libraries",
+    "projectTree",
+    "gridSystems",
+    "levels",
+    "objectIndex",
+    "modelDefaults",
+    "model"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "steel-bim-project"
+    },
+    "schemaVersion": {
+      "type": "string"
+    },
+    "project": {
+      "$ref": "#/$defs/project"
+    },
+    "settings": {
+      "$ref": "#/$defs/settings"
+    },
+    "libraries": {
+      "$ref": "#/$defs/libraries"
+    },
+    "projectTree": {
+      "$ref": "#/$defs/projectTree"
+    },
+    "gridSystems": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/gridSystem"
+      }
+    },
+    "levels": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/level"
+      }
+    },
+    "phases": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/namedRecord"
+      }
+    },
+    "lots": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/namedRecord"
+      }
+    },
+    "objectIndex": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/objectIndexEntry"
+      }
+    },
+    "modelDefaults": {
+      "$ref": "#/$defs/modelDefaults"
+    },
+    "model": {
+      "$ref": "#/$defs/model"
+    },
+    "migrationHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vec2": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false
+    },
+    "vec3": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false
+    },
+    "bim": {
+      "type": "object",
+      "properties": {
+        "ifcClass": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "propertySets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "tracking": {
+      "type": "object",
+      "properties": {
+        "projectTreeNodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "phase": {
+          "$ref": "#/$defs/id"
+        },
+        "lot": {
+          "$ref": "#/$defs/id"
+        },
+        "shopOrSite": {
+          "enum": [
+            "shop",
+            "site"
+          ]
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "fabrication": {
+      "type": "object",
+      "properties": {
+        "partMark": {
+          "type": "string"
+        },
+        "assemblyMark": {
+          "type": "string"
+        },
+        "numberingStatus": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "project": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "createdWith": {
+          "type": "string"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        }
+      },
+      "additionalProperties": true
+    },
+    "settings": {
+      "type": "object",
+      "required": [
+        "units",
+        "coordinateSystem"
+      ],
+      "properties": {
+        "units": {
+          "type": "object",
+          "required": [
+            "length",
+            "angle",
+            "mass"
+          ],
+          "properties": {
+            "length": {
+              "type": "string"
+            },
+            "angle": {
+              "const": "deg"
+            },
+            "mass": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "coordinateSystem": {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "origin",
+            "axisX",
+            "axisY",
+            "axisZ"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/id"
+            },
+            "type": {
+              "type": "string"
+            },
+            "origin": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axisX": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axisY": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axisZ": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "additionalProperties": true
+        },
+        "modelingConvention": {
+          "$ref": "#/$defs/modelingConvention"
+        },
+        "tolerances": {
+          "$ref": "#/$defs/tolerances"
+        }
+      },
+      "additionalProperties": true
+    },
+    "tolerances": {
+      "type": "object",
+      "properties": {
+        "coincident": {
+          "type": "number"
+        },
+        "snap": {
+          "type": "number"
+        },
+        "connectionGap": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": true
+    },
+    "modelingConvention": {
+      "type": "object",
+      "required": [
+        "memberLocalX",
+        "memberLocalY",
+        "memberLocalZ",
+        "memberRotation",
+        "cardinalPoint",
+        "objectIndex"
+      ],
+      "properties": {
+        "memberLocalX": {
+          "const": "start-to-end"
+        },
+        "memberLocalY": {
+          "const": "profile-section-y-width-axis"
+        },
+        "memberLocalZ": {
+          "const": "profile-section-z-depth-axis"
+        },
+        "memberRotation": {
+          "const": "degrees-about-member-local-x"
+        },
+        "cardinalPoint": {
+          "const": "profile-reference-point-name"
+        },
+        "objectIndex": {
+          "const": "stored-and-authoritative"
+        }
+      },
+      "additionalProperties": true
+    },
+    "libraries": {
+      "type": "object",
+      "required": [
+        "profiles",
+        "materials",
+        "fasteners",
+        "connections",
+        "frames"
+      ],
+      "properties": {
+        "profiles": {
+          "$ref": "#/$defs/libraryRef"
+        },
+        "materials": {
+          "$ref": "#/$defs/libraryRef"
+        },
+        "fasteners": {
+          "$ref": "#/$defs/libraryRef"
+        },
+        "connections": {
+          "$ref": "#/$defs/libraryRef"
+        },
+        "frames": {
+          "$ref": "#/$defs/libraryRef"
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/libraryRef"
+      }
+    },
+    "libraryRef": {
+      "type": "object",
+      "required": [
+        "libraryId",
+        "version",
+        "path"
+      ],
+      "properties": {
+        "libraryId": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "projectTree": {
+      "type": "object",
+      "required": [
+        "rootNodeId",
+        "nodes"
+      ],
+      "properties": {
+        "rootNodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "nodes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/projectTreeNode"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "projectTreeNode": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "name",
+        "children"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "gridSystem": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "origin",
+        "rotation",
+        "axes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/vec3"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "axes": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/gridAxis"
+              }
+            },
+            "y": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/gridAxis"
+              }
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "gridAxis": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "position"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        },
+        "position": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": true
+    },
+    "level": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "elevation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "elevation": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": true
+    },
+    "namedRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "objectIndexEntry": {
+      "type": "object",
+      "required": [
+        "collection",
+        "type"
+      ],
+      "properties": {
+        "collection": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "modelDefaults": {
+      "type": "object",
+      "required": [
+        "resolutionOrder",
+        "collections"
+      ],
+      "properties": {
+        "resolutionOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "collections": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "members",
+        "plates",
+        "holePatterns",
+        "objectPatterns",
+        "features",
+        "fastenerGroups",
+        "welds",
+        "connections",
+        "assemblies"
+      ],
+      "properties": {
+        "workPoints": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/workPoint"
+          }
+        },
+        "referencePlanes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/referencePlane"
+          }
+        },
+        "groups": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/group"
+          }
+        },
+        "interfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/interface"
+          }
+        },
+        "connectionZones": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/connectionZone"
+          }
+        },
+        "assemblies": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/assembly"
+          }
+        },
+        "members": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/member"
+          }
+        },
+        "plates": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/plate"
+          }
+        },
+        "holePatterns": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/holePattern"
+          }
+        },
+        "objectPatterns": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/objectPattern"
+          }
+        },
+        "features": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/feature"
+          }
+        },
+        "fastenerGroups": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/fastenerGroup"
+          }
+        },
+        "welds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/weld"
+          }
+        },
+        "connections": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/connection"
+          }
+        },
+        "addonData": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "workPoint": {
+      "type": "object",
+      "required": [
+        "id",
+        "point"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "point": {
+          "$ref": "#/$defs/vec3"
+        },
+        "role": {
+          "type": "string"
+        },
+        "gridSystemId": {
+          "$ref": "#/$defs/id"
+        },
+        "gridRefs": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "string"
+            },
+            "y": {
+              "type": "string"
+            },
+            "level": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "additionalProperties": true
+        },
+        "referencePlaneId": {
+          "$ref": "#/$defs/id"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "referencePlane": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "origin",
+        "normal",
+        "axisX",
+        "axisY"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/vec3"
+        },
+        "normal": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisX": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisY": {
+          "$ref": "#/$defs/vec3"
+        },
+        "extents": {
+          "type": "object",
+          "properties": {
+            "xMin": {
+              "type": "number"
+            },
+            "xMax": {
+              "type": "number"
+            },
+            "yMin": {
+              "type": "number"
+            },
+            "yMax": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "group": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "name",
+        "objectIds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "projectTreeNodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sourceTemplate": {
+          "$ref": "#/$defs/librarySource"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "objectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "assembly": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parentAssemblyId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "childAssemblyIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "connectionZoneIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "sourceTemplate": {
+          "$ref": "#/$defs/librarySource"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
+        }
+      },
+      "additionalProperties": true
+    },
+    "interface": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "ownerId"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/vec3"
+        },
+        "normal": {
+          "$ref": "#/$defs/vec3"
+        },
+        "localAxisY": {
+          "$ref": "#/$defs/vec3"
+        },
+        "localAxisZ": {
+          "$ref": "#/$defs/vec3"
+        },
+        "extents": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "length": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "memberEnd": {
+          "enum": [
+            "start",
+            "end"
+          ]
+        },
+        "station": {
+          "type": "number"
+        },
+        "stationReference": {
+          "enum": [
+            "connection-secondary-interface-origin"
+          ]
+        },
+        "faceRef": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "connectionZone": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "mainObjectId",
+        "interfaceIds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "mainObjectId": {
+          "$ref": "#/$defs/id"
+        },
+        "secondaryObjectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "interfaceIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "connectionIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "objectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "member": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/$defs/id"
+        },
+        "material": {
+          "$ref": "#/$defs/id"
+        },
+        "start": {
+          "$ref": "#/$defs/vec3"
+        },
+        "end": {
+          "$ref": "#/$defs/vec3"
+        },
+        "layoutAxis": {
+          "type": "object",
+          "required": [
+            "start",
+            "end"
+          ],
+          "properties": {
+            "start": {
+              "$ref": "#/$defs/vec3"
+            },
+            "end": {
+              "$ref": "#/$defs/vec3"
+            },
+            "notes": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "startPointRef": {
+          "$ref": "#/$defs/id"
+        },
+        "endPointRef": {
+          "$ref": "#/$defs/id"
+        },
+        "referencePlaneId": {
+          "$ref": "#/$defs/id"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "cardinalPoint": {
+          "type": "string"
+        },
+        "assemblyId": {
+          "$ref": "#/$defs/id"
+        },
+        "featureIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "placementIntent": {
+          "$ref": "#/$defs/placementIntent"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "fabrication": {
+          "$ref": "#/$defs/fabrication"
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
+        }
+      },
+      "additionalProperties": true
+    },
+    "plate": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "material": {
+          "$ref": "#/$defs/id"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/vec2"
+          }
+        },
+        "center": {
+          "$ref": "#/$defs/vec3"
+        },
+        "normal": {
+          "$ref": "#/$defs/vec3"
+        },
+        "localAxisY": {
+          "$ref": "#/$defs/vec3"
+        },
+        "localAxisZ": {
+          "$ref": "#/$defs/vec3"
+        },
+        "assemblyId": {
+          "$ref": "#/$defs/id"
+        },
+        "featureIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "flatPattern": {
+          "$ref": "#/$defs/flatPattern"
+        },
+        "placementIntent": {
+          "$ref": "#/$defs/placementIntent"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "fabrication": {
+          "$ref": "#/$defs/fabrication"
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
+        }
+      },
+      "additionalProperties": true
+    },
+    "holePattern": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "positions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "holeDiameter": {
+          "type": "number"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/vec2"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "objectPattern": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "status",
+        "generatedObjectIds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "linear-pattern",
+            "rectangular-pattern",
+            "circular-pattern",
+            "path-pattern",
+            "mirror-pattern"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "linked",
+            "partially-detached",
+            "broken"
+          ]
+        },
+        "sourceObjectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "generatedObjectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "detachedObjectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "deletedObjectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "transform": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/vec3"
+            },
+            "spacing": {
+              "type": "number"
+            },
+            "count": {
+              "type": "integer"
+            },
+            "center": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axis": {
+              "$ref": "#/$defs/vec3"
+            },
+            "angle": {
+              "type": "number"
+            },
+            "rowDirection": {
+              "$ref": "#/$defs/vec3"
+            },
+            "rowSpacing": {
+              "type": "number"
+            },
+            "rowCount": {
+              "type": "integer"
+            },
+            "columnDirection": {
+              "$ref": "#/$defs/vec3"
+            },
+            "columnSpacing": {
+              "type": "number"
+            },
+            "columnCount": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": true
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "feature": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "ownerId"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "teklaClass": {
+          "enum": [
+            "BooleanPart",
+            "CutPlane",
+            "Fitting",
+            "EdgeChamfer"
+          ]
+        },
+        "booleanType": {
+          "enum": [
+            "BOOLEAN_CUT",
+            "BOOLEAN_ADD",
+            "BOOLEAN_WELDPREP"
+          ]
+        },
+        "cutKind": {
+          "enum": [
+            "part-cut",
+            "polygon-cut",
+            "line-cut",
+            "plane-cut",
+            "fitting",
+            "edge-chamfer",
+            "weld-prep"
+          ]
+        },
+        "ownerId": {
+          "$ref": "#/$defs/id"
+        },
+        "operationEnabled": {
+          "type": "boolean"
+        },
+        "holePatternRef": {
+          "$ref": "#/$defs/id"
+        },
+        "reference": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "face": {
+              "enum": [
+                "front",
+                "back"
+              ]
+            },
+            "faceRef": {
+              "type": "string"
+            },
+            "interfaceRef": {
+              "$ref": "#/$defs/id"
+            },
+            "stationReferenceInterfaceRef": {
+              "$ref": "#/$defs/id"
+            },
+            "origin": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/vec3"
+                }
+              ]
+            },
+            "normal": {
+              "$ref": "#/$defs/vec3"
+            },
+            "localAxisY": {
+              "$ref": "#/$defs/vec3"
+            },
+            "localAxisZ": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "additionalProperties": true
+        },
+        "diameter": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "slot": {
+          "type": "object",
+          "properties": {
+            "length": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "orientation": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "cut": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "body": {
+          "$ref": "#/$defs/cutBody"
+        },
+        "plane": {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axisX": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axisY": {
+              "$ref": "#/$defs/vec3"
+            },
+            "normal": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "additionalProperties": true
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "position": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/vec2"
+            },
+            {
+              "$ref": "#/$defs/vec3"
+            }
+          ]
+        },
+        "placementIntent": {
+          "$ref": "#/$defs/placementIntent"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "fabrication": {
+          "$ref": "#/$defs/fabrication"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        }
+      },
+      "additionalProperties": true
+    },
+    "fastenerGroup": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "participants"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "fastenerRef": {
+          "$ref": "#/$defs/id"
+        },
+        "holePatternRef": {
+          "$ref": "#/$defs/id"
+        },
+        "orientation": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "assembly": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "placementIntent": {
+          "$ref": "#/$defs/placementIntent"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
+        }
+      },
+      "additionalProperties": true
+    },
+    "weld": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "participants"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "size": {
+          "type": "number"
+        },
+        "length": {},
+        "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "reference": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "plateId": {
+              "$ref": "#/$defs/id"
+            },
+            "supportInterfaceId": {
+              "$ref": "#/$defs/id"
+            },
+            "stationReferenceInterfaceRef": {
+              "$ref": "#/$defs/id"
+            },
+            "runs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/weldRun"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "placementIntent": {
+          "$ref": "#/$defs/placementIntent"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
+        }
+      },
+      "additionalProperties": true
+    },
+    "connection": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "mainMemberId",
+        "secondaryMemberId"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "moment-end-plate"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sourcePreset",
+              "referenceParameters"
+            ],
+            "properties": {
+              "referenceParameters": {
+                "$ref": "#/$defs/momentEndPlateReferenceParameters"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "fin-plate"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sourcePreset",
+              "referenceParameters"
+            ],
+            "properties": {
+              "referenceParameters": {
+                "$ref": "#/$defs/finPlateReferenceParameters"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
+        },
+        "mainMemberId": {
+          "$ref": "#/$defs/id"
+        },
+        "secondaryMemberId": {
+          "$ref": "#/$defs/id"
+        },
+        "connectionZoneId": {
+          "$ref": "#/$defs/id"
+        },
+        "assemblyId": {
+          "$ref": "#/$defs/id"
+        },
+        "sourcePreset": {
+          "$ref": "#/$defs/librarySource"
+        },
+        "manualParts": {
+          "type": "object",
+          "properties": {
+            "plateIds": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "featureIds": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "fastenerGroupIds": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "weldIds": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "generator": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "definition": {
+              "type": "string"
+            },
+            "version": {
+              "type": "number"
+            },
+            "health": {
+              "enum": [
+                "ok",
+                "error"
+              ]
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/diagnostic"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "referenceParameters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
+        }
+      },
+      "additionalProperties": true
+    },
+    "weldRun": {
+      "type": "object",
+      "required": [
+        "edge",
+        "size"
+      ],
+      "properties": {
+        "edge": {
+          "enum": [
+            "support",
+            "top",
+            "bottom"
+          ]
+        },
+        "side": {
+          "enum": [
+            "front",
+            "back"
+          ]
+        },
+        "size": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "momentEndPlateReferenceParameters": {
+      "type": "object",
+      "required": [
+        "plate",
+        "bolts",
+        "holes",
+        "welds"
+      ],
+      "properties": {
+        "plate": {
+          "type": "object",
+          "required": [
+            "thickness",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "thickness": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "width": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "height": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "offset": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "bolts": {
+          "type": "object",
+          "required": [
+            "fastenerRef",
+            "rows",
+            "columns",
+            "pitch",
+            "gauge"
+          ],
+          "properties": {
+            "fastenerRef": {
+              "$ref": "#/$defs/id"
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "pitch": {
+              "type": "number",
+              "minimum": 0
+            },
+            "gauge": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "holes": {
+          "type": "object",
+          "required": [
+            "type",
+            "memberDepth"
+          ],
+          "properties": {
+            "diameter": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tolerance": {
+              "enum": [
+                "tight",
+                "normal",
+                "loose",
+                "custom"
+              ]
+            },
+            "customDiameter": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "memberDepth": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "type": {
+              "enum": [
+                "round",
+                "slotted",
+                "countersunk"
+              ]
+            }
+          },
+          "additionalProperties": true
+        },
+        "welds": {
+          "type": "object",
+          "properties": {
+            "beamWeb": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "beamFlanges": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "finPlateReferenceParameters": {
+      "type": "object",
+      "required": [
+        "plate",
+        "bolts",
+        "holes",
+        "welds"
+      ],
+      "properties": {
+        "plate": {
+          "type": "object",
+          "required": [
+            "thickness",
+            "length",
+            "height",
+            "edgeOffset"
+          ],
+          "properties": {
+            "thickness": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "length": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "height": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "edgeOffset": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "bolts": {
+          "type": "object",
+          "required": [
+            "fastenerRef",
+            "rows",
+            "columns",
+            "pitch",
+            "gauge"
+          ],
+          "properties": {
+            "fastenerRef": {
+              "$ref": "#/$defs/id"
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "pitch": {
+              "type": "number",
+              "minimum": 0
+            },
+            "gauge": {
+              "type": "number",
+              "minimum": 0
+            },
+            "length": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "parallelToSupport": {
+              "type": "boolean"
+            },
+            "verticalPositionMode": {
+              "enum": [
+                "centered",
+                "custom"
+              ]
+            },
+            "horizontalPositionMode": {
+              "enum": [
+                "centered",
+                "custom"
+              ]
+            },
+            "topEdgeDistance": {
+              "type": "number",
+              "minimum": 0
+            },
+            "supportEdgeDistance": {
+              "type": "number",
+              "minimum": 0
+            },
+            "rowSpacingMode": {
+              "enum": [
+                "equal",
+                "custom"
+              ]
+            },
+            "columnSpacingMode": {
+              "enum": [
+                "equal",
+                "custom"
+              ]
+            },
+            "rowSpacings": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "columnSpacings": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "nutPositionMode": {
+              "enum": [
+                "auto",
+                "custom"
+              ]
+            },
+            "nutOffset": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "holes": {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "diameter": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tolerance": {
+              "enum": [
+                "tight",
+                "normal",
+                "loose",
+                "custom"
+              ]
+            },
+            "customDiameter": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "type": {
+              "enum": [
+                "round",
+                "slotted",
+                "countersunk"
+              ]
+            }
+          },
+          "additionalProperties": true
+        },
+        "washers": {
+          "type": "object",
+          "properties": {
+            "head": {
+              "type": "boolean"
+            },
+            "nut": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
+        "fit": {
+          "type": "object",
+          "properties": {
+            "beamGap": {
+              "type": "number",
+              "minimum": 0
+            },
+            "clipBeam": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
+        "welds": {
+          "type": "object",
+          "required": [
+            "front",
+            "back",
+            "top",
+            "bottom"
+          ],
+          "properties": {
+            "support": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "front": {
+              "type": "number",
+              "minimum": 0
+            },
+            "back": {
+              "type": "number",
+              "minimum": 0
+            },
+            "top": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bottom": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "designAssumptions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "loads": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "flatPattern": {
+      "type": "object",
+      "required": [
+        "outline"
+      ],
+      "properties": {
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/vec2"
+          }
+        },
+        "bendLines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/bendLine"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "bendLine": {
+      "type": "object",
+      "required": [
+        "id",
+        "start",
+        "end",
+        "angle",
+        "radius",
+        "direction"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "start": {
+          "$ref": "#/$defs/vec2"
+        },
+        "end": {
+          "$ref": "#/$defs/vec2"
+        },
+        "angle": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number"
+        },
+        "direction": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "cutBody": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "box",
+            "polygonal-prism",
+            "cylinder"
+          ]
+        },
+        "center": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisX": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisY": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisZ": {
+          "$ref": "#/$defs/vec3"
+        },
+        "size": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "items": false
+        },
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/vec2"
+          }
+        },
+        "depth": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number"
+        },
+        "diameter": {
+          "type": "number"
+        },
+        "axis": {
+          "$ref": "#/$defs/vec3"
+        }
+      },
+      "additionalProperties": true
+    },
+    "librarySource": {
+      "type": "object",
+      "required": [
+        "library",
+        "id",
+        "version"
+      ],
+      "properties": {
+        "library": {
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "authoring": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "patternId": {
+          "$ref": "#/$defs/id"
+        },
+        "patternIndex": {
+          "type": "integer"
+        },
+        "patternStatus": {
+          "enum": [
+            "source",
+            "linked",
+            "detached",
+            "deleted-from-pattern"
+          ]
+        },
+        "sourcePreset": {
+          "$ref": "#/$defs/librarySource"
+        },
+        "sourceTemplate": {
+          "$ref": "#/$defs/librarySource"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "placementIntent": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "fit": {
+          "type": "string"
+        },
+        "flush": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "avoid": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "split": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "display": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "transparent": {
+          "type": "boolean"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": [
+        "severity",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "severity": {
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "objectRoles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

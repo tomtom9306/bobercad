@@ -9,8 +9,10 @@ function readJson(filePath) {
 }
 
 async function main() {
-  const { buildScene } = await import(pathToFileURL(path.join(ROOT, "viewer", "src", "scene", "build-scene.mjs")).href);
-  const settingsPath = path.join(ROOT, "viewer", "viewer_settings.json");
+  const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "scene", "build-scene.mjs")).href);
+  const { createCamera } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "webgl", "camera.mjs")).href);
+  const { buildConnectionDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "annotations", "build-dimensions.mjs")).href);
+  const settingsPath = path.join(ROOT, "bobercad", "app", "ui", "viewer", "viewer-settings.json");
   const settings = readJson(settingsPath);
   const projectPath = path.resolve(path.dirname(settingsPath), settings.project.path);
   const project = readJson(projectPath);
@@ -20,6 +22,60 @@ async function main() {
 
   if (!scene.faces.length) {
     console.error("FAILED: viewer produced no faces");
+    return 1;
+  }
+
+  const camera = createCamera(settings);
+  const viewport = { width: 1300, height: 1000 };
+  camera.fit(scene, viewport);
+  camera.setOrbitPivot(scene.bounds.max, scene, viewport);
+  const clippedDepths = scene.vertices.filter((point) => Math.abs(camera.projectPoint(point, scene, viewport).depth) >= 0.999999);
+  if (clippedDepths.length) {
+    console.error(`FAILED: camera clipped ${clippedDepths.length} scene vertices after local orbit pivot`);
+    return 1;
+  }
+
+  const finPlatePath = path.resolve(path.dirname(settingsPath), settings.project.demos["fin-plate-1"].path);
+  const finPlateProject = readJson(finPlatePath);
+  const finPlateProfiles = readJson(path.resolve(path.dirname(finPlatePath), finPlateProject.libraries.profiles.path));
+  const finPlateDefinition = readJson(path.join(ROOT, "bobercad", "data", "libraries", "connections", "connections", "fin-plate", "config.json"));
+  const [finPlateConnectionId] = Object.keys(finPlateProject.model.connections || {});
+  const dimensionOverlay = buildConnectionDimensions({
+    project: finPlateProject,
+    profiles: finPlateProfiles.profiles,
+    definition: finPlateDefinition,
+    connectionId: finPlateConnectionId
+  });
+  const invalidDimensionPoints = [
+    ...dimensionOverlay.labels.map((label) => label.point),
+    ...dimensionOverlay.lines.flatMap((line) => line.points)
+  ].filter((point) => !point.every(Number.isFinite));
+  if (!dimensionOverlay.labels.length || invalidDimensionPoints.length) {
+    console.error(`FAILED: fin plate dimensions produced ${dimensionOverlay.labels.length} labels and ${invalidDimensionPoints.length} invalid points`);
+    return 1;
+  }
+  const dimensionLabels = dimensionOverlay.labels.map((label) => label.text);
+  for (const expected of ["bolts 3x1", "topW no weld", "botW no weld"]) {
+    if (!dimensionLabels.includes(expected)) {
+      console.error(`FAILED: missing fin plate dimension label: ${expected}`);
+      return 1;
+    }
+  }
+  const boltPatternLabel = dimensionOverlay.labels.find((label) => label.dimensionId.endsWith(":bolt-pattern"));
+  if (boltPatternLabel?.editKind !== "positiveIntegerPair" || boltPatternLabel.editPaths?.first !== "bolts.rows" || boltPatternLabel.editPaths?.second !== "bolts.columns") {
+    console.error(`FAILED: fin plate bolt pattern dimension should edit rows and columns, got ${JSON.stringify(boltPatternLabel)}`);
+    return 1;
+  }
+  const twoColumnProject = JSON.parse(JSON.stringify(finPlateProject));
+  twoColumnProject.model.connections[finPlateConnectionId].referenceParameters.bolts.columns = 2;
+  const twoColumnOverlay = buildConnectionDimensions({
+    project: twoColumnProject,
+    profiles: finPlateProfiles.profiles,
+    definition: finPlateDefinition,
+    connectionId: finPlateConnectionId
+  });
+  if (!twoColumnOverlay.labels.some((label) => label.text === "bolts 3x2")) {
+    console.error("FAILED: fin plate bolt pattern dimension should display requested row/column parameters even when generated columns overlap");
     return 1;
   }
 

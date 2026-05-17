@@ -1,0 +1,133 @@
+{
+  "$schema": "../../../../../app/schemas/fastener-library.schema.json",
+  "schema": "steel-fastener-library",
+  "schemaVersion": "0.1.0",
+  "library": {
+    "id": "starter-fastener-library",
+    "name": "Starter Steel Fastener Library",
+    "version": "0.1.0",
+    "status": "demo-not-certified-for-fabrication",
+    "description": "Small seed fastener library for early viewer and editor development. Replace with verified standard fastener data before fabrication use."
+  },
+  "units": {
+    "length": "mm"
+  },
+  "fasteners": {
+    "M16_8_8": {
+      "id": "M16_8_8",
+      "kind": "through-bolt",
+      "standard": "EN 14399",
+      "grade": "8.8",
+      "lengths": [
+        40,
+        45,
+        50,
+        55,
+        60,
+        65,
+        70,
+        80,
+        90,
+        100
+      ],
+      "shank": {
+        "diameter": 16
+      },
+      "hole": {
+        "defaultDiameter": 18,
+        "shape": "round",
+        "tolerances": {
+          "tight": 17,
+          "normal": 18,
+          "loose": 20
+        }
+      },
+      "head": {
+        "kind": "hex",
+        "acrossFlats": 24,
+        "height": 10
+      },
+      "nut": {
+        "kind": "hex",
+        "acrossFlats": 24,
+        "height": 13
+      },
+      "washer": {
+        "outerDiameter": 30,
+        "thickness": 3
+      }
+    },
+    "BLIND_M16_TOGGLE": {
+      "id": "BLIND_M16_TOGGLE",
+      "kind": "blind-bolt",
+      "standard": "manufacturer-specific",
+      "grade": "8.8",
+      "lengths": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "shank": {
+        "diameter": 16
+      },
+      "hole": {
+        "defaultDiameter": 18,
+        "shape": "round",
+        "tolerances": {
+          "tight": 17,
+          "normal": 18,
+          "loose": 20
+        }
+      },
+      "head": {
+        "kind": "hex",
+        "acrossFlats": 24,
+        "height": 10
+      },
+      "blindEnd": {
+        "kind": "toggle",
+        "requiresOrientation": true,
+        "clearanceEnvelope": {
+          "width": 40,
+          "height": 18,
+          "length": 55
+        }
+      }
+    },
+    "HOOK_M12": {
+      "id": "HOOK_M12",
+      "kind": "hook-bolt",
+      "standard": "manufacturer-specific",
+      "lengths": [
+        50,
+        60,
+        70,
+        80
+      ],
+      "shank": {
+        "diameter": 12
+      },
+      "hole": {
+        "defaultDiameter": 14,
+        "shape": "round",
+        "tolerances": {
+          "tight": 13,
+          "normal": 14,
+          "loose": 16
+        }
+      },
+      "head": {
+        "kind": "hex",
+        "acrossFlats": 19,
+        "height": 8
+      },
+      "hook": {
+        "radius": 35,
+        "opening": 18,
+        "requiresOrientation": true
+      }
+    }
+  }
+}

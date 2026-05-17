@@ -2,19 +2,19 @@
 
 ## Goal
 
-Build the first web viewer for `projects/sample_structure.json`.
+Build the first web viewer for `bobercad/data/projects/sample_structure.json`.
 
 ## Inputs
 
-- `projects/sample_structure.json`
-- `libraries/profiles.json`
-- `libraries/materials.json`
-- `viewer/viewer_settings.json`
+- `bobercad/data/projects/sample_structure.json`
+- `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json`
+- `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json`
+- `bobercad/app/ui/viewer/viewer-settings.json`
 
 ## Required Behavior
 
 - Load all three JSON files.
-- Load viewer camera, UI, control, and render settings from `viewer/viewer_settings.json`.
+- Load viewer camera, UI, control, and render settings from `bobercad/app/ui/viewer/viewer-settings.json`.
 - Use `objectIndex` to resolve objects.
 - Resolve `modelDefaults` before rendering so object-specific values override collection/type defaults.
 - Render members by extruding profile section contours along member start/end axes.
@@ -40,7 +40,7 @@ Build the first web viewer for `projects/sample_structure.json`.
 
 ## Implementation
 
-- Static entrypoint: `viewer/index.html`
-- Styles: `viewer/style.css`
-- Runtime entrypoint: `viewer/src/app.mjs`
+- Static entrypoint: `bobercad/app/ui/viewer/index.html`
+- Styles: `bobercad/app/ui/viewer/style.css`
+- Runtime entrypoint: `bobercad/app/ui/viewer/main.mjs`
 - No viewer geometry is written back to project JSON.

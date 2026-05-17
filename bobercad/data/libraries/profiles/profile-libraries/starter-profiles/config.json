@@ -1,0 +1,919 @@
+{
+  "$schema": "../../../../../app/schemas/profile-library.schema.json",
+  "schema": "steel-profile-library",
+  "schemaVersion": "0.2.0",
+  "library": {
+    "id": "starter-profile-library",
+    "name": "Starter Demo Profile Library",
+    "version": "0.2.0",
+    "status": "demo-not-certified-for-fabrication",
+    "description": "Point-based profile library for early viewer and editor development. Replace with verified standard catalog data before fabrication use."
+  },
+  "units": {
+    "length": "mm",
+    "angle": "deg",
+    "area": "mm2",
+    "massPerLength": "kg/m"
+  },
+  "sectionCoordinateSystem": {
+    "memberAxis": "local-x-from-start-to-end",
+    "pointFormat": "[y, z]",
+    "sectionWidthAxis": "local-y",
+    "sectionDepthAxis": "local-z",
+    "positiveRotation": "right-hand-about-local-x",
+    "contourRule": "each contour is closed by connecting the last point back to the first point",
+    "solidContourOrientation": "counter-clockwise",
+    "voidContourOrientation": "clockwise"
+  },
+  "profiles": {
+    "DEMO_I_200X100X8X12": {
+      "id": "DEMO_I_200X100X8X12",
+      "designation": "Demo I 200x100x8x12",
+      "profileType": "i-section",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                -50,
+                -100
+              ],
+              [
+                50,
+                -100
+              ],
+              [
+                50,
+                -88
+              ],
+              [
+                4,
+                -88
+              ],
+              [
+                4,
+                88
+              ],
+              [
+                50,
+                88
+              ],
+              [
+                50,
+                100
+              ],
+              [
+                -50,
+                100
+              ],
+              [
+                -50,
+                88
+              ],
+              [
+                -4,
+                88
+              ],
+              [
+                -4,
+                -88
+              ],
+              [
+                -50,
+                -88
+              ]
+            ]
+          }
+        ],
+        "referencePoints": {
+          "top-left": [
+            -50,
+            100
+          ],
+          "top-center": [
+            0,
+            100
+          ],
+          "top-right": [
+            50,
+            100
+          ],
+          "middle-left": [
+            -50,
+            0
+          ],
+          "middle-center": [
+            0,
+            0
+          ],
+          "middle-right": [
+            50,
+            0
+          ],
+          "bottom-left": [
+            -50,
+            -100
+          ],
+          "bottom-center": [
+            0,
+            -100
+          ],
+          "bottom-right": [
+            50,
+            -100
+          ]
+        },
+        "semanticRefs": {
+          "regions": [
+            "top-flange",
+            "bottom-flange",
+            "web"
+          ],
+          "faces": [
+            "top-flange.top",
+            "top-flange.bottom-left",
+            "top-flange.bottom-right",
+            "bottom-flange.top-left",
+            "bottom-flange.top-right",
+            "bottom-flange.bottom",
+            "web.left",
+            "web.right"
+          ],
+          "edges": [
+            "top-flange.outer-left",
+            "top-flange.outer-right",
+            "top-flange.inner-left",
+            "top-flange.inner-right",
+            "bottom-flange.outer-left",
+            "bottom-flange.outer-right",
+            "bottom-flange.inner-left",
+            "bottom-flange.inner-right",
+            "web.left",
+            "web.right"
+          ]
+        }
+      },
+      "properties": {
+        "area": 3808,
+        "massPerLength": 29.89
+      }
+    },
+    "DEMO_I_300X150X8X12": {
+      "id": "DEMO_I_300X150X8X12",
+      "designation": "Demo I 300x150x8x12",
+      "profileType": "i-section",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                -75,
+                -150
+              ],
+              [
+                75,
+                -150
+              ],
+              [
+                75,
+                -138
+              ],
+              [
+                4,
+                -138
+              ],
+              [
+                4,
+                138
+              ],
+              [
+                75,
+                138
+              ],
+              [
+                75,
+                150
+              ],
+              [
+                -75,
+                150
+              ],
+              [
+                -75,
+                138
+              ],
+              [
+                -4,
+                138
+              ],
+              [
+                -4,
+                -138
+              ],
+              [
+                -75,
+                -138
+              ]
+            ]
+          }
+        ],
+        "referencePoints": {
+          "top-left": [
+            -75,
+            150
+          ],
+          "top-center": [
+            0,
+            150
+          ],
+          "top-right": [
+            75,
+            150
+          ],
+          "middle-left": [
+            -75,
+            0
+          ],
+          "middle-center": [
+            0,
+            0
+          ],
+          "middle-right": [
+            75,
+            0
+          ],
+          "bottom-left": [
+            -75,
+            -150
+          ],
+          "bottom-center": [
+            0,
+            -150
+          ],
+          "bottom-right": [
+            75,
+            -150
+          ]
+        },
+        "semanticRefs": {
+          "regions": [
+            "top-flange",
+            "bottom-flange",
+            "web"
+          ],
+          "faces": [
+            "top-flange.top",
+            "top-flange.bottom-left",
+            "top-flange.bottom-right",
+            "bottom-flange.top-left",
+            "bottom-flange.top-right",
+            "bottom-flange.bottom",
+            "web.left",
+            "web.right"
+          ],
+          "edges": [
+            "top-flange.outer-left",
+            "top-flange.outer-right",
+            "top-flange.inner-left",
+            "top-flange.inner-right",
+            "bottom-flange.outer-left",
+            "bottom-flange.outer-right",
+            "bottom-flange.inner-left",
+            "bottom-flange.inner-right",
+            "web.left",
+            "web.right"
+          ]
+        }
+      },
+      "properties": {
+        "area": 5808,
+        "massPerLength": 45.59
+      }
+    },
+    "DEMO_RHS_100X50X5": {
+      "id": "DEMO_RHS_100X50X5",
+      "designation": "Demo RHS 100x50x5",
+      "profileType": "rhs",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                -25,
+                -50
+              ],
+              [
+                25,
+                -50
+              ],
+              [
+                25,
+                50
+              ],
+              [
+                -25,
+                50
+              ]
+            ]
+          },
+          {
+            "id": "inner",
+            "role": "void",
+            "points": [
+              [
+                -20,
+                -45
+              ],
+              [
+                -20,
+                45
+              ],
+              [
+                20,
+                45
+              ],
+              [
+                20,
+                -45
+              ]
+            ]
+          }
+        ],
+        "referencePoints": {
+          "top-left": [
+            -25,
+            50
+          ],
+          "top-center": [
+            0,
+            50
+          ],
+          "top-right": [
+            25,
+            50
+          ],
+          "middle-left": [
+            -25,
+            0
+          ],
+          "middle-center": [
+            0,
+            0
+          ],
+          "middle-right": [
+            25,
+            0
+          ],
+          "bottom-left": [
+            -25,
+            -50
+          ],
+          "bottom-center": [
+            0,
+            -50
+          ],
+          "bottom-right": [
+            25,
+            -50
+          ]
+        },
+        "semanticRefs": {
+          "regions": [
+            "outer-wall",
+            "inner-void"
+          ],
+          "faces": [
+            "outer.top",
+            "outer.bottom",
+            "outer.left",
+            "outer.right",
+            "inner.top",
+            "inner.bottom",
+            "inner.left",
+            "inner.right"
+          ],
+          "edges": [
+            "outer.top-left",
+            "outer.top-right",
+            "outer.bottom-left",
+            "outer.bottom-right",
+            "inner.top-left",
+            "inner.top-right",
+            "inner.bottom-left",
+            "inner.bottom-right"
+          ]
+        }
+      },
+      "properties": {
+        "area": 1400,
+        "massPerLength": 10.99
+      }
+    },
+    "DEMO_SHS_100X100X5": {
+      "id": "DEMO_SHS_100X100X5",
+      "designation": "Demo SHS 100x100x5",
+      "profileType": "shs",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                -50,
+                -50
+              ],
+              [
+                50,
+                -50
+              ],
+              [
+                50,
+                50
+              ],
+              [
+                -50,
+                50
+              ]
+            ]
+          },
+          {
+            "id": "inner",
+            "role": "void",
+            "points": [
+              [
+                -45,
+                -45
+              ],
+              [
+                -45,
+                45
+              ],
+              [
+                45,
+                45
+              ],
+              [
+                45,
+                -45
+              ]
+            ]
+          }
+        ],
+        "referencePoints": {
+          "top-left": [
+            -50,
+            50
+          ],
+          "top-center": [
+            0,
+            50
+          ],
+          "top-right": [
+            50,
+            50
+          ],
+          "middle-left": [
+            -50,
+            0
+          ],
+          "middle-center": [
+            0,
+            0
+          ],
+          "middle-right": [
+            50,
+            0
+          ],
+          "bottom-left": [
+            -50,
+            -50
+          ],
+          "bottom-center": [
+            0,
+            -50
+          ],
+          "bottom-right": [
+            50,
+            -50
+          ]
+        },
+        "semanticRefs": {
+          "regions": [
+            "outer-wall",
+            "inner-void"
+          ],
+          "faces": [
+            "outer.top",
+            "outer.bottom",
+            "outer.left",
+            "outer.right",
+            "inner.top",
+            "inner.bottom",
+            "inner.left",
+            "inner.right"
+          ],
+          "edges": [
+            "outer.top-left",
+            "outer.top-right",
+            "outer.bottom-left",
+            "outer.bottom-right",
+            "inner.top-left",
+            "inner.top-right",
+            "inner.bottom-left",
+            "inner.bottom-right"
+          ]
+        }
+      },
+      "properties": {
+        "area": 1900,
+        "massPerLength": 14.92
+      }
+    },
+    "DEMO_CHS_114X5": {
+      "id": "DEMO_CHS_114X5",
+      "designation": "Demo CHS 114.3x5",
+      "profileType": "chs",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                57.15,
+                0
+              ],
+              [
+                52.8,
+                21.87
+              ],
+              [
+                40.41,
+                40.41
+              ],
+              [
+                21.87,
+                52.8
+              ],
+              [
+                0,
+                57.15
+              ],
+              [
+                -21.87,
+                52.8
+              ],
+              [
+                -40.41,
+                40.41
+              ],
+              [
+                -52.8,
+                21.87
+              ],
+              [
+                -57.15,
+                0
+              ],
+              [
+                -52.8,
+                -21.87
+              ],
+              [
+                -40.41,
+                -40.41
+              ],
+              [
+                -21.87,
+                -52.8
+              ],
+              [
+                0,
+                -57.15
+              ],
+              [
+                21.87,
+                -52.8
+              ],
+              [
+                40.41,
+                -40.41
+              ],
+              [
+                52.8,
+                -21.87
+              ]
+            ]
+          },
+          {
+            "id": "inner",
+            "role": "void",
+            "points": [
+              [
+                52.15,
+                0
+              ],
+              [
+                48.18,
+                19.96
+              ],
+              [
+                36.88,
+                36.88
+              ],
+              [
+                19.96,
+                48.18
+              ],
+              [
+                0,
+                52.15
+              ],
+              [
+                -19.96,
+                48.18
+              ],
+              [
+                -36.88,
+                36.88
+              ],
+              [
+                -48.18,
+                19.96
+              ],
+              [
+                -52.15,
+                0
+              ],
+              [
+                -48.18,
+                -19.96
+              ],
+              [
+                -36.88,
+                -36.88
+              ],
+              [
+                -19.96,
+                -48.18
+              ],
+              [
+                0,
+                -52.15
+              ],
+              [
+                19.96,
+                -48.18
+              ],
+              [
+                36.88,
+                -36.88
+              ],
+              [
+                48.18,
+                -19.96
+              ]
+            ]
+          }
+        ],
+        "referencePoints": {
+          "top": [
+            0,
+            57.15
+          ],
+          "center": [
+            0,
+            0
+          ],
+          "bottom": [
+            0,
+            -57.15
+          ],
+          "left": [
+            -57.15,
+            0
+          ],
+          "right": [
+            57.15,
+            0
+          ],
+          "middle-center": [
+            0,
+            0
+          ]
+        },
+        "semanticRefs": {
+          "regions": [
+            "tube-wall",
+            "inner-void"
+          ],
+          "faces": [
+            "outer",
+            "inner"
+          ],
+          "edges": [
+            "outer-circle",
+            "inner-circle"
+          ]
+        }
+      },
+      "properties": {
+        "area": 1716.6,
+        "massPerLength": 13.48
+      }
+    },
+    "DEMO_L_75X75X8": {
+      "id": "DEMO_L_75X75X8",
+      "designation": "Demo Equal Angle 75x75x8",
+      "profileType": "equal-angle",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                -21.69,
+                -21.69
+              ],
+              [
+                53.31,
+                -21.69
+              ],
+              [
+                53.31,
+                -13.69
+              ],
+              [
+                -13.69,
+                -13.69
+              ],
+              [
+                -13.69,
+                53.31
+              ],
+              [
+                -21.69,
+                53.31
+              ]
+            ]
+          }
+        ],
+        "referencePoints": {
+          "heel": [
+            -21.69,
+            -21.69
+          ],
+          "toe-horizontal": [
+            53.31,
+            -21.69
+          ],
+          "toe-vertical": [
+            -21.69,
+            53.31
+          ],
+          "centroid": [
+            0,
+            0
+          ],
+          "middle-center": [
+            0,
+            0
+          ]
+        },
+        "semanticRefs": {
+          "regions": [
+            "vertical-leg",
+            "horizontal-leg"
+          ],
+          "faces": [
+            "vertical-leg.outer",
+            "vertical-leg.inner",
+            "horizontal-leg.outer",
+            "horizontal-leg.inner"
+          ],
+          "edges": [
+            "heel",
+            "vertical-toe",
+            "horizontal-toe"
+          ]
+        }
+      },
+      "properties": {
+        "area": 1136,
+        "massPerLength": 8.92
+      }
+    },
+    "DEMO_FLAT_100X10": {
+      "id": "DEMO_FLAT_100X10",
+      "designation": "Demo Flat Bar 100x10",
+      "profileType": "flat-bar",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                -50,
+                -5
+              ],
+              [
+                50,
+                -5
+              ],
+              [
+                50,
+                5
+              ],
+              [
+                -50,
+                5
+              ]
+            ]
+          }
+        ],
+        "referencePoints": {
+          "top-left": [
+            -50,
+            5
+          ],
+          "top-center": [
+            0,
+            5
+          ],
+          "top-right": [
+            50,
+            5
+          ],
+          "middle-left": [
+            -50,
+            0
+          ],
+          "middle-center": [
+            0,
+            0
+          ],
+          "middle-right": [
+            50,
+            0
+          ],
+          "bottom-left": [
+            -50,
+            -5
+          ],
+          "bottom-center": [
+            0,
+            -5
+          ],
+          "bottom-right": [
+            50,
+            -5
+          ]
+        },
+        "semanticRefs": {
+          "regions": [
+            "solid"
+          ],
+          "faces": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+          ],
+          "edges": [
+            "top-left",
+            "top-right",
+            "bottom-left",
+            "bottom-right"
+          ]
+        }
+      },
+      "properties": {
+        "area": 1000,
+        "massPerLength": 7.85
+      }
+    }
+  }
+}

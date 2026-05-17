@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../app/schemas/connection-register.schema.json",
+  "libraryUi": "./connection-library-ui.mjs",
+  "connections": [
+    "./connections/fin-plate/",
+    "./connections/moment-end-plate/"
+  ]
+}

@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bobercad/app/schemas/fastener-library.schema.json",
+  "title": "Steel Fastener Library Schema",
+  "description": "Starter schema for bolt, blind bolt, hook bolt, anchor, stud, nut, and washer catalog data referenced by steel BIM project files.",
+  "type": "object",
+  "required": [
+    "schema",
+    "schemaVersion",
+    "library",
+    "units",
+    "fasteners"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "steel-fastener-library"
+    },
+    "schemaVersion": {
+      "type": "string"
+    },
+    "library": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "units": {
+      "type": "object",
+      "required": [
+        "length"
+      ],
+      "properties": {
+        "length": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "fasteners": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/fastener"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "fastener": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "standard",
+        "shank",
+        "hole"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "grade": {
+          "type": "string"
+        },
+        "lengths": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "shank": {
+          "type": "object",
+          "required": [
+            "diameter"
+          ],
+          "properties": {
+            "diameter": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "hole": {
+          "type": "object",
+          "required": [
+            "defaultDiameter",
+            "shape"
+          ],
+          "properties": {
+            "defaultDiameter": {
+              "type": "number"
+            },
+            "shape": {
+              "type": "string"
+            },
+            "tolerances": {
+              "type": "object",
+              "properties": {
+                "tight": {
+                  "type": "number"
+                },
+                "normal": {
+                  "type": "number"
+                },
+                "loose": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "head": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "acrossFlats": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "nut": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "acrossFlats": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "washer": {
+          "type": "object",
+          "properties": {
+            "outerDiameter": {
+              "type": "number"
+            },
+            "thickness": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "blindEnd": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "hook": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "orientation": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "clearanceEnvelope": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

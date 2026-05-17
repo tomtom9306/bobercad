@@ -28,7 +28,7 @@ python .\scripts\check_repo.py
 Run project schema validation:
 
 ```powershell
-python .\validate_project.py .\projects\sample_structure.json
+python .\validate_project.py .\bobercad\data\projects\sample_structure.json
 ```
 
 ## When Work Gets Confusing
