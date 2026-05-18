@@ -1,0 +1,100 @@
+{
+  "type": "support-edge-fillet",
+  "title": "Support Edge Fillet",
+  "version": 1,
+  "roles": {
+    "weld": "_support_weld",
+    "backWeld": "_back_support_weld"
+  },
+  "parameters": {
+    "welds.front": {
+      "kind": "nonNegativeNumber",
+      "label": "Front weld",
+      "unit": "mm"
+    },
+    "welds.back": {
+      "kind": "nonNegativeNumber",
+      "label": "Back weld",
+      "unit": "mm"
+    },
+    "welds.top": {
+      "kind": "nonNegativeNumber",
+      "label": "Top weld",
+      "unit": "mm"
+    },
+    "welds.bottom": {
+      "kind": "nonNegativeNumber",
+      "label": "Bottom weld",
+      "unit": "mm"
+    }
+  },
+  "dimensions": [
+    {
+      "id": "front-weld",
+      "parameter": "welds.front",
+      "label": "FW",
+      "reference": {
+        "kind": "weld-size",
+        "weldRole": "weld",
+        "objectRole": "finPlate",
+        "interfaceRole": "main",
+        "edge": "support",
+        "side": "front"
+      }
+    },
+    {
+      "id": "back-weld",
+      "parameter": "welds.back",
+      "label": "BW",
+      "reference": {
+        "kind": "weld-size",
+        "weldRole": "weld",
+        "objectRole": "finPlate",
+        "interfaceRole": "main",
+        "edge": "support",
+        "side": "back"
+      }
+    },
+    {
+      "id": "top-weld",
+      "parameter": "welds.top",
+      "label": "topW",
+      "zeroLabel": "no weld",
+      "reference": {
+        "kind": "weld-size",
+        "weldRole": "weld",
+        "objectRole": "finPlate",
+        "interfaceRole": "main",
+        "edge": "top"
+      }
+    },
+    {
+      "id": "bottom-weld",
+      "parameter": "welds.bottom",
+      "label": "botW",
+      "zeroLabel": "no weld",
+      "reference": {
+        "kind": "weld-size",
+        "weldRole": "weld",
+        "objectRole": "finPlate",
+        "interfaceRole": "main",
+        "edge": "bottom"
+      }
+    }
+  ],
+  "ui": {
+    "tabs": [
+      {
+        "id": "welds",
+        "label": "Welds",
+        "items": [
+          "welds.front",
+          "welds.back",
+          "welds.top",
+          "welds.bottom"
+        ]
+      }
+    ]
+  },
+  "$schema": "../../../../../../app/schemas/connection-component.schema.json"
+}

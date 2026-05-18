@@ -4,6 +4,7 @@ import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgPolygon, csgSubtract, csgUni
 import { clearanceCutGeometry, cutBodyForFeature } from "../../engine/geometry/cut-features.mjs";
 import { memberFrame, resolveInterface, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
 import { triangulateFace } from "../../engine/geometry/polygon.mjs";
+import { DEFAULT_GHOST_OPACITY, activeConnectionObjectIds, isActiveConnectionObject, shouldRenderObject } from "./scene-object-visibility.mjs";
 
 let settings = null;
 
@@ -87,9 +88,11 @@ function holePatternCutters(project, profiles, feature, depth, shared = {}) {
   const basis = featureOrigin(project, profiles, feature);
   const radius = diameter / 2;
   if (radius <= 0) geometryError(`${pattern.id}: holeDiameter must be positive`);
+  const suppressed = new Set(pattern.suppressedPositionIndices || []);
   let cutters = [];
 
-  for (const position of positions) {
+  for (const [index, position] of positions.entries()) {
+    if (suppressed.has(index)) continue;
     if (!Array.isArray(position) || position.length !== 2 || position.some((value) => typeof value !== "number" || !Number.isFinite(value))) {
       geometryError(`${pattern.id}: hole position must be [y, z]`);
     }
@@ -385,7 +388,12 @@ function addBentPlate(scene, plate) {
   const n = v.norm(plate.normal);
   const color = plate.display?.color || "#a6a6a6";
   const edgeColor = plate.display?.edgeColor || settings.render.edges.plateColor;
-  const meta = { collection: "plates", objectId: plate.id };
+  const meta = {
+    collection: "plates",
+    objectId: plate.id,
+    ...(plate.display?.transparent || plate.display?.suppressed || plate.display?.opacity !== undefined ? { opacity: plate.display?.opacity ?? DEFAULT_GHOST_OPACITY } : {}),
+    ...(plate.display?.suppressed ? { suppressed: true } : {})
+  };
   const outline = plate.flatPattern.outline;
   const minY = Math.min(...outline.map((point) => point[0]));
   const maxY = Math.max(...outline.map((point) => point[0]));
@@ -503,7 +511,12 @@ function addPlate(scene, project, plate) {
 
   const color = plate.display?.color || "#a6a6a6";
   const edgeColor = plate.display?.edgeColor || settings.render.edges.plateColor;
-  const meta = { collection: "plates", objectId: plate.id };
+  const meta = {
+    collection: "plates",
+    objectId: plate.id,
+    ...(plate.display?.transparent || plate.display?.suppressed || plate.display?.opacity !== undefined ? { opacity: plate.display?.opacity ?? DEFAULT_GHOST_OPACITY } : {}),
+    ...(plate.display?.suppressed ? { suppressed: true } : {})
+  };
   const polygons = plateCsgPolygons(project, scene.profiles, plate, color);
 
   for (const polygon of polygons) {
@@ -612,7 +625,7 @@ function featureOrigin(project, profiles, feature) {
 
 function addCutBody(scene, project, profiles, feature) {
   if (feature.operationEnabled === false) return;
-  if (feature.display?.visible === false) return;
+  if (!shouldRenderObject(scene, feature)) return;
   const meta = { collection: "features", objectId: feature.id };
   if (feature.type === "cut-plane" || feature.type === "fitting") {
     if (!feature.plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
@@ -705,7 +718,7 @@ function addFastenerAssembly(scene, project, fastenerGroup, fastener, basis, pos
 
 function addFastenerGroups(scene, project) {
   for (const fastenerGroup of collectionObjects(project, "fastenerGroups")) {
-    if (fastenerGroup.display?.visible === false) continue;
+    if (!shouldRenderObject(scene, fastenerGroup)) continue;
     const pattern = objectById(project, fastenerGroup.holePatternRef);
     const feature = objectById(project, fastenerGroup.through.fromFeatureId);
     const basis = featureOrigin(project, scene.profiles, feature);
@@ -713,9 +726,18 @@ function addFastenerGroups(scene, project) {
     const color = fastenerGroup.display?.color || "#b7791f";
     const edgeColor = fastenerGroup.display?.edgeColor || settings.render.edges.fastenerHeadColor;
     const meta = { collection: "fastenerGroups", objectId: fastenerGroup.id };
+    const suppressedPositions = new Set(pattern.suppressedPositionIndices || []);
+    const groupSuppressed = Boolean(fastenerGroup.display?.suppressed);
 
-    for (const position of pattern.positions) {
-      addFastenerAssembly(scene, project, fastenerGroup, fastener, basis, position, color, edgeColor, meta);
+    for (const [positionIndex, position] of pattern.positions.entries()) {
+      const suppressed = groupSuppressed || suppressedPositions.has(positionIndex);
+      if (suppressed && !isActiveConnectionObject(scene, fastenerGroup.id) && !isActiveConnectionObject(scene, pattern.id)) continue;
+      addFastenerAssembly(scene, project, fastenerGroup, fastener, basis, position, color, edgeColor, {
+        ...meta,
+        positionIndex,
+        componentKind: "fastener-position",
+        ...(suppressed ? { suppressed: true, opacity: fastenerGroup.display?.opacity ?? DEFAULT_GHOST_OPACITY } : {})
+      });
     }
   }
 }
@@ -741,7 +763,8 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
   const edgeSide = v.dot(plateAxisY, supportNormal) >= 0 ? -1 : 1;
   const edgeCenter = v.add(plateCenter, v.mul(plateAxisY, edgeSide * width / 2));
   const color = weld.display?.color || "#f6e05e";
-  const meta = { collection: "welds", objectId: weld.id };
+  const weldOpacity = weld.display?.transparent || weld.display?.suppressed || weld.display?.opacity !== undefined ? weld.display?.opacity ?? DEFAULT_GHOST_OPACITY : 0.9;
+  const meta = { collection: "welds", objectId: weld.id, opacity: weldOpacity, ...(weld.display?.suppressed ? { suppressed: true } : {}) };
   const runs = Array.isArray(ref.runs)
     ? ref.runs
     : [{ edge: "support", side: "front", size }, { edge: "support", side: "back", size }];
@@ -881,7 +904,7 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
   };
 
   const addWeldFace = (points, runColor = color) => {
-    scene.faces.push({ points, color: runColor, opacity: 0.9, ...meta });
+    scene.faces.push({ points, color: runColor, opacity: weldOpacity, ...meta });
     addLoopLines(scene, points, runColor, meta);
   };
 
@@ -941,7 +964,7 @@ function memberWeldProfilePoints(project, weld, member, profile, frame, contour)
 
 function addWelds(scene, project) {
   for (const weld of collectionObjects(project, "welds")) {
-    if (weld.display?.visible === false) continue;
+    if (!shouldRenderObject(scene, weld)) continue;
     if (weld.reference?.kind === "plate-support-edge") {
       addPlateSupportEdgeWeld(scene, project, weld);
       continue;
@@ -960,10 +983,19 @@ function addWelds(scene, project) {
   }
 }
 
-export function buildScene(project, profiles, fasteners, viewerSettings) {
+export function buildScene(project, profiles, fasteners, viewerSettings, options = {}) {
   settings = viewerSettings;
   setGeometrySettings(viewerSettings);
-  const sceneData = { faces: [], lines: [], vertices: [], profiles: profiles.profiles, fasteners: fasteners.fasteners, project };
+  const sceneData = {
+    faces: [],
+    lines: [],
+    vertices: [],
+    profiles: profiles.profiles,
+    fasteners: fasteners.fasteners,
+    project,
+    activeConnectionId: options.activeConnectionId || null,
+    activeConnectionObjectIds: activeConnectionObjectIds(project, options.activeConnectionId)
+  };
 
   for (const member of collectionObjects(project, "members")) {
     if (member.display?.visible === false) continue;
@@ -971,7 +1003,7 @@ export function buildScene(project, profiles, fasteners, viewerSettings) {
   }
 
   for (const plate of collectionObjects(project, "plates")) {
-    if (plate.display?.visible === false) continue;
+    if (!shouldRenderObject(sceneData, plate)) continue;
     addPlate(sceneData, project, plate);
   }
 

@@ -1,9 +1,13 @@
 import { defineConnection } from "./connection-schema.mjs";
+import { loadConnectionComponents } from "./component-registry.mjs";
+import { buildConnectionRecipe } from "./connection-recipe.mjs";
+import { mountParameterConnectionUi } from "../../../../data/libraries/connections/connection-ui.mjs";
 
 const definitions = new Map();
 const presets = new Map();
 let loaded = false;
 let libraryUi = null;
+let componentCatalog = {};
 const registerUrl = new URL("../../../../data/libraries/connections/connection-register.json", import.meta.url);
 
 async function loadJson(url) {
@@ -29,22 +33,73 @@ export function registerConnectionDefinition(definition) {
 }
 
 export function connectionCatalog() {
-  return { connections: Object.fromEntries(presets), customUi: libraryUi };
+  return { connections: Object.fromEntries(presets), customUi: libraryUi, components: componentCatalog };
+}
+
+function sameJson(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function mergeRecord(scope, target = {}, source = {}) {
+  const next = { ...target };
+  for (const [key, value] of Object.entries(source || {})) {
+    if (key in next && !sameJson(next[key], value)) throw new Error(`${scope}: duplicate ${key}`);
+    next[key] = value;
+  }
+  return next;
+}
+
+function mergeUi(connectionUi = { tabs: [] }, componentUi = { tabs: [] }) {
+  const tabs = (connectionUi.tabs || []).map((tab) => ({ ...tab, items: [...(tab.items || [])] }));
+  for (const componentTab of componentUi.tabs || []) {
+    const existing = tabs.find((tab) => tab.id === componentTab.id);
+    if (existing) existing.items.push(...(componentTab.items || []));
+    else tabs.push({ ...componentTab, items: [...(componentTab.items || [])] });
+  }
+  return { ...connectionUi, tabs };
+}
+
+function componentType(ref) {
+  if (typeof ref === "string") return ref;
+  return ref?.component || ref?.type;
+}
+
+function composeConnectionDefinition(config) {
+  let next = { ...config };
+  for (const ref of config.componentRefs || []) {
+    const type = componentType(ref);
+    const component = componentCatalog[type];
+    if (!component) throw new Error(`${config.type}: connection component not found: ${type}`);
+    next = {
+      ...next,
+      roles: mergeRecord(`${config.type}.${type}.roles`, next.roles, component.roles),
+      parameters: mergeRecord(`${config.type}.${type}.parameters`, next.parameters, component.parameters),
+      requiredPlateRoles: [...(next.requiredPlateRoles || []), ...(component.requiredPlateRoles || [])],
+      components: [...(next.components || []), ...(component.components || [])],
+      dimensions: [...(next.dimensions || []), ...(component.dimensions || [])],
+      ui: mergeUi(next.ui, component.ui)
+    };
+  }
+  return next;
 }
 
 export async function loadConnectionDefinitions() {
   if (loaded) return connectionCatalog();
 
   const register = await loadJson(registerUrl);
+  componentCatalog = await loadConnectionComponents();
   if (typeof register.libraryUi !== "string") throw new Error("connection register missing libraryUi");
   libraryUi = await import(new URL(register.libraryUi, registerUrl).href);
   const nextDefinitions = await Promise.all((register.connections || []).map(async (connectionPath) => {
     if (typeof connectionPath !== "string") throw new Error("connection register entries must be folder paths");
     const base = new URL(connectionPath.endsWith("/") ? connectionPath : `${connectionPath}/`, registerUrl);
     const config = await loadJson(new URL("config.json", base));
-    const buildModule = await import(new URL("build.mjs", base).href);
-    const customUi = await import(new URL("ui.mjs", base).href);
-    return defineConnection({ ...config, build: buildModule.build || buildModule.default, customUi });
+    if (!Array.isArray(config.recipe) || !config.recipe.length) throw new Error(`${config.type}: missing connection recipe`);
+    return defineConnection({
+      ...composeConnectionDefinition(config),
+      build: buildConnectionRecipe(config.recipe),
+      customUi: { mountConnectionUi: mountParameterConnectionUi }
+    });
   }));
 
   for (const definition of nextDefinitions) registerConnectionDefinition(definition);

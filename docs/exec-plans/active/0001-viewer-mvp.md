@@ -34,7 +34,7 @@ Build the first web viewer for `bobercad/data/projects/sample_structure.json`.
 ## Acceptance Checks
 
 - JSON files still parse.
-- `scripts/check_repo.py` passes.
+- `node .\scripts\check_repo.js` passes.
 - Viewer runs locally.
 - Generated geometry is runtime-only.
 

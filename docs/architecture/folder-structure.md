@@ -6,8 +6,6 @@ Current root shape:
 bobercad
 |-- .gitignore
 |-- AGENTS.md
-|-- requirements.txt
-|-- validate_project.py
 |-- docs
 |-- scripts
 `-- bobercad
@@ -30,7 +28,6 @@ Current checked structure:
 ```text
 bobercad
 |-- AGENTS.md
-|-- requirements.txt
 |
 |-- docs
 |   |-- README.md
@@ -43,9 +40,10 @@ bobercad
 |   `-- workflows
 |
 |-- scripts
-|   |-- check_repo.py
+|   |-- check_repo.js
 |   |-- check_repo_structure.js
-|   `-- check_viewer_geometry.js
+|   |-- check_viewer_geometry.js
+|   `-- validate_json_schema.js
 |
 `-- bobercad
     |-- app
@@ -58,7 +56,9 @@ bobercad
     |   |   |-- fastener-library.schema.json
     |   |   |-- model-library.schema.json
     |   |   |-- connection.schema.json
-    |   |   `-- connection-register.schema.json
+    |   |   |-- connection-register.schema.json
+    |   |   |-- connection-component.schema.json
+    |   |   `-- connection-component-register.schema.json
     |   |
     |   |-- engine
     |   |   |-- api
@@ -97,8 +97,12 @@ bobercad
     |   |   `-- modules
     |   |       |-- connections
     |   |       |   |-- connection-registry.mjs
+    |   |       |   |-- component-registry.mjs
+    |   |       |   |-- component-config-groups.mjs
     |   |       |   |-- connection-generator.mjs
-    |   |       |   `-- connection-schema.mjs
+    |   |       |   |-- connection-recipe.mjs
+    |   |       |   |-- connection-schema.mjs
+    |   |       |   `-- README.md
     |   |       |
     |   |       |-- drawings
     |   |       |   `-- drawing-generator.mjs
@@ -107,6 +111,9 @@ bobercad
     |   |           `-- report-generator.mjs
     |   |
     |   |-- rendering
+    |   |   |-- annotations
+    |   |   |   `-- README.md
+    |   |   |
     |   |   |-- scene
     |   |   |   |-- build-authoring-overlays.mjs
     |   |   |   `-- build-scene.mjs
@@ -123,6 +130,7 @@ bobercad
     |   `-- ui
     |       `-- viewer
     |           |-- index.html
+    |           |-- README.md
     |           |-- style.css
     |           |-- viewer-settings.json
     |           |-- main.mjs
@@ -175,21 +183,65 @@ bobercad
         |   |       `-- starter-frames
         |   |           `-- config.json
         |   |
-        |   `-- connections
-        |       |-- connection-register.json
-        |       |-- connection-library-ui.mjs
-        |       |-- connection-ui.mjs
+        |   |-- connections
+        |   |   |-- connection-register.json
+        |   |   |-- README.md
+        |   |   |-- connection-library-ui.mjs
+        |   |   |-- connection-ui.mjs
+        |   |   |
+        |   |   `-- connections
+        |   |       |-- fin-plate
+        |   |       |   `-- config.json
+        |   |       |
+        |   |       `-- moment-end-plate
+        |   |           `-- config.json
+        |   |
+        |   `-- connection-components
+        |       |-- component-register.json
+        |       |-- README.md
         |       |
-        |       `-- connections
-        |           |-- fin-plate
-        |           |   |-- config.json
-        |           |   |-- build.mjs
-        |           |   `-- ui.mjs
+        |       `-- components
+        |           |-- metadata
+        |           |   `-- design-status
+        |           |       |-- config.json
+        |           |       `-- build.mjs
         |           |
-        |           `-- moment-end-plate
-        |               |-- config.json
-        |               |-- build.mjs
-        |               `-- ui.mjs
+        |           |-- plates
+        |           |   |-- secondary-web-plate
+        |           |   |   |-- config.json
+        |           |   |   `-- build.mjs
+        |           |   |
+        |           |   `-- member-end-plate
+        |           |       |-- config.json
+        |           |       `-- build.mjs
+        |           |
+        |           |-- features
+        |           |   `-- secondary-member-gap-fitting
+        |           |       |-- config.json
+        |           |       `-- build.mjs
+        |           |
+        |           |-- fasteners
+        |           |   `-- web-bolt-pattern
+        |           |       |-- config.json
+        |           |       `-- build.mjs
+        |           |
+        |           |-- cuts
+        |           |   `-- support-flange-clearance
+        |           |       |-- config.json
+        |           |       `-- build.mjs
+        |           |
+        |           |-- welds
+        |           |   `-- support-edge-fillet
+        |           |       |-- config.json
+        |           |       `-- build.mjs
+        |           |
+        |           |-- stiffeners
+        |           |   `-- support-web-stiffeners
+        |           |       |-- config.json
+        |           |       `-- build.mjs
+        |           |
+        |           `-- shared
+        |               `-- secondary-web-context.mjs
         |
         `-- projects
             `-- sample_*.json
@@ -236,7 +288,7 @@ ui/controls    reusable inputs, buttons, menus, form controls
 ui/themes      visual styling tokens and theme switching
 ```
 
-Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Connection files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The connection register points to `data/libraries/connections/connection-library-ui.mjs` for library-level tools, and each connection folder provides its own `ui.mjs` for connection-specific UI.
+Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Connection files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The connection register points to `data/libraries/connections/connection-library-ui.mjs` for library-level tools. Connection-specific fields come from JSON config merged from reusable components, not custom viewer files.
 
 API rule:
 
@@ -248,7 +300,7 @@ engine/modules/<name>          feature implementation used by API and store
 
 `bobercad/bobercad/data/libraries` is for editable industry knowledge. Material, profile, fastener, and model libraries should be grouped as packs, not one folder per individual item.
 
-Connection libraries are different because each connection must have config, code, and custom UI:
+Connection libraries are intentionally thin because standard connections should be composed from reusable components:
 
 ```text
 bobercad/bobercad/data/libraries/connections
@@ -257,9 +309,9 @@ bobercad/bobercad/data/libraries/connections
 |-- connection-ui.mjs
 `-- connections
     `-- one-folder-per-connection
-        |-- config.json
-        |-- build.mjs
-        `-- ui.mjs
+        `-- config.json
 ```
 
-Adding a new connection should usually mean adding one folder under `bobercad/bobercad/data/libraries/connections/connections` and adding that folder path to `bobercad/bobercad/data/libraries/connections/connection-register.json`. The register is also the only link to connection library UI through `libraryUi`. The app loads `build.mjs` and `ui.mjs` from each connection folder; the viewer should not contain connection-specific panels.
+Adding a new connection should usually mean adding one folder under `bobercad/bobercad/data/libraries/connections/connections` and adding that folder path to `bobercad/bobercad/data/libraries/connections/connection-register.json`. The register is also the only link to connection library UI through `libraryUi`. The app reads each connection `config.json`, composes `componentRefs`, and runs its declarative `recipe`; connection folders must not contain `build.mjs` or `ui.mjs`.
+
+Reusable connection parts live in `bobercad/bobercad/data/libraries/connection-components`. Add one folder under `components`, register it in `component-register.json`, then reference it from a connection config with `componentRefs` and `recipe`. Component configs own shared roles, UI fragments, dimensions, and optional parameters; component build files create explicit model objects through the connection API. Compact config groups are allowed when they prevent repeated boilerplate across many components.

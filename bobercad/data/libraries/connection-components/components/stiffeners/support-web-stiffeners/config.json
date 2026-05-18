@@ -1,0 +1,61 @@
+{
+  "type": "support-web-stiffeners",
+  "title": "Support Web Stiffeners",
+  "version": 1,
+  "roles": {
+    "leftNearSupportStiffener": "_left_near_support_stiffener",
+    "leftFarSupportStiffener": "_left_far_support_stiffener",
+    "rightNearSupportStiffener": "_right_near_support_stiffener",
+    "rightFarSupportStiffener": "_right_far_support_stiffener",
+    "leftNearSupportStiffenerWeld": "_left_near_support_stiffener_weld",
+    "leftFarSupportStiffenerWeld": "_left_far_support_stiffener_weld",
+    "rightNearSupportStiffenerWeld": "_right_near_support_stiffener_weld",
+    "rightFarSupportStiffenerWeld": "_right_far_support_stiffener_weld"
+  },
+  "components": [
+    {
+      "role": "leftNearSupportStiffener",
+      "label": "Left near stiffener",
+      "kind": "plate",
+      "default": "ghost"
+    },
+    {
+      "role": "leftFarSupportStiffener",
+      "label": "Left far stiffener",
+      "kind": "plate",
+      "default": "ghost"
+    },
+    {
+      "role": "rightNearSupportStiffener",
+      "label": "Right near stiffener",
+      "kind": "plate",
+      "default": "ghost"
+    },
+    {
+      "role": "rightFarSupportStiffener",
+      "label": "Right far stiffener",
+      "kind": "plate",
+      "default": "ghost"
+    }
+  ],
+  "ui": {
+    "tabs": [
+      {
+        "id": "parts",
+        "label": "Parts",
+        "items": [
+          {
+            "kind": "connectionComponents",
+            "roles": [
+              "leftNearSupportStiffener",
+              "leftFarSupportStiffener",
+              "rightNearSupportStiffener",
+              "rightFarSupportStiffener"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "$schema": "../../../../../../app/schemas/connection-component.schema.json"
+}

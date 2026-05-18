@@ -1,20 +1,20 @@
 const fs = require("fs");
 const path = require("path");
 const { fileURLToPath, pathToFileURL } = require("url");
+const { validateFile, formatError } = require("./validate_json_schema");
 
 const ROOT = path.resolve(__dirname, "..");
 
 const REQUIRED_FILES = [
   "AGENTS.md",
-  "requirements.txt",
   "docs/README.md",
   "docs/architecture/data-model.md",
   "docs/architecture/folder-structure.md",
   "docs/workflows/codex-workflow.md",
-  "scripts/check_repo.py",
+  "scripts/check_repo.js",
   "scripts/check_repo_structure.js",
+  "scripts/validate_json_schema.js",
   "scripts/check_viewer_geometry.js",
-  "validate_project.py",
 
   "bobercad/app/schemas/project.schema.json",
   "bobercad/app/schemas/viewer-settings.schema.json",
@@ -25,6 +25,8 @@ const REQUIRED_FILES = [
   "bobercad/app/schemas/model-library.schema.json",
   "bobercad/app/schemas/connection.schema.json",
   "bobercad/app/schemas/connection-register.schema.json",
+  "bobercad/app/schemas/connection-component.schema.json",
+  "bobercad/app/schemas/connection-component-register.schema.json",
 
   "bobercad/app/engine/api/api-register.json",
   "bobercad/app/engine/api/project/project-api.mjs",
@@ -46,11 +48,16 @@ const REQUIRED_FILES = [
   "bobercad/app/engine/geometry/polygon.mjs",
   "bobercad/app/engine/store/project-store.mjs",
   "bobercad/app/engine/modules/connections/connection-registry.mjs",
+  "bobercad/app/engine/modules/connections/component-registry.mjs",
+  "bobercad/app/engine/modules/connections/component-config-groups.mjs",
   "bobercad/app/engine/modules/connections/connection-generator.mjs",
+  "bobercad/app/engine/modules/connections/connection-recipe.mjs",
   "bobercad/app/engine/modules/connections/connection-schema.mjs",
+  "bobercad/app/engine/modules/connections/README.md",
   "bobercad/app/engine/modules/drawings/drawing-generator.mjs",
   "bobercad/app/engine/modules/reports/report-generator.mjs",
 
+  "bobercad/app/rendering/annotations/README.md",
   "bobercad/app/rendering/scene/build-authoring-overlays.mjs",
   "bobercad/app/rendering/scene/build-scene.mjs",
   "bobercad/app/rendering/interaction/member-edit-controller.mjs",
@@ -60,6 +67,7 @@ const REQUIRED_FILES = [
   "bobercad/app/rendering/webgl/webgl-renderer.mjs",
 
   "bobercad/app/ui/viewer/index.html",
+  "bobercad/app/ui/viewer/README.md",
   "bobercad/app/ui/viewer/style.css",
   "bobercad/app/ui/viewer/viewer-settings.json",
   "bobercad/app/ui/viewer/main.mjs",
@@ -93,14 +101,30 @@ const REQUIRED_FILES = [
   "bobercad/data/libraries/model-library/model-register.json",
   "bobercad/data/libraries/model-library/models/starter-frames/config.json",
   "bobercad/data/libraries/connections/connection-register.json",
+  "bobercad/data/libraries/connections/README.md",
   "bobercad/data/libraries/connections/connection-library-ui.mjs",
   "bobercad/data/libraries/connections/connection-ui.mjs",
+  "bobercad/data/libraries/connections/parameter-values.mjs",
   "bobercad/data/libraries/connections/connections/fin-plate/config.json",
-  "bobercad/data/libraries/connections/connections/fin-plate/build.mjs",
-  "bobercad/data/libraries/connections/connections/fin-plate/ui.mjs",
   "bobercad/data/libraries/connections/connections/moment-end-plate/config.json",
-  "bobercad/data/libraries/connections/connections/moment-end-plate/build.mjs",
-  "bobercad/data/libraries/connections/connections/moment-end-plate/ui.mjs"
+  "bobercad/data/libraries/connection-components/component-register.json",
+  "bobercad/data/libraries/connection-components/README.md",
+  "bobercad/data/libraries/connection-components/components/metadata/design-status/config.json",
+  "bobercad/data/libraries/connection-components/components/metadata/design-status/build.mjs",
+  "bobercad/data/libraries/connection-components/components/plates/secondary-web-plate/config.json",
+  "bobercad/data/libraries/connection-components/components/plates/secondary-web-plate/build.mjs",
+  "bobercad/data/libraries/connection-components/components/features/secondary-member-gap-fitting/config.json",
+  "bobercad/data/libraries/connection-components/components/features/secondary-member-gap-fitting/build.mjs",
+  "bobercad/data/libraries/connection-components/components/fasteners/web-bolt-pattern/config.json",
+  "bobercad/data/libraries/connection-components/components/fasteners/web-bolt-pattern/build.mjs",
+  "bobercad/data/libraries/connection-components/components/cuts/support-flange-clearance/config.json",
+  "bobercad/data/libraries/connection-components/components/cuts/support-flange-clearance/build.mjs",
+  "bobercad/data/libraries/connection-components/components/welds/support-edge-fillet/config.json",
+  "bobercad/data/libraries/connection-components/components/welds/support-edge-fillet/build.mjs",
+  "bobercad/data/libraries/connection-components/components/stiffeners/support-web-stiffeners/config.json",
+  "bobercad/data/libraries/connection-components/components/stiffeners/support-web-stiffeners/build.mjs",
+  "bobercad/data/libraries/connection-components/components/plates/member-end-plate/config.json",
+  "bobercad/data/libraries/connection-components/components/plates/member-end-plate/build.mjs"
 ];
 
 const FORBIDDEN_ROOT_DIRS = ["viewer", "libraries", "projects", "schemas"];
@@ -170,6 +194,23 @@ function checkJsonSchemaRefs(errors) {
   }
 }
 
+function checkJsonSchemas(errors) {
+  const targets = [
+    ...walk(path.join(ROOT, "bobercad/data/projects")).filter((item) => item.endsWith(".json")),
+    ...walk(path.join(ROOT, "bobercad/data/libraries/connections/connections")).filter((item) => item.endsWith(`${path.sep}config.json`)),
+    path.join(ROOT, "bobercad/data/libraries/connection-components/component-register.json"),
+    ...walk(path.join(ROOT, "bobercad/data/libraries/connection-components/components")).filter((item) => item.endsWith(`${path.sep}config.json`))
+  ];
+  for (const file of targets) {
+    try {
+      const result = validateFile(file);
+      for (const error of result.errors) fail(errors, formatError(result, error));
+    } catch (error) {
+      fail(errors, `${path.relative(ROOT, file)}: ${error.message}`);
+    }
+  }
+}
+
 function checkFolderRegister(errors, registerRelative, key) {
   const registerPath = path.join(ROOT, registerRelative);
   const register = readJson(registerRelative);
@@ -195,14 +236,29 @@ function checkConnectionFolders(errors) {
   }
   for (const item of register.connections || []) {
     const folder = path.resolve(path.dirname(registerPath), item);
-    for (const fileName of ["config.json", "build.mjs", "ui.mjs"]) {
+    for (const fileName of ["config.json"]) {
       const filePath = path.join(folder, fileName);
       if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
         fail(errors, `${registerRelative}: ${item} missing ${fileName}`);
       }
     }
+    for (const fileName of ["build.mjs", "ui.mjs"]) {
+      const filePath = path.join(folder, fileName);
+      if (fs.existsSync(filePath)) fail(errors, `${registerRelative}: ${item} should use recipe/component JSON, not ${fileName}`);
+    }
+    const definition = JSON.parse(fs.readFileSync(path.join(folder, "config.json"), "utf8"));
+    if (!Array.isArray(definition.recipe) || !definition.recipe.length) {
+      fail(errors, `${registerRelative}: ${item} must declare a recipe`);
+    }
+    if (!Array.isArray(definition.componentRefs) || !definition.componentRefs.length) {
+      fail(errors, `${registerRelative}: ${item} must declare componentRefs`);
+    }
+    for (const ownedField of ["roles", "requiredPlateRoles", "components", "parameters", "dimensions", "ui"]) {
+      if (Object.hasOwn(definition, ownedField)) {
+        fail(errors, `${registerRelative}: ${item} should keep ${ownedField} in reusable connection components, not the connection config`);
+      }
+    }
     if (item.endsWith("fin-plate")) {
-      const definition = JSON.parse(fs.readFileSync(path.join(folder, "config.json"), "utf8"));
       if (definition.parameters?.["holes.memberDepth"]) {
         fail(errors, `${item}: fin plate should not expose member hole depth as a user parameter`);
       }
@@ -211,6 +267,25 @@ function checkConnectionFolders(errors) {
       }
       if ((definition.dimensions || []).some((entry) => entry.parameter === "holes.memberDepth")) {
         fail(errors, `${item}: fin plate dimensions should not show member hole depth`);
+      }
+    }
+  }
+}
+
+function checkConnectionComponentFolders(errors) {
+  const registerRelative = "bobercad/data/libraries/connection-components/component-register.json";
+  const registerPath = path.join(ROOT, registerRelative);
+  const register = readJson(registerRelative);
+  const forbiddenComponentPathWords = ["fin-plate", "moment-end-plate", "assembly"];
+  for (const item of register.components || []) {
+    if (forbiddenComponentPathWords.some((word) => item.includes(word))) {
+      fail(errors, `${registerRelative}: component folder should be generic, not connection-specific: ${item}`);
+    }
+    const folder = path.resolve(path.dirname(registerPath), item);
+    for (const fileName of ["config.json", "build.mjs"]) {
+      const filePath = path.join(folder, fileName);
+      if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+        fail(errors, `${registerRelative}: ${item} missing ${fileName}`);
       }
     }
   }
@@ -327,11 +402,13 @@ async function checkAutoConnectionLifecycle(errors) {
     const { loadConnectionDefinitions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/modules/connections/connection-registry.mjs")).href);
     const { createProjectStore } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/store/project-store.mjs")).href);
     const { buildConnectionDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/annotations/build-dimensions.mjs")).href);
+    const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/scene/build-scene.mjs")).href);
     const { resolveInterface } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/geometry/member-geometry.mjs")).href);
     const { v } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/core/math.mjs")).href);
     const project = emptyGeneratedConnectionModel(readJson("bobercad/data/projects/sample_fin_plate.json"));
     const profiles = readJson("bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json");
     const fasteners = readJson("bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json");
+    const viewerSettings = readJson("bobercad/app/ui/viewer/viewer-settings.json");
     const connectionCatalog = await loadConnectionDefinitions();
     const storedStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
     const storedBefore = storedStore.project().model.plates.connection_fin_plate_1_fin_plate.center;
@@ -505,17 +582,6 @@ async function checkAutoConnectionLifecycle(errors) {
     if (Math.abs((washerFastenerGroup.assembly?.gripLength || 0) - 18) > 1e-6) {
       fail(errors, `auto connection lifecycle: fin plate grip length should be plate plus secondary web thickness, got ${washerFastenerGroup.assembly?.gripLength}`);
     }
-    const gripBeforeLegacyDepth = washerFastenerGroup.assembly?.gripLength;
-    const depthBeforeLegacyDepth = fastenerHoleStore.project().model.features.connection_fin_plate_1_holes_secondary.depth;
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters,
-      holes: { ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.holes, memberDepth: 999 }
-    });
-    const legacyDepthGroup = fastenerHoleStore.project().model.fastenerGroups.connection_fin_plate_1_bolts;
-    const depthAfterLegacyDepth = fastenerHoleStore.project().model.features.connection_fin_plate_1_holes_secondary.depth;
-    if (legacyDepthGroup.assembly?.gripLength !== gripBeforeLegacyDepth || depthAfterLegacyDepth !== depthBeforeLegacyDepth) {
-      fail(errors, "auto connection lifecycle: legacy holes.memberDepth must not move fin plate nuts or change generated member hole depth");
-    }
     fastenerHoleStore.updateConnection("connection_fin_plate_1", {
       ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters,
       bolts: {
@@ -642,7 +708,7 @@ async function checkAutoConnectionLifecycle(errors) {
         fail(errors, `auto connection lifecycle: generated interface is not tagged for delete-with-connection: ${interfaceId}`);
       }
     }
-    if (Object.keys(afterCreate.model.plates || {}).length !== 1) fail(errors, "auto connection lifecycle: fin plate was not generated");
+    if (!afterCreate.model.plates?.[connection.generator.objectRoles.finPlate]) fail(errors, "auto connection lifecycle: fin plate was not generated");
     if (Object.keys(afterCreate.model.fastenerGroups || {}).length !== 1) fail(errors, "auto connection lifecycle: fastener group was not generated");
     const beamStart = afterCreate.model.members.beam_1.start;
     if (JSON.stringify(beamStart) !== JSON.stringify([170, 0, 1500])) {
@@ -653,6 +719,52 @@ async function checkAutoConnectionLifecycle(errors) {
     if (runKeys.join("|") !== "support:back:6|support:front:6") {
       fail(errors, `auto connection lifecycle: fin plate weld runs are not explicit front/back runs: ${runKeys.join("|")}`);
     }
+    const plateToggleStore = createProjectStore({ project: afterCreate, profiles, connectionCatalog, fasteners });
+    plateToggleStore.toggleConnectionComponentFromFace({ objectId: connection.generator.objectRoles.finPlate });
+    const plateToggleProject = plateToggleStore.project();
+    const hiddenWeld = plateToggleProject.model.welds?.[plateToggleProject.model.connections[created.connectionId].generator.objectRoles.weld];
+    if (!hiddenWeld?.display?.suppressed) {
+      fail(errors, "auto connection lifecycle: suppressing the fin plate should also suppress its weld");
+    }
+    const sceneHasObject = (scene, objectId, predicate = () => true) => {
+      return [...scene.faces, ...scene.lines].some((item) => item.objectId === objectId && predicate(item));
+    };
+    const hiddenPlateId = connection.generator.objectRoles.finPlate;
+    const hiddenWeldId = connection.generator.objectRoles.weld;
+    const inactivePlateScene = buildScene(plateToggleProject, profiles, fasteners, viewerSettings);
+    if (sceneHasObject(inactivePlateScene, hiddenPlateId) || sceneHasObject(inactivePlateScene, hiddenWeldId)) {
+      fail(errors, "auto connection lifecycle: suppressed plate ghosts should not render without an active connection editor");
+    }
+    const activePlateScene = buildScene(plateToggleProject, profiles, fasteners, viewerSettings, { activeConnectionId: created.connectionId });
+    if (!sceneHasObject(activePlateScene, hiddenPlateId, (item) => item.suppressed) || !sceneHasObject(activePlateScene, hiddenWeldId, (item) => item.suppressed)) {
+      fail(errors, "auto connection lifecycle: suppressed plate and weld ghosts should render while editing their connection");
+    }
+
+    const boltToggleStore = createProjectStore({ project: afterCreate, profiles, connectionCatalog, fasteners });
+    boltToggleStore.toggleConnectionComponentFromFace({ objectId: connection.generator.objectRoles.fasteners, positionIndex: 0 });
+    const boltToggleProject = boltToggleStore.project();
+    const skippedBoltPattern = boltToggleProject.model.holePatterns?.[boltToggleProject.model.connections[created.connectionId].generator.objectRoles.holePattern];
+    if (!skippedBoltPattern?.suppressedPositionIndices?.includes(0)) {
+      fail(errors, "auto connection lifecycle: suppressing one bolt should also suppress the matching hole");
+    }
+    const hiddenFastenerId = connection.generator.objectRoles.fasteners;
+    const inactiveBoltScene = buildScene(boltToggleProject, profiles, fasteners, viewerSettings);
+    if (sceneHasObject(inactiveBoltScene, hiddenFastenerId, (item) => item.positionIndex === 0)) {
+      fail(errors, "auto connection lifecycle: suppressed bolt ghosts should not render without an active connection editor");
+    }
+    const activeBoltScene = buildScene(boltToggleProject, profiles, fasteners, viewerSettings, { activeConnectionId: created.connectionId });
+    if (!sceneHasObject(activeBoltScene, hiddenFastenerId, (item) => item.positionIndex === 0 && item.suppressed)) {
+      fail(errors, "auto connection lifecycle: suppressed bolt ghosts should render while editing their connection");
+    }
+
+    const fastenerToggleStore = createProjectStore({ project: afterCreate, profiles, connectionCatalog, fasteners });
+    fastenerToggleStore.toggleConnectionComponentFromFace({ objectId: connection.generator.objectRoles.fasteners });
+    const fastenerToggleProject = fastenerToggleStore.project();
+    const hiddenFastenerPattern = fastenerToggleProject.model.holePatterns?.[fastenerToggleProject.model.connections[created.connectionId].generator.objectRoles.holePattern];
+    if ((hiddenFastenerPattern?.suppressedPositionIndices || []).length !== (hiddenFastenerPattern?.positions || []).length) {
+      fail(errors, "auto connection lifecycle: suppressing the fastener group should also suppress all matching holes");
+    }
+
     const plateBeforeMove = afterCreate.model.plates?.[connection.generator.objectRoles.finPlate];
     store.moveMemberWithLayout("beam_1", [0, 0, 250]);
     const afterMove = store.project();
@@ -744,12 +856,15 @@ async function main() {
   }
 
   checkJsonSchemaRefs(errors);
+  checkJsonSchemas(errors);
   checkFolderRegister(errors, "bobercad/data/libraries/materials/material-register.json", "libraries");
   checkFolderRegister(errors, "bobercad/data/libraries/profiles/profile-register.json", "libraries");
   checkFolderRegister(errors, "bobercad/data/libraries/fasteners/fastener-register.json", "libraries");
   checkFolderRegister(errors, "bobercad/data/libraries/model-library/model-register.json", "libraries");
   checkFolderRegister(errors, "bobercad/data/libraries/connections/connection-register.json", "connections");
+  checkFolderRegister(errors, "bobercad/data/libraries/connection-components/component-register.json", "components");
   checkConnectionFolders(errors);
+  checkConnectionComponentFolders(errors);
   checkViewerHasNoDomainFiles(errors);
   checkProjectFiles(errors);
   await checkApiRegister(errors);

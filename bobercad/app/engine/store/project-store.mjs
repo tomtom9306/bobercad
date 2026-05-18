@@ -13,6 +13,7 @@ import {
 import {
   clone,
   connectionById,
+  connectionComponentOptions as projectConnectionComponentOptions,
   connectionOptionalObjectIds,
   connectionPlateOptions as projectConnectionPlateOptions,
   createProjectConnectionFromPreset,
@@ -153,6 +154,68 @@ function affectedConnections(project, memberId) {
 function connectionReferencesObject(connection, objectId) {
   if (connection.id === objectId) return true;
   return connectionOwnedObjectIds(connection).includes(objectId) || connectionOptionalObjectIds(connection).includes(objectId);
+}
+
+function connectionRoleForObject(connection, objectId) {
+  for (const [role, value] of Object.entries(connection.generator?.objectRoles || {})) {
+    if (flattenIds(value).includes(objectId)) return role;
+  }
+  return null;
+}
+
+function normalizedIndexList(values) {
+  if (!Array.isArray(values)) return [];
+  return [...new Set(values.filter((value) => Number.isInteger(value) && value >= 0))].sort((a, b) => a - b);
+}
+
+function setIndexIncluded(values, index, included) {
+  const current = new Set(normalizedIndexList(values));
+  if (included) current.delete(index);
+  else current.add(index);
+  return [...current].sort((a, b) => a - b);
+}
+
+function optionalComponentRole(definition, role) {
+  return (definition.components || []).some((component) => component?.role === role && component.default === "ghost");
+}
+
+function setRoleInList(list = [], role, active) {
+  const current = new Set((Array.isArray(list) ? list : []).filter((value) => typeof value === "string"));
+  if (active) current.add(role);
+  else current.delete(role);
+  return [...current].sort();
+}
+
+function componentFromFace(project, face) {
+  if (!face?.objectId) return null;
+  const connection = Object.values(project.model.connections || {}).find((item) => connectionReferencesObject(item, face.objectId));
+  if (!connection) return null;
+  const collection = objectCollection(project, face.objectId);
+  if (!collection) return null;
+
+  const objectRole = connectionRoleForObject(connection, face.objectId);
+  if (collection === "fastenerGroups" && Number.isInteger(face.positionIndex)) {
+    const fastenerGroup = project.model.fastenerGroups?.[face.objectId];
+    const patternRole = fastenerGroup?.holePatternRef ? connectionRoleForObject(connection, fastenerGroup.holePatternRef) : null;
+    if (patternRole) {
+      return {
+        kind: "pattern-position",
+        connectionId: connection.id,
+        objectId: face.objectId,
+        objectRole,
+        patternRole,
+        positionIndex: face.positionIndex
+      };
+    }
+  }
+
+  if (!objectRole) return null;
+  return {
+    kind: "object-role",
+    connectionId: connection.id,
+    objectId: face.objectId,
+    objectRole
+  };
 }
 
 function interfaceReferencePoint(project, profiles, zone, interfaceId) {
@@ -372,6 +435,8 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     return setProject(reconcileGeneratedConnections(regenerateMemberConnections(next, memberId)));
   };
 
+  currentProject = reconcileGeneratedConnections(currentProject);
+
   return {
     subscribe(listener) {
       subscribers.add(listener);
@@ -398,6 +463,46 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
 
     connectionForObject(objectId) {
       return Object.values(currentProject.model.connections || {}).find((connection) => connectionReferencesObject(connection, objectId)) || null;
+    },
+
+    componentFromFace(face) {
+      return componentFromFace(currentProject, face);
+    },
+
+    toggleConnectionComponentFromFace(face) {
+      const component = componentFromFace(currentProject, face);
+      if (!component) return null;
+      const next = clone(currentProject);
+      const connection = connectionById(next, component.connectionId);
+      connection.componentOverrides ||= {};
+
+      let included = true;
+      if (component.kind === "pattern-position") {
+        connection.componentOverrides.suppressedPatternPositions ||= {};
+        const current = connection.componentOverrides.suppressedPatternPositions[component.patternRole] || [];
+        included = current.includes(component.positionIndex);
+        const nextList = setIndexIncluded(current, component.positionIndex, included);
+        if (nextList.length) connection.componentOverrides.suppressedPatternPositions[component.patternRole] = nextList;
+        else delete connection.componentOverrides.suppressedPatternPositions[component.patternRole];
+      } else if (component.kind === "object-role") {
+        const definition = definitionFor(next, component.connectionId);
+        if (optionalComponentRole(definition, component.objectRole)) {
+          const current = new Set(connection.componentOverrides.activeObjectRoles || []);
+          included = !current.has(component.objectRole);
+          if (included) current.add(component.objectRole);
+          else current.delete(component.objectRole);
+          connection.componentOverrides.activeObjectRoles = [...current].sort();
+        } else {
+          const current = new Set(connection.componentOverrides.suppressedObjectRoles || []);
+          included = current.has(component.objectRole);
+          if (included) current.delete(component.objectRole);
+          else current.add(component.objectRole);
+          connection.componentOverrides.suppressedObjectRoles = [...current].sort();
+        }
+      }
+
+      const updated = setProject(reconcileGeneratedConnections(regenerateConnection(next, component.connectionId)));
+      return { project: updated, component, included };
     },
 
     connectionObjectIds(connectionId) {
@@ -441,6 +546,24 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
 
     connectionPlateOptions(connectionId) {
       return projectConnectionPlateOptions(currentProject, definitionFor(currentProject, connectionId), connectionId);
+    },
+
+    connectionComponentOptions(connectionId) {
+      return projectConnectionComponentOptions(currentProject, definitionFor(currentProject, connectionId), connectionId);
+    },
+
+    setConnectionComponentActive(connectionId, role, active) {
+      const next = clone(currentProject);
+      const connection = connectionById(next, connectionId);
+      const definition = definitionFor(next, connectionId);
+      if (!(definition.components || []).some((component) => component?.role === role)) fail(`${connectionId}: unknown component role ${role}`);
+      connection.componentOverrides ||= {};
+      if (optionalComponentRole(definition, role)) {
+        connection.componentOverrides.activeObjectRoles = setRoleInList(connection.componentOverrides.activeObjectRoles, role, active);
+      } else {
+        connection.componentOverrides.suppressedObjectRoles = setRoleInList(connection.componentOverrides.suppressedObjectRoles, role, !active);
+      }
+      return setProject(reconcileGeneratedConnections(regenerateConnection(next, connectionId)));
     },
 
     setConnectionPlateIncluded(connectionId, plateId, included) {

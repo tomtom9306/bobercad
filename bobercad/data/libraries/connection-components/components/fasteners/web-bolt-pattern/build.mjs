@@ -1,99 +1,4 @@
-function addWeldRun(runs, edge, size, side = null) {
-  if (size > 0) runs.push({ edge, ...(side ? { side } : {}), size });
-}
-
-function supportWeldRuns(ctx) {
-  const legacy = ctx.optionalParam("welds.support", 0);
-  const runs = [];
-  addWeldRun(runs, "support", ctx.optionalParam("welds.front", legacy), "front");
-  addWeldRun(runs, "support", ctx.optionalParam("welds.back", legacy), "back");
-  addWeldRun(runs, "top", ctx.optionalParam("welds.top", 0));
-  addWeldRun(runs, "bottom", ctx.optionalParam("welds.bottom", 0));
-  return runs;
-}
-
-function trimAllowance(ctx, height, localAxisY, localAxisZ, planeNormal) {
-  const alongY = Math.abs(ctx.geometry.v.dot(localAxisY, planeNormal));
-  if (alongY <= 1e-9) return 0;
-  return height * Math.abs(ctx.geometry.v.dot(localAxisZ, planeNormal)) / alongY + 1;
-}
-
-function finPlateOutline(ctx, plate, supportInterface, beamDirection, webReference) {
-  const supportPlane = ctx.geometry.v.add(supportInterface.origin, ctx.geometry.v.mul(supportInterface.normal, plate.edgeOffset));
-  const beamEndPlane = ctx.geometry.v.add(supportPlane, ctx.geometry.v.mul(beamDirection, plate.length));
-  const beamKeepPoint = ctx.geometry.v.add(supportPlane, ctx.geometry.v.mul(beamDirection, plate.length / 2));
-  const extra = Math.max(
-    trimAllowance(ctx, plate.height, webReference.localAxisY, webReference.localAxisZ, supportInterface.normal),
-    trimAllowance(ctx, plate.height, webReference.localAxisY, webReference.localAxisZ, beamDirection)
-  );
-  let outline = ctx.geometry.rectangleOutline(plate.length + 2 * extra, plate.height);
-  outline = ctx.geometry.clipPlateOutlineByPlane({
-    outline,
-    plateCenter: webReference.origin,
-    localAxisY: webReference.localAxisY,
-    localAxisZ: webReference.localAxisZ,
-    planeOrigin: supportPlane,
-    planeNormal: supportInterface.normal,
-    keepPoint: beamKeepPoint
-  });
-  outline = ctx.geometry.clipPlateOutlineByPlane({
-    outline,
-    plateCenter: webReference.origin,
-    localAxisY: webReference.localAxisY,
-    localAxisZ: webReference.localAxisZ,
-    planeOrigin: beamEndPlane,
-    planeNormal: beamDirection,
-    keepPoint: supportPlane
-  });
-  return outline;
-}
-
-function memberEndPoint(member, iface) {
-  if (iface.memberEnd === "end") return member.end;
-  return member.start;
-}
-
-function isBeam(member) {
-  return String(member.type || "").includes("beam");
-}
-
-function notchOffsets(ctx, path) {
-  return {
-    xMinus: Math.max(0, ctx.optionalParam(`${path}.xMinus`, 5)),
-    xPlus: Math.max(0, ctx.optionalParam(`${path}.xPlus`, 5)),
-    yMinus: Math.max(0, ctx.optionalParam(`${path}.yMinus`, 5)),
-    yPlus: Math.max(0, ctx.optionalParam(`${path}.yPlus`, 5)),
-    zMinus: Math.max(0, ctx.optionalParam(`${path}.zMinus`, 5)),
-    zPlus: Math.max(0, ctx.optionalParam(`${path}.zPlus`, 5))
-  };
-}
-
-function supportFlangeNotch(ctx, { region, modePath, offsetsPath, supportMember, supportProfile, supportedBeam, supportedBeamProfile, supportInterface, beamInterface }) {
-  if (!isBeam(supportMember)) return null;
-  if (supportProfile.profileType !== "i-section" || supportedBeamProfile.profileType !== "i-section") return null;
-
-  const supportFrame = ctx.geometry.memberFrame(supportMember);
-  const supportStation = Math.max(0, Math.min(
-    ctx.geometry.memberLength(supportMember),
-    ctx.geometry.v.dot(ctx.geometry.v.sub(supportInterface.origin, supportMember.start), supportFrame.x)
-  ));
-
-  return {
-    operationEnabled: ctx.optionalParam(modePath, "auto") !== "off",
-    source: {
-      kind: "member-region",
-      memberId: supportMember.id,
-      interfaceId: supportInterface.id,
-      region,
-      station: supportStation
-    },
-    target: {
-      memberId: supportedBeam.id,
-      end: beamInterface.memberEnd
-    },
-    offsets: notchOffsets(ctx, offsetsPath)
-  };
-}
+import { secondaryWebConnectionContext } from "../../shared/secondary-web-context.mjs";
 
 function fastenerDefinition(ctx, fastenerRef) {
   const fastener = ctx.fasteners?.fasteners?.[fastenerRef];
@@ -114,8 +19,8 @@ function holeDiameter(ctx, fastener, holes) {
   return normal;
 }
 
-function automaticMemberHoleDepth(webThickness, holeDiameter) {
-  return Math.max(webThickness * 2 + 4, holeDiameter + 2);
+function automaticMemberHoleDepth(webThickness, holeDiameterValue) {
+  return Math.max(webThickness * 2 + 4, holeDiameterValue + 2);
 }
 
 function finiteNumber(value) {
@@ -213,115 +118,24 @@ function patternInReference(ctx, pattern, fromReference, toReference) {
   };
 }
 
-export function build(ctx) {
-  const supportInterface = ctx.interface("main");
-  const beamInterface = ctx.interface("secondary");
-  const supportMember = ctx.member("main");
-  const supportedBeam = ctx.member("secondary");
-  const supportProfile = ctx.profile("main");
-  const supportedBeamProfile = ctx.profile("secondary");
-  ctx.check.requireMemberEnd(beamInterface, "secondary interface missing memberEnd");
-
-  const plate = ctx.params({
-    thickness: "plate.thickness",
-    length: "plate.length",
-    height: "plate.height",
-    edgeOffset: "plate.edgeOffset"
-  });
-  const beamDirection = ctx.geometry.secondaryBeamDirection(supportedBeam, beamInterface);
-  const beamGap = ctx.optionalParam("fit.beamGap", 0);
-  const clipBeam = ctx.optionalParam("fit.clipBeam", true);
-  const boltsParallelToSupport = ctx.optionalParam("bolts.parallelToSupport", false);
-  const supportNormal = ctx.geometry.v.dot(supportInterface.normal, beamDirection) < 0
-    ? ctx.geometry.v.mul(supportInterface.normal, -1)
-    : supportInterface.normal;
-  const beamEndPoint = memberEndPoint(supportedBeam, beamInterface);
-  const supportPlane = ctx.geometry.v.add(supportInterface.origin, ctx.geometry.v.mul(supportNormal, plate.edgeOffset));
-  const supportEdge = ctx.geometry.linePlaneIntersection(beamEndPoint, ctx.geometry.v.mul(beamDirection, -1), supportPlane, supportNormal)
-    || ctx.geometry.projectPointToPlane(beamEndPoint, supportPlane, supportNormal);
-  const plateReference = ctx.geometry.secondaryWebReference({
-    member: supportedBeam,
-    profile: supportedBeamProfile,
+export function build(ctx, input = {}) {
+  const context = secondaryWebConnectionContext(ctx, input);
+  const recipeContext = input.recipeContext || {};
+  const {
+    plate,
+    supportedBeam,
     supportInterface,
-    beamInterface,
-    plateLength: plate.length,
-    plateThickness: plate.thickness,
-    startReferencePoint: supportEdge
-  });
-  const beamHoleReference = ctx.geometry.secondaryWebReference({
-    member: supportedBeam,
-    profile: supportedBeamProfile,
-    supportInterface,
-    beamInterface,
-    plateLength: plate.length,
-    plateThickness: plate.thickness,
-    startReferencePoint: beamEndPoint
-  });
-  const supportAxisZ = ctx.geometry.projectedAxis(supportInterface.localAxisZ, beamHoleReference.normal);
-  const layoutAxisZ = supportAxisZ && Math.abs(ctx.geometry.v.dot(supportAxisZ, beamHoleReference.localAxisY)) < 0.98
-    ? (ctx.geometry.v.dot(supportAxisZ, beamHoleReference.localAxisZ) < 0 ? ctx.geometry.v.mul(supportAxisZ, -1) : supportAxisZ)
-    : beamHoleReference.localAxisZ;
-  const layoutReference = boltsParallelToSupport
-    ? { ...beamHoleReference, localAxisY: beamHoleReference.localAxisY, localAxisZ: layoutAxisZ }
-    : beamHoleReference;
-  const holeReference = beamHoleReference;
-
-  ctx.check.plateFitsInterface(beamHoleReference, plate.length, plate.height, {
-    offset: plate.edgeOffset,
-    objectRoles: ["finPlate"],
-    lengthCode: "fin-plate-length-outside-secondary-interface",
-    lengthMessage: (overrun) => `Fin plate extends ${overrun} mm past the secondary member connection zone.`,
-    lengthParameters: ["plate.length", "plate.edgeOffset"],
-    heightCode: "fin-plate-height-intersects-secondary-flanges",
-    heightMessage: (allowedHeight) => `Fin plate height ${plate.height} mm exceeds the secondary web zone height ${allowedHeight} mm.`,
-    heightParameters: ["plate.height"]
-  });
-  const outline = finPlateOutline(ctx, plate, supportInterface, beamDirection, plateReference);
-  ctx.check.plateOutlineValid(outline, {
-    code: "fin-plate-outline-invalid-after-trimming",
-    message: "Fin plate trimming left no valid plate outline.",
-    objectRoles: ["finPlate"],
-    parameters: ["plate.length", "plate.height", "plate.edgeOffset"]
-  });
-
-  const finPlate = ctx.part.plate("finPlate", {
-    type: "rectangular-plate",
-    thickness: plate.thickness,
-    width: plate.length,
-    height: plate.height,
-    outline,
-    center: plateReference.origin,
-    normal: plateReference.normal,
-    localAxisY: plateReference.localAxisY,
-    localAxisZ: plateReference.localAxisZ,
-    assemblyId: ctx.connection.assemblyId,
-    placementIntent: {
-      role: "fin-plate",
-      host: { objectId: supportMember.id, interfaceId: supportInterface.id },
-      references: [{ objectId: supportedBeam.id, end: beamInterface.memberEnd }],
-      fit: "support-face-to-secondary-web"
-    },
-    display: { color: "#4f6f83" },
-    fabrication: { partMark: "FP1" }
-  });
-  ctx.feature.fitting("beamFitting", {
-    ownerId: supportedBeam.id,
-    operationEnabled: clipBeam,
-    plane: {
-      origin: ctx.geometry.v.add(supportInterface.origin, ctx.geometry.v.mul(supportNormal, beamGap)),
-      normal: supportNormal,
-      axisX: plateReference.normal,
-      axisY: plateReference.localAxisZ
-    },
-    display: { visible: false },
-    fabrication: { operation: "fit-secondary-member-to-fin-plate-gap" },
-    placementIntent: {
-      role: "set-secondary-member-gap",
-      host: { objectId: supportedBeam.id, end: beamInterface.memberEnd },
-      references: [{ objectId: supportMember.id, interfaceId: supportInterface.id }],
-      fit: "secondary-end-to-support-face-gap"
-    }
-  });
+    supportNormal,
+    beamHoleReference,
+    layoutReference,
+    holeReference,
+    beamWebThickness
+  } = context;
+  const finPlate = input.finPlate || recipeContext.finPlate;
+  const backFinPlate = input.backFinPlate || recipeContext.backFinPlate;
+  if (!plate || !finPlate || !backFinPlate || !supportedBeam || !supportInterface || !supportNormal || !beamHoleReference || !layoutReference || !holeReference) {
+    ctx.fail("web-bolt-pattern: secondary-web-plate must run before web-bolt-pattern");
+  }
 
   const bolts = ctx.params({
     rows: "bolts.rows",
@@ -337,6 +151,7 @@ export function build(ctx) {
   const horizontalPositionMode = ctx.optionalParam("bolts.horizontalPositionMode", "centered");
   const rowSpacingMode = ctx.optionalParam("bolts.rowSpacingMode", "equal");
   const columnSpacingMode = ctx.optionalParam("bolts.columnSpacingMode", "equal");
+  const boltsParallelToSupport = ctx.optionalParam("bolts.parallelToSupport", false);
   const holes = {
     tolerance: ctx.optionalParam("holes.tolerance", "normal"),
     customDiameter: ctx.optionalParam("holes.customDiameter", ctx.optionalParam("holes.diameter")),
@@ -345,9 +160,9 @@ export function build(ctx) {
   };
   const fastener = fastenerDefinition(ctx, bolts.fastenerRef);
   const effectiveHoleDiameter = holeDiameter(ctx, fastener, holes);
-  const beamWebThickness = beamHoleReference.webThickness || ctx.geometry.webThickness(supportedBeamProfile);
   const memberHoleDepth = automaticMemberHoleDepth(beamWebThickness, effectiveHoleDiameter);
-  const gripLength = plate.thickness + beamWebThickness;
+  const backPlateActive = ctx.roleActive("backFinPlate");
+  const gripLength = plate.thickness + beamWebThickness + (backPlateActive ? plate.thickness : 0);
   const holeType = fastener.hole?.shape || holes.type;
   const washers = {
     head: ctx.optionalParam("washers.head", Boolean(fastener.washer)),
@@ -359,6 +174,7 @@ export function build(ctx) {
   const columnSpacings = columnSpacingMode === "custom"
     ? normalizeSpacings(ctx.optionalParam("bolts.columnSpacings", []), bolts.columns - 1, bolts.gauge)
     : normalizeSpacings([], bolts.columns - 1, bolts.gauge);
+
   if (bolts.rows > 1 && Math.min(...rowSpacings) <= 0) {
     ctx.error("fin-plate-bolt-row-spacing-required", "Bolt row spacing must be greater than 0 when more than one bolt row is used.", {
       objectRoles: ["holePattern", "plateHoles", "memberHoles", "fasteners"],
@@ -373,6 +189,7 @@ export function build(ctx) {
       resolve: columnSpacingMode === "custom" ? [] : [{ path: "bolts.gauge", mode: "min", value: Math.max(1, effectiveHoleDiameter * 3) }]
     });
   }
+
   const patternHeight = rowSpacings.reduce((sum, value) => sum + value, 0);
   const patternWidth = columnSpacings.reduce((sum, value) => sum + value, 0);
   const layoutBounds = plateBoundsInReference(ctx, finPlate, layoutReference);
@@ -438,6 +255,12 @@ export function build(ctx) {
     reference: { kind: "plate-face", face: "back", origin: holeReference.origin, localAxisY: holeReference.localAxisY, localAxisZ: holeReference.localAxisZ },
     fabrication: { operation: "drill" }
   });
+  ctx.feature.holePattern("backPlateHoles", {
+    ownerId: backFinPlate.id,
+    holePatternRef: boltGrid.id,
+    reference: { kind: "plate-face", face: "back", origin: backFinPlate.center, localAxisY: holeReference.localAxisY, localAxisZ: holeReference.localAxisZ },
+    fabrication: { operation: "drill" }
+  });
   const memberHoles = ctx.feature.holePattern("memberHoles", {
     ownerId: supportedBeam.id,
     holePatternRef: boltGrid.id,
@@ -452,107 +275,16 @@ export function build(ctx) {
     fabrication: { operation: "drill" }
   });
 
-  for (const spec of [
-    {
-      region: "top-flange",
-      modePath: "notch.topMode",
-      offsetsPath: "notch.topOffsets",
-      memberRole: "topNotch",
-      plateRole: "topPlateNotch",
-      memberPlacementRole: "clear-supporting-beam-top-flange",
-      platePlacementRole: "trim-fin-plate-for-supporting-beam-top-flange",
-      operation: "top-flange-notch",
-      plateOperation: "top-flange-plate-trim",
-      name: "Top flange notch",
-      plateName: "Top flange fin plate trim"
-    },
-    {
-      region: "bottom-flange",
-      modePath: "notch.bottomMode",
-      offsetsPath: "notch.bottomOffsets",
-      memberRole: "bottomNotch",
-      plateRole: "bottomPlateNotch",
-      memberPlacementRole: "clear-supporting-beam-bottom-flange",
-      platePlacementRole: "trim-fin-plate-for-supporting-beam-bottom-flange",
-      operation: "bottom-flange-notch",
-      plateOperation: "bottom-flange-plate-trim",
-      name: "Bottom flange notch",
-      plateName: "Bottom flange fin plate trim"
-    }
-  ]) {
-    const notch = supportFlangeNotch(ctx, {
-      region: spec.region,
-      modePath: spec.modePath,
-      offsetsPath: spec.offsetsPath,
-      supportMember,
-      supportProfile,
-      supportedBeam,
-      supportedBeamProfile,
-      supportInterface,
-      beamInterface
-    });
-    if (!notch) continue;
-
-    const common = {
-      kind: "support-flange-notch",
-      operationEnabled: notch.operationEnabled,
-      cutKind: "part-cut",
-      source: notch.source,
-      target: notch.target,
-      offsets: notch.offsets,
-      display: { visible: false, color: "#ff3366", transparent: true, opacity: 0.08 }
-    };
-    const references = [
-      { objectId: supportMember.id, interfaceId: supportInterface.id },
-      { objectId: supportedBeam.id, end: beamInterface.memberEnd }
-    ];
-
-    ctx.feature.clearanceCut(spec.memberRole, {
-      ...common,
-      ownerId: supportedBeam.id,
-      fabrication: { operation: spec.operation },
-      placementIntent: {
-        role: spec.memberPlacementRole,
-        host: { objectId: supportedBeam.id, end: beamInterface.memberEnd },
-        references: [references[0]],
-        source: "support-flange-clearance-cut"
-      },
-      bim: { name: spec.name }
-    });
-    ctx.feature.clearanceCut(spec.plateRole, {
-      ...common,
-      ownerId: finPlate.id,
-      fabrication: { operation: spec.plateOperation },
-      placementIntent: {
-        role: spec.platePlacementRole,
-        host: { objectId: finPlate.id },
-        references,
-        source: "support-flange-clearance-cut"
-      },
-      bim: { name: spec.plateName }
-    });
-  }
-
   const assembly = { length: boltLength, gripLength, washers };
   if (nutPositionMode === "custom") assembly.nutOffset = nutOffset;
-  ctx.fastener.group("fasteners", {
+  const fasteners = ctx.fastener.group("fasteners", {
     fastenerRef: bolts.fastenerRef,
     holePatternRef: boltGrid.id,
-    participants: [finPlate.id, supportedBeam.id],
+    participants: backPlateActive ? [finPlate.id, supportedBeam.id, backFinPlate.id] : [finPlate.id, supportedBeam.id],
     through: { fromFeatureId: plateHoles.id, toFeatureId: memberHoles.id },
     orientation: { axis: ctx.geometry.v.mul(holeReference.normal, -1), headSide: "fin-plate-side" },
     assembly
   });
-  const weldRuns = supportWeldRuns(ctx);
-  ctx.weld.fillet("weld", {
-    size: Math.max(0, ...weldRuns.map((run) => run.size)),
-    participants: [supportMember.id, finPlate.id],
-    reference: {
-      kind: "plate-support-edge",
-      plateId: finPlate.id,
-      supportInterfaceId: supportInterface.id,
-      stationReferenceInterfaceRef: beamInterface.id,
-      runs: weldRuns
-    }
-  });
+
+  return { boltGrid, plateHoles, memberHoles, fasteners, effectiveHoleDiameter };
 }

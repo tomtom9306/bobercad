@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../app/schemas/connection-component-register.schema.json",
+  "components": [
+    "./components/metadata/design-status/",
+    "./components/plates/secondary-web-plate/",
+    "./components/features/secondary-member-gap-fitting/",
+    "./components/fasteners/web-bolt-pattern/",
+    "./components/cuts/support-flange-clearance/",
+    "./components/welds/support-edge-fillet/",
+    "./components/stiffeners/support-web-stiffeners/",
+    "./components/plates/member-end-plate/"
+  ]
+}

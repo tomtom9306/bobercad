@@ -12,6 +12,7 @@ async function main() {
   const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "scene", "build-scene.mjs")).href);
   const { createCamera } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "webgl", "camera.mjs")).href);
   const { buildConnectionDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "annotations", "build-dimensions.mjs")).href);
+  const { loadConnectionDefinitions, connectionDefinition } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "modules", "connections", "connection-registry.mjs")).href);
   const settingsPath = path.join(ROOT, "bobercad", "app", "ui", "viewer", "viewer-settings.json");
   const settings = readJson(settingsPath);
   const projectPath = path.resolve(path.dirname(settingsPath), settings.project.path);
@@ -38,8 +39,9 @@ async function main() {
   const finPlatePath = path.resolve(path.dirname(settingsPath), settings.project.demos["fin-plate-1"].path);
   const finPlateProject = readJson(finPlatePath);
   const finPlateProfiles = readJson(path.resolve(path.dirname(finPlatePath), finPlateProject.libraries.profiles.path));
-  const finPlateDefinition = readJson(path.join(ROOT, "bobercad", "data", "libraries", "connections", "connections", "fin-plate", "config.json"));
+  const connectionCatalog = await loadConnectionDefinitions();
   const [finPlateConnectionId] = Object.keys(finPlateProject.model.connections || {});
+  const finPlateDefinition = connectionDefinition(connectionCatalog, finPlateProject.model.connections[finPlateConnectionId]);
   const dimensionOverlay = buildConnectionDimensions({
     project: finPlateProject,
     profiles: finPlateProfiles.profiles,

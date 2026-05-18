@@ -1,0 +1,52 @@
+{
+  "type": "secondary-member-gap-fitting",
+  "title": "Secondary Member Gap Fitting",
+  "version": 1,
+  "roles": {
+    "beamFitting": "_beam_gap_fitting"
+  },
+  "parameters": {
+    "fit.beamGap": {
+      "kind": "nonNegativeNumber",
+      "label": "Beam gap",
+      "unit": "mm",
+      "required": false,
+      "default": 20
+    },
+    "fit.clipBeam": {
+      "kind": "boolean",
+      "label": "Clip beam",
+      "required": false,
+      "default": true
+    }
+  },
+  "dimensions": [
+    {
+      "id": "beam-gap",
+      "parameter": "fit.beamGap",
+      "label": "gap",
+      "reference": {
+        "kind": "feature-plane-offset",
+        "interfaceRole": "main",
+        "featureRole": "beamFitting",
+        "objectRole": "finPlate",
+        "offset": {
+          "localAxisZ": 46
+        }
+      }
+    }
+  ],
+  "ui": {
+    "tabs": [
+      {
+        "id": "parts",
+        "label": "Parts",
+        "items": [
+          "fit.beamGap",
+          "fit.clipBeam"
+        ]
+      }
+    ]
+  },
+  "$schema": "../../../../../../app/schemas/connection-component.schema.json"
+}

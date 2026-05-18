@@ -1162,6 +1162,13 @@
           "items": {
             "$ref": "#/$defs/vec2"
           }
+        },
+        "suppressedPositionIndices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
         }
       },
       "additionalProperties": true
@@ -1635,48 +1642,6 @@
         "mainMemberId",
         "secondaryMemberId"
       ],
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "moment-end-plate"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "sourcePreset",
-              "referenceParameters"
-            ],
-            "properties": {
-              "referenceParameters": {
-                "$ref": "#/$defs/momentEndPlateReferenceParameters"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "fin-plate"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "sourcePreset",
-              "referenceParameters"
-            ],
-            "properties": {
-              "referenceParameters": {
-                "$ref": "#/$defs/finPlateReferenceParameters"
-              }
-            }
-          }
-        }
-      ],
       "properties": {
         "id": {
           "$ref": "#/$defs/id"
@@ -1724,6 +1689,28 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/id"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "componentOverrides": {
+          "type": "object",
+          "properties": {
+            "suppressedObjectRoles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "suppressedPatternPositions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
               }
             }
           },
@@ -1795,437 +1782,6 @@
         "size": {
           "type": "number",
           "minimum": 0
-        }
-      },
-      "additionalProperties": true
-    },
-    "momentEndPlateReferenceParameters": {
-      "type": "object",
-      "required": [
-        "plate",
-        "bolts",
-        "holes",
-        "welds"
-      ],
-      "properties": {
-        "plate": {
-          "type": "object",
-          "required": [
-            "thickness",
-            "width",
-            "height"
-          ],
-          "properties": {
-            "thickness": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "width": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "height": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "offset": {
-              "type": "number"
-            }
-          },
-          "additionalProperties": true
-        },
-        "bolts": {
-          "type": "object",
-          "required": [
-            "fastenerRef",
-            "rows",
-            "columns",
-            "pitch",
-            "gauge"
-          ],
-          "properties": {
-            "fastenerRef": {
-              "$ref": "#/$defs/id"
-            },
-            "rows": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "columns": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "pitch": {
-              "type": "number",
-              "minimum": 0
-            },
-            "gauge": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          "additionalProperties": true
-        },
-        "holes": {
-          "type": "object",
-          "required": [
-            "type",
-            "memberDepth"
-          ],
-          "properties": {
-            "diameter": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "tolerance": {
-              "enum": [
-                "tight",
-                "normal",
-                "loose",
-                "custom"
-              ]
-            },
-            "customDiameter": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "memberDepth": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "type": {
-              "enum": [
-                "round",
-                "slotted",
-                "countersunk"
-              ]
-            }
-          },
-          "additionalProperties": true
-        },
-        "welds": {
-          "type": "object",
-          "properties": {
-            "beamWeb": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "beamFlanges": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            }
-          },
-          "additionalProperties": true
-        }
-      },
-      "additionalProperties": true
-    },
-    "finPlateReferenceParameters": {
-      "type": "object",
-      "required": [
-        "plate",
-        "bolts",
-        "holes",
-        "welds"
-      ],
-      "properties": {
-        "plate": {
-          "type": "object",
-          "required": [
-            "thickness",
-            "length",
-            "height",
-            "edgeOffset"
-          ],
-          "properties": {
-            "thickness": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "length": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "height": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "edgeOffset": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          "additionalProperties": true
-        },
-        "bolts": {
-          "type": "object",
-          "required": [
-            "fastenerRef",
-            "rows",
-            "columns",
-            "pitch",
-            "gauge"
-          ],
-          "properties": {
-            "fastenerRef": {
-              "$ref": "#/$defs/id"
-            },
-            "rows": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "columns": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "pitch": {
-              "type": "number",
-              "minimum": 0
-            },
-            "gauge": {
-              "type": "number",
-              "minimum": 0
-            },
-            "length": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "parallelToSupport": {
-              "type": "boolean"
-            },
-            "verticalPositionMode": {
-              "enum": [
-                "centered",
-                "custom"
-              ]
-            },
-            "horizontalPositionMode": {
-              "enum": [
-                "centered",
-                "custom"
-              ]
-            },
-            "topEdgeDistance": {
-              "type": "number",
-              "minimum": 0
-            },
-            "supportEdgeDistance": {
-              "type": "number",
-              "minimum": 0
-            },
-            "rowSpacingMode": {
-              "enum": [
-                "equal",
-                "custom"
-              ]
-            },
-            "columnSpacingMode": {
-              "enum": [
-                "equal",
-                "custom"
-              ]
-            },
-            "rowSpacings": {
-              "type": "array",
-              "items": {
-                "type": "number",
-                "minimum": 0
-              }
-            },
-            "columnSpacings": {
-              "type": "array",
-              "items": {
-                "type": "number",
-                "minimum": 0
-              }
-            },
-            "nutPositionMode": {
-              "enum": [
-                "auto",
-                "custom"
-              ]
-            },
-            "nutOffset": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          "additionalProperties": true
-        },
-        "holes": {
-          "type": "object",
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "diameter": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "tolerance": {
-              "enum": [
-                "tight",
-                "normal",
-                "loose",
-                "custom"
-              ]
-            },
-            "customDiameter": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "type": {
-              "enum": [
-                "round",
-                "slotted",
-                "countersunk"
-              ]
-            }
-          },
-          "additionalProperties": true
-        },
-        "washers": {
-          "type": "object",
-          "properties": {
-            "head": {
-              "type": "boolean"
-            },
-            "nut": {
-              "type": "boolean"
-            }
-          },
-          "additionalProperties": true
-        },
-        "fit": {
-          "type": "object",
-          "properties": {
-            "beamGap": {
-              "type": "number",
-              "minimum": 0
-            },
-            "clipBeam": {
-              "type": "boolean"
-            }
-          },
-          "additionalProperties": true
-        },
-        "notch": {
-          "type": "object",
-          "properties": {
-            "topMode": {
-              "enum": [
-                "auto",
-                "off"
-              ]
-            },
-            "bottomMode": {
-              "enum": [
-                "auto",
-                "off"
-              ]
-            },
-            "topOffsets": {
-              "type": "object",
-              "properties": {
-                "xMinus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "xPlus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "yMinus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "yPlus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "zMinus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "zPlus": {
-                  "type": "number",
-                  "minimum": 0
-                }
-              },
-              "additionalProperties": true
-            },
-            "bottomOffsets": {
-              "type": "object",
-              "properties": {
-                "xMinus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "xPlus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "yMinus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "yPlus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "zMinus": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "zPlus": {
-                  "type": "number",
-                  "minimum": 0
-                }
-              },
-              "additionalProperties": true
-            }
-          },
-          "additionalProperties": true
-        },
-        "welds": {
-          "type": "object",
-          "required": [
-            "front",
-            "back",
-            "top",
-            "bottom"
-          ],
-          "properties": {
-            "support": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "front": {
-              "type": "number",
-              "minimum": 0
-            },
-            "back": {
-              "type": "number",
-              "minimum": 0
-            },
-            "top": {
-              "type": "number",
-              "minimum": 0
-            },
-            "bottom": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          "additionalProperties": true
-        },
-        "designAssumptions": {
-          "type": "object",
-          "additionalProperties": true
-        },
-        "loads": {
-          "type": "object",
-          "additionalProperties": true
         }
       },
       "additionalProperties": true
@@ -2461,6 +2017,9 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "suppressed": {
+          "type": "boolean"
         }
       },
       "additionalProperties": true

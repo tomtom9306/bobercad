@@ -9,6 +9,7 @@ import { clone, optionalPath, requiredPath, validateConnectionParameters } from 
 const MODEL_COLLECTIONS = ["groups", "interfaces", "connectionZones", "assemblies", "members", "plates", "holePatterns", "objectPatterns", "features", "fastenerGroups", "welds", "connections"];
 const AXIS_EPSILON = 1e-9;
 const DEFAULT_CONNECTION_TOLERANCE = 25;
+const DEFAULT_GHOST_OPACITY = 0.01;
 const DIAGNOSTIC_DISPLAY = {
   color: "#dc2626",
   edgeColor: "#7f1d1d",
@@ -247,6 +248,83 @@ function addDiagnosticDisplay(model, objectIds, diagnostics) {
   }
 }
 
+function normalizedIndexList(values) {
+  if (!Array.isArray(values)) return [];
+  return [...new Set(values
+    .filter((value) => Number.isInteger(value) && value >= 0)
+    .map((value) => Number(value)))]
+    .sort((a, b) => a - b);
+}
+
+function collectionObjectById(model, id) {
+  for (const collection of MODEL_COLLECTIONS) {
+    const object = model[collection]?.[id];
+    if (object) return { collection, object };
+  }
+  return null;
+}
+
+function suppressObject(object) {
+  object.display = {
+    ...(object.display || {}),
+    suppressed: true,
+    transparent: true,
+    opacity: object.display?.opacity ?? DEFAULT_GHOST_OPACITY
+  };
+}
+
+function suppressHolePatternPositions(model, patternId, indices) {
+  const pattern = typeof patternId === "string" ? model.holePatterns?.[patternId] : null;
+  if (!pattern) return;
+  const existing = pattern.suppressedPositionIndices || [];
+  pattern.suppressedPositionIndices = normalizedIndexList([...existing, ...indices]).filter((index) => index < (pattern.positions || []).length);
+}
+
+function suppressFastenerHoles(model, fastenerGroup) {
+  const pattern = fastenerGroup?.holePatternRef ? model.holePatterns?.[fastenerGroup.holePatternRef] : null;
+  if (!pattern) return;
+  suppressHolePatternPositions(model, pattern.id, (pattern.positions || []).map((_, index) => index));
+}
+
+function suppressParticipantWelds(model, objectIds) {
+  for (const weld of Object.values(model.welds || {})) {
+    if ((weld.participants || []).some((id) => objectIds.has(id))) suppressObject(weld);
+  }
+}
+
+function applyComponentOverrides(model, roles, overrides = {}) {
+  const activeObjectRoles = new Set((overrides.activeObjectRoles || []).filter((role) => typeof role === "string"));
+  const defaultGhostRoles = new Set((overrides.defaultGhostRoles || []).filter((role) => typeof role === "string"));
+  const patternPositions = overrides.suppressedPatternPositions || {};
+  for (const [role, indices] of Object.entries(patternPositions)) {
+    const patternId = roles[role];
+    suppressHolePatternPositions(model, patternId, indices);
+  }
+
+  const objectRoles = new Set([
+    ...[...defaultGhostRoles].filter((role) => !activeObjectRoles.has(role)),
+    ...(overrides.suppressedObjectRoles || []).filter((role) => typeof role === "string")
+  ]);
+  const suppressedObjectIds = new Set();
+  for (const role of objectRoles) {
+    const objectIds = flattenIds(roles[role]);
+    for (const objectId of objectIds) {
+      const entry = collectionObjectById(model, objectId);
+      if (!entry) continue;
+      suppressObject(entry.object);
+      suppressedObjectIds.add(objectId);
+      if (entry.collection === "fastenerGroups") suppressFastenerHoles(model, entry.object);
+    }
+  }
+  suppressParticipantWelds(model, suppressedObjectIds);
+}
+
+function defaultGhostComponentRoles(definition) {
+  return (definition.components || [])
+    .filter((component) => component?.role && component.default === "ghost")
+    .map((component) => component.role);
+}
+
 export { clone };
 
 export function connectionById(project, connectionId) {
@@ -292,7 +370,6 @@ function connectionInterfaceDefinitions(definition) {
 function autoInterfaceSpec(definition, preset, role) {
   const spec = connectionInterfaceDefinitions(definition).find((entry) => entry.role === role)?.auto || {};
   if (Object.keys(spec).length) return spec;
-  if (role === "secondary" && (definition?.type || preset.type) === "fin-plate") return { type: "member-web", faceRef: "web-center-plane" };
   if (role === "secondary") return { type: "member-end-face" };
   return { type: "planar-face", faceRef: "connection-secondary-facing-section-face" };
 }
@@ -527,6 +604,22 @@ class ConnectionBuildContext {
     return optionalPath(this.parameters, path, fallback);
   }
 
+  component(type, input = {}) {
+    const component = this.connectionCatalog.components?.[type];
+    if (!component) this.fail(`connection component not found: ${type}`);
+    if (typeof component.build !== "function") this.fail(`connection component ${type} missing build(ctx, input)`);
+    return component.build(this, input) || {};
+  }
+
+  roleActive(role) {
+    const overrides = this.connection.componentOverrides || {};
+    if ((overrides.suppressedObjectRoles || []).includes(role)) return false;
+    if (defaultGhostComponentRoles(this.definition).includes(role)) {
+      return (overrides.activeObjectRoles || []).includes(role);
+    }
+    return true;
+  }
+
   params(paths) {
     return Object.fromEntries(Object.entries(paths).map(([key, path]) => [key, this.param(path)]));
   }
@@ -597,6 +690,10 @@ function buildConnectionPatch({ project, profiles, definition, connectionCatalog
   if (ctx.preset.type !== definition.type) fail(`${connectionId}: preset type ${ctx.preset.type} does not match ${definition.type}`);
   validateConnectionParameters(definition, ctx.parameters, { fasteners });
   definition.build(ctx);
+  applyComponentOverrides(ctx.model, ctx.roles, {
+    ...(ctx.connection.componentOverrides || {}),
+    defaultGhostRoles: defaultGhostComponentRoles(definition)
+  });
 
   const ownedObjectIds = unique(flattenIds(ctx.roles));
   addDiagnosticDisplay(ctx.model, ownedObjectIds, ctx.diagnostics);
@@ -659,6 +756,25 @@ export function connectionPlateOptions(project, definition, connectionId) {
       required: requiredPlateIds.includes(id)
     };
   });
+}
+
+export function connectionComponentOptions(project, definition, connectionId) {
+  const connection = connectionById(project, connectionId);
+  const roles = connection.generator?.objectRoles || {};
+  const activeObjectRoles = new Set(connection.componentOverrides?.activeObjectRoles || []);
+  const suppressedObjectRoles = new Set(connection.componentOverrides?.suppressedObjectRoles || []);
+  return (definition.components || []).map((component) => {
+    const objectIds = unique(flattenIds((component.objectRoles || [component.role]).map((role) => roles[role]))).filter((id) => project.objectIndex?.[id]);
+    const defaultGhost = component.default === "ghost";
+    return {
+      role: component.role,
+      label: component.label || component.role,
+      kind: component.kind || "object",
+      objectIds,
+      active: defaultGhost ? activeObjectRoles.has(component.role) : !suppressedObjectRoles.has(component.role),
+      defaultGhost
+    };
+  }).filter((component) => component.role && component.objectIds.length);
 }
 
 export function setConnectionPlateIncluded(project, definition, connectionId, plateId, included) {

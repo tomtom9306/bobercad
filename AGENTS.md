@@ -17,6 +17,7 @@ Start here, then open the specific docs needed for the task.
 - Material library pack: `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json`
 - Fastener library pack: `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json`
 - Connection library register: `bobercad/data/libraries/connections/connection-register.json`
+- Connection component register: `bobercad/data/libraries/connection-components/component-register.json`
 - Model library register: `bobercad/data/libraries/model-library/model-register.json`
 - Viewer settings: `bobercad/app/ui/viewer/viewer-settings.json`
 - Schemas: `bobercad/app/schemas/`
@@ -31,6 +32,7 @@ Start here, then open the specific docs needed for the task.
 - Project schema: `bobercad/app/schemas/project.schema.json`
 - Fastener library schema: `bobercad/app/schemas/fastener-library.schema.json`
 - Connection schema: `bobercad/app/schemas/connection.schema.json`
+- Connection component schema: `bobercad/app/schemas/connection-component.schema.json`
 - Model library schema: `bobercad/app/schemas/model-library.schema.json`
 
 ## Hard Rules
@@ -45,6 +47,7 @@ Start here, then open the specific docs needed for the task.
 - Use `model.workPoints` and `model.referencePlanes` for large-frame authoring points, roof slopes, grid nodes, and truss nodes; member `start`/`end` stay authoritative and point refs are review metadata only.
 - Use `model.holePatterns` for hole/slot/fastener positions and `model.objectPatterns` for linear/circular/rectangular/path/mirror repetition of stored objects.
 - Connection presets and frame templates are authoring provenance only; project objects must still store all geometry needed by the viewer and NC1 exporter.
+- Reusable connection components live in `bobercad/data/libraries/connection-components`; connections reference them with `componentRefs` and generate them through `recipe` instead of carrying custom build/UI code or duplicating common parts such as stiffeners.
 - Use stored `interfaces` and `connectionZones` to describe connection locations; do not infer connection faces from vague object proximity.
 - BIM metadata lives inside the object as `bim`, not in a separate wrapper.
 - If model structure changes, update the matching schema in the same change.
@@ -54,11 +57,11 @@ Start here, then open the specific docs needed for the task.
 Run after JSON/schema/doc workflow changes:
 
 ```powershell
-python .\scripts\check_repo.py
+node .\scripts\check_repo.js
 ```
 
-Run project schema validation:
+Run schema validation for a specific JSON file:
 
 ```powershell
-python .\validate_project.py .\bobercad\data\projects\sample_structure.json
+node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_structure.json
 ```

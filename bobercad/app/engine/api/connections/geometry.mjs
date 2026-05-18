@@ -139,14 +139,14 @@ function circleFitsPolygon(point, radius, outline) {
   return true;
 }
 
-function endPlateAxes(mainInterface, secondaryInterface) {
+function endPlateAxes(mainInterface) {
   const normal = v.norm(mainInterface.normal);
-  const secondaryZ = projectedAxis(secondaryInterface.localAxisZ, normal);
-  let localAxisZ = secondaryZ || projectedAxis(mainInterface.localAxisZ, normal);
+  const mainZ = projectedAxis(mainInterface.localAxisZ, normal);
+  let localAxisZ = mainZ;
   if (!localAxisZ) localAxisZ = projectedAxis([0, 0, 1], normal) || projectedAxis([0, 1, 0], normal);
-  const secondaryY = projectedAxis(secondaryInterface.localAxisY, normal);
+  const mainY = projectedAxis(mainInterface.localAxisY, normal);
   let localAxisY = v.norm(v.cross(localAxisZ, normal));
-  if (secondaryY && v.dot(localAxisY, secondaryY) < 0) localAxisY = v.mul(localAxisY, -1);
+  if (mainY && v.dot(localAxisY, mainY) < 0) localAxisY = v.mul(localAxisY, -1);
   localAxisZ = v.norm(v.cross(normal, localAxisY));
   return { localAxisY, localAxisZ };
 }

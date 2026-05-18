@@ -42,31 +42,15 @@ function cutStation(project, profiles, intent, sourceMember, sourceFrame) {
   return 0;
 }
 
-function legacyOffsets(intent) {
-  const lateral = finiteOffset(intent.clearances?.lateral ?? intent.clearances?.length);
-  const depth = finiteOffset(intent.clearances?.depth);
-  const top = intent.source?.region === "top-flange";
-  const bottom = intent.source?.region === "bottom-flange";
-  return {
-    xMinus: lateral,
-    xPlus: lateral,
-    yMinus: lateral,
-    yPlus: lateral,
-    zMinus: top ? depth : 0,
-    zPlus: bottom ? depth : 0
-  };
-}
-
 function cutOffsets(intent) {
-  const fallback = legacyOffsets(intent);
   const offsets = intent.offsets || {};
   return {
-    xMinus: finiteOffset(offsets.xMinus, fallback.xMinus),
-    xPlus: finiteOffset(offsets.xPlus, fallback.xPlus),
-    yMinus: finiteOffset(offsets.yMinus, fallback.yMinus),
-    yPlus: finiteOffset(offsets.yPlus, fallback.yPlus),
-    zMinus: finiteOffset(offsets.zMinus, fallback.zMinus),
-    zPlus: finiteOffset(offsets.zPlus, fallback.zPlus)
+    xMinus: finiteOffset(offsets.xMinus),
+    xPlus: finiteOffset(offsets.xPlus),
+    yMinus: finiteOffset(offsets.yMinus),
+    yPlus: finiteOffset(offsets.yPlus),
+    zMinus: finiteOffset(offsets.zMinus),
+    zPlus: finiteOffset(offsets.zPlus)
   };
 }
 

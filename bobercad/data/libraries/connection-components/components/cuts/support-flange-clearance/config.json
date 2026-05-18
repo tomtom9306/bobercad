@@ -1,0 +1,90 @@
+{
+  "type": "support-flange-clearance",
+  "title": "Support Flange Clearance",
+  "version": 1,
+  "roles": {
+    "topNotch": "_top_flange_notch",
+    "bottomNotch": "_bottom_flange_notch",
+    "topPlateNotch": "_fin_plate_top_flange_trim",
+    "bottomPlateNotch": "_fin_plate_bottom_flange_trim"
+  },
+  "parameters": {
+    "notch.topMode": {
+      "kind": "enum",
+      "values": [
+        "auto",
+        "off"
+      ],
+      "label": "Top notch",
+      "required": false,
+      "default": "auto"
+    },
+    "notch.bottomMode": {
+      "kind": "enum",
+      "values": [
+        "auto",
+        "off"
+      ],
+      "label": "Bottom notch",
+      "required": false,
+      "default": "auto"
+    }
+  },
+  "parameterGroups": [
+    {
+      "kind": "clearanceCutOffsets",
+      "path": "notch.topOffsets",
+      "label": "Top",
+      "default": 5
+    },
+    {
+      "kind": "clearanceCutOffsets",
+      "path": "notch.bottomOffsets",
+      "label": "Bottom",
+      "default": 5
+    }
+  ],
+  "dimensionGroups": [
+    {
+      "kind": "clearanceCutOffsets",
+      "path": "notch.topOffsets",
+      "idPrefix": "top-notch",
+      "featureRole": "topNotch",
+      "side": "top"
+    },
+    {
+      "kind": "clearanceCutOffsets",
+      "path": "notch.bottomOffsets",
+      "idPrefix": "bottom-notch",
+      "featureRole": "bottomNotch",
+      "side": "bottom"
+    }
+  ],
+  "ui": {
+    "tabs": [
+      {
+        "id": "parts",
+        "label": "Parts",
+        "items": [
+          "notch.topMode",
+          "notch.bottomMode"
+        ]
+      }
+    ]
+  },
+  "uiGroups": [
+    {
+      "kind": "clearanceCutOffsets",
+      "path": "notch.topOffsets",
+      "id": "top-notch-offsets",
+      "label": "Top notch offsets"
+    },
+    {
+      "kind": "clearanceCutOffsets",
+      "path": "notch.bottomOffsets",
+      "id": "bottom-notch-offsets",
+      "label": "Bottom notch offsets"
+    }
+  ],
+  "$schema": "../../../../../../app/schemas/connection-component.schema.json"
+}

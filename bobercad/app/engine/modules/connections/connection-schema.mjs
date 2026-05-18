@@ -83,10 +83,10 @@ export function validateConnectionParameters(definition, parameters, libraries =
 }
 
 function uiItemFields(item) {
-    if (typeof item === "string") return [item];
-    if (item?.kind === "parameter" && item.path) return [item.path];
-    if (item?.kind === "section") return (item.items || []).flatMap(uiItemFields);
-    return [];
+  if (typeof item === "string") return [item];
+  if (item?.kind === "parameter" && item.path) return [item.path];
+  if (item?.kind === "section") return (item.items || []).flatMap(uiItemFields);
+  return [];
 }
 
 function referencedUiFields(definition) {
@@ -112,7 +112,7 @@ export function defineConnection(definition) {
   if (!definition.version) fail(definition.type, "missing version");
   if (!definition.title) fail(definition.type, "missing title");
   if (typeof definition.build !== "function") fail(definition.type, "missing build(ctx)");
-  if (typeof definition.customUi?.mountConnectionUi !== "function") fail(definition.type, "missing ui.mjs mountConnectionUi(args)");
+  if (typeof definition.customUi?.mountConnectionUi !== "function") fail(definition.type, "missing generic connection UI mountConnectionUi(args)");
   if (!definition.parameters || typeof definition.parameters !== "object") fail(definition.type, "missing parameters");
   if (!Array.isArray(definition.ui?.tabs) || !definition.ui.tabs.length) fail(definition.type, "missing ui.tabs");
   for (const [path, spec] of Object.entries(definition.parameters)) validateParameterSpec(definition, path, spec);

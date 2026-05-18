@@ -317,7 +317,7 @@ Use these for future quality checks, not for hidden geometry fallback.
 
 ## 10. Validation Strategy
 
-Keep `validate_project.py` limited to schema matching only.
+Keep `scripts/validate_json_schema.js` limited to schema matching only.
 
 Add a separate future quality checker for semantic checks:
 
@@ -351,7 +351,7 @@ Useful future checks:
 ## Acceptance Checks
 
 - Project JSON files still validate against `bobercad/app/schemas/project.schema.json`.
-- `scripts/check_repo.py` passes.
+- `node .\scripts\check_repo.js` passes.
 - Viewer still renders existing samples.
 - No generated geometry is written to project JSON.
 - A member with holes, end cuts, and copes can be described only from stored JSON data.

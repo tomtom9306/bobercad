@@ -22,13 +22,13 @@ Use this workflow for changes in this repo.
 Run:
 
 ```powershell
-python .\scripts\check_repo.py
+node .\scripts\check_repo.js
 ```
 
-Run project schema validation:
+Run schema validation for a specific JSON file when changing JSON contracts:
 
 ```powershell
-python .\validate_project.py .\bobercad\data\projects\sample_structure.json
+node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_structure.json
 ```
 
 ## When Work Gets Confusing
@@ -42,3 +42,11 @@ Do not guess silently. Improve one of:
 - file organization
 
 That is the Harness Engineering loop for this repo.
+
+## Agent Routing
+
+- New connection behavior: start in `bobercad/data/libraries/connections/README.md`.
+- Reusable connection parts such as stiffeners: start in `bobercad/data/libraries/connection-components/README.md`.
+- Connection runtime or API behavior: start in `bobercad/app/engine/modules/connections/README.md`.
+- 3D dimensions and labels: start in `bobercad/app/rendering/annotations/README.md`.
+- Viewer panels, layout, and controls: start in `bobercad/app/ui/viewer/README.md`.
