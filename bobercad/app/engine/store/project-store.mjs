@@ -1,7 +1,10 @@
 import { objectById } from "../core/model.mjs";
 import { v } from "../core/math.mjs";
-import { resolveInterface } from "../geometry/member-geometry.mjs";
+import { resolveInterface, sectionBounds } from "../geometry/member-geometry.mjs";
+import { addIndexedObject, removeIndexedObject } from "../api/project/objects.mjs";
+import { createMemberObject } from "../api/project/member-factory.mjs";
 import {
+  memberLayoutAxis,
   moveMemberWithLayout as moveMemberWithLayoutData,
   setMemberLayoutEndpoint as setMemberLayoutEndpointData,
   setMemberPhysicalEndpoint as setMemberPhysicalEndpointData
@@ -50,6 +53,10 @@ function fail(message) {
 
 function unique(values) {
   return [...new Set(values.filter(Boolean))];
+}
+
+function appendUnique(values, id) {
+  return unique([...(Array.isArray(values) ? values : []), id]);
 }
 
 function almostSamePoint(a, b, tolerance = FIT_EPSILON) {
@@ -163,6 +170,13 @@ function connectionRoleForObject(connection, objectId) {
   return null;
 }
 
+function appendMemberToDefaultGroup(project, memberId) {
+  const group = Object.values(project.model.groups || {}).find((item) => item.type === "member-group" || item.groupType === "members");
+  if (!group) return;
+  group.memberIds = appendUnique(group.memberIds, memberId);
+  group.objectIds = appendUnique(group.objectIds, memberId);
+}
+
 function normalizedIndexList(values) {
   if (!Array.isArray(values)) return [];
   return [...new Set(values.filter((value) => Number.isInteger(value) && value >= 0))].sort((a, b) => a - b);
@@ -220,7 +234,12 @@ function componentFromFace(project, face) {
 
 function interfaceReferencePoint(project, profiles, zone, interfaceId) {
   const otherId = (zone.interfaceIds || []).find((id) => id !== interfaceId);
-  return otherId ? resolveInterface(project, profiles, otherId).origin : null;
+  try {
+    if (otherId) return resolveInterface(project, profiles, otherId).origin;
+  } catch (error) {
+    if (!String(error.message || "").includes("stationReference requires a connection reference point")) throw error;
+  }
+  return Array.isArray(zone.origin) ? zone.origin : null;
 }
 
 function lockConnectionZoneFaces(project, profiles, connectionId) {
@@ -261,6 +280,118 @@ function memberCenter(member) {
 
 function roundedDimension(value) {
   return Math.round(value * 1000) / 1000;
+}
+
+function connectionTolerance(project) {
+  const tolerances = project.settings?.tolerances || {};
+  return Math.max(
+    tolerances.connectionGap || 0,
+    tolerances.snap || 0,
+    tolerances.coincident || 0
+  ) || 25;
+}
+
+function axisGeometry(axis) {
+  const vector = v.sub(axis.end, axis.start);
+  const length = v.len(vector);
+  if (length <= FIT_EPSILON) return null;
+  return { ...axis, direction: v.mul(vector, 1 / length), length };
+}
+
+function projectedOnAxis(axisData, point) {
+  const station = v.dot(v.sub(point, axisData.start), axisData.direction);
+  const clampedStation = Math.min(axisData.length, Math.max(0, station));
+  return {
+    station,
+    clampedStation,
+    point: v.add(axisData.start, v.mul(axisData.direction, clampedStation))
+  };
+}
+
+function memberSectionSpan(project, profiles, member) {
+  const resolved = objectById(project, member.id);
+  const profileId = resolved.profile || member.profile;
+  if (!profileId) return 0;
+  const bounds = sectionBounds(profileById(profiles, profileId));
+  return Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 0);
+}
+
+function layoutRepairTolerance(project, profiles, main, secondary) {
+  return Math.max(
+    connectionTolerance(project),
+    memberSectionSpan(project, profiles, main),
+    memberSectionSpan(project, profiles, secondary)
+  ) * 1.25;
+}
+
+function canRepairLayoutAxis(member) {
+  return member.authoring?.source === "viewer-command" || member.authoring?.command === "create-beam" || member.authoring?.command === "create-column";
+}
+
+function layoutRepairCandidate(project, profiles, main, secondary) {
+  if (!canRepairLayoutAxis(secondary)) return null;
+  const mainAxis = axisGeometry(memberLayoutAxis(main));
+  const secondaryAxis = axisGeometry(memberLayoutAxis(secondary));
+  if (!mainAxis || !secondaryAxis) return null;
+  const tolerance = layoutRepairTolerance(project, profiles, main, secondary);
+  let best = null;
+
+  for (const endpoint of ["start", "end"]) {
+    const point = secondaryAxis[endpoint];
+    const projected = projectedOnAxis(mainAxis, point);
+    if (projected.station < -tolerance || projected.station > mainAxis.length + tolerance) continue;
+    const distance = v.len(v.sub(point, projected.point));
+    if (distance > tolerance) continue;
+    const offset = v.sub(projected.point, point);
+    const candidate = {
+      mainMemberId: main.id,
+      secondaryMemberId: secondary.id,
+      endpoint,
+      offset,
+      distance,
+      station: projected.clampedStation,
+      score: distance
+    };
+    if (!best || candidate.score < best.score) best = candidate;
+  }
+
+  return best;
+}
+
+function applyLayoutAxisRepair(project, repair) {
+  const next = clone(project);
+  const member = memberById(next, repair.secondaryMemberId);
+  const axis = memberLayoutAxis(member);
+  member.layoutAxis = {
+    start: v.add(axis.start, repair.offset),
+    end: v.add(axis.end, repair.offset)
+  };
+  member.authoring = {
+    ...(member.authoring || {}),
+    layoutAxisRepair: {
+      source: "connection-create",
+      mainMemberId: repair.mainMemberId,
+      endpoint: repair.endpoint,
+      offset: repair.offset.map(roundedDimension)
+    }
+  };
+  return next;
+}
+
+function connectionSeedProjects(project, profiles, memberIds) {
+  const [firstId, secondId] = memberIds || [];
+  const first = project.model.members?.[firstId];
+  const second = project.model.members?.[secondId];
+  if (!first || !second) return [project];
+
+  const repairs = [
+    layoutRepairCandidate(project, profiles, first, second),
+    layoutRepairCandidate(project, profiles, second, first)
+  ]
+    .filter(Boolean)
+    .sort((a, b) => a.score - b.score);
+
+  return [project, ...repairs.map((repair) => applyLayoutAxisRepair(project, repair))];
 }
 
 export function createProjectStore({ project, profiles, connectionCatalog, fasteners }) {
@@ -530,7 +661,18 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       const preset = connectionCatalog.connections[presetId];
       if (!preset) fail(`connection preset not found: ${presetId}`);
       const definition = connectionDefinition(connectionCatalog, { type: preset.type, sourcePreset: { id: presetId } });
-      const created = createProjectConnectionFromPreset(currentProject, connectionCatalog, presetId, memberIds, { definition });
+      let created = null;
+      let firstError = null;
+      for (const seedProject of connectionSeedProjects(currentProject, profiles, memberIds)) {
+        try {
+          created = createProjectConnectionFromPreset(seedProject, connectionCatalog, presetId, memberIds, { definition });
+          break;
+        } catch (error) {
+          firstError ||= error;
+          if (!String(firstError.message || "").includes("layout axes do not intersect")) break;
+        }
+      }
+      if (!created) throw firstError;
       const locked = lockConnectionZoneFaces(created.project, profiles, created.connectionId);
       const next = reconcileGeneratedConnections(regenerateConnection(locked, created.connectionId));
       setProject(next);
@@ -582,6 +724,23 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
         connectionId,
         parameters
       })));
+    },
+
+    createMember(options = {}) {
+      const next = clone(currentProject);
+      const member = createMemberObject(next, profiles, options);
+      addIndexedObject(next, "members", member);
+      appendMemberToDefaultGroup(next, member.id);
+      const updated = setProject(reconcileGeneratedConnections(next));
+      return { project: updated, memberId: member.id, member: updated.model.members[member.id] };
+    },
+
+    deleteMember(memberId) {
+      if (!currentProject.model.members?.[memberId]) fail(`member not found: ${memberId}`);
+      const next = clone(currentProject);
+      removeIndexedObject(next, memberId);
+      removeReferences(next.model, new Set([memberId]));
+      return setProject(reconcileGeneratedConnections(next));
     },
 
     updateMember(memberId, patch) {

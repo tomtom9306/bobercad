@@ -2,7 +2,7 @@ import { v } from "../../engine/core/math.mjs";
 
 const HOVER_COLOR = "#2563eb";
 
-export function createDimensionOverlayUi({ canvas, settings, projectPoint, screenScale, requestDraw }) {
+export function createDimensionOverlayUi({ canvas, settings, projectPoint, screenScale, requestDraw, isPointVisible = () => true }) {
   let overlay = { lines: [], labels: [] };
   const handlers = {
     click: null,
@@ -498,10 +498,7 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
 
   function renderLabels() {
     const visibleLabels = (overlay.labels || [])
-      .filter((label) => {
-        const font = dimensionFontSettings(label);
-        return label.editing || label.issueSeverity || labelScreenFontSize(label) >= font.minSize || label.active || isHovered(label);
-      });
+      .filter((label) => label.active || label.editing);
     if (!visibleLabels.length) {
       labels.replaceChildren();
       return;
@@ -510,7 +507,7 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
     const focusInputs = [];
     const projectedLabels = visibleLabels
       .map((label) => ({ label, projected: projectPoint(label.point) }))
-      .filter((item) => item.projected)
+      .filter((item) => item.projected && isPointVisible(item.label.point, item.label))
       .sort((a, b) => a.projected.y - b.projected.y || a.projected.x - b.projected.x);
     for (const { label, projected } of projectedLabels) {
       if (projected.x < -80 || projected.x > canvas.width + 80 || projected.y < -40 || projected.y > canvas.height + 40) continue;

@@ -418,6 +418,7 @@ function autoConnectionObjects(project, memberIds, definition, preset) {
     name: `${preset.name || preset.type} zone`,
     mainObjectId: roles.mainMember.id,
     secondaryObjectIds: [roles.secondaryMember.id],
+    origin: roles.intersection,
     interfaceIds,
     connectionIds: [],
     objectIds: [],
@@ -637,6 +638,15 @@ class ConnectionBuildContext {
     return profile;
   }
 
+  connectionReferencePoint(secondaryInterfaceId) {
+    try {
+      if (secondaryInterfaceId) return resolveInterface(this.project, this.profiles, secondaryInterfaceId).origin;
+    } catch (error) {
+      if (!String(error.message || "").includes("stationReference requires a connection reference point")) throw error;
+    }
+    return Array.isArray(this.zone.origin) ? this.zone.origin : null;
+  }
+
   interface(role) {
     const index = this.definition.interfaces.findIndex((entry) => entry.role === role);
     if (index < 0) this.fail(`unknown interface role ${role}`);
@@ -646,8 +656,9 @@ class ConnectionBuildContext {
     if (role === "main") {
       const secondaryIndex = this.definition.interfaces.findIndex((entry) => entry.role === "secondary");
       const secondaryInterfaceId = this.zone.interfaceIds?.[secondaryIndex];
-      if (secondaryInterfaceId) {
-        options.referencePoint = resolveInterface(this.project, this.profiles, secondaryInterfaceId).origin;
+      const referencePoint = this.connectionReferencePoint(secondaryInterfaceId);
+      if (referencePoint) {
+        options.referencePoint = referencePoint;
         options.preferReferencePoint = true;
       }
     }

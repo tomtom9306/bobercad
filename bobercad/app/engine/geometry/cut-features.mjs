@@ -1,6 +1,6 @@
 import { objectById } from "../core/model.mjs";
 import { v } from "../core/math.mjs";
-import { memberFrame, memberFrameAt, memberLength, resolveInterface, sectionBounds, sectionWebBounds } from "./member-geometry.mjs";
+import { memberFrame, memberFrameAt, memberLength, resolveInterfaceWithConnectionReference, sectionBounds, sectionWebBounds } from "./member-geometry.mjs";
 
 const EPSILON = 1e-9;
 
@@ -36,7 +36,7 @@ function cutStation(project, profiles, intent, sourceMember, sourceFrame) {
     return Math.max(0, Math.min(memberLength(sourceMember), intent.source.station));
   }
   if (intent.source?.interfaceId) {
-    const iface = resolveInterface(project, profiles, intent.source.interfaceId);
+    const iface = resolveInterfaceWithConnectionReference(project, profiles, intent.source.interfaceId);
     return Math.max(0, Math.min(memberLength(sourceMember), v.dot(v.sub(iface.origin, sourceMember.start), sourceFrame.x)));
   }
   return 0;

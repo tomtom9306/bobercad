@@ -49,6 +49,7 @@ export function parameterValue(definition, parameters, path, api) {
   if (spec.derive?.kind === "fastenerHoleDiameter") return fastenerHoleDiameter(api, parameters, spec.derive);
   if (spec.derive?.kind === "spacingList") return normalizedSpacingList(parameters, spec.derive, optionalPath(parameters, path, spec.default || []));
   if (spec.derive?.kind === "boltEdgeDistance") return optionalPath(parameters, path) ?? boltEdgeDistance(parameters, spec.derive);
+  if (spec.derive?.kind === "sameAsParameter") return optionalPath(parameters, path) ?? optionalPath(parameters, spec.derive.sourcePath, spec.default ?? 0);
   return spec.required === false
     ? optionalPath(parameters, path, spec.default ?? 0)
     : requiredPath(parameters, path, definition.type);

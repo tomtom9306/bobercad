@@ -36,7 +36,7 @@ export function clearanceCutOffsetDimension(ctx, spec) {
     spec,
     a,
     b,
-    offset: dimensionOffset(ctx, basis, spec.reference.offset, { clampNormal: false }),
+    offset: dimensionOffset(ctx, basis, spec.reference.offset),
     measured
   });
 }

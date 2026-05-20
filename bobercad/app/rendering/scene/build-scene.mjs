@@ -2,7 +2,7 @@ import { v } from "../../engine/core/math.mjs";
 import { collectionObjects, objectById } from "../../engine/core/model.mjs";
 import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgPolygon, csgSubtract, csgUnion, cutBodyPolygons, geometryError, prismPolygons, projectCoincidentTolerance, requiredArray, requiredNumber, requiredVector, setGeometrySettings, slotOutline2d } from "../../engine/geometry/csg.mjs";
 import { clearanceCutGeometry, cutBodyForFeature } from "../../engine/geometry/cut-features.mjs";
-import { memberFrame, resolveInterface, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
+import { memberFrame, resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
 import { triangulateFace } from "../../engine/geometry/polygon.mjs";
 import { DEFAULT_GHOST_OPACITY, activeConnectionObjectIds, isActiveConnectionObject, shouldRenderObject } from "./scene-object-visibility.mjs";
 
@@ -352,12 +352,13 @@ function addMeshCreaseEdges(scene, polygons, edgeColor, meta = {}) {
 function addMember(scene, project, member, profile) {
   const color = member.display?.color || "#78909c";
   const edgeColor = member.display?.edgeColor || color || settings.render.edges.defaultColor;
+  const opacity = member.display?.transparent ? member.display?.opacity ?? DEFAULT_GHOST_OPACITY : member.display?.opacity;
   const meta = { collection: "members", objectId: member.id };
   const polygons = memberCsgPolygons(project, scene.profiles, member, profile, color);
 
   for (const polygon of polygons) {
     const points = csgCleanPoints(polygon.vertices);
-    if (points.length >= 3) scene.faces.push({ points, color: polygon.shared?.color || color, hideEdges: true, ...meta });
+    if (points.length >= 3) scene.faces.push({ points, color: polygon.shared?.color || color, opacity, hideEdges: true, ...meta });
   }
   addMeshCreaseEdges(scene, polygons, edgeColor, meta);
 }
@@ -605,8 +606,11 @@ function featureOrigin(project, profiles, feature) {
   }
   if (ref.interfaceRef) {
     const options = {};
-    if (ref.stationReferenceInterfaceRef) options.referencePoint = resolveInterface(project, profiles, ref.stationReferenceInterfaceRef).origin;
-    const iface = resolveInterface(project, profiles, ref.interfaceRef, options);
+    if (ref.stationReferenceInterfaceRef) {
+      options.referencePoint = resolveInterfaceWithConnectionReference(project, profiles, ref.stationReferenceInterfaceRef).origin;
+      options.preferReferencePoint = true;
+    }
+    const iface = resolveInterfaceWithConnectionReference(project, profiles, ref.interfaceRef, options);
     return {
       origin: requiredVector(iface, "origin", `${feature.id} resolved interface`),
       normal: v.norm(requiredVector(iface, "normal", `${feature.id} resolved interface`)),
@@ -747,10 +751,10 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
   const plate = objectById(project, ref.plateId);
   const options = {};
   if (ref.stationReferenceInterfaceRef) {
-    options.referencePoint = resolveInterface(project, scene.profiles, ref.stationReferenceInterfaceRef).origin;
+    options.referencePoint = resolveInterfaceWithConnectionReference(project, scene.profiles, ref.stationReferenceInterfaceRef).origin;
     options.preferReferencePoint = true;
   }
-  const supportInterface = resolveInterface(project, scene.profiles, ref.supportInterfaceId, options);
+  const supportInterface = resolveInterfaceWithConnectionReference(project, scene.profiles, ref.supportInterfaceId, options);
   const plateCenter = requiredVector(plate, "center", plate.id);
   const plateNormal = v.norm(requiredVector(plate, "normal", plate.id));
   const plateAxisY = v.norm(requiredVector(plate, "localAxisY", plate.id));
@@ -1000,6 +1004,9 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
   for (const member of collectionObjects(project, "members")) {
     if (member.display?.visible === false) continue;
     addMember(sceneData, project, member, profiles.profiles[member.profile]);
+  }
+  for (const previewMember of options.previewMembers || []) {
+    addMember(sceneData, project, previewMember, profiles.profiles[previewMember.profile]);
   }
 
   for (const plate of collectionObjects(project, "plates")) {

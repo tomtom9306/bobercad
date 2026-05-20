@@ -945,6 +945,9 @@
             "$ref": "#/$defs/id"
           }
         },
+        "origin": {
+          "$ref": "#/$defs/vec3"
+        },
         "interfaceIds": {
           "type": "array",
           "items": {

@@ -540,6 +540,7 @@ export function mountParameterConnectionUi({ panel, definition, connectionId, ap
     spec.editableWhen?.path === path || spec.standardOptions?.fastenerRef === path
     || spec.derive?.countPath === path || spec.derive?.defaultPath === path || spec.derive?.sizePath === path
     || spec.derive?.spacingModePath === path || spec.derive?.equalSpacingPath === path || spec.derive?.customSpacingPath === path
+    || spec.derive?.sourcePath === path
   )) || (definition.ui.tabs || []).some((tab) => (tab.items || []).some((item) => itemDependsOn(item, path)));
 
   const refreshReadouts = () => {

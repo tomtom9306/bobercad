@@ -1,0 +1,184 @@
+import { v } from "../../core/math.mjs";
+import { memberCenter, memberLayoutAxis } from "./members.mjs";
+
+function finitePoint(point) {
+  return Array.isArray(point) && point.length === 3 && point.every((value) => typeof value === "number" && Number.isFinite(value));
+}
+
+function pushPoint(candidates, point, data) {
+  if (!finitePoint(point)) return;
+  candidates.push({
+    kind: "point",
+    point: [...point],
+    priority: 100,
+    ...data
+  });
+}
+
+function pushLine(candidates, a, b, data) {
+  if (!finitePoint(a) || !finitePoint(b) || v.len(v.sub(b, a)) <= 1e-9) return;
+  candidates.push({
+    kind: "line",
+    a: [...a],
+    b: [...b],
+    priority: 60,
+    ...data
+  });
+}
+
+function gridDirections(grid) {
+  const rotation = (grid.rotation || 0) * Math.PI / 180;
+  return {
+    xDir: [Math.cos(rotation), Math.sin(rotation), 0],
+    yDir: [-Math.sin(rotation), Math.cos(rotation), 0]
+  };
+}
+
+function gridPosition(origin, xDir, yDir, x, y, z) {
+  return v.add(v.add([origin[0], origin[1], z], v.mul(xDir, x)), v.mul(yDir, y));
+}
+
+function axisSpan(values, fallback = 5000) {
+  const positions = values.map((axis) => axis.position || 0);
+  if (!positions.length) return [-fallback, fallback];
+  const min = Math.min(...positions);
+  const max = Math.max(...positions);
+  if (Math.abs(max - min) < 1e-9) return [min - fallback, max + fallback];
+  const pad = Math.max((max - min) * 0.25, fallback * 0.2);
+  return [min - pad, max + pad];
+}
+
+function addGridCandidates(candidates, project) {
+  const projectLevels = Object.values(project.levels || project.model?.levels || {});
+  for (const grid of Object.values(project.gridSystems || project.model?.gridSystems || {})) {
+    const origin = grid.origin || [0, 0, 0];
+    const xAxes = grid.axes?.x || [];
+    const yAxes = grid.axes?.y || [];
+    const levels = grid.levels || (projectLevels.length ? projectLevels : [{ id: "base", elevation: origin[2] || 0 }]);
+    const { xDir, yDir } = gridDirections(grid);
+    const xSpan = axisSpan(xAxes);
+    const ySpan = axisSpan(yAxes);
+
+    for (const level of levels) {
+      const z = level.elevation || 0;
+      for (const xAxis of xAxes) {
+        const x = xAxis.position || 0;
+        pushLine(
+          candidates,
+          gridPosition(origin, xDir, yDir, x, ySpan[0], z),
+          gridPosition(origin, xDir, yDir, x, ySpan[1], z),
+          {
+            type: "grid-line",
+            objectId: grid.id,
+            axis: "x",
+            label: `Grid ${xAxis.id || "X"} @ ${level.id || z}`,
+            priority: 55
+          }
+        );
+      }
+      for (const yAxis of yAxes) {
+        const y = yAxis.position || 0;
+        pushLine(
+          candidates,
+          gridPosition(origin, xDir, yDir, xSpan[0], y, z),
+          gridPosition(origin, xDir, yDir, xSpan[1], y, z),
+          {
+            type: "grid-line",
+            objectId: grid.id,
+            axis: "y",
+            label: `Grid ${yAxis.id || "Y"} @ ${level.id || z}`,
+            priority: 55
+          }
+        );
+      }
+      for (const xAxis of xAxes) {
+        for (const yAxis of yAxes) {
+          pushPoint(candidates, gridPosition(origin, xDir, yDir, xAxis.position || 0, yAxis.position || 0, z), {
+            type: "grid-intersection",
+            objectId: grid.id,
+            label: `Grid ${xAxis.id || "X"}/${yAxis.id || "Y"} @ ${level.id || z}`,
+            priority: 130
+          });
+        }
+      }
+    }
+  }
+}
+
+export function snapCandidates(project, options = {}) {
+  const candidates = [];
+  const includeLayoutAxis = options.includeLayoutAxis !== false;
+  const includeLines = options.includeLines !== false;
+
+  for (const member of Object.values(project.model?.members || {})) {
+    pushPoint(candidates, member.start, {
+      type: "member-endpoint",
+      objectId: member.id,
+      endpoint: "start",
+      label: `Endpoint: ${member.id} start`,
+      priority: 120
+    });
+    pushPoint(candidates, member.end, {
+      type: "member-endpoint",
+      objectId: member.id,
+      endpoint: "end",
+      label: `Endpoint: ${member.id} end`,
+      priority: 120
+    });
+    pushPoint(candidates, memberCenter(member), {
+      type: "member-midpoint",
+      objectId: member.id,
+      label: `Midpoint: ${member.id}`,
+      priority: 95
+    });
+    if (includeLines) {
+      pushLine(candidates, member.start, member.end, {
+        type: "member-axis",
+        objectId: member.id,
+        label: `Axis: ${member.id}`,
+        priority: 70
+      });
+    }
+    if (includeLayoutAxis && member.layoutAxis) {
+      const axis = memberLayoutAxis(member);
+      pushPoint(candidates, axis.start, {
+        type: "layout-endpoint",
+        objectId: member.id,
+        endpoint: "start",
+        label: `Layout endpoint: ${member.id} start`,
+        priority: 115
+      });
+      pushPoint(candidates, axis.end, {
+        type: "layout-endpoint",
+        objectId: member.id,
+        endpoint: "end",
+        label: `Layout endpoint: ${member.id} end`,
+        priority: 115
+      });
+      if (includeLines) {
+        pushLine(candidates, axis.start, axis.end, {
+          type: "layout-axis",
+          objectId: member.id,
+          label: `Layout axis: ${member.id}`,
+          priority: 80
+        });
+      }
+    }
+  }
+
+  for (const point of Object.values(project.model?.workPoints || {})) {
+    pushPoint(candidates, point.point || point.position, {
+      type: "work-point",
+      objectId: point.id,
+      label: `Work point: ${point.name || point.id}`,
+      priority: 125
+    });
+  }
+
+  addGridCandidates(candidates, project);
+  return candidates;
+}
+
+export function pointSnapCandidates(project, options = {}) {
+  return snapCandidates(project, options).filter((candidate) => candidate.kind === "point");
+}

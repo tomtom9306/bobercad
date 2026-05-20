@@ -46,6 +46,17 @@
     "zoomInFactor": 1.1,
     "zoomOutFactor": 0.9
   },
+  "authoring": {
+    "snapTolerancePx": 16,
+    "defaultColumnHeight": 3000,
+    "previewOpacity": 0.32,
+    "beamColor": "#3f657d",
+    "columnColor": "#406b85",
+    "previewColor": "#2563eb",
+    "snapColor": "#38bdf8",
+    "workPlaneColor": "#94a3b8",
+    "workPlaneSize": 280
+  },
   "render": {
     "background": "#f5f7fb",
     "lighting": {
@@ -69,7 +80,8 @@
       "activeFontWeight": "700",
       "textHeight": 6,
       "minFontPx": 2.5,
-      "surfaceLift": 4,
+      "surfaceLift": 0,
+      "hideBehindGeometry": true,
       "tooltipDelayMs": 80,
       "tooltipFontPx": 13,
       "tooltipMaxWidthPx": 320

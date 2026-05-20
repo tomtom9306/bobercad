@@ -1,7 +1,7 @@
 import { optionalPath } from "../../engine/modules/connections/connection-schema.mjs";
 import { v } from "../../engine/core/math.mjs";
 import { objectById } from "../../engine/core/model.mjs";
-import { resolveInterface, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
+import { resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
 
 export { optionalPath, v };
 
@@ -137,16 +137,20 @@ export function surfaceLift(settings) {
   return finite(settings?.surfaceLift) ? Math.max(0, settings.surfaceLift) : DEFAULT_SURFACE_LIFT;
 }
 
+function hasInPlaneOffset(offset) {
+  return ["localAxisY", "localAxisZ"].some((key) => finite(offset?.[key]) && Math.abs(offset[key]) > EPSILON);
+}
+
 export function offsetVector(basis, offset = {}, settings = {}) {
   const lift = surfaceLift(settings);
-  return Object.entries(offset).reduce((sum, [key, value]) => (
-    finite(value)
-      ? v.add(sum, v.mul(
-        basisAxis(basis, key),
-        settings.clampNormal !== false && key === "normal" && Math.abs(value) > lift ? Math.sign(value) * lift : value
-      ))
-      : sum
-  ), [0, 0, 0]);
+  const keepPlaneOffsetFlat = settings.clampNormal !== false && hasInPlaneOffset(offset);
+  return Object.entries(offset).reduce((sum, [key, value]) => {
+    if (!finite(value) || (keepPlaneOffsetFlat && key === "normal")) return sum;
+    const resolved = settings.clampNormal !== false && key === "normal" && Math.abs(value) > lift
+      ? Math.sign(value) * lift
+      : value;
+    return v.add(sum, v.mul(basisAxis(basis, key), resolved));
+  }, [0, 0, 0]);
 }
 
 export function dimensionOffset(ctx, basis, offset = {}, options = {}) {
@@ -168,6 +172,13 @@ export function perpendicularAxis(axis) {
   const fromZ = v.cross(axis, [0, 0, 1]);
   if (v.len(fromZ) > EPSILON) return v.norm(fromZ);
   return v.norm(v.cross(axis, [0, 1, 0]));
+}
+
+function perpendicularDimensionOffset(dimensionAxis, offset) {
+  if (v.len(offset) <= EPSILON) return offset;
+  const parallel = v.mul(dimensionAxis, v.dot(offset, dimensionAxis));
+  const perpendicular = v.sub(offset, parallel);
+  return v.len(perpendicular) > EPSILON ? perpendicular : [0, 0, 0];
 }
 
 export function pushLine(lines, base, a, b) {
@@ -261,9 +272,11 @@ export function makeDimension({ spec, definition, connection, a, b, extensionA =
   const length = distance(a, b);
   const value = finite(measured) ? measured : length;
   if (value <= EPSILON) return null;
-  const start = v.add(a, offset);
-  const end = v.add(b, offset);
-  const offsetLength = v.len(offset);
+  const dimensionAxis = v.norm(v.sub(b, a));
+  const dimensionLineOffset = perpendicularDimensionOffset(dimensionAxis, offset);
+  const start = v.add(a, dimensionLineOffset);
+  const end = v.add(b, dimensionLineOffset);
+  const offsetLength = v.len(dimensionLineOffset);
   const lines = [];
   const id = `${connection.id}:${spec.id}`;
   const isActive = active && (!activeDimensionId || activeDimensionId === id);
@@ -294,14 +307,13 @@ export function makeDimension({ spec, definition, connection, a, b, extensionA =
     dimensionStart: start,
     dimensionEnd: end
   };
-  const dimensionAxis = v.norm(v.sub(end, start));
-  const markerAxis = offsetLength > EPSILON ? v.norm(offset) : perpendicularAxis(dimensionAxis);
+  const markerAxis = offsetLength > EPSILON ? v.norm(dimensionLineOffset) : perpendicularAxis(dimensionAxis);
   const outsideArrows = distance(start, end) <= (spec.outsideArrowMaxLength || OUTSIDE_ARROW_MAX_LENGTH);
   pushLine(lines, base, start, end);
   pushArrow(lines, base, start, outsideArrows ? v.mul(dimensionAxis, -1) : dimensionAxis, markerAxis);
   pushArrow(lines, base, end, outsideArrows ? dimensionAxis : v.mul(dimensionAxis, -1), markerAxis);
   if (offsetLength > EPSILON) {
-    const extensionAxis = v.norm(offset);
+    const extensionAxis = v.norm(dimensionLineOffset);
     const gap = Math.min(EXTENSION_GAP, offsetLength * 0.3);
     const firstAnchor = extensionA || a;
     const secondAnchor = extensionB || b;
@@ -585,7 +597,7 @@ export function uniqueCount(values) {
 
 export function interfaceByRole(project, profiles, definition, connection, role) {
   const interfaceId = interfaceIdByRole(project, definition, connection, role);
-  return interfaceId ? resolveInterface(project, profiles, interfaceId) : null;
+  return interfaceId ? resolveInterfaceWithConnectionReference(project, profiles, interfaceId) : null;
 }
 
 export function rawInterfaceByRole(project, definition, connection, role) {

@@ -1,23 +1,28 @@
 import { createProjectStore } from "../../engine/store/project-store.mjs";
 import { loadConnectionDefinitions } from "../../engine/modules/connections/connection-registry.mjs";
 import { buildScene } from "../../rendering/scene/build-scene.mjs";
+import { createCommandController } from "../../rendering/interaction/command-controller.mjs";
 import { createMemberEditController } from "../../rendering/interaction/member-edit-controller.mjs";
 import { createSelectionController } from "../../rendering/interaction/selection-controller.mjs";
 import { createWebglViewer } from "../../rendering/webgl/webgl-renderer.mjs";
 import { createDimensionEditController } from "./dimensions/dimension-edit-controller.mjs";
 import { mountEditorUi } from "./panels/property-panel.mjs";
+import { mountModelingToolbar } from "./toolbar/modeling-toolbar.mjs";
 
 const canvas = document.getElementById("view");
 const title = document.getElementById("title");
 const meta = document.getElementById("meta");
 const reset = document.getElementById("reset");
 const hud = document.getElementById("hud");
+const modelingToolbar = document.getElementById("modeling-toolbar");
+const modelingStatus = document.getElementById("modeling-status");
 const objectEditor = document.getElementById("object-editor");
 const libraryPanel = document.getElementById("library-panel");
 const customPanel = document.getElementById("custom-panel");
 const settingsUrl = new URL("./viewer-settings.json", import.meta.url);
 let settings = null;
 let viewer = null;
+let authoringPreview = [];
 
 async function loadJson(url) {
   const response = await fetch(url, { cache: "no-store" });
@@ -42,8 +47,8 @@ function updateMeta(project) {
 }
 
 function renderProject(project, profiles, fasteners, options = {}) {
-  const { activeConnectionId = null, ...viewerOptions } = options;
-  viewer.setScene(buildScene(project, profiles, fasteners, settings, { activeConnectionId }), viewerOptions);
+  const { activeConnectionId = null, previewMembers = authoringPreview, ...viewerOptions } = options;
+  viewer.setScene(buildScene(project, profiles, fasteners, settings, { activeConnectionId, previewMembers }), viewerOptions);
   updateMeta(project);
 }
 
@@ -61,6 +66,14 @@ async function main() {
 
     const api = createProjectStore({ project, profiles: profiles.profiles, connectionCatalog, fasteners });
     const selection = createSelectionController({ viewer });
+    let commandController = null;
+    const modelingUi = mountModelingToolbar({
+      toolbar: modelingToolbar,
+      status: modelingStatus,
+      onBeam: () => commandController?.startBeam(),
+      onColumn: () => commandController?.startColumn(),
+      onCancel: () => commandController?.cancel()
+    });
     let dimensionEdit = null;
     const rerender = (nextProject) => {
       renderProject(nextProject, profiles, fasteners, { preserveCamera: true, activeConnectionId: dimensionEdit?.connectionId() || null });
@@ -123,6 +136,28 @@ async function main() {
         rerender(result.project);
       } catch (error) {
         console.error(error);
+      }
+    });
+    commandController = createCommandController({
+      viewer,
+      api,
+      profiles: profiles.profiles,
+      settings,
+      onPreviewChange: (previewMembers) => {
+        authoringPreview = previewMembers || [];
+        renderProject(api.project(), profiles, fasteners, { preserveCamera: true, activeConnectionId: dimensionEdit?.connectionId() || null });
+      },
+      onOverlayChange: (overlay) => viewer.setAuthoringOverlay(overlay),
+      onProjectChange: rerender,
+      onStatusChange: (message) => {
+        modelingUi.setStatus(message);
+        if (message === "No modeling command") modelingUi.setActive(null);
+      },
+      onCommandStart: (type) => {
+        modelingUi.setActive(type);
+        dimensionEdit?.clearDimension({ render: false });
+        memberEdit.clear({ notify: false });
+        selection.clear();
       }
     });
     window.addEventListener("keydown", (event) => {

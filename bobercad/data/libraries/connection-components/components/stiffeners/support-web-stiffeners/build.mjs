@@ -10,7 +10,7 @@ function createStiffener(ctx, input, supportAt, supportBounds, supportWebBounds,
   const supportMember = requiredInput(ctx, input, "supportMember");
   const supportInterface = requiredInput(ctx, input, "supportInterface");
   const referencePlate = requiredInput(ctx, input, "referencePlate");
-  const plateThickness = input.plateThickness || referencePlate.thickness;
+  const plateThickness = input.plateThickness || ctx.optionalParam("stiffeners.thickness", referencePlate.thickness);
   const supportWebY = webSide < 0 ? supportWebBounds.minY : supportWebBounds.maxY;
   const supportOuterY = webSide < 0 ? supportBounds.minY : supportBounds.maxY;
   const supportStiffenerWidth = Math.abs(supportOuterY - supportWebY);
@@ -85,14 +85,20 @@ export function build(ctx, input = {}) {
   const supportStiffenerHeight = supportWebBounds.maxZ - supportWebBounds.minZ;
   const supportStiffenerCenterZ = (supportWebBounds.minZ + supportWebBounds.maxZ) / 2;
   const supportedBeamBounds = ctx.geometry.sectionBounds(supportedBeamProfile);
-  const supportStiffenerStationOffset = (supportedBeamBounds.maxY - supportedBeamBounds.minY) / 2 + referencePlate.thickness / 2;
+  const derivedSupportStiffenerStationOffset = (supportedBeamBounds.maxY - supportedBeamBounds.minY) / 2 + referencePlate.thickness / 2;
+  const stationOffsets = {
+    leftNearSupportStiffener: ctx.optionalParam("stiffeners.leftNearAxisOffset", derivedSupportStiffenerStationOffset),
+    leftFarSupportStiffener: ctx.optionalParam("stiffeners.leftFarAxisOffset", derivedSupportStiffenerStationOffset),
+    rightNearSupportStiffener: ctx.optionalParam("stiffeners.rightNearAxisOffset", derivedSupportStiffenerStationOffset),
+    rightFarSupportStiffener: ctx.optionalParam("stiffeners.rightFarAxisOffset", derivedSupportStiffenerStationOffset)
+  };
   const interfaceSide = ctx.geometry.v.dot(supportInterface.normal, supportAt.y) < 0 ? -1 : 1;
   const oppositeSide = interfaceSide * -1;
   const stiffeners = {
-    leftNearSupportStiffener: createStiffener(ctx, resolvedInput, supportAt, supportBounds, supportWebBounds, supportStiffenerHeight, supportStiffenerCenterZ, supportStiffenerStationOffset, interfaceSide, "leftNearSupportStiffener", -1, interfaceSide, "ST1"),
-    leftFarSupportStiffener: createStiffener(ctx, resolvedInput, supportAt, supportBounds, supportWebBounds, supportStiffenerHeight, supportStiffenerCenterZ, supportStiffenerStationOffset, interfaceSide, "leftFarSupportStiffener", -1, oppositeSide, "ST2"),
-    rightNearSupportStiffener: createStiffener(ctx, resolvedInput, supportAt, supportBounds, supportWebBounds, supportStiffenerHeight, supportStiffenerCenterZ, supportStiffenerStationOffset, interfaceSide, "rightNearSupportStiffener", 1, interfaceSide, "ST3"),
-    rightFarSupportStiffener: createStiffener(ctx, resolvedInput, supportAt, supportBounds, supportWebBounds, supportStiffenerHeight, supportStiffenerCenterZ, supportStiffenerStationOffset, interfaceSide, "rightFarSupportStiffener", 1, oppositeSide, "ST4")
+    leftNearSupportStiffener: createStiffener(ctx, resolvedInput, supportAt, supportBounds, supportWebBounds, supportStiffenerHeight, supportStiffenerCenterZ, stationOffsets.leftNearSupportStiffener, interfaceSide, "leftNearSupportStiffener", -1, interfaceSide, "ST1"),
+    leftFarSupportStiffener: createStiffener(ctx, resolvedInput, supportAt, supportBounds, supportWebBounds, supportStiffenerHeight, supportStiffenerCenterZ, stationOffsets.leftFarSupportStiffener, interfaceSide, "leftFarSupportStiffener", -1, oppositeSide, "ST2"),
+    rightNearSupportStiffener: createStiffener(ctx, resolvedInput, supportAt, supportBounds, supportWebBounds, supportStiffenerHeight, supportStiffenerCenterZ, stationOffsets.rightNearSupportStiffener, interfaceSide, "rightNearSupportStiffener", 1, interfaceSide, "ST3"),
+    rightFarSupportStiffener: createStiffener(ctx, resolvedInput, supportAt, supportBounds, supportWebBounds, supportStiffenerHeight, supportStiffenerCenterZ, stationOffsets.rightFarSupportStiffener, interfaceSide, "rightFarSupportStiffener", 1, oppositeSide, "ST4")
   };
 
   const topWeldSize = Math.max(0, ctx.optionalParam("welds.top", ctx.optionalParam("welds.front", 0)));

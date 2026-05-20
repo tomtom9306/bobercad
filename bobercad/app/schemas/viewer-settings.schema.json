@@ -124,6 +124,44 @@
       },
       "additionalProperties": true
     },
+    "authoring": {
+      "type": "object",
+      "properties": {
+        "snapTolerancePx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "defaultColumnHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "previewOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "beamColor": {
+          "$ref": "#/$defs/color"
+        },
+        "columnColor": {
+          "$ref": "#/$defs/color"
+        },
+        "previewColor": {
+          "$ref": "#/$defs/color"
+        },
+        "snapColor": {
+          "$ref": "#/$defs/color"
+        },
+        "workPlaneColor": {
+          "$ref": "#/$defs/color"
+        },
+        "workPlaneSize": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
     "render": {
       "type": "object",
       "required": [
@@ -212,6 +250,9 @@
             "surfaceLift": {
               "type": "number",
               "minimum": 0
+            },
+            "hideBehindGeometry": {
+              "type": "boolean"
             },
             "tooltipDelayMs": {
               "type": "number",

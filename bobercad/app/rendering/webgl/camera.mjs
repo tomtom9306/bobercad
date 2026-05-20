@@ -138,9 +138,19 @@ export function createCamera(settings) {
     return unrotateVector([dx / state.scale, -dy / state.scale, 0]);
   }
 
+  function screenRay(x, y, viewport) {
+    const { width, height } = viewportSize(viewport);
+    const viewX = (x - width / 2 - state.panX) / state.scale;
+    const viewY = -(y - height / 2 - state.panY) / state.scale;
+    return {
+      origin: v.add(state.pivot, unrotateVector([viewX, viewY, 0])),
+      direction: v.norm(unrotateVector([0, 0, -1]))
+    };
+  }
+
   function screenScale() {
     return state.scale;
   }
 
-  return { clipPoint, fit, orbit, pan, projectPoint, reset, screenDeltaToWorld, screenScale, setOrbitPivot, zoomAt };
+  return { clipPoint, fit, orbit, pan, projectPoint, reset, screenDeltaToWorld, screenRay, screenScale, setOrbitPivot, zoomAt };
 }
