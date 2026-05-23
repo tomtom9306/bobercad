@@ -8,6 +8,8 @@
     "./components/cuts/support-flange-clearance/",
     "./components/welds/support-edge-fillet/",
     "./components/stiffeners/support-web-stiffeners/",
-    "./components/plates/member-end-plate/"
+    "./components/plates/member-end-plate/",
+    "./components/plates/base-plate/",
+    "./components/plates/dual-member-gusset/"
   ]
 }

@@ -329,6 +329,20 @@
           },
           "additionalProperties": true
         },
+        "lod": {
+          "type": "object",
+          "properties": {
+            "detailPixelThreshold": {
+              "type": "number",
+              "minimum": 1
+            },
+            "maxAutoDetailObjects": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
         "curves": {
           "type": "object",
           "required": [

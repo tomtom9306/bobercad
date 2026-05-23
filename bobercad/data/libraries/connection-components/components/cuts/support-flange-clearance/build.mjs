@@ -106,8 +106,9 @@ export function build(ctx, input = {}) {
       source: notch.source,
       target: notch.target,
       offsets: notch.offsets,
-      display: { visible: false, color: "#ff3366", transparent: true, opacity: 0.08 }
     };
+    const cutterDisplay = { visible: true, suppressed: true, color: "#ff3366", transparent: true, opacity: 0.28 };
+    const hiddenTrimDisplay = { visible: false, color: "#ff3366", transparent: true, opacity: 0.08 };
     const references = [
       { objectId: supportMember.id, interfaceId: supportInterface.id },
       { objectId: supportedBeam.id, end: beamInterface.memberEnd }
@@ -123,7 +124,8 @@ export function build(ctx, input = {}) {
         references: [references[0]],
         source: "support-flange-clearance-cut"
       },
-      bim: { name: spec.name }
+      bim: { name: spec.name },
+      display: cutterDisplay
     });
     ctx.feature.clearanceCut(spec.plateRole, {
       ...common,
@@ -135,7 +137,8 @@ export function build(ctx, input = {}) {
         references,
         source: "support-flange-clearance-cut"
       },
-      bim: { name: spec.plateName }
+      bim: { name: spec.plateName },
+      display: hiddenTrimDisplay
     });
   }
 }

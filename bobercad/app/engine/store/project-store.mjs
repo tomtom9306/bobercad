@@ -21,7 +21,8 @@ import {
   connectionPlateOptions as projectConnectionPlateOptions,
   createProjectConnectionFromPreset,
   setConnectionPlateIncluded as setProjectConnectionPlateIncluded,
-  updateConnection
+  updateConnection,
+  updateConnections
 } from "../modules/connections/connection-generator.mjs";
 import { connectionDefinition, supportedConnectionPresets, supportedConnections } from "../modules/connections/connection-registry.mjs";
 
@@ -122,6 +123,17 @@ function removeObjects(project, objectIds) {
   }
   removeReferences(next.model, deletedIds);
   return next;
+}
+
+function cloneProjectForMemberUpdate(project, memberId) {
+  return {
+    ...project,
+    objectIndex: { ...(project.objectIndex || {}) },
+    model: {
+      ...(project.model || {}),
+      members: { ...(project.model?.members || {}) }
+    }
+  };
 }
 
 function connectionOwnedObjectIds(connection) {
@@ -232,18 +244,34 @@ function componentFromFace(project, face) {
   };
 }
 
+function memberDirectionFromInterface(project, iface) {
+  if (!iface?.memberEnd) return null;
+  const entry = project.objectIndex?.[iface.ownerId];
+  if (entry?.collection !== "members") return null;
+  const member = objectById(project, iface.ownerId);
+  const axis = v.sub(member.end, member.start);
+  const length = v.len(axis);
+  if (length <= FIT_EPSILON) return null;
+  const direction = v.mul(axis, 1 / length);
+  return iface.memberEnd === "end" ? v.mul(direction, -1) : direction;
+}
+
 function interfaceReferencePoint(project, profiles, zone, interfaceId) {
   const otherId = (zone.interfaceIds || []).find((id) => id !== interfaceId);
   try {
-    if (otherId) return resolveInterface(project, profiles, otherId).origin;
+    if (otherId) {
+      const resolved = resolveInterface(project, profiles, otherId);
+      const direction = memberDirectionFromInterface(project, resolved);
+      return direction ? v.add(resolved.origin, v.mul(direction, 10)) : resolved.origin;
+    }
   } catch (error) {
     if (!String(error.message || "").includes("stationReference requires a connection reference point")) throw error;
   }
   return Array.isArray(zone.origin) ? zone.origin : null;
 }
 
-function lockConnectionZoneFaces(project, profiles, connectionId) {
-  const next = clone(project);
+function lockConnectionZoneFaces(project, profiles, connectionId, options = {}) {
+  const next = options.inPlace ? project : clone(project);
   const connection = connectionById(next, connectionId);
   const zone = next.model.connectionZones?.[connection.connectionZoneId];
   if (!zone) fail(`${connectionId}: connection zone not found: ${connection.connectionZoneId}`);
@@ -269,7 +297,7 @@ function lockConnectionZoneFaces(project, profiles, connectionId) {
 function lockGeneratedConnectionFaces(project, profiles) {
   let next = project;
   for (const connection of Object.values(project.model.connections || {})) {
-    if (connection.generator?.status === "generated") next = lockConnectionZoneFaces(next, profiles, connection.id);
+    if (connection.generator?.status === "generated") next = lockConnectionZoneFaces(next, profiles, connection.id, { inPlace: true });
   }
   return next;
 }
@@ -394,8 +422,9 @@ function connectionSeedProjects(project, profiles, memberIds) {
   return [project, ...repairs.map((repair) => applyLayoutAxisRepair(project, repair))];
 }
 
-export function createProjectStore({ project, profiles, connectionCatalog, fasteners }) {
-  let currentProject = lockGeneratedConnectionFaces(clone(project), profiles);
+export function createProjectStore({ project, profiles, connectionCatalog, fasteners, reconcileOnLoad = false, cloneOnLoad = true }) {
+  const initialProject = cloneOnLoad ? clone(project) : project;
+  let currentProject = lockGeneratedConnectionFaces(initialProject, profiles);
   const subscribers = new Set();
 
   const definitionFor = (projectState, connectionId) => connectionDefinition(connectionCatalog, connectionById(projectState, connectionId));
@@ -426,11 +455,31 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     parameters
   });
   const regenerateMemberConnections = (projectState, memberId) => {
-    let next = projectState;
-    for (const connection of affectedConnections(projectState, memberId)) {
-      if (connection.generator?.status === "generated") next = regenerateConnection(next, connection.id);
-    }
-    return next;
+    const connectionIds = affectedConnections(projectState, memberId)
+      .filter((connection) => connection.generator?.status === "generated")
+      .map((connection) => connection.id);
+    if (!connectionIds.length) return projectState;
+    return updateConnections({
+      project: projectState,
+      profiles,
+      definitionFor,
+      connectionCatalog,
+      fasteners,
+      connectionIds,
+      parametersFor: (state, connectionId) => connectionById(state, connectionId).referenceParameters
+    });
+  };
+  const regenerateConnectionsBatch = (projectState, connectionIds) => {
+    const ids = connectionIds.filter((connectionId) => projectState.model.connections?.[connectionId]);
+    if (!ids.length) return projectState;
+    return updateConnections({
+      project: projectState,
+      profiles,
+      definitionFor,
+      connectionCatalog,
+      fasteners,
+      connectionIds: ids
+    });
   };
   const generatedConnectionIds = (projectState) => Object.values(projectState.model.connections || {})
     .filter((connection) => connection.generator?.status === "generated")
@@ -504,19 +553,14 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     let next = projectState;
     const ids = generatedConnectionIds(next);
     for (let index = 0; index < iterations; index += 1) {
-      for (const connectionId of ids) {
-        if (next.model.connections?.[connectionId]) next = regenerateConnection(next, connectionId);
-      }
+      next = regenerateConnectionsBatch(next, ids);
       let changed = false;
       for (const connectionId of ids) {
         if (next.model.connections?.[connectionId]) changed = fitMemberEndToPlane(next, connectionId) || changed;
       }
       if (!changed) return next;
     }
-    for (const connectionId of ids) {
-      if (next.model.connections?.[connectionId]) next = regenerateConnection(next, connectionId);
-    }
-    return next;
+    return regenerateConnectionsBatch(next, ids);
   };
   const applyResolveHint = (parameters, hint) => {
     if (!hint?.path || typeof hint.value !== "number" || !Number.isFinite(hint.value)) return false;
@@ -559,14 +603,15 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     if (!changed) fail(`${connectionId}: no automatic resolver is available for current diagnostics`);
     return setProject(next);
   };
-  const replaceMember = (memberId, update) => {
-    const next = clone(currentProject);
+  const replaceMember = (memberId, update, options = {}) => {
+    const next = cloneProjectForMemberUpdate(currentProject, memberId);
     const member = memberById(next, memberId);
     next.model.members[memberId] = update(member);
-    return setProject(reconcileGeneratedConnections(regenerateMemberConnections(next, memberId)));
+    if (options.regenerateConnections === false) return setProject(next);
+    return setProject(regenerateMemberConnections(next, memberId));
   };
 
-  currentProject = reconcileGeneratedConnections(currentProject);
+  if (reconcileOnLoad) currentProject = reconcileGeneratedConnections(currentProject);
 
   return {
     subscribe(listener) {
@@ -780,16 +825,21 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       }));
     },
 
-    moveMemberWithLayout(memberId, delta) {
-      return replaceMember(memberId, (member) => moveMemberWithLayoutData(member, delta));
+    moveMemberWithLayout(memberId, delta, options = {}) {
+      return replaceMember(memberId, (member) => moveMemberWithLayoutData(member, delta), options);
     },
 
-    setMemberPhysicalEndpoint(memberId, endpoint, point) {
-      return replaceMember(memberId, (member) => setMemberPhysicalEndpointData(member, endpoint, point));
+    setMemberPhysicalEndpoint(memberId, endpoint, point, options = {}) {
+      return replaceMember(memberId, (member) => setMemberPhysicalEndpointData(member, endpoint, point), options);
     },
 
-    setMemberLayoutEndpoint(memberId, endpoint, point) {
-      return replaceMember(memberId, (member) => setMemberLayoutEndpointData(member, endpoint, point));
+    setMemberLayoutEndpoint(memberId, endpoint, point, options = {}) {
+      return replaceMember(memberId, (member) => setMemberLayoutEndpointData(member, endpoint, point), options);
+    },
+
+    regenerateMemberConnections(memberId) {
+      memberById(currentProject, memberId);
+      return setProject(regenerateMemberConnections(currentProject, memberId));
     },
 
     setMemberCenter(memberId, center) {

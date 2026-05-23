@@ -3,7 +3,7 @@ import { collectionObjects, objectById } from "../../engine/core/model.mjs";
 import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgPolygon, csgSubtract, csgUnion, cutBodyPolygons, geometryError, prismPolygons, projectCoincidentTolerance, requiredArray, requiredNumber, requiredVector, setGeometrySettings, slotOutline2d } from "../../engine/geometry/csg.mjs";
 import { clearanceCutGeometry, cutBodyForFeature } from "../../engine/geometry/cut-features.mjs";
 import { memberFrame, resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
-import { triangulateFace } from "../../engine/geometry/polygon.mjs";
+import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs";
 import { DEFAULT_GHOST_OPACITY, activeConnectionObjectIds, isActiveConnectionObject, shouldRenderObject } from "./scene-object-visibility.mjs";
 
 let settings = null;
@@ -14,6 +14,153 @@ function sectionPoint(origin, frame, point, xOffset = 0) {
 
 function addLine(scene, a, b, color, meta = {}) {
   scene.lines.push({ points: [a, b], color, ...meta });
+}
+
+function detailMeta(objectId) {
+  return objectId ? { lodDetailObjectId: objectId } : {};
+}
+
+function flattenIds(value) {
+  if (!value) return [];
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(flattenIds);
+  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
+  return [];
+}
+
+function generatedConnectionObjectIds(project) {
+  return new Set(Object.values(project.model.connections || {}).flatMap((connection) => [
+    ...flattenIds(connection.generator?.objectRoles),
+    ...(connection.generator?.ownedObjectIds || [])
+  ]));
+}
+
+function renderCollectionObjects(project, collection, renderObjectIds = null) {
+  if (!renderObjectIds) return collectionObjects(project, collection);
+  return [...renderObjectIds]
+    .filter((objectId) => project.objectIndex?.[objectId]?.collection === collection)
+    .map((objectId) => project.model?.[collection]?.[objectId])
+    .filter(Boolean);
+}
+
+function shouldApplyMemberFeature(scene, feature) {
+  if (feature.type !== "hole-pattern") return true;
+  if (!scene?.generatedConnectionObjectIds?.has(feature.id)) return true;
+  return isActiveConnectionObject(scene, feature.id);
+}
+
+function shouldBuildLodDetail(scene, objectId) {
+  if (!objectId) return true;
+  if (isActiveConnectionObject(scene, objectId)) return true;
+  return typeof scene?.lodDetailFilter === "function" ? scene.lodDetailFilter(objectId) : true;
+}
+
+function addInstanceTriangle(geometry, a, b, c) {
+  const normal = faceNormal([a, b, c]);
+  for (const point of [a, b, c]) {
+    geometry.positions.push(point[0], point[1], point[2]);
+    geometry.normals.push(normal[0], normal[1], normal[2]);
+  }
+}
+
+function addInstanceFace(geometry, points) {
+  for (const triangle of triangulateFace(points)) addInstanceTriangle(geometry, triangle[0], triangle[1], triangle[2]);
+}
+
+function signedArea2d(points) {
+  let area = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const next = points[(index + 1) % points.length];
+    area += points[index][0] * next[1] - next[0] * points[index][1];
+  }
+  return area / 2;
+}
+
+function axisAlignedRectangle(points) {
+  if (!Array.isArray(points) || points.length !== 4) return null;
+  const ys = [...new Set(points.map((point) => point[0]))].sort((a, b) => a - b);
+  const zs = [...new Set(points.map((point) => point[1]))].sort((a, b) => a - b);
+  if (ys.length !== 2 || zs.length !== 2) return null;
+  const hasCorner = (y, z) => points.some((point) => Math.abs(point[0] - y) <= CSG_EPSILON && Math.abs(point[1] - z) <= CSG_EPSILON);
+  if (!ys.every((y) => zs.every((z) => hasCorner(y, z)))) return null;
+  return { minY: ys[0], maxY: ys[1], minZ: zs[0], maxZ: zs[1] };
+}
+
+function addCapFace2d(geometry, points, x, normalSign) {
+  const area = signedArea2d(points);
+  const oriented = area * normalSign >= 0 ? points : [...points].reverse();
+  addInstanceFace(geometry, oriented.map((point) => [x, point[0], point[1]]));
+}
+
+function addContourSides(geometry, contour, reverse = false) {
+  const points = reverse ? [...contour].reverse() : contour;
+  const start = points.map((point) => [0, point[0], point[1]]);
+  const end = points.map((point) => [1, point[0], point[1]]);
+
+  for (let index = 0; index < points.length; index += 1) {
+    const next = (index + 1) % points.length;
+    addInstanceFace(geometry, [start[index], start[next], end[next], end[index]]);
+  }
+}
+
+function addSimpleContourPrism(geometry, points) {
+  const contour = ccwPoints(points);
+  const start = contour.map((point) => [0, point[0], point[1]]);
+  const end = contour.map((point) => [1, point[0], point[1]]);
+
+  addInstanceFace(geometry, [...start].reverse());
+  addInstanceFace(geometry, end);
+  addContourSides(geometry, contour);
+}
+
+function addRectangularTubePrism(geometry, solidContour, voidContour) {
+  const outer = axisAlignedRectangle(solidContour.points || []);
+  const inner = axisAlignedRectangle(voidContour.points || []);
+  if (!outer || !inner) return false;
+  if (inner.minY <= outer.minY || inner.maxY >= outer.maxY || inner.minZ <= outer.minZ || inner.maxZ >= outer.maxZ) return false;
+
+  const capStrips = [
+    [[outer.minY, outer.minZ], [outer.maxY, outer.minZ], [inner.maxY, inner.minZ], [inner.minY, inner.minZ]],
+    [[outer.maxY, outer.minZ], [outer.maxY, outer.maxZ], [inner.maxY, inner.maxZ], [inner.maxY, inner.minZ]],
+    [[outer.maxY, outer.maxZ], [outer.minY, outer.maxZ], [inner.minY, inner.maxZ], [inner.maxY, inner.maxZ]],
+    [[outer.minY, outer.maxZ], [outer.minY, outer.minZ], [inner.minY, inner.minZ], [inner.minY, inner.maxZ]]
+  ];
+
+  for (const strip of capStrips) {
+    addCapFace2d(geometry, strip, 0, -1);
+    addCapFace2d(geometry, strip, 1, 1);
+  }
+
+  addContourSides(geometry, ccwPoints(solidContour.points || []));
+  addContourSides(geometry, ccwPoints(voidContour.points || []), true);
+  return true;
+}
+
+function profileInstanceGeometry(profile) {
+  const geometry = { positions: [], normals: [] };
+  const contours = profile.section?.contours || [];
+  const solidContours = contours.filter((contour) => contour.role === "solid");
+  const voidContours = contours.filter((contour) => contour.role === "void");
+
+  if (voidContours.length) {
+    if (solidContours.length !== 1 || voidContours.length !== 1) return null;
+    if (!addRectangularTubePrism(geometry, solidContours[0], voidContours[0])) return null;
+  } else {
+    for (const contour of solidContours) {
+      const points = ccwPoints(contour.points || []);
+      if (points.length < 3) continue;
+      addSimpleContourPrism(geometry, points);
+    }
+  }
+
+  return geometry.positions.length ? geometry : null;
+}
+
+function instanceGeometryForProfile(scene, profile) {
+  if (!scene.memberInstanceGeometries[profile.id]) {
+    scene.memberInstanceGeometries[profile.id] = profileInstanceGeometry(profile);
+  }
+  return scene.memberInstanceGeometries[profile.id];
 }
 
 function addAxisHead(scene, axis, sideA, sideB, length, headSize, color) {
@@ -69,12 +216,16 @@ function addPlaneMarker(scene, plane, display = {}, meta = {}) {
   addLoopLines(scene, points, color, meta);
 }
 
-function memberFeatures(project, member) {
-  return (member.featureIds || []).map((id) => objectById(project, id)).filter((feature) => feature.ownerId === member.id && feature.operationEnabled !== false);
+function memberFeatures(project, member, scene = null) {
+  return (member.featureIds || [])
+    .map((id) => objectById(project, id))
+    .filter((feature) => feature.ownerId === member.id && feature.operationEnabled !== false && shouldApplyMemberFeature(scene, feature));
 }
 
 function objectFeatures(project, object) {
-  return (object.featureIds || []).map((id) => objectById(project, id)).filter((feature) => feature.ownerId === object.id && feature.operationEnabled !== false);
+  return (object.featureIds || [])
+    .map((id) => objectById(project, id))
+    .filter((feature) => feature.ownerId === object.id && feature.operationEnabled !== false);
 }
 
 function holePatternCutters(project, profiles, feature, depth, shared = {}) {
@@ -136,9 +287,9 @@ function holeOrSlotCut(project, profiles, polygons, feature, depth, shared) {
   return null;
 }
 
-function endCutFeatures(project, member) {
+function endCutFeatures(project, member, scene = null) {
   const cuts = { start: null, end: null };
-  for (const feature of memberFeatures(project, member)) {
+  for (const feature of memberFeatures(project, member, scene)) {
     if (!["saw-cut", "miter-cut", "end-cut"].includes(feature.type)) continue;
     if (!feature.reference) geometryError(`${feature.id}: end cut missing reference`);
     const memberEnd = feature.reference.memberEnd;
@@ -161,10 +312,118 @@ function memberStation(member, frame, point) {
   return v.dot(v.sub(point, member.start), frame.x);
 }
 
-function memberTrimRange(project, member, frame, length) {
+function projectedAxis(axis, normal) {
+  if (!Array.isArray(axis)) return null;
+  const projected = v.sub(axis, v.mul(normal, v.dot(axis, normal)));
+  return v.len(projected) <= CSG_EPSILON ? null : v.norm(projected);
+}
+
+function memberEndPoint(member, memberEnd) {
+  if (memberEnd === "start") return member.start;
+  if (memberEnd === "end") return member.end;
+  return null;
+}
+
+function memberEndKeepDirection(member, frame, memberEnd) {
+  if (memberEnd === "start") return frame.x;
+  if (memberEnd === "end") return v.mul(frame.x, -1);
+  geometryError(`${member.id}: member-trim must set memberEnd to start or end`);
+}
+
+function sectionMaxSpan(profile) {
+  if (!profile) return 1;
+  const bounds = sectionBounds(profile);
+  return Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
+}
+
+function mateTrimDirection(project, trim) {
+  const mateId = trim?.mateMemberId;
+  const mate = mateId ? project.model?.members?.[mateId] : null;
+  if (!mate) return null;
+  const frame = memberFrame(mate);
+  let memberEnd = trim.mateMemberEnd;
+  if (memberEnd !== "start" && memberEnd !== "end" && Array.isArray(trim.jointPoint)) {
+    const toStart = v.len(v.sub(trim.jointPoint, mate.start));
+    const toEnd = v.len(v.sub(trim.jointPoint, mate.end));
+    memberEnd = toStart <= toEnd ? "start" : "end";
+  }
+  if (memberEnd !== "start" && memberEnd !== "end") return null;
+  return memberEndKeepDirection(mate, frame, memberEnd);
+}
+
+function equalAngleMiterNormal(ownDirection, mateDirection) {
+  if (!mateDirection) return ownDirection;
+  let normal = v.norm(v.sub(mateDirection, ownDirection));
+  if (v.len(normal) <= CSG_EPSILON) return ownDirection;
+  if (v.dot(normal, ownDirection) < 0) normal = v.mul(normal, -1);
+  return Math.abs(v.dot(normal, ownDirection)) <= CSG_EPSILON ? ownDirection : normal;
+}
+
+function matchedEdgeLengthNormal(project, profiles, member, ownDirection, miterNormal, trim) {
+  const profile = profiles?.[member.profile];
+  const ownSpan = sectionMaxSpan(profile);
+  const mate = trim?.mateMemberId ? project.model?.members?.[trim.mateMemberId] : null;
+  const mateSpan = mate ? sectionMaxSpan(profiles?.[mate.profile]) : ownSpan;
+  const targetCutLength = typeof trim?.targetCutLength === "number" && Number.isFinite(trim.targetCutLength)
+    ? Math.max(trim.targetCutLength, ownSpan)
+    : Math.max(ownSpan, mateSpan);
+  if (targetCutLength <= ownSpan + CSG_EPSILON) return ownDirection;
+
+  const towardMiter = projectedAxis(miterNormal, ownDirection);
+  if (!towardMiter) return ownDirection;
+  const miterDot = Math.max(Math.abs(v.dot(miterNormal, ownDirection)), 0.05);
+  const targetDot = Math.max(Math.min(ownSpan / targetCutLength, 1), miterDot);
+  const side = Math.sqrt(Math.max(0, 1 - targetDot * targetDot));
+  const normal = v.norm(v.add(v.mul(ownDirection, targetDot), v.mul(towardMiter, side)));
+  return v.dot(normal, ownDirection) < 0 ? v.mul(normal, -1) : normal;
+}
+
+function memberTrimPlane(project, profiles, member, frame, feature) {
+  const trim = feature.trim || {};
+  if (trim.mode === "cut-to-reference-plane" && feature.plane) return feature.plane;
+
+  const memberEnd = feature.memberEnd || trim.memberEnd;
+  const ownDirection = memberEndKeepDirection(member, frame, memberEnd);
+  const mateDirection = mateTrimDirection(project, trim);
+  const miterNormal = equalAngleMiterNormal(ownDirection, mateDirection);
+  const mode = trim.mode || "matched-edge-length";
+  let normal = ownDirection;
+  if (mode === "equal-angle-miter") normal = miterNormal;
+  else if (mode === "matched-edge-length") normal = matchedEdgeLengthNormal(project, profiles, member, ownDirection, miterNormal, trim);
+  else if (mode === "square-to-own-axis") normal = ownDirection;
+  else if (mode !== "cut-to-reference-plane") geometryError(`${feature.id}: unsupported member-trim mode ${mode}`);
+
+  const jointPoint = Array.isArray(trim.jointPoint) ? requiredVector(trim, "jointPoint", feature.id) : memberEndPoint(member, memberEnd);
+  if (!jointPoint) geometryError(`${feature.id}: member-trim missing jointPoint/memberEnd`);
+  const gap = typeof trim.gap === "number" && Number.isFinite(trim.gap) ? trim.gap : 0;
+  const origin = v.add(jointPoint, v.mul(normal, Math.max(0, gap)));
+  const axisX = projectedAxis(feature.plane?.axisX || trim.axisX, normal)
+    || projectedAxis(frame.y, normal)
+    || projectedAxis(frame.z, normal)
+    || projectedAxis([0, 0, 1], normal)
+    || projectedAxis([0, 1, 0], normal);
+  if (!axisX) geometryError(`${feature.id}: member-trim cannot resolve plane axis`);
+  const axisY = v.norm(v.cross(normal, axisX));
+  const markerSpan = sectionMaxSpan(profiles?.[member.profile]) * 1.35;
+  return {
+    ...(feature.plane || {}),
+    origin,
+    normal,
+    axisX,
+    axisY,
+    size: feature.plane?.size || trim.size || [markerSpan, markerSpan]
+  };
+}
+
+function cuttingPlaneForFeature(project, profiles, member, frame, feature) {
+  if (feature.type === "member-trim") return memberTrimPlane(project, profiles, member, frame, feature);
+  return feature.plane;
+}
+
+function memberTrimRange(project, member, frame, length, scene = null) {
   const range = { start: 0, end: length };
 
-  for (const feature of memberFeatures(project, member)) {
+  for (const feature of memberFeatures(project, member, scene)) {
     if (feature.type !== "cut-plane") continue;
     if (!feature.plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
     const normal = v.norm(requiredVector(feature.plane, "normal", feature.id));
@@ -177,17 +436,18 @@ function memberTrimRange(project, member, frame, length) {
   return range;
 }
 
-function memberFittingExtension(project, member, frame, profile, length) {
+function memberFittingExtension(project, member, frame, profile, length, scene = null) {
   const bounds = sectionBounds(profile);
   const sectionSpan = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
   const extension = sectionSpan * 2 + projectCoincidentTolerance(project) * 10;
   const range = { start: 0, end: length };
 
-  for (const feature of memberFeatures(project, member)) {
-    if (feature.type !== "fitting") continue;
-    if (!feature.plane) geometryError(`${feature.id}: fitting missing plane`);
-    const normal = v.norm(requiredVector(feature.plane, "normal", feature.id));
-    const station = memberStation(member, frame, requiredVector(feature.plane, "origin", feature.id));
+  for (const feature of memberFeatures(project, member, scene)) {
+    if (feature.type !== "fitting" && feature.type !== "member-trim") continue;
+    const plane = cuttingPlaneForFeature(project, scene?.profiles || {}, member, frame, feature);
+    if (!plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
+    const normal = v.norm(requiredVector(plane, "normal", feature.id));
+    const station = memberStation(member, frame, requiredVector(plane, "origin", feature.id));
     const along = v.dot(normal, frame.x);
     if (along > 0.5) range.start = Math.min(range.start, station - extension);
     if (along < -0.5) range.end = Math.max(range.end, station + extension);
@@ -225,8 +485,8 @@ function memberContourPolygons(member, frame, contourPoints, startStation, endSt
   return polygons;
 }
 
-function memberBasePolygons(project, member, frame, profile, color, startStation, endStation, length) {
-  const cuts = endCutFeatures(project, member);
+function memberBasePolygons(project, member, frame, profile, color, startStation, endStation, length, scene = null) {
+  const cuts = endCutFeatures(project, member, scene);
   const overlap = projectCoincidentTolerance(project) * 2;
   let polygons = [];
   const shared = { color };
@@ -268,15 +528,15 @@ function planeCutPolygons(member, frame, profile, plane, shared = {}) {
   ], shared);
 }
 
-function memberCsgPolygons(project, profiles, member, profile, color) {
+function memberCsgPolygons(project, profiles, member, profile, color, scene = null) {
   const frame = memberFrame(member);
   const length = v.len(v.sub(member.end, member.start));
-  const range = memberTrimRange(project, member, frame, length);
-  const fittingRange = memberFittingExtension(project, member, frame, profile, length);
+  const range = memberTrimRange(project, member, frame, length, scene);
+  const fittingRange = memberFittingExtension(project, member, frame, profile, length, scene);
   const shared = { color };
-  let polygons = memberBasePolygons(project, member, frame, profile, color, Math.min(range.start, fittingRange.start), Math.max(range.end, fittingRange.end), length);
+  let polygons = memberBasePolygons(project, member, frame, profile, color, Math.min(range.start, fittingRange.start), Math.max(range.end, fittingRange.end), length, scene);
 
-  for (const feature of memberFeatures(project, member)) {
+  for (const feature of memberFeatures(project, member, scene)) {
     const cutPolygons = holeOrSlotCut(project, profiles, polygons, feature, null, shared);
     if (cutPolygons) {
       polygons = cutPolygons;
@@ -299,8 +559,9 @@ function memberCsgPolygons(project, profiles, member, profile, color) {
       continue;
     }
 
-    if (feature.type === "cut-plane" || feature.type === "fitting") {
-      polygons = csgSubtract(polygons, planeCutPolygons(member, frame, profile, feature.plane, shared));
+    if (feature.type === "cut-plane" || feature.type === "fitting" || feature.type === "member-trim") {
+      const plane = cuttingPlaneForFeature(project, scene?.profiles || {}, member, frame, feature);
+      polygons = csgSubtract(polygons, planeCutPolygons(member, frame, profile, plane, shared));
       continue;
     }
 
@@ -349,18 +610,51 @@ function addMeshCreaseEdges(scene, polygons, edgeColor, meta = {}) {
   }
 }
 
-function addMember(scene, project, member, profile) {
+function addMember(scene, project, member, profile, options = {}) {
   const color = member.display?.color || "#78909c";
   const edgeColor = member.display?.edgeColor || color || settings.render.edges.defaultColor;
   const opacity = member.display?.transparent ? member.display?.opacity ?? DEFAULT_GHOST_OPACITY : member.display?.opacity;
-  const meta = { collection: "members", objectId: member.id };
-  const polygons = memberCsgPolygons(project, scene.profiles, member, profile, color);
+  const meta = { collection: "members", objectId: member.id, ...(options.lodDetail ? detailMeta(member.id) : {}) };
+  const polygons = memberCsgPolygons(project, scene.profiles, member, profile, color, scene);
 
   for (const polygon of polygons) {
     const points = csgCleanPoints(polygon.vertices);
     if (points.length >= 3) scene.faces.push({ points, color: polygon.shared?.color || color, opacity, hideEdges: true, ...meta });
   }
   addMeshCreaseEdges(scene, polygons, edgeColor, meta);
+}
+
+function canInstanceMember(scene, member, profile) {
+  if (member.display?.transparent || member.display?.opacity !== undefined) return false;
+  if (!instanceGeometryForProfile(scene, profile)) return false;
+  return true;
+}
+
+function addInstancedMember(scene, member, profile, options = {}) {
+  const frame = memberFrame(member);
+  const length = v.len(v.sub(member.end, member.start));
+  if (!Number.isFinite(length) || length <= CSG_EPSILON) return false;
+  const color = member.display?.color || "#78909c";
+  const opacity = member.display?.opacity ?? 1;
+  const bounds = sectionBounds(profile);
+  const profileRadius = Math.hypot(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ) / 2;
+
+  scene.memberInstances.push({
+    collection: "members",
+    objectId: member.id,
+    profileId: profile.id,
+    start: [...member.start],
+    axisX: frame.x,
+    axisY: frame.y,
+    axisZ: frame.z,
+    length,
+    color,
+    opacity,
+    profileRadius,
+    lodDetailObjectId: options.lodDetail ? member.id : null
+  });
+  scene.vertices.push(member.start, member.end);
+  return true;
 }
 
 function addPlateSolid(scene, midPoints, normal, thickness, color, edgeColor, meta = {}) {
@@ -392,6 +686,7 @@ function addBentPlate(scene, plate) {
   const meta = {
     collection: "plates",
     objectId: plate.id,
+    ...detailMeta(plate.id),
     ...(plate.display?.transparent || plate.display?.suppressed || plate.display?.opacity !== undefined ? { opacity: plate.display?.opacity ?? DEFAULT_GHOST_OPACITY } : {}),
     ...(plate.display?.suppressed ? { suppressed: true } : {})
   };
@@ -515,6 +810,7 @@ function addPlate(scene, project, plate) {
   const meta = {
     collection: "plates",
     objectId: plate.id,
+    ...detailMeta(plate.id),
     ...(plate.display?.transparent || plate.display?.suppressed || plate.display?.opacity !== undefined ? { opacity: plate.display?.opacity ?? DEFAULT_GHOST_OPACITY } : {}),
     ...(plate.display?.suppressed ? { suppressed: true } : {})
   };
@@ -630,10 +926,15 @@ function featureOrigin(project, profiles, feature) {
 function addCutBody(scene, project, profiles, feature) {
   if (feature.operationEnabled === false) return;
   if (!shouldRenderObject(scene, feature)) return;
-  const meta = { collection: "features", objectId: feature.id };
-  if (feature.type === "cut-plane" || feature.type === "fitting") {
-    if (!feature.plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
-    addPlaneMarker(scene, feature.plane, feature.display || {}, meta);
+  const meta = { collection: "features", objectId: feature.id, ...detailMeta(feature.id) };
+  if (feature.type === "cut-plane" || feature.type === "fitting" || feature.type === "member-trim") {
+    let plane = feature.plane;
+    if (feature.type === "member-trim") {
+      const member = objectById(project, feature.ownerId);
+      plane = memberTrimPlane(project, profiles, member, memberFrame(member), feature);
+    }
+    if (!plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
+    addPlaneMarker(scene, plane, feature.display || {}, meta);
     return;
   }
   if (feature.type !== "boolean-part" && feature.type !== "clearance-cut") return;
@@ -720,16 +1021,17 @@ function addFastenerAssembly(scene, project, fastenerGroup, fastener, basis, pos
   if (fastener.nut) addPrism(scene, v.add(nutSurface, v.mul(axis, nutStackOffset + nutHeight / 2)), axis, basis.y, basis.z, nutHeight, hexOutline(nutAcrossFlats), componentColor, edgeColor, meta);
 }
 
-function addFastenerGroups(scene, project) {
-  for (const fastenerGroup of collectionObjects(project, "fastenerGroups")) {
+function addFastenerGroups(scene, project, fastenerGroups = collectionObjects(project, "fastenerGroups")) {
+  for (const fastenerGroup of fastenerGroups) {
     if (!shouldRenderObject(scene, fastenerGroup)) continue;
+    if (!shouldBuildLodDetail(scene, fastenerGroup.id)) continue;
     const pattern = objectById(project, fastenerGroup.holePatternRef);
     const feature = objectById(project, fastenerGroup.through.fromFeatureId);
     const basis = featureOrigin(project, scene.profiles, feature);
     const fastener = fastenerDefinition(scene, fastenerGroup);
     const color = fastenerGroup.display?.color || "#b7791f";
     const edgeColor = fastenerGroup.display?.edgeColor || settings.render.edges.fastenerHeadColor;
-    const meta = { collection: "fastenerGroups", objectId: fastenerGroup.id };
+    const meta = { collection: "fastenerGroups", objectId: fastenerGroup.id, ...detailMeta(fastenerGroup.id) };
     const suppressedPositions = new Set(pattern.suppressedPositionIndices || []);
     const groupSuppressed = Boolean(fastenerGroup.display?.suppressed);
 
@@ -768,7 +1070,7 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
   const edgeCenter = v.add(plateCenter, v.mul(plateAxisY, edgeSide * width / 2));
   const color = weld.display?.color || "#f6e05e";
   const weldOpacity = weld.display?.transparent || weld.display?.suppressed || weld.display?.opacity !== undefined ? weld.display?.opacity ?? DEFAULT_GHOST_OPACITY : 0.9;
-  const meta = { collection: "welds", objectId: weld.id, opacity: weldOpacity, ...(weld.display?.suppressed ? { suppressed: true } : {}) };
+  const meta = { collection: "welds", objectId: weld.id, ...detailMeta(weld.id), opacity: weldOpacity, ...(weld.display?.suppressed ? { suppressed: true } : {}) };
   const runs = Array.isArray(ref.runs)
     ? ref.runs
     : [{ edge: "support", side: "front", size }, { edge: "support", side: "back", size }];
@@ -953,12 +1255,15 @@ function memberProfilePointOnPlane(member, frame, planeOrigin, planeNormal, poin
   return sectionPoint(member.start, frame, point, station);
 }
 
-function memberWeldProfilePoints(project, weld, member, profile, frame, contour) {
-  if (weld.reference?.fittingFeatureId) {
-    const feature = objectById(project, weld.reference.fittingFeatureId);
-    if (feature.type !== "fitting" || !feature.plane) geometryError(`${weld.id}: fittingFeatureId must reference a fitting feature`);
-    const planeOrigin = requiredVector(feature.plane, "origin", feature.id);
-    const planeNormal = v.norm(requiredVector(feature.plane, "normal", feature.id));
+function memberWeldProfilePoints(project, profiles, weld, member, profile, frame, contour) {
+  const trimOrFittingFeatureId = weld.reference?.trimFeatureId || weld.reference?.fittingFeatureId;
+  if (trimOrFittingFeatureId) {
+    const feature = objectById(project, trimOrFittingFeatureId);
+    if (feature.type !== "fitting" && feature.type !== "member-trim") geometryError(`${weld.id}: trim/fitting reference must reference a fitting or member-trim feature`);
+    const plane = cuttingPlaneForFeature(project, profiles, member, frame, feature);
+    if (!plane) geometryError(`${weld.id}: trim/fitting reference missing plane`);
+    const planeOrigin = requiredVector(plane, "origin", feature.id);
+    const planeNormal = v.norm(requiredVector(plane, "normal", feature.id));
     return contour.points.map((point) => memberProfilePointOnPlane(member, frame, planeOrigin, planeNormal, point));
   }
 
@@ -966,9 +1271,10 @@ function memberWeldProfilePoints(project, weld, member, profile, frame, contour)
   return contour.points.map((point) => sectionPoint(origin, frame, point));
 }
 
-function addWelds(scene, project) {
-  for (const weld of collectionObjects(project, "welds")) {
+function addWelds(scene, project, welds = collectionObjects(project, "welds")) {
+  for (const weld of welds) {
     if (!shouldRenderObject(scene, weld)) continue;
+    if (!shouldBuildLodDetail(scene, weld.id)) continue;
     if (weld.reference?.kind === "plate-support-edge") {
       addPlateSupportEdgeWeld(scene, project, weld);
       continue;
@@ -978,62 +1284,149 @@ function addWelds(scene, project) {
     const profile = scene.profiles[member.profile];
     const frame = memberFrame(member);
     const color = weld.display?.color || "#f6e05e";
-    const meta = { collection: "welds", objectId: weld.id };
+    const meta = { collection: "welds", objectId: weld.id, ...detailMeta(weld.id) };
 
     for (const contour of profile.section.contours) {
       if (contour.role !== "solid") continue;
-      addLoopLines(scene, memberWeldProfilePoints(project, weld, member, profile, frame, contour), color, meta);
+      addLoopLines(scene, memberWeldProfilePoints(project, scene.profiles, weld, member, profile, frame, contour), color, meta);
     }
   }
+}
+
+function buildLodDetails(scene) {
+  const entries = new Map();
+  const addPoint = (id, point) => {
+    if (!id || !Array.isArray(point)) return;
+    const entry = entries.get(id) || {
+      min: [Infinity, Infinity, Infinity],
+      max: [-Infinity, -Infinity, -Infinity]
+    };
+    for (let i = 0; i < 3; i += 1) {
+      entry.min[i] = Math.min(entry.min[i], point[i]);
+      entry.max[i] = Math.max(entry.max[i], point[i]);
+    }
+    entries.set(id, entry);
+  };
+
+  for (const face of scene.faces) {
+    for (const point of face.points || []) addPoint(face.lodDetailObjectId, point);
+  }
+  for (const line of scene.lines) {
+    for (const point of line.points || []) addPoint(line.lodDetailObjectId, point);
+  }
+
+  scene.lodDetails = {};
+  for (const [id, entry] of entries) {
+    if (entry.min.some((value) => !Number.isFinite(value)) || entry.max.some((value) => !Number.isFinite(value))) continue;
+    const center = v.mul(v.add(entry.min, entry.max), 0.5);
+    const radius = Math.max(v.len(v.sub(entry.max, entry.min)) / 2, 1);
+    scene.lodDetails[id] = { center, radius };
+  }
+}
+
+function addBoundsPoint(boundsData, point) {
+  if (!Array.isArray(point)) return;
+  for (let i = 0; i < 3; i += 1) {
+    boundsData.min[i] = Math.min(boundsData.min[i], point[i]);
+    boundsData.max[i] = Math.max(boundsData.max[i], point[i]);
+  }
+}
+
+function sceneBounds(scene) {
+  const boundsData = {
+    min: [Infinity, Infinity, Infinity],
+    max: [-Infinity, -Infinity, -Infinity]
+  };
+  for (const face of scene.faces) {
+    for (const point of face.points || []) addBoundsPoint(boundsData, point);
+  }
+  for (const line of scene.lines) {
+    for (const point of line.points || []) addBoundsPoint(boundsData, point);
+  }
+  for (const instance of scene.memberInstances || []) {
+    addBoundsPoint(boundsData, instance.start);
+    addBoundsPoint(boundsData, v.add(instance.start, v.mul(instance.axisX, instance.length)));
+  }
+  return bounds(boundsData);
+}
+
+function boundsPoints(boundsData) {
+  const { min, max } = boundsData;
+  return [
+    [min[0], min[1], min[2]],
+    [min[0], min[1], max[2]],
+    [min[0], max[1], min[2]],
+    [min[0], max[1], max[2]],
+    [max[0], min[1], min[2]],
+    [max[0], min[1], max[2]],
+    [max[0], max[1], min[2]],
+    [max[0], max[1], max[2]]
+  ];
 }
 
 export function buildScene(project, profiles, fasteners, viewerSettings, options = {}) {
   settings = viewerSettings;
   setGeometrySettings(viewerSettings);
+  const renderObjectIds = options.renderObjectIds ? new Set(options.renderObjectIds) : null;
+  const shouldRenderId = (objectId) => !renderObjectIds || renderObjectIds.has(objectId);
+  const members = renderCollectionObjects(project, "members", renderObjectIds);
   const sceneData = {
     faces: [],
     lines: [],
     vertices: [],
+    memberInstances: [],
+    memberInstanceGeometries: {},
+    lodDetails: {},
     profiles: profiles.profiles,
     fasteners: fasteners.fasteners,
     project,
     activeConnectionId: options.activeConnectionId || null,
-    activeConnectionObjectIds: activeConnectionObjectIds(project, options.activeConnectionId)
+    activeConnectionObjectIds: activeConnectionObjectIds(project, options.activeConnectionId),
+    generatedConnectionObjectIds: generatedConnectionObjectIds(project),
+    lodDetailFilter: options.lodDetailFilter || null,
+    renderObjectIds
   };
 
-  for (const member of collectionObjects(project, "members")) {
+  for (const member of members) {
     if (member.display?.visible === false) continue;
-    addMember(sceneData, project, member, profiles.profiles[member.profile]);
+    if (!shouldRenderId(member.id)) continue;
+    const profile = profiles.profiles[member.profile];
+    const hasDetails = memberFeatures(project, member, sceneData).length > 0;
+    const instanced = profile && canInstanceMember(sceneData, member, profile) && addInstancedMember(sceneData, member, profile, { lodDetail: hasDetails });
+    if (!instanced || (hasDetails && shouldBuildLodDetail(sceneData, member.id))) {
+      addMember(sceneData, project, member, profile, { lodDetail: instanced && hasDetails });
+    }
   }
   for (const previewMember of options.previewMembers || []) {
     addMember(sceneData, project, previewMember, profiles.profiles[previewMember.profile]);
   }
 
-  for (const plate of collectionObjects(project, "plates")) {
+  for (const plate of renderCollectionObjects(project, "plates", renderObjectIds)) {
+    if (!shouldRenderId(plate.id)) continue;
     if (!shouldRenderObject(sceneData, plate)) continue;
+    if (!shouldBuildLodDetail(sceneData, plate.id)) continue;
     addPlate(sceneData, project, plate);
   }
 
-  for (const feature of collectionObjects(project, "features")) addCutBody(sceneData, project, profiles.profiles, feature);
-  addFastenerGroups(sceneData, project);
-  addWelds(sceneData, project);
+  for (const feature of renderCollectionObjects(project, "features", renderObjectIds)) {
+    if (!shouldRenderId(feature.id)) continue;
+    if (!shouldRenderObject(sceneData, feature)) continue;
+    if (!shouldBuildLodDetail(sceneData, feature.id)) continue;
+    addCutBody(sceneData, project, profiles.profiles, feature);
+  }
+  addFastenerGroups(sceneData, project, renderCollectionObjects(project, "fastenerGroups", renderObjectIds));
+  addWelds(sceneData, project, renderCollectionObjects(project, "welds", renderObjectIds));
 
-  for (const face of sceneData.faces) sceneData.vertices.push(...face.points);
-  for (const line of sceneData.lines) sceneData.vertices.push(...line.points);
-  sceneData.bounds = bounds(sceneData.vertices);
+  sceneData.bounds = sceneBounds(sceneData);
+  sceneData.vertices = boundsPoints(sceneData.bounds);
+  buildLodDetails(sceneData);
   addViewerAxes(sceneData);
   return sceneData;
 }
 
-function bounds(points) {
-  const min = [Infinity, Infinity, Infinity];
-  const max = [-Infinity, -Infinity, -Infinity];
-  for (const point of points) {
-    for (let i = 0; i < 3; i += 1) {
-      min[i] = Math.min(min[i], point[i]);
-      max[i] = Math.max(max[i], point[i]);
-    }
-  }
+function bounds(boundsData) {
+  const min = boundsData.min.some((value) => !Number.isFinite(value)) ? [0, 0, 0] : boundsData.min;
+  const max = boundsData.max.some((value) => !Number.isFinite(value)) ? [0, 0, 0] : boundsData.max;
   const size = v.sub(max, min);
   return { min, max, center: v.mul(v.add(min, max), 0.5), depthHalf: Math.max(1, v.len(size) / 2) };
 }

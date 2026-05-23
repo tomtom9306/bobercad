@@ -96,6 +96,28 @@ export function createSemanticBuilders(ctx) {
         return feature;
       },
 
+      memberTrim(role, data) {
+        const id = ctx.id(role);
+        const feature = {
+          id,
+          type: "member-trim",
+          cutKind: "fitting",
+          ownerId: data.ownerId,
+          operationEnabled: data.operationEnabled,
+          memberEnd: data.memberEnd,
+          trim: data.trim,
+          placementIntent: data.placementIntent,
+          fabrication: data.fabrication,
+          display: data.display,
+          bim: data.bim
+        };
+        if (data.plane !== undefined) feature.plane = data.plane;
+        ctx.add("features", id, feature);
+        ctx.attachFeature(data.ownerId, id);
+        ctx.role(role, id);
+        return feature;
+      },
+
       booleanPart(role, data) {
         const id = ctx.id(role);
         const feature = {

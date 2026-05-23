@@ -410,6 +410,31 @@ async function checkAutoConnectionLifecycle(errors) {
     const fasteners = readJson("bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json");
     const viewerSettings = readJson("bobercad/app/ui/viewer/viewer-settings.json");
     const connectionCatalog = await loadConnectionDefinitions();
+    const beamToBeamProject = readJson("bobercad/data/projects/sample_beam_to_beam_fin_plate.json");
+    const beamToBeamConnectionId = "connection_beam_to_beam_fin_plate_1";
+    const beamToBeamScene = buildScene(beamToBeamProject, profiles, fasteners, viewerSettings);
+    const activeBeamToBeamScene = buildScene(beamToBeamProject, profiles, fasteners, viewerSettings, { activeConnectionId: beamToBeamConnectionId });
+    for (const notchId of ["connection_beam_to_beam_fin_plate_1_top_flange_notch", "connection_beam_to_beam_fin_plate_1_bottom_flange_notch"]) {
+      const notch = beamToBeamProject.model.features[notchId];
+      if (notch?.display?.visible !== true || notch.display?.suppressed !== true) {
+        fail(errors, `beam-to-beam notch ${notchId} should be active-connection-only cutter geometry`);
+      }
+      if (beamToBeamScene.lines.some((line) => line.objectId === notchId)) {
+        fail(errors, `beam-to-beam notch ${notchId} should stay hidden outside connection editing`);
+      }
+      if (!activeBeamToBeamScene.lines.some((line) => line.objectId === notchId)) {
+        fail(errors, `beam-to-beam notch ${notchId} should contribute visible cutter edges while editing its connection`);
+      }
+    }
+    const beamToBeamStore = createProjectStore({ project: beamToBeamProject, profiles, connectionCatalog, fasteners });
+    const beamToBeamParameters = beamToBeamStore.project().model.connections[beamToBeamConnectionId].referenceParameters;
+    beamToBeamStore.updateConnection(beamToBeamConnectionId, beamToBeamParameters);
+    for (const notchId of ["connection_beam_to_beam_fin_plate_1_top_flange_notch", "connection_beam_to_beam_fin_plate_1_bottom_flange_notch"]) {
+      const regeneratedNotch = beamToBeamStore.project().model.features[notchId];
+      if (regeneratedNotch?.display?.visible !== true || regeneratedNotch.display?.suppressed !== true || regeneratedNotch.display?.opacity < 0.2) {
+        fail(errors, `generated beam-to-beam notch ${notchId} should be stored as active-connection-only cutter geometry`);
+      }
+    }
     const storedStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
     const storedBefore = storedStore.project().model.plates.connection_fin_plate_1_fin_plate.center;
     storedStore.moveMemberWithLayout("beam_1", [0, 0, 125]);

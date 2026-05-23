@@ -59,6 +59,42 @@
           "status": "not-defined"
         }
       }
+    },
+    "light_end_plate_m12_1x2": {
+      "id": "light_end_plate_m12_1x2",
+      "version": "0.1.0",
+      "name": "End plate, M12 1x2",
+      "parameters": {
+        "plate": {
+          "thickness": 8,
+          "width": 170,
+          "height": 130,
+          "offset": 0
+        },
+        "bolts": {
+          "fastenerRef": "HOOK_M12",
+          "rows": 1,
+          "columns": 2,
+          "pitch": 0,
+          "gauge": 70
+        },
+        "holes": {
+          "diameter": 14,
+          "memberDepth": 25,
+          "type": "round"
+        },
+        "welds": {
+          "beamWeb": 4,
+          "beamFlanges": 4
+        },
+        "designAssumptions": {
+          "standard": "EN 1993-1-8",
+          "status": "not-calculated"
+        },
+        "loads": {
+          "status": "not-defined"
+        }
+      }
     }
   },
   "$schema": "../../../../../app/schemas/connection.schema.json"

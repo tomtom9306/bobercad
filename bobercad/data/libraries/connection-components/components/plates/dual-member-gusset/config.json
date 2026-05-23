@@ -1,0 +1,193 @@
+{
+  "type": "dual-member-gusset",
+  "title": "Dual Member Gusset",
+  "version": 1,
+  "roles": {
+    "gussetPlate": "_gusset_plate",
+    "mainHolePattern": "_main_bolt_grid",
+    "secondaryHolePattern": "_secondary_bolt_grid",
+    "mainTrim": "_main_trim",
+    "secondaryTrim": "_secondary_trim",
+    "mainPlateHoles": "_main_holes_plate",
+    "secondaryPlateHoles": "_secondary_holes_plate",
+    "mainMemberHoles": "_main_holes_member",
+    "secondaryMemberHoles": "_secondary_holes_member",
+    "mainFasteners": "_main_bolts",
+    "secondaryFasteners": "_secondary_bolts"
+  },
+  "requiredPlateRoles": [
+    "gussetPlate"
+  ],
+  "parameters": {
+    "plate.thickness": {
+      "kind": "positiveNumber",
+      "label": "Plate thickness",
+      "unit": "mm"
+    },
+    "plate.width": {
+      "kind": "positiveNumber",
+      "label": "Plate width",
+      "unit": "mm"
+    },
+    "plate.height": {
+      "kind": "positiveNumber",
+      "label": "Plate height",
+      "unit": "mm"
+    },
+    "plate.verticalOffset": {
+      "kind": "number",
+      "label": "Vertical offset",
+      "unit": "mm",
+      "required": false,
+      "default": 0
+    },
+    "trim.mode": {
+      "kind": "enum",
+      "values": [
+        "matched-edge-length",
+        "equal-angle-miter",
+        "square-to-own-axis"
+      ],
+      "label": "Trim mode",
+      "required": false,
+      "default": "matched-edge-length"
+    },
+    "bolts.fastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Fastener"
+    },
+    "bolts.rows": {
+      "kind": "positiveInteger",
+      "label": "Rows per member",
+      "unit": "pcs"
+    },
+    "bolts.pitch": {
+      "kind": "nonNegativeNumber",
+      "label": "Pitch",
+      "unit": "mm"
+    },
+    "bolts.groupSpacing": {
+      "kind": "nonNegativeNumber",
+      "label": "Member line spacing",
+      "unit": "mm"
+    },
+    "bolts.length": {
+      "kind": "positiveNumber",
+      "label": "Bolt length",
+      "unit": "mm",
+      "required": false,
+      "default": 80,
+      "standardOptions": {
+        "kind": "fastenerLengths",
+        "fastenerRef": "bolts.fastenerRef"
+      }
+    },
+    "holes.diameter": {
+      "kind": "positiveNumber",
+      "label": "Hole diameter",
+      "unit": "mm"
+    },
+    "holes.memberDepth": {
+      "kind": "positiveNumber",
+      "label": "Member depth",
+      "unit": "mm"
+    },
+    "holes.type": {
+      "kind": "enum",
+      "values": [
+        "round",
+        "slotted",
+        "countersunk"
+      ],
+      "label": "Hole type",
+      "readOnly": true
+    }
+  },
+  "dimensions": [
+    {
+      "id": "gusset-thickness",
+      "parameter": "plate.thickness",
+      "label": "t",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "gussetPlate",
+        "axis": "normal",
+        "at": {
+          "localAxisY": "max",
+          "localAxisZ": "max"
+        },
+        "offset": {
+          "localAxisY": 24,
+          "localAxisZ": 18
+        }
+      }
+    },
+    {
+      "id": "gusset-width",
+      "parameter": "plate.width",
+      "label": "W",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "gussetPlate",
+        "axis": "localAxisY",
+        "at": {
+          "localAxisZ": "max"
+        },
+        "offset": {
+          "localAxisZ": 28,
+          "normal": 18
+        }
+      }
+    },
+    {
+      "id": "gusset-height",
+      "parameter": "plate.height",
+      "label": "H",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "gussetPlate",
+        "axis": "localAxisZ",
+        "at": {
+          "localAxisY": "max"
+        },
+        "offset": {
+          "localAxisY": 30,
+          "normal": 18
+        }
+      }
+    }
+  ],
+  "ui": {
+    "tabs": [
+      {
+        "id": "parts",
+        "label": "Parts",
+        "items": [
+          "plate.thickness",
+          "plate.width",
+          "plate.height",
+          "plate.verticalOffset",
+          "trim.mode",
+          {
+            "kind": "connectionPlates"
+          }
+        ]
+      },
+      {
+        "id": "bolts",
+        "label": "Bolts",
+        "items": [
+          "bolts.fastenerRef",
+          "bolts.rows",
+          "bolts.pitch",
+          "bolts.groupSpacing",
+          "bolts.length",
+          "holes.diameter",
+          "holes.memberDepth"
+        ]
+      }
+    ]
+  },
+  "$schema": "../../../../../../app/schemas/connection-component.schema.json"
+}

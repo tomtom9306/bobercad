@@ -1,3 +1,7 @@
+function stableMainOrigin(ctx, mainInterface, secondaryInterface) {
+  return mainInterface.origin;
+}
+
 export function build(ctx) {
   const mainInterface = ctx.interface("main");
   const secondaryInterface = ctx.interface("secondary");
@@ -12,11 +16,14 @@ export function build(ctx) {
     offset: "plate.offset"
   });
   const v = ctx.geometry.v;
-  const plateNormal = v.norm(mainInterface.normal);
-  const beamDirection = v.mul(v.norm(secondaryInterface.normal), -1);
-  const center = v.add(mainInterface.origin, v.mul(plateNormal, plate.thickness / 2 + plate.offset));
-  const beamFaceOrigin = v.add(mainInterface.origin, v.mul(plateNormal, plate.thickness + plate.offset));
-  const axes = ctx.geometry.endPlateAxes(mainInterface, secondaryInterface);
+  const beamDirection = ctx.geometry.secondaryBeamDirection(secondaryMember, secondaryInterface);
+  let plateNormal = v.norm(mainInterface.normal);
+  if (v.dot(plateNormal, beamDirection) < -0.5) plateNormal = v.mul(plateNormal, -1);
+  if (Math.abs(v.dot(plateNormal, beamDirection)) < 0.5) plateNormal = beamDirection;
+  const supportOrigin = stableMainOrigin(ctx, mainInterface, secondaryInterface);
+  const center = v.add(supportOrigin, v.mul(plateNormal, plate.thickness / 2 + plate.offset));
+  const beamFaceOrigin = v.add(supportOrigin, v.mul(plateNormal, plate.thickness + plate.offset));
+  const axes = ctx.geometry.endPlateAxes({ ...mainInterface, normal: plateNormal }, secondaryInterface);
 
   ctx.check.vectorsAligned(plateNormal, beamDirection, {
     minDot: 0.5,
@@ -101,7 +108,13 @@ export function build(ctx) {
     ownerId: mainMember.id,
     holePatternRef: boltGrid.id,
     depth: bolts.memberDepth,
-    reference: { kind: "member-face", interfaceRef: mainInterface.id, stationReferenceInterfaceRef: secondaryInterface.id },
+    reference: {
+      kind: "member-face",
+      origin: supportOrigin,
+      normal: plateNormal,
+      localAxisY: axes.localAxisY,
+      localAxisZ: axes.localAxisZ
+    },
     fabrication: { operation: "drill" }
   });
 
@@ -110,7 +123,7 @@ export function build(ctx) {
     holePatternRef: boltGrid.id,
     participants: [endPlate.id, mainMember.id],
     through: { fromFeatureId: plateHoles.id, toFeatureId: memberHoles.id },
-    orientation: { axis: plateNormal, headSide: "secondary-member-side" }
+    orientation: { axis: v.mul(plateNormal, -1), headSide: "secondary-member-side" }
   });
   ctx.weld.fillet("weld", {
     size: ctx.param("welds.beamWeb"),

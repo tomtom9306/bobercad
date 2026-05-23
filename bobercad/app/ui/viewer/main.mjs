@@ -1,6 +1,7 @@
 import { createProjectStore } from "../../engine/store/project-store.mjs";
+import { memberAuthoringPoints } from "../../engine/api/project/members.mjs";
 import { loadConnectionDefinitions } from "../../engine/modules/connections/connection-registry.mjs";
-import { buildScene } from "../../rendering/scene/build-scene.mjs";
+import { buildScene } from "../../rendering/scene/build-scene.mjs?v=member-trim";
 import { createCommandController } from "../../rendering/interaction/command-controller.mjs";
 import { createMemberEditController } from "../../rendering/interaction/member-edit-controller.mjs";
 import { createSelectionController } from "../../rendering/interaction/selection-controller.mjs";
@@ -23,6 +24,362 @@ const settingsUrl = new URL("./viewer-settings.json", import.meta.url);
 let settings = null;
 let viewer = null;
 let authoringPreview = [];
+let renderedLodDetailBucket = null;
+let progressiveDetailRenderToken = 0;
+
+function finiteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function add(a, b) {
+  return a.map((value, index) => value + b[index]);
+}
+
+function sub(a, b) {
+  return a.map((value, index) => value - b[index]);
+}
+
+function mul(a, scalar) {
+  return a.map((value) => value * scalar);
+}
+
+function dot(a, b) {
+  return a.reduce((sum, value, index) => sum + value * b[index], 0);
+}
+
+function len(a) {
+  return Math.hypot(...a);
+}
+
+function norm(a) {
+  const length = len(a);
+  return length > 1e-9 ? mul(a, 1 / length) : [0, 0, 1];
+}
+
+function flattenIds(value) {
+  if (!value) return [];
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(flattenIds);
+  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
+  return [];
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function pointsBounds(points) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (const point of points) {
+    for (let i = 0; i < 3; i += 1) {
+      min[i] = Math.min(min[i], point[i]);
+      max[i] = Math.max(max[i], point[i]);
+    }
+  }
+  const size = sub(max, min);
+  return { min, max, size, center: mul(add(min, max), 0.5), maxSize: Math.max(...size.map(Math.abs), 1) };
+}
+
+function boxPoints(bounds) {
+  const { min, max } = bounds;
+  return [
+    [min[0], min[1], min[2]],
+    [min[0], min[1], max[2]],
+    [min[0], max[1], min[2]],
+    [min[0], max[1], max[2]],
+    [max[0], min[1], min[2]],
+    [max[0], min[1], max[2]],
+    [max[0], max[1], min[2]],
+    [max[0], max[1], max[2]]
+  ];
+}
+
+function projectObjectCount(project) {
+  return Object.values(project.model || {})
+    .filter((collection) => collection && typeof collection === "object" && !Array.isArray(collection))
+    .reduce((sum, collection) => sum + Object.keys(collection).length, 0);
+}
+
+function shouldUseProgressiveDetails(project) {
+  return projectObjectCount(project) > 5000;
+}
+
+function lodDetailBucket(scale) {
+  if (!finiteNumber(scale) || scale <= 0) return null;
+  return Math.floor(Math.log2(scale) * 4);
+}
+
+function objectEntry(project, objectId) {
+  const entry = project.objectIndex?.[objectId];
+  if (!entry?.collection) return null;
+  const object = project.model?.[entry.collection]?.[objectId];
+  return object ? { collection: entry.collection, object } : null;
+}
+
+function profileRadius(profile) {
+  const points = (profile?.section?.contours || []).flatMap((contour) => contour.points || []);
+  if (!points.length) return 1;
+  return Math.max(...points.map((point) => Math.hypot(point[0], point[1])), 1);
+}
+
+function plateRadius(plate) {
+  const outline = Array.isArray(plate.outline) && plate.outline.length
+    ? plate.outline
+    : [
+        [-(plate.width || 1) / 2, -(plate.height || plate.depth || 1) / 2],
+        [(plate.width || 1) / 2, (plate.height || plate.depth || 1) / 2]
+      ];
+  const y = Math.max(...outline.map((point) => Math.abs(point[0] || 0)), 1);
+  const z = Math.max(...outline.map((point) => Math.abs(point[1] || 0)), 1);
+  return Math.hypot(y, z, (plate.thickness || 1) / 2);
+}
+
+function memberRadius(project, profiles, member) {
+  const axisLength = len(sub(member.end || [0, 0, 0], member.start || [0, 0, 0]));
+  return axisLength / 2 + profileRadius(profiles[member.profile]);
+}
+
+function estimateObjectRadius(project, profiles, objectId, seen = new Set()) {
+  if (!objectId || seen.has(objectId)) return 1;
+  seen.add(objectId);
+  const entry = objectEntry(project, objectId);
+  if (!entry) return 1;
+  const { collection, object } = entry;
+
+  if (collection === "members") return memberRadius(project, profiles, object);
+  if (collection === "plates") return plateRadius(object);
+  if (collection === "fastenerGroups") {
+    const pattern = project.model.holePatterns?.[object.holePatternRef];
+    const feature = project.model.features?.[object.through?.fromFeatureId];
+    const patternRadius = Math.max(...(pattern?.positions || [[0, 0]]).map((point) => Math.hypot(point[0] || 0, point[1] || 0)), 1);
+    return patternRadius + Math.max(object.assembly?.length || settings.render.fasteners.length || 1, estimateObjectRadius(project, profiles, feature?.ownerId, seen) * 0.25);
+  }
+  if (collection === "features") return Math.max(1, estimateObjectRadius(project, profiles, object.ownerId, seen) * 0.25);
+  if (collection === "welds") {
+    return Math.max(1, ...(object.participants || []).map((id) => estimateObjectRadius(project, profiles, id, seen) * 0.25));
+  }
+  if (collection === "connectionZones") return 750;
+  return 1;
+}
+
+function memberConnectionDetailObjectIds(project, memberId) {
+  const ids = [];
+  for (const connection of Object.values(project.model.connections || {})) {
+    if (connection.mainMemberId !== memberId && connection.secondaryMemberId !== memberId) continue;
+    ids.push(
+      ...flattenIds(connection.generator?.objectRoles),
+      ...(connection.generator?.ownedObjectIds || []),
+      ...flattenIds(connection.manualParts)
+    );
+  }
+  return [...new Set(ids)].filter((id) => project.objectIndex?.[id] && id !== memberId);
+}
+
+function averagePoints(points) {
+  const valid = points.filter((point) => Array.isArray(point) && point.length === 3 && point.every(finiteNumber));
+  if (!valid.length) return null;
+  return valid.reduce((sum, point) => add(sum, point), [0, 0, 0]).map((value) => value / valid.length);
+}
+
+function memberCenter(member) {
+  if (!Array.isArray(member?.start) || !Array.isArray(member?.end)) return null;
+  return mul(add(member.start, member.end), 0.5);
+}
+
+function objectCenter(project, objectId, seen = new Set()) {
+  if (!objectId || seen.has(objectId)) return null;
+  seen.add(objectId);
+  const entry = objectEntry(project, objectId);
+  if (!entry) return null;
+  const { collection, object } = entry;
+
+  if (collection === "members") return memberCenter(object);
+  if (collection === "plates" && Array.isArray(object.center)) return object.center;
+  if (collection === "features") {
+    if (Array.isArray(object.center)) return object.center;
+    if (Array.isArray(object.plane?.origin)) return object.plane.origin;
+    return objectCenter(project, object.ownerId, seen);
+  }
+  if (collection === "fastenerGroups") {
+    const feature = project.model.features?.[object.through?.fromFeatureId];
+    return objectCenter(project, feature?.ownerId, seen);
+  }
+  if (collection === "welds") {
+    const centers = (object.participants || []).map((id) => objectCenter(project, id, seen)).filter(Boolean);
+    return averagePoints(centers);
+  }
+  if (collection === "connectionZones" && Array.isArray(object.origin)) return object.origin;
+  return null;
+}
+
+function projectedDetailScore(center, pixelRadius, detailContext = {}) {
+  if (!center || typeof detailContext.projectPoint !== "function" || !detailContext.viewport) return pixelRadius;
+  const projected = detailContext.projectPoint(center);
+  const viewport = detailContext.viewport;
+  if (!projected || !finiteNumber(projected.x) || !finiteNumber(projected.y)) return null;
+  const margin = Math.max(120, pixelRadius * 2);
+  if (projected.x < -margin || projected.x > viewport.width + margin || projected.y < -margin || projected.y > viewport.height + margin) return null;
+  const dx = projected.x - viewport.width / 2;
+  const dy = projected.y - viewport.height / 2;
+  return pixelRadius - Math.hypot(dx, dy) * 0.015;
+}
+
+function createLodDetailFilter(project, profileMap, scale, detailContext = {}) {
+  const threshold = Number.isFinite(settings.render.lod?.detailPixelThreshold)
+    ? settings.render.lod.detailPixelThreshold
+    : 24;
+  const maxAutoDetails = Number.isFinite(settings.render.lod?.maxAutoDetailObjects)
+    ? Math.max(0, Math.floor(settings.render.lod.maxAutoDetailObjects))
+    : 600;
+  const forced = new Set(detailContext.forceDetailObjectIds || []);
+  if (!maxAutoDetails && !forced.size) return () => false;
+
+  const candidates = [];
+  for (const objectId of Object.keys(project.objectIndex || {})) {
+    if (forced.has(objectId)) continue;
+    const pixelRadius = estimateObjectRadius(project, profileMap, objectId) * scale;
+    if (pixelRadius < threshold) continue;
+    const score = projectedDetailScore(objectCenter(project, objectId), pixelRadius, detailContext);
+    if (!finiteNumber(score)) continue;
+    candidates.push({ objectId, score });
+  }
+
+  const selected = new Set(candidates
+    .sort((left, right) => right.score - left.score)
+    .slice(0, maxAutoDetails)
+    .map((entry) => entry.objectId));
+  for (const objectId of forced) selected.add(objectId);
+  return (objectId) => selected.has(objectId);
+}
+
+function expandedPoints(points, basis, margin) {
+  const axes = [basis.normal, basis.localAxisY, basis.localAxisZ].filter(Boolean).map(norm);
+  const expanded = [...points];
+  for (const point of points) {
+    for (const axis of axes) {
+      expanded.push(add(point, mul(axis, margin)), add(point, mul(axis, -margin)));
+    }
+  }
+  return expanded;
+}
+
+function connectionOwnedIds(connection) {
+  return [
+    ...flattenIds(connection.generator?.objectRoles),
+    ...(connection.generator?.ownedObjectIds || []),
+    ...flattenIds(connection.manualParts)
+  ];
+}
+
+function connectionHighlightObjectIds(project, objectIds = []) {
+  const highlightCollections = new Set(["plates", "fastenerGroups", "welds"]);
+  return objectIds.filter((objectId) => highlightCollections.has(project.objectIndex?.[objectId]?.collection));
+}
+
+function isolatedConnectionProject(project, connection, visibleConnectionObjectIds) {
+  const next = clone(project);
+  const visibleObjects = new Set(visibleConnectionObjectIds);
+  visibleObjects.add(connection.mainMemberId);
+  visibleObjects.add(connection.secondaryMemberId);
+
+  for (const [memberId, member] of Object.entries(next.model.members || {})) {
+    if (visibleObjects.has(memberId)) {
+      member.featureIds = (member.featureIds || []).filter((featureId) => visibleObjects.has(featureId));
+    } else {
+      member.display = { ...(member.display || {}), visible: false };
+      member.featureIds = [];
+    }
+  }
+
+  for (const collection of ["plates", "features", "fastenerGroups", "welds"]) {
+    for (const [objectId, object] of Object.entries(next.model[collection] || {})) {
+      if (visibleObjects.has(objectId)) continue;
+      object.display = { ...(object.display || {}), visible: false };
+    }
+  }
+
+  return next;
+}
+
+function connectionPrimaryPlate(project, connection) {
+  const roles = connection.generator?.objectRoles || {};
+  const preferredRoles = ["endPlate", "finPlate", "gussetPlate", "basePlate"];
+  for (const role of preferredRoles) {
+    const plate = project.model.plates?.[roles[role]];
+    if (plate) return plate;
+  }
+  return connectionOwnedIds(connection).map((id) => project.model.plates?.[id]).find(Boolean) || null;
+}
+
+function memberAxis(project, memberId) {
+  const member = project.model.members?.[memberId];
+  if (!member) return null;
+  const axis = sub(member.end, member.start);
+  const length = len(axis);
+  if (length <= 1e-9) return null;
+  return { member, axis: mul(axis, 1 / length), length };
+}
+
+function connectionBasis(project, connection) {
+  const plate = connectionPrimaryPlate(project, connection);
+  if (plate?.normal && plate?.localAxisY && plate?.localAxisZ) {
+    return {
+      normal: norm(plate.normal),
+      localAxisY: norm(plate.localAxisY),
+      localAxisZ: norm(plate.localAxisZ)
+    };
+  }
+  const secondary = memberAxis(project, connection.secondaryMemberId);
+  const main = memberAxis(project, connection.mainMemberId);
+  const normal = secondary?.axis || [1, 0, 0];
+  let localAxisZ = [0, 0, 1];
+  if (Math.abs(dot(normal, localAxisZ)) > 0.95) localAxisZ = main?.axis || [0, 1, 0];
+  localAxisZ = norm(sub(localAxisZ, mul(normal, dot(localAxisZ, normal))));
+  const localAxisY = norm([
+    localAxisZ[1] * normal[2] - localAxisZ[2] * normal[1],
+    localAxisZ[2] * normal[0] - localAxisZ[0] * normal[2],
+    localAxisZ[0] * normal[1] - localAxisZ[1] * normal[0]
+  ]);
+  return { normal, localAxisY, localAxisZ };
+}
+
+function viewDirection(basis, view) {
+  const directions = {
+    front: basis.normal,
+    back: mul(basis.normal, -1),
+    right: basis.localAxisY,
+    left: mul(basis.localAxisY, -1),
+    top: basis.localAxisZ,
+    bottom: mul(basis.localAxisZ, -1),
+    "front-iso": norm(add(add(basis.normal, mul(basis.localAxisY, 0.62)), mul(basis.localAxisZ, -0.48))),
+    "back-iso": norm(add(add(mul(basis.normal, -1), mul(basis.localAxisY, -0.62)), mul(basis.localAxisZ, -0.48))),
+    iso: norm(add(add(mul(basis.normal, -1), mul(basis.localAxisY, -0.75)), mul(basis.localAxisZ, -0.55)))
+  };
+  return norm(directions[view] || directions.iso);
+}
+
+function cameraAnglesForDirection(direction) {
+  const d = norm(direction);
+  const pitch = Math.acos(Math.max(-1, Math.min(1, -d[2])));
+  const horizontal = Math.hypot(d[0], d[1]);
+  const yaw = horizontal <= 1e-9 ? 0 : Math.atan2(-d[0], -d[1]);
+  return { yaw, pitch };
+}
+
+function memberContextPoints(project, memberId, center, radius) {
+  const data = memberAxis(project, memberId);
+  if (!data) return [];
+  const station = Math.max(0, Math.min(data.length, dot(sub(center, data.member.start), data.axis)));
+  return [
+    add(data.member.start, mul(data.axis, Math.max(0, station - radius))),
+    add(data.member.start, mul(data.axis, Math.min(data.length, station + radius)))
+  ];
+}
+
+function waitFrame() {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
 
 async function loadJson(url) {
   const response = await fetch(url, { cache: "no-store" });
@@ -47,9 +404,225 @@ function updateMeta(project) {
 }
 
 function renderProject(project, profiles, fasteners, options = {}) {
-  const { activeConnectionId = null, previewMembers = authoringPreview, ...viewerOptions } = options;
-  viewer.setScene(buildScene(project, profiles, fasteners, settings, { activeConnectionId, previewMembers }), viewerOptions);
+  const { activeConnectionId = null, previewMembers = authoringPreview, forceDetailObjectIds = [], ...viewerOptions } = options;
+  const progressiveDetails = shouldUseProgressiveDetails(project);
+  const profileMap = profiles.profiles || profiles;
+  const detailContext = () => ({
+    projectPoint: (point) => viewer.projectPoint(point),
+    viewport: viewer.viewportSize(),
+    forceDetailObjectIds
+  });
+
+  if (progressiveDetails && !viewerOptions.preserveCamera) {
+    const detailToken = ++progressiveDetailRenderToken;
+    const coarseScene = buildScene(project, profiles, fasteners, settings, {
+      activeConnectionId,
+      previewMembers,
+      lodDetailFilter: () => false
+    });
+    viewer.setScene(coarseScene, viewerOptions);
+    updateMeta(project);
+    window.setTimeout(() => {
+      const run = () => {
+        if (detailToken !== progressiveDetailRenderToken) return;
+        const scheduledScale = viewer.screenScale();
+        renderedLodDetailBucket = lodDetailBucket(scheduledScale);
+        viewer.setScene(buildScene(project, profiles, fasteners, settings, {
+          activeConnectionId,
+          previewMembers,
+          lodDetailFilter: createLodDetailFilter(project, profileMap, scheduledScale, detailContext())
+        }), { ...viewerOptions, preserveCamera: true });
+      };
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(run, { timeout: 1800 });
+        return;
+      }
+      run();
+    }, 500);
+    return;
+  }
+
+  progressiveDetailRenderToken += 1;
+  const detailScale = progressiveDetails ? viewer.screenScale() : null;
+  renderedLodDetailBucket = progressiveDetails ? lodDetailBucket(detailScale) : null;
+  const lodDetailFilter = progressiveDetails ? createLodDetailFilter(project, profileMap, detailScale, detailContext()) : null;
+  viewer.setScene(buildScene(project, profiles, fasteners, settings, { activeConnectionId, previewMembers, lodDetailFilter }), {
+    ...viewerOptions,
+    preserveCamera: progressiveDetails || viewerOptions.preserveCamera
+  });
   updateMeta(project);
+}
+function mountQaApi({ api, profiles, fasteners }) {
+  const connectionSummaries = () => Object.values(api.project().model.connections || {}).map((connection) => ({
+    id: connection.id,
+    type: connection.type,
+    name: connection.bim?.name || connection.sourcePreset?.id || connection.id,
+    mainMemberId: connection.mainMemberId,
+    secondaryMemberId: connection.secondaryMemberId,
+    health: connection.generator?.health || "ok"
+  }));
+
+  const clientPoint = (point) => {
+    const projected = viewer.projectPoint(point);
+    const rect = canvas.getBoundingClientRect();
+    if (!projected) return null;
+    return {
+      x: rect.left + projected.x,
+      y: rect.top + projected.y,
+      screen: projected,
+      inside: projected.x >= 0 && projected.x <= rect.width && projected.y >= 0 && projected.y <= rect.height,
+      hitCanvas: document.elementFromPoint(rect.left + projected.x, rect.top + projected.y) === canvas,
+      viewport: { width: rect.width, height: rect.height }
+    };
+  };
+
+  const memberInteractionTarget = (options = {}) => {
+    const project = api.project();
+    const profileMap = profiles.profiles || profiles;
+    const connectionCounts = new Map();
+    for (const connection of Object.values(project.model.connections || {})) {
+      for (const memberId of [connection.mainMemberId, connection.secondaryMemberId]) {
+        if (!memberId) continue;
+        connectionCounts.set(memberId, (connectionCounts.get(memberId) || 0) + 1);
+      }
+    }
+    const members = Object.values(project.model.members || {})
+      .filter((member) => member.display?.visible !== false && (!options.memberId || member.id === options.memberId));
+    let best = null;
+    for (const member of members) {
+      const affectedConnections = connectionCounts.get(member.id) || 0;
+      if (options.connected !== false && !options.memberId && affectedConnections <= 0) continue;
+      const points = memberAuthoringPoints(member);
+      const center = clientPoint(points.center);
+      if (!center?.inside || !center.hitCanvas) continue;
+      const start = clientPoint(points.physicalStart);
+      const end = clientPoint(points.physicalEnd);
+      const lengthPx = start && end ? Math.hypot(end.x - start.x, end.y - start.y) : 0;
+      const radiusPx = profileRadius(profileMap[member.profile]) * viewer.screenScale();
+      const viewport = center.viewport;
+      const centerDistance = Math.hypot(center.screen.x - viewport.width / 2, center.screen.y - viewport.height / 2);
+      const score = affectedConnections * 25 + radiusPx * 10 + lengthPx * 0.1 - centerDistance * 0.02;
+      if (!best || score > best.score) {
+        best = {
+          memberId: member.id,
+          score,
+          affectedConnections,
+          radiusPx,
+          lengthPx,
+          select: { x: center.x, y: center.y },
+          handles: {
+            move: { x: center.x, y: center.y },
+            physicalStart: start ? { x: start.x, y: start.y } : null,
+            physicalEnd: end ? { x: end.x, y: end.y } : null
+          },
+          start: [...member.start],
+          end: [...member.end]
+        };
+      }
+    }
+    if (!best) throw new Error("No visible member target found.");
+    return best;
+  };
+
+  const memberState = (memberId) => {
+    const member = api.project().model.members?.[memberId];
+    if (!member) throw new Error(`member not found: ${memberId}`);
+    return { id: member.id, start: [...member.start], end: [...member.end] };
+  };
+
+  const memberConnectionObjectIds = (memberId) => {
+    const project = api.project();
+    const ids = [];
+    for (const connection of Object.values(project.model.connections || {})) {
+      if (connection.mainMemberId !== memberId && connection.secondaryMemberId !== memberId) continue;
+      ids.push(
+        ...flattenIds(connection.generator?.objectRoles),
+        ...(connection.generator?.ownedObjectIds || []),
+        ...flattenIds(connection.manualParts)
+      );
+    }
+    return [...new Set(ids)].filter((id) => project.objectIndex?.[id] && id !== memberId);
+  };
+
+  const memberConnectionPoints = (memberId) => {
+    const objectIds = memberConnectionObjectIds(memberId);
+    const points = viewer.objectPoints(objectIds);
+    return {
+      memberId,
+      objectIds,
+      pointCount: points.length,
+      center: averagePoints(points)
+    };
+  };
+
+  const captureConnectionView = async (options = {}) => {
+    const connectionId = options.connectionId;
+    const project = api.project();
+    const connection = project.model.connections?.[connectionId];
+    if (!connection) throw new Error(`connection not found: ${connectionId}`);
+
+    const previousAxesVisible = settings.render.axes.visible;
+    const connectionObjectIds = api.connectionObjectIds(connectionId);
+    const captureProject = options.isolate === false
+      ? project
+      : isolatedConnectionProject(project, connection, connectionObjectIds);
+    if (options.hideAxes !== false) settings.render.axes.visible = false;
+    renderProject(captureProject, profiles, fasteners, { preserveCamera: true, activeConnectionId: connectionId });
+    settings.render.axes.visible = previousAxesVisible;
+    viewer.setDimensionOverlay({ lines: [], labels: [] });
+
+    const basis = connectionBasis(project, connection);
+    if (options.highlight) viewer.setHighlightedObjects(connectionHighlightObjectIds(project, connectionObjectIds));
+    else viewer.setHighlightedObjects([]);
+
+    const zone = project.model.connectionZones?.[connection.connectionZoneId];
+    const seedPoints = [
+      ...(Array.isArray(zone?.origin) ? [zone.origin] : []),
+      ...viewer.objectPoints(connectionObjectIds)
+    ];
+    const seedBounds = pointsBounds(seedPoints.length ? seedPoints : [[0, 0, 0]]);
+    const memberRadius = Math.max(options.memberContext || 520, seedBounds.maxSize * 1.15);
+    const focusPoints = [
+      ...seedPoints,
+      ...memberContextPoints(project, connection.mainMemberId, seedBounds.center, memberRadius),
+      ...memberContextPoints(project, connection.secondaryMemberId, seedBounds.center, memberRadius)
+    ];
+    const focusBounds = pointsBounds(focusPoints);
+    const margin = Math.max(options.margin || 0, Math.min(650, Math.max(140, focusBounds.maxSize * 0.12)));
+    const fitPoints = expandedPoints([...focusPoints, ...boxPoints(focusBounds)], basis, margin);
+    const angles = cameraAnglesForDirection(viewDirection(basis, options.view || "iso"));
+    viewer.fitPoints(fitPoints, {
+      ...angles,
+      padding: finiteNumber(options.padding) ? options.padding : 0.74,
+      minSpan: options.minSpan || 520
+    });
+
+    await waitFrame();
+    await waitFrame();
+    const dataUrl = viewer.canvasDataUrl("image/png");
+    return {
+      dataUrl,
+      connection: connectionSummaries().find((item) => item.id === connectionId),
+      view: options.view || "iso",
+      camera: angles,
+      focus: {
+        center: focusBounds.center,
+        size: focusBounds.size,
+        pointCount: fitPoints.length
+      }
+    };
+  };
+
+  window.__boberCadQa = {
+    version: 1,
+    ready: true,
+    connectionSummaries,
+    memberInteractionTarget,
+    memberState,
+    memberConnectionObjectIds,
+    memberConnectionPoints,
+    captureConnectionView
+  };
 }
 
 async function main() {
@@ -64,7 +637,13 @@ async function main() {
     viewer = createWebglViewer(canvas, reset, settings);
     applyUiSettings(project);
 
-    const api = createProjectStore({ project, profiles: profiles.profiles, connectionCatalog, fasteners });
+    const api = createProjectStore({
+      project,
+      profiles: profiles.profiles,
+      connectionCatalog,
+      fasteners,
+      cloneOnLoad: !shouldUseProgressiveDetails(project)
+    });
     const selection = createSelectionController({ viewer });
     let commandController = null;
     const modelingUi = mountModelingToolbar({
@@ -75,24 +654,130 @@ async function main() {
       onCancel: () => commandController?.cancel()
     });
     let dimensionEdit = null;
-    const rerender = (nextProject) => {
-      renderProject(nextProject, profiles, fasteners, { preserveCamera: true, activeConnectionId: dimensionEdit?.connectionId() || null });
+    let focusedMemberId = null;
+    const focusedDetailObjectIds = () => focusedMemberId ? memberConnectionDetailObjectIds(api.project(), focusedMemberId) : [];
+    let rerenderTimer = null;
+    let rerenderIdle = null;
+    const clearQueuedRerender = () => {
+      window.clearTimeout(rerenderTimer);
+      rerenderTimer = null;
+      if (rerenderIdle !== null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(rerenderIdle);
+      }
+      rerenderIdle = null;
+    };
+    const renderProjectNow = (nextProject) => {
+      renderProject(nextProject, profiles, fasteners, {
+        preserveCamera: true,
+        activeConnectionId: dimensionEdit?.connectionId() || null,
+        forceDetailObjectIds: focusedDetailObjectIds()
+      });
       dimensionEdit?.render();
     };
+    const queueLargeProjectRerender = () => {
+      clearQueuedRerender();
+      const run = () => {
+        rerenderIdle = null;
+        renderProjectNow(api.project());
+      };
+      rerenderTimer = window.setTimeout(() => {
+        rerenderTimer = null;
+        if (typeof window.requestIdleCallback === "function") {
+          rerenderIdle = window.requestIdleCallback(run, { timeout: 1200 });
+        } else {
+          run();
+        }
+      }, 0);
+    };
+    const rerender = (nextProject) => {
+      if (shouldUseProgressiveDetails(nextProject)) {
+        queueLargeProjectRerender();
+        return;
+      }
+      clearQueuedRerender();
+      renderProjectNow(nextProject);
+    };
+    let detailRefreshTimer = null;
+    let detailRefreshIdle = null;
+    const clearDetailRefresh = () => {
+      window.clearTimeout(detailRefreshTimer);
+      detailRefreshTimer = null;
+      if (detailRefreshIdle !== null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(detailRefreshIdle);
+      }
+      detailRefreshIdle = null;
+    };
+    const scheduleDetailRefresh = () => {
+      clearDetailRefresh();
+      const run = () => {
+        detailRefreshIdle = null;
+        rerender(api.project());
+      };
+      detailRefreshTimer = window.setTimeout(() => {
+        detailRefreshTimer = null;
+        if (typeof window.requestIdleCallback === "function") {
+          detailRefreshIdle = window.requestIdleCallback(run, { timeout: 1000 });
+        } else {
+          run();
+        }
+      }, 0);
+    };
+    const hotSwapMemberDetails = (nextProject, memberId, objectIds = []) => {
+      if (!shouldUseProgressiveDetails(nextProject) || typeof viewer.replaceSceneObjects !== "function") return false;
+      const renderIds = new Set([memberId, ...objectIds].filter((objectId) => nextProject.objectIndex?.[objectId]));
+      if (!renderIds.size) return false;
+      clearQueuedRerender();
+      clearDetailRefresh();
+      progressiveDetailRenderToken += 1;
+      renderedLodDetailBucket = lodDetailBucket(viewer.screenScale());
+
+      const patchScene = buildScene(nextProject, profiles, fasteners, settings, {
+        activeConnectionId: dimensionEdit?.connectionId() || null,
+        renderObjectIds: renderIds,
+        lodDetailFilter: (objectId) => renderIds.has(objectId)
+      });
+      const replaced = viewer.replaceSceneObjects(patchScene, renderIds);
+      if (replaced) {
+        updateMeta(nextProject);
+        dimensionEdit?.render();
+      }
+      return replaced;
+    };
+    viewer.setDetailScaleChangeHandler((scale) => {
+      if (!shouldUseProgressiveDetails(api.project())) return;
+      const bucket = lodDetailBucket(scale);
+      if (bucket === null || bucket === renderedLodDetailBucket) return;
+      scheduleDetailRefresh();
+    });
     let editorApi = null;
     const memberEdit = createMemberEditController({
       viewer,
       api,
       selection,
       onProjectChange: rerender,
-      onMemberSelected: (memberId) => editorApi?.selectMember(memberId, { fromMemberEdit: true }),
-      onCleared: () => editorApi?.clearSelection({ fromMemberEdit: true })
+      onLocalProjectChange: hotSwapMemberDetails,
+      onMemberSelected: (memberId) => {
+        focusedMemberId = memberId;
+        editorApi?.selectMember(memberId, { fromMemberEdit: true });
+        if (dimensionEdit?.connectionId()) {
+          dimensionEdit.clearAll();
+          customPanel.hidden = true;
+          renderProjectNow(api.project());
+        }
+      },
+      onCleared: () => {
+        focusedMemberId = null;
+        editorApi?.clearSelection({ fromMemberEdit: true });
+      }
     });
     viewer.setClickHandler((face) => {
       if (!face) dimensionEdit?.clearDimension();
       memberEdit.handleSceneClick(face);
     });
     const showConnectionEditor = (connectionId, options = {}) => {
+      focusedMemberId = null;
+      memberEdit.clear({ notify: false });
+      selection.select(connectionHighlightObjectIds(api.project(), api.connectionObjectIds(connectionId)));
       const focus = dimensionEdit.selectConnection(connectionId, options);
       const definition = api.definition(connectionId);
       definition.customUi.mountConnectionUi({
@@ -179,20 +864,21 @@ async function main() {
       profiles: profiles.profiles,
       selection,
       memberEdit,
+      connectionHighlightObjectIds: (connectionId) => connectionHighlightObjectIds(api.project(), api.connectionObjectIds(connectionId)),
       onProjectChange: rerender,
-      onConnectionSelected: showConnectionEditor,
+      onLocalMemberProjectChange: hotSwapMemberDetails,
+      onConnectionSelected: (connectionId, options) => {
+        focusedMemberId = null;
+        showConnectionEditor(connectionId, options);
+      },
       onConnectionDeleted: () => {
         dimensionEdit.clearAll();
         customPanel.hidden = true;
       }
     });
 
-    const connection = api.supportedConnections()[0];
-    if (connection) {
-      showConnectionEditor(connection.id);
-    } else {
-      customPanel.hidden = true;
-    }
+    customPanel.hidden = true;
+    mountQaApi({ api, profiles, fasteners });
 
   } catch (error) {
     title.textContent = "Viewer error";

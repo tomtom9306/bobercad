@@ -998,10 +998,11 @@
           "operation": "top-flange-notch"
         },
         "display": {
-          "visible": false,
+          "visible": true,
+          "suppressed": true,
           "color": "#ff3366",
           "transparent": true,
-          "opacity": 0.08
+          "opacity": 0.28
         },
         "bim": {
           "name": "Top flange notch"
@@ -1051,10 +1052,11 @@
           "operation": "bottom-flange-notch"
         },
         "display": {
-          "visible": false,
+          "visible": true,
+          "suppressed": true,
           "color": "#ff3366",
           "transparent": true,
-          "opacity": 0.08
+          "opacity": 0.28
         },
         "bim": {
           "name": "Bottom flange notch"

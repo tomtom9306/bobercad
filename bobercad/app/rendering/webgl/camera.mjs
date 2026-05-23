@@ -13,6 +13,22 @@ function viewportSize(viewport) {
   return { width: viewport.width, height: viewport.height };
 }
 
+function finiteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function pointsBounds(points) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (const point of points) {
+    for (let i = 0; i < 3; i += 1) {
+      min[i] = Math.min(min[i], point[i]);
+      max[i] = Math.max(max[i], point[i]);
+    }
+  }
+  return { min, max, center: v.mul(v.add(min, max), 0.5) };
+}
+
 export function createCamera(settings) {
   let state = home();
 
@@ -80,6 +96,37 @@ export function createCamera(settings) {
     state.panY = settings.camera.home.pan[1];
   }
 
+  function fitPoints(points, viewport, options = {}) {
+    const validPoints = (points || []).filter((point) => Array.isArray(point) && point.length === 3 && point.every(finiteNumber));
+    if (!validPoints.length) return false;
+    if (finiteNumber(options.yaw)) state.yaw = wrapAngle(options.yaw);
+    if (finiteNumber(options.pitch)) state.pitch = wrapAngle(options.pitch);
+
+    const bounds = pointsBounds(validPoints);
+    state.pivot = [...bounds.center];
+    const projected = validPoints.map((point) => {
+      const r = rotate(point);
+      return [r[0], r[1]];
+    });
+    const min = [Infinity, Infinity];
+    const max = [-Infinity, -Infinity];
+    for (const point of projected) {
+      min[0] = Math.min(min[0], point[0]);
+      min[1] = Math.min(min[1], point[1]);
+      max[0] = Math.max(max[0], point[0]);
+      max[1] = Math.max(max[1], point[1]);
+    }
+    const minSpan = Math.max(1, options.minSpan || 1);
+    const width = Math.max(minSpan, max[0] - min[0]);
+    const height = Math.max(minSpan, max[1] - min[1]);
+    const { width: viewportWidth, height: viewportHeight } = viewportSize(viewport);
+    const padding = finiteNumber(options.padding) ? options.padding : settings.camera.fit.padding;
+    state.scale = Math.min(viewportWidth * padding / width, viewportHeight * padding / height);
+    state.panX = 0;
+    state.panY = 0;
+    return true;
+  }
+
   function orbit(dx, dy) {
     const controls = settings.controls;
     state.yaw = wrapAngle(state.yaw + dx * controls.orbitSpeed);
@@ -126,6 +173,20 @@ export function createCamera(settings) {
     ];
   }
 
+  function viewUniforms(scene, viewport) {
+    const { width, height } = viewportSize(viewport);
+    const pivotOffset = scene.bounds.center ? v.len(v.sub(state.pivot, scene.bounds.center)) : 0;
+    return {
+      yaw: state.yaw,
+      pitch: state.pitch,
+      scale: state.scale,
+      pan: [state.panX, state.panY],
+      pivot: [...state.pivot],
+      viewport: [width, height],
+      depthHalf: Math.max(settings.camera.fit.minDepthHalf, (scene.bounds.depthHalf || 1) + pivotOffset)
+    };
+  }
+
   function setOrbitPivot(point, scene, viewport, screenAnchor = null) {
     const anchor = screenAnchor || projectPoint(point, scene, viewport);
     state.pivot = [...point];
@@ -152,5 +213,5 @@ export function createCamera(settings) {
     return state.scale;
   }
 
-  return { clipPoint, fit, orbit, pan, projectPoint, reset, screenDeltaToWorld, screenRay, screenScale, setOrbitPivot, zoomAt };
+  return { clipPoint, fit, fitPoints, orbit, pan, projectPoint, reset, screenDeltaToWorld, screenRay, screenScale, setOrbitPivot, viewUniforms, zoomAt };
 }

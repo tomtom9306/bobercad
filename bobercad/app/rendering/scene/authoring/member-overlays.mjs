@@ -23,22 +23,30 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
   const member = memberById(project, memberId, options.member);
   if (!member) return { lines: [], handles: [], labels: [] };
   const points = memberAuthoringPoints(member);
+  const showLayoutAxis = options.showLayoutAxis === true;
   const lines = [
-    line([points.physicalStart, points.physicalEnd], "#22c55e", { objectId: memberId, kind: "physical-axis" }),
-    line([points.layoutStart, points.layoutEnd], "#f59e0b", { objectId: memberId, kind: "layout-axis" })
+    line([points.physicalStart, points.physicalEnd], "#22c55e", { objectId: memberId, kind: "physical-axis" })
   ];
+  if (showLayoutAxis) {
+    lines.push(line([points.layoutStart, points.layoutEnd], "#f59e0b", { objectId: memberId, kind: "layout-axis" }));
+  }
   if (options.snap?.point) {
     lines.push(line([options.dragPoint || options.snap.point, options.snap.point], "#38bdf8", { objectId: memberId, kind: "snap-line" }));
   }
-  return {
-    lines,
-    handles: [
-      handle(memberId, "move-member", points.center, "#0ea5e9", 12),
-      handle(memberId, "physical-start", points.physicalStart, "#22c55e"),
-      handle(memberId, "physical-end", points.physicalEnd, "#22c55e"),
+  const handles = [
+    handle(memberId, "move-member", points.center, "#0ea5e9", 12),
+    handle(memberId, "physical-start", points.physicalStart, "#22c55e"),
+    handle(memberId, "physical-end", points.physicalEnd, "#22c55e")
+  ];
+  if (showLayoutAxis) {
+    handles.push(
       handle(memberId, "layout-start", points.layoutStart, "#f59e0b"),
       handle(memberId, "layout-end", points.layoutEnd, "#f59e0b")
-    ],
+    );
+  }
+  return {
+    lines,
+    handles,
     labels: options.snap?.point ? [{
       point: options.snap.point,
       text: options.snap.label || options.snap.type || "Snap",

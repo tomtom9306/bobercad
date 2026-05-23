@@ -206,6 +206,7 @@ function autoConnectionRoles(project, memberIds) {
   if (secondEnd) {
     return {
       mainMember: first,
+      mainEnd: firstEnd,
       secondaryMember: second,
       secondaryEnd: secondEnd,
       intersection,
@@ -215,6 +216,7 @@ function autoConnectionRoles(project, memberIds) {
   if (firstEnd) {
     return {
       mainMember: second,
+      mainEnd: secondEnd,
       secondaryMember: first,
       secondaryEnd: firstEnd,
       intersection,
@@ -389,6 +391,10 @@ function autoConnectionObjects(project, memberIds, definition, preset) {
   const assemblyId = nextId(project, `assembly_${base}`);
   const mainSpec = autoInterfaceSpec(definition, preset, "main");
   const secondarySpec = autoInterfaceSpec(definition, preset, "secondary");
+  const mainEnd = mainSpec.memberEnd || ((mainSpec.type || "").includes("end") ? roles.mainEnd : null);
+  if ((mainSpec.type || "").includes("end") && !mainEnd) {
+    fail(`${preset.type}: automatic main member-end interface requires the main member to meet at an end`);
+  }
   const authoring = generatedConnectionHelperAuthoring();
   const generatedInterfaces = {
     main: {
@@ -396,8 +402,9 @@ function autoConnectionObjects(project, memberIds, definition, preset) {
       type: mainSpec.type || "planar-face",
       ownerId: roles.mainMember.id,
       role: "connection-main",
-      faceRef: mainSpec.faceRef || "connection-secondary-facing-section-face",
-      stationReference: mainSpec.stationReference || "connection-secondary-interface-origin",
+      ...(mainEnd ? { memberEnd: mainEnd } : {}),
+      ...(mainEnd ? {} : { faceRef: mainSpec.faceRef || "connection-secondary-facing-section-face" }),
+      ...(mainEnd ? {} : { stationReference: mainSpec.stationReference || "connection-secondary-interface-origin" }),
       authoring
     },
     secondary: {
@@ -652,11 +659,20 @@ class ConnectionBuildContext {
     if (index < 0) this.fail(`unknown interface role ${role}`);
     const interfaceId = this.zone.interfaceIds?.[index];
     if (!interfaceId) this.fail(`connection zone missing ${role} interface`);
+    const iface = projectObject(this.project, "interfaces", interfaceId);
     const options = {};
     if (role === "main") {
       const secondaryIndex = this.definition.interfaces.findIndex((entry) => entry.role === "secondary");
       const secondaryInterfaceId = this.zone.interfaceIds?.[secondaryIndex];
-      const referencePoint = this.connectionReferencePoint(secondaryInterfaceId);
+      let referencePoint = this.connectionReferencePoint(secondaryInterfaceId);
+      if (referencePoint && secondaryInterfaceId) {
+        const secondaryInterface = resolveInterface(this.project, this.profiles, secondaryInterfaceId);
+        const ownerEntry = this.project.objectIndex?.[secondaryInterface.ownerId];
+        if (iface.faceRef === "connection-secondary-facing-section-face" && ownerEntry?.collection === "members" && secondaryInterface.memberEnd) {
+          const secondaryMember = resolvedProjectObject(this.project, "members", secondaryInterface.ownerId);
+          referencePoint = v.add(referencePoint, v.mul(this.geometry.secondaryBeamDirection(secondaryMember, secondaryInterface), 10));
+        }
+      }
       if (referencePoint) {
         options.referencePoint = referencePoint;
         options.preferReferencePoint = true;
@@ -735,17 +751,60 @@ function buildConnectionPatch({ project, profiles, definition, connectionCatalog
 }
 
 export function applyConnectionPatch(project, patch) {
-  const next = clone(project);
+  const next = {
+    ...project,
+    objectIndex: { ...(project.objectIndex || {}) },
+    model: { ...(project.model || {}) }
+  };
   Object.assign(next.objectIndex, patch.objectIndex);
   for (const [collection, objects] of Object.entries(patch.model)) {
-    next.model[collection] ||= {};
-    Object.assign(next.model[collection], objects);
+    next.model[collection] = {
+      ...(next.model[collection] || {}),
+      ...objects
+    };
   }
   return next;
 }
 
+function clonePatchableProject(project) {
+  const next = {
+    ...project,
+    objectIndex: { ...(project.objectIndex || {}) },
+    model: { ...(project.model || {}) }
+  };
+  for (const collection of MODEL_COLLECTIONS) {
+    next.model[collection] = { ...(next.model[collection] || {}) };
+  }
+  return next;
+}
+
+function applyConnectionPatchInPlace(project, patch) {
+  Object.assign(project.objectIndex, patch.objectIndex);
+  for (const [collection, objects] of Object.entries(patch.model)) {
+    Object.assign(project.model[collection], objects);
+  }
+  return project;
+}
+
 export function updateConnection({ project, profiles, definition, connectionCatalog, fasteners, connectionId, parameters }) {
   return applyConnectionPatch(project, buildConnectionPatch({ project, profiles, definition, connectionCatalog, fasteners, connectionId, parameters }));
+}
+
+export function updateConnections({ project, profiles, definitionFor, connectionCatalog, fasteners, connectionIds, parametersFor }) {
+  const next = clonePatchableProject(project);
+  for (const connectionId of connectionIds) {
+    const patch = buildConnectionPatch({
+      project: next,
+      profiles,
+      definition: definitionFor(next, connectionId),
+      connectionCatalog,
+      fasteners,
+      connectionId,
+      parameters: parametersFor ? parametersFor(next, connectionId) : connectionById(next, connectionId).referenceParameters
+    });
+    applyConnectionPatchInPlace(next, patch);
+  }
+  return next;
 }
 
 function partLabel(part) {

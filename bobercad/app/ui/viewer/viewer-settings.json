@@ -22,6 +22,18 @@
       },
       "beam-to-beam-end-plate-1": {
         "path": "../../../data/projects/sample_beam_to_beam_end_plate.json"
+      },
+      "warehouse-12x24": {
+        "path": "../../../data/projects/sample_warehouse_12x24.json"
+      },
+      "stress-100-warehouse-halls": {
+        "path": "../../../../stress-output/stress-100-warehouse-halls.json"
+      },
+      "stress-eiffel-tower": {
+        "path": "../../../../stress-output/stress-eiffel-tower.json"
+      },
+      "stress-100k-beams": {
+        "path": "../../../../stress-output/stress-100k-beams.json"
       }
     }
   },
@@ -98,8 +110,12 @@
     },
     "fasteners": {
       "length": 70,
-      "sides": 10,
+      "sides": 6,
       "headRadiusFactor": 2.1
+    },
+    "lod": {
+      "detailPixelThreshold": 4,
+      "maxAutoDetailObjects": 600
     },
     "curves": {
       "circleSegments": 32,

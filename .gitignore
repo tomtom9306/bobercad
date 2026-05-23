@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 server.err.log
 server.out.log
+stress-output/
+qa-output/

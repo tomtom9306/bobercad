@@ -48,6 +48,49 @@ function axisSpan(values, fallback = 5000) {
   return [min - pad, max + pad];
 }
 
+function inSnapRange(point, options) {
+  if (!finitePoint(options.center) || !(options.radius > 0)) return true;
+  if (!finitePoint(point)) return false;
+  return v.len(v.sub(point, options.center)) <= options.radius;
+}
+
+function closestPointOnSegment(a, b, point) {
+  const ab = v.sub(b, a);
+  const lengthSq = v.dot(ab, ab);
+  if (lengthSq <= 1e-12) return a;
+  const t = Math.max(0, Math.min(1, v.dot(v.sub(point, a), ab) / lengthSq));
+  return v.add(a, v.mul(ab, t));
+}
+
+function memberSnapDistance(member, options) {
+  if (!finitePoint(options.center) || !(options.radius > 0)) return true;
+  const closest = closestPointOnSegment(member.start, member.end, options.center);
+  return v.len(v.sub(closest, options.center));
+}
+
+function memberInSnapRange(member, options) {
+  const distance = memberSnapDistance(member, options);
+  return distance === true || distance <= options.radius;
+}
+
+function memberSnapSource(project, options) {
+  const members = Object.values(project.model?.members || {});
+  const maxMemberCandidates = Number.isFinite(options.maxMemberCandidates)
+    ? Math.max(0, Math.floor(options.maxMemberCandidates))
+    : null;
+  if (maxMemberCandidates === null) return members.filter((member) => memberInSnapRange(member, options));
+  if (maxMemberCandidates <= 0) return [];
+
+  const scored = [];
+  for (const member of members) {
+    const distance = memberSnapDistance(member, options);
+    if (distance !== true && options.radius > 0 && distance > options.radius) continue;
+    scored.push({ member, distance: distance === true ? 0 : distance });
+  }
+  scored.sort((a, b) => a.distance - b.distance);
+  return scored.slice(0, maxMemberCandidates).map((item) => item.member);
+}
+
 function addGridCandidates(candidates, project) {
   const projectLevels = Object.values(project.levels || project.model?.levels || {});
   for (const grid of Object.values(project.gridSystems || project.model?.gridSystems || {})) {
@@ -107,66 +150,70 @@ function addGridCandidates(candidates, project) {
 
 export function snapCandidates(project, options = {}) {
   const candidates = [];
+  const includeMembers = options.includeMembers !== false;
   const includeLayoutAxis = options.includeLayoutAxis !== false;
   const includeLines = options.includeLines !== false;
 
-  for (const member of Object.values(project.model?.members || {})) {
-    pushPoint(candidates, member.start, {
-      type: "member-endpoint",
-      objectId: member.id,
-      endpoint: "start",
-      label: `Endpoint: ${member.id} start`,
-      priority: 120
-    });
-    pushPoint(candidates, member.end, {
-      type: "member-endpoint",
-      objectId: member.id,
-      endpoint: "end",
-      label: `Endpoint: ${member.id} end`,
-      priority: 120
-    });
-    pushPoint(candidates, memberCenter(member), {
-      type: "member-midpoint",
-      objectId: member.id,
-      label: `Midpoint: ${member.id}`,
-      priority: 95
-    });
-    if (includeLines) {
-      pushLine(candidates, member.start, member.end, {
-        type: "member-axis",
-        objectId: member.id,
-        label: `Axis: ${member.id}`,
-        priority: 70
-      });
-    }
-    if (includeLayoutAxis && member.layoutAxis) {
-      const axis = memberLayoutAxis(member);
-      pushPoint(candidates, axis.start, {
-        type: "layout-endpoint",
+  if (includeMembers) {
+    for (const member of memberSnapSource(project, options)) {
+      pushPoint(candidates, member.start, {
+        type: "member-endpoint",
         objectId: member.id,
         endpoint: "start",
-        label: `Layout endpoint: ${member.id} start`,
-        priority: 115
+        label: `Endpoint: ${member.id} start`,
+        priority: 120
       });
-      pushPoint(candidates, axis.end, {
-        type: "layout-endpoint",
+      pushPoint(candidates, member.end, {
+        type: "member-endpoint",
         objectId: member.id,
         endpoint: "end",
-        label: `Layout endpoint: ${member.id} end`,
-        priority: 115
+        label: `Endpoint: ${member.id} end`,
+        priority: 120
+      });
+      pushPoint(candidates, memberCenter(member), {
+        type: "member-midpoint",
+        objectId: member.id,
+        label: `Midpoint: ${member.id}`,
+        priority: 95
       });
       if (includeLines) {
-        pushLine(candidates, axis.start, axis.end, {
-          type: "layout-axis",
+        pushLine(candidates, member.start, member.end, {
+          type: "member-axis",
           objectId: member.id,
-          label: `Layout axis: ${member.id}`,
-          priority: 80
+          label: `Axis: ${member.id}`,
+          priority: 70
         });
+      }
+      if (includeLayoutAxis && member.layoutAxis) {
+        const axis = memberLayoutAxis(member);
+        pushPoint(candidates, axis.start, {
+          type: "layout-endpoint",
+          objectId: member.id,
+          endpoint: "start",
+          label: `Layout endpoint: ${member.id} start`,
+          priority: 115
+        });
+        pushPoint(candidates, axis.end, {
+          type: "layout-endpoint",
+          objectId: member.id,
+          endpoint: "end",
+          label: `Layout endpoint: ${member.id} end`,
+          priority: 115
+        });
+        if (includeLines) {
+          pushLine(candidates, axis.start, axis.end, {
+            type: "layout-axis",
+            objectId: member.id,
+            label: `Layout axis: ${member.id}`,
+            priority: 80
+          });
+        }
       }
     }
   }
 
   for (const point of Object.values(project.model?.workPoints || {})) {
+    if (!inSnapRange(point.point || point.position, options)) continue;
     pushPoint(candidates, point.point || point.position, {
       type: "work-point",
       objectId: point.id,

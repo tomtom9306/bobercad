@@ -3,6 +3,8 @@
   "libraryUi": "./connection-library-ui.mjs",
   "connections": [
     "./connections/fin-plate/",
-    "./connections/moment-end-plate/"
+    "./connections/moment-end-plate/",
+    "./connections/base-plate/",
+    "./connections/apex-gusset/"
   ]
 }

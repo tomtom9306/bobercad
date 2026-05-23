@@ -1,30 +1,110 @@
 ﻿import { v } from "../../engine/core/math.mjs";
 import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs";
+import { memberFrame } from "../../engine/geometry/member-geometry.mjs";
 import { createCamera } from "./camera.mjs";
 import { createDimensionOverlayUi } from "./dimension-overlay-ui.mjs";
 import { createTextLabelRenderer } from "./text-label-renderer.mjs";
 
 export function createWebglViewer(canvas, reset, settings) {
-  const gl = canvas.getContext("webgl", { antialias: true });
+  const qaCapture = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("qaCapture");
+  const gl = canvas.getContext("webgl", { antialias: true, preserveDrawingBuffer: qaCapture });
   let scene = null;
   const camera = createCamera(settings);
   let drag = null;
   let renderer = null;
+  let staticSceneRenderer = null;
+  let staticSceneCache = null;
+  let memberInstanceRenderer = null;
+  let memberInstanceCache = null;
+  let memberInstanceLookup = null;
+  let pickObjectByColorId = new Map();
+  let pickColorIdByObjectKey = new Map();
+  let nextPickColorId = 1;
   let pickHandler = null;
   let clickHandler = null;
   let doubleClickHandler = null;
   let authoringHandler = null;
   let commandHandler = null;
+  let detailScaleChangeHandler = null;
+  let detailScaleChangeTimer = null;
+  let wheelZoomFramePending = false;
+  let pendingWheelZoom = null;
   let authoringOverlay = { lines: [], handles: [] };
   let dimensionOverlay = { lines: [], labels: [] };
+  let objectPreview = null;
   let projectedSceneTriangles = null;
+  let frameDrawPending = false;
   const dimensionTextRenderer = gl ? createTextLabelRenderer(gl, canvas, settings) : null;
+
+  function requestDraw() {
+    if (frameDrawPending) return;
+    frameDrawPending = true;
+    requestAnimationFrame(() => {
+      frameDrawPending = false;
+      draw();
+    });
+  }
+
+  function notifyDetailScaleChange() {
+    if (!detailScaleChangeHandler) return;
+    detailScaleChangeHandler(camera.screenScale());
+  }
+
+  function clearPendingDetailScaleChange() {
+    if (!detailScaleChangeTimer) return;
+    window.clearTimeout(detailScaleChangeTimer);
+    detailScaleChangeTimer = null;
+  }
+
+  function scheduleDetailScaleChange(delayMs = 0) {
+    clearPendingDetailScaleChange();
+    if (!detailScaleChangeHandler) return;
+    if (delayMs <= 0) {
+      notifyDetailScaleChange();
+      return;
+    }
+    detailScaleChangeTimer = window.setTimeout(() => {
+      detailScaleChangeTimer = null;
+      if (drag) {
+        scheduleDetailScaleChange(delayMs);
+        return;
+      }
+      notifyDetailScaleChange();
+    }, delayMs);
+  }
+
+  function requestWheelZoom(deltaY, x, y) {
+    const direction = Math.sign(deltaY) || 1;
+    if (!pendingWheelZoom || Math.sign(pendingWheelZoom.deltaY) !== direction) {
+      pendingWheelZoom = { deltaY: direction, x, y, steps: 1 };
+    } else {
+      pendingWheelZoom.deltaY += direction;
+      pendingWheelZoom.x = x;
+      pendingWheelZoom.y = y;
+      pendingWheelZoom.steps += 1;
+    }
+    if (wheelZoomFramePending) return;
+    wheelZoomFramePending = true;
+    requestAnimationFrame(() => {
+      wheelZoomFramePending = false;
+      const zoom = pendingWheelZoom;
+      pendingWheelZoom = null;
+      if (!scene || !zoom) return;
+      const steps = Math.min(12, Math.max(1, zoom.steps));
+      for (let index = 0; index < steps; index += 1) {
+        camera.zoomAt(zoom.deltaY, zoom.x, zoom.y, canvas);
+      }
+      scheduleDetailScaleChange(900);
+      draw();
+    });
+  }
+
   const dimensionUi = createDimensionOverlayUi({
     canvas,
     settings,
     projectPoint,
     screenScale: () => camera.screenScale(),
-    requestDraw: () => draw()
+    requestDraw
   });
   const authoringLabelLayer = document.createElement("div");
   authoringLabelLayer.className = "authoring-label-layer";
@@ -34,6 +114,9 @@ export function createWebglViewer(canvas, reset, settings) {
     fill: "#f59e0b",
     edge: "#facc15"
   };
+  const detailPixelThreshold = Number.isFinite(settings.render.lod?.detailPixelThreshold)
+    ? settings.render.lod.detailPixelThreshold
+    : 24;
 
 
   function hexToRgb(hex) {
@@ -65,6 +148,95 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function isHighlighted(item) {
     return highlightedObjectIds.has(item.objectId);
+  }
+
+  function shouldBakeHighlight(item) {
+    return isHighlighted(item) && !useHighlightOverlay();
+  }
+
+  function isActiveConnectionObject(objectId) {
+    return Boolean(objectId && scene?.activeConnectionObjectIds?.has?.(objectId));
+  }
+
+  function lodDetailVisible(objectId) {
+    if (!objectId) return true;
+    const detail = scene?.lodDetails?.[objectId];
+    if (!detail) return false;
+    if (isActiveConnectionObject(objectId) || highlightedObjectIds.has(objectId)) return true;
+    return detail.radius * camera.screenScale() >= detailPixelThreshold;
+  }
+
+  function isObjectPreviewed(item) {
+    return Boolean(item?.objectId && objectPreview?.objectIds?.has(item.objectId));
+  }
+
+  function shouldDrawSceneItem(item) {
+    if (isObjectPreviewed(item)) return false;
+    return !item?.lodDetailObjectId || lodDetailVisible(item.lodDetailObjectId);
+  }
+
+  function sameObjectIdSet(a, values = []) {
+    if (a.size !== values.length) return false;
+    return values.every((id) => a.has(id));
+  }
+
+  function resetPickObjects() {
+    pickObjectByColorId = new Map();
+    pickColorIdByObjectKey = new Map();
+    nextPickColorId = 1;
+  }
+
+  function pickObjectKey(item) {
+    return item?.collection && item?.objectId ? `${item.collection}:${item.objectId}` : null;
+  }
+
+  function encodePickColorId(id) {
+    return [
+      ((id >> 16) & 255) / 255,
+      ((id >> 8) & 255) / 255,
+      (id & 255) / 255,
+      1
+    ];
+  }
+
+  function pickColorForItem(item) {
+    const key = pickObjectKey(item);
+    if (!key) return [0, 0, 0, 1];
+    let id = pickColorIdByObjectKey.get(key);
+    if (!id) {
+      id = nextPickColorId;
+      nextPickColorId += 1;
+      pickColorIdByObjectKey.set(key, id);
+      pickObjectByColorId.set(id, { collection: item.collection, objectId: item.objectId });
+    }
+    return encodePickColorId(id);
+  }
+
+  function pickObjectFromPixel(pixel) {
+    const id = (pixel[0] << 16) | (pixel[1] << 8) | pixel[2];
+    return id ? pickObjectByColorId.get(id) || null : null;
+  }
+
+  function shouldUseGpuPick() {
+    return (scene?.faces?.length || 0) + (scene?.memberInstances?.length || 0) > 25000;
+  }
+
+  function isLargeScene() {
+    return (scene?.faces?.length || 0) + (scene?.lines?.length || 0) + (scene?.memberInstances?.length || 0) > 25000;
+  }
+
+  function objectCollection(objectId) {
+    return scene?.project?.objectIndex?.[objectId]?.collection || null;
+  }
+
+  function memberOnlyHighlightChange(nextObjectIds = []) {
+    if (!isLargeScene()) return false;
+    const ids = [...highlightedObjectIds, ...nextObjectIds].filter(Boolean);
+    return ids.length > 0 && ids.every((id) => objectCollection(id) === "members");
+  }
+
+  function useHighlightOverlay() {
+    return isLargeScene() && [...highlightedObjectIds].every((id) => objectCollection(id) === "members");
   }
 
   function compileShader(type, source) {
@@ -114,6 +286,153 @@ export function createWebglViewer(canvas, reset, settings) {
     return renderer;
   }
 
+  function initStaticSceneRenderer() {
+    if (staticSceneRenderer) return staticSceneRenderer;
+    if (!gl) throw new Error("WebGL is required for scene rendering");
+
+    const program = createProgram(`
+      precision highp float;
+      attribute vec3 aWorldPosition;
+      attribute vec4 aColor;
+      uniform float uYaw;
+      uniform float uPitch;
+      uniform float uScale;
+      uniform vec2 uPan;
+      uniform vec2 uViewport;
+      uniform vec3 uPivot;
+      uniform float uDepthHalf;
+      varying vec4 vColor;
+
+      vec3 cameraRotate(vec3 point) {
+        float cy = cos(uYaw);
+        float sy = sin(uYaw);
+        float cp = cos(uPitch);
+        float sp = sin(uPitch);
+        float x = cy * point.x - sy * point.y;
+        float y = sy * point.x + cy * point.y;
+        return vec3(x, cp * y - sp * point.z, sp * y + cp * point.z);
+      }
+
+      void main() {
+        vec3 view = cameraRotate(aWorldPosition - uPivot);
+        float screenX = uViewport.x * 0.5 + uPan.x + view.x * uScale;
+        float screenY = uViewport.y * 0.5 + uPan.y - view.y * uScale;
+        float depth = clamp(-view.z / uDepthHalf, -1.0, 1.0);
+        gl_Position = vec4(screenX / uViewport.x * 2.0 - 1.0, 1.0 - screenY / uViewport.y * 2.0, depth, 1.0);
+        vColor = aColor;
+      }
+    `, `
+      precision mediump float;
+      varying vec4 vColor;
+      void main() {
+        gl_FragColor = vColor;
+      }
+    `);
+
+    staticSceneRenderer = {
+      program,
+      position: gl.getAttribLocation(program, "aWorldPosition"),
+      color: gl.getAttribLocation(program, "aColor"),
+      uniforms: {
+        yaw: gl.getUniformLocation(program, "uYaw"),
+        pitch: gl.getUniformLocation(program, "uPitch"),
+        scale: gl.getUniformLocation(program, "uScale"),
+        pan: gl.getUniformLocation(program, "uPan"),
+        viewport: gl.getUniformLocation(program, "uViewport"),
+        pivot: gl.getUniformLocation(program, "uPivot"),
+        depthHalf: gl.getUniformLocation(program, "uDepthHalf")
+      }
+    };
+    return staticSceneRenderer;
+  }
+
+  function initMemberInstanceRenderer() {
+    if (memberInstanceRenderer) return memberInstanceRenderer;
+    if (!gl) throw new Error("WebGL is required for member instancing");
+    const instancing = gl.getExtension("ANGLE_instanced_arrays");
+    if (!instancing) return null;
+
+    const program = createProgram(`
+      precision highp float;
+      attribute vec3 aLocalPosition;
+      attribute vec3 aLocalNormal;
+      attribute vec3 aStart;
+      attribute vec3 aAxisX;
+      attribute vec3 aAxisY;
+      attribute vec3 aAxisZ;
+      attribute float aLength;
+      attribute vec4 aColor;
+      uniform float uYaw;
+      uniform float uPitch;
+      uniform float uScale;
+      uniform vec2 uPan;
+      uniform vec2 uViewport;
+      uniform vec3 uPivot;
+      uniform float uDepthHalf;
+      uniform vec3 uLight;
+      uniform float uAmbient;
+      uniform float uDiffuse;
+      varying vec4 vColor;
+
+      vec3 cameraRotate(vec3 point) {
+        float cy = cos(uYaw);
+        float sy = sin(uYaw);
+        float cp = cos(uPitch);
+        float sp = sin(uPitch);
+        float x = cy * point.x - sy * point.y;
+        float y = sy * point.x + cy * point.y;
+        return vec3(x, cp * y - sp * point.z, sp * y + cp * point.z);
+      }
+
+      void main() {
+        vec3 world = aStart
+          + aAxisX * (aLocalPosition.x * aLength)
+          + aAxisY * aLocalPosition.y
+          + aAxisZ * aLocalPosition.z;
+        vec3 view = cameraRotate(world - uPivot);
+        float screenX = uViewport.x * 0.5 + uPan.x + view.x * uScale;
+        float screenY = uViewport.y * 0.5 + uPan.y - view.y * uScale;
+        float depth = clamp(-view.z / uDepthHalf, -1.0, 1.0);
+        vec3 normal = normalize(aAxisX * aLocalNormal.x + aAxisY * aLocalNormal.y + aAxisZ * aLocalNormal.z);
+        float shade = uAmbient + max(0.0, dot(normal, normalize(uLight))) * uDiffuse;
+        gl_Position = vec4(screenX / uViewport.x * 2.0 - 1.0, 1.0 - screenY / uViewport.y * 2.0, depth, 1.0);
+        vColor = vec4(aColor.rgb * shade, aColor.a);
+      }
+    `, `
+      precision mediump float;
+      varying vec4 vColor;
+      void main() {
+        gl_FragColor = vColor;
+      }
+    `);
+
+    memberInstanceRenderer = {
+      program,
+      instancing,
+      localPosition: gl.getAttribLocation(program, "aLocalPosition"),
+      localNormal: gl.getAttribLocation(program, "aLocalNormal"),
+      start: gl.getAttribLocation(program, "aStart"),
+      axisX: gl.getAttribLocation(program, "aAxisX"),
+      axisY: gl.getAttribLocation(program, "aAxisY"),
+      axisZ: gl.getAttribLocation(program, "aAxisZ"),
+      length: gl.getAttribLocation(program, "aLength"),
+      color: gl.getAttribLocation(program, "aColor"),
+      uniforms: {
+        yaw: gl.getUniformLocation(program, "uYaw"),
+        pitch: gl.getUniformLocation(program, "uPitch"),
+        scale: gl.getUniformLocation(program, "uScale"),
+        pan: gl.getUniformLocation(program, "uPan"),
+        viewport: gl.getUniformLocation(program, "uViewport"),
+        pivot: gl.getUniformLocation(program, "uPivot"),
+        depthHalf: gl.getUniformLocation(program, "uDepthHalf"),
+        light: gl.getUniformLocation(program, "uLight"),
+        ambient: gl.getUniformLocation(program, "uAmbient"),
+        diffuse: gl.getUniformLocation(program, "uDiffuse")
+      }
+    };
+    return memberInstanceRenderer;
+  }
+
   function clipPoint(point) {
     return camera.clipPoint(point, scene, canvas);
   }
@@ -145,16 +464,39 @@ export function createWebglViewer(canvas, reset, settings) {
     projectedSceneTriangles = null;
   }
 
-  function scenePickTriangles() {
-    if (projectedSceneTriangles) return projectedSceneTriangles;
+  function invalidateMemberInstanceLookup() {
+    memberInstanceLookup = null;
+  }
+
+  function memberInstancesForPick(objectIds = null) {
+    if (!scene?.memberInstances?.length) return [];
+    if (!objectIds) return scene.memberInstances;
+    if (!memberInstanceLookup) {
+      memberInstanceLookup = new Map();
+      for (const instance of scene.memberInstances) {
+        const bucket = memberInstanceLookup.get(instance.objectId) || [];
+        bucket.push(instance);
+        memberInstanceLookup.set(instance.objectId, bucket);
+      }
+    }
+    const instances = [];
+    for (const objectId of objectIds) instances.push(...(memberInstanceLookup.get(objectId) || []));
+    return instances;
+  }
+
+  function scenePickTriangles(objectIds = null) {
+    const filteredIds = objectIds ? new Set(objectIds) : null;
+    if (!filteredIds && projectedSceneTriangles) return projectedSceneTriangles;
     if (!scene) return [];
-    projectedSceneTriangles = [];
+    const triangles = [];
     for (const face of scene.faces) {
+      if (filteredIds && !filteredIds.has(face.objectId)) continue;
+      if (!shouldDrawSceneItem(face)) continue;
       for (const triangle of triangulateFace(face.points)) {
         const projected = triangle.map((point) => camera.projectPoint(point, scene, canvas));
         const xs = projected.map((point) => point.x);
         const ys = projected.map((point) => point.y);
-        projectedSceneTriangles.push({
+        triangles.push({
           face,
           triangle,
           projected,
@@ -165,14 +507,50 @@ export function createWebglViewer(canvas, reset, settings) {
         });
       }
     }
-    return projectedSceneTriangles;
+    if (!filteredIds) projectedSceneTriangles = triangles;
+    return triangles;
+  }
+
+  function pickMemberInstance(x, y, options = {}) {
+    if (!scene?.memberInstances?.length) return null;
+    const cursor = { x, y };
+    const objectIds = options.objectIds ? new Set(options.objectIds) : null;
+    let best = null;
+
+    for (const instance of memberInstancesForPick(objectIds)) {
+      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
+      const a = camera.projectPoint(instance.start, scene, canvas);
+      const b = camera.projectPoint(v.add(instance.start, v.mul(instance.axisX, instance.length)), scene, canvas);
+      const t = screenLineParameter(cursor, a, b);
+      const closestScreen = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+      const distance = Math.hypot(cursor.x - closestScreen.x, cursor.y - closestScreen.y);
+      const radiusPx = instance.profileRadius * camera.screenScale();
+      const threshold = Math.max(6, Math.min(16, radiusPx));
+      if (distance > threshold) continue;
+      const depth = a.depth + (b.depth - a.depth) * t;
+      if (!best || depth < best.depth || (depth === best.depth && distance < best.distance)) {
+        best = {
+          depth,
+          distance,
+          point: v.add(instance.start, v.mul(instance.axisX, instance.length * t)),
+          face: {
+            collection: instance.collection,
+            objectId: instance.objectId
+          }
+        };
+      }
+    }
+
+    return best;
   }
 
   function pickScene(x, y, options = {}) {
     if (!scene) return null;
+    if (!options.forceCpu && shouldUseGpuPick()) return pickSceneGpu(x, y, options);
     const cursor = { x, y };
+    const objectIds = options.objectIds ? new Set(options.objectIds) : null;
     let best = null;
-    for (const item of scenePickTriangles()) {
+    for (const item of scenePickTriangles(objectIds)) {
       const { face, projected, triangle } = item;
       if (options.includeTransparent === false && (face.opacity ?? 1) < 1) continue;
       if (x < item.minX || x > item.maxX || y < item.minY || y > item.maxY) continue;
@@ -181,15 +559,298 @@ export function createWebglViewer(canvas, reset, settings) {
       const depth = projected[0].depth * weights[0] + projected[1].depth * weights[1] + projected[2].depth * weights[2];
       if (!best || depth < best.depth) best = { depth, point: interpolatePoint(triangle, weights), face };
     }
-    return best;
+    return best || (options.includeInstances === false ? null : pickMemberInstance(x, y, { objectIds }));
+  }
+
+  function pickOrbitAnchor(x, y) {
+    const coarse = shouldUseGpuPick() ? pickSceneGpu(x, y, { includeTransparent: false }) : null;
+    if (coarse?.face?.objectId) {
+      const precise = pickScene(x, y, {
+        forceCpu: true,
+        includeTransparent: false,
+        objectIds: [coarse.face.objectId]
+      });
+      return precise || coarse;
+    }
+    return pickScene(x, y, { forceCpu: true, includeTransparent: false });
+  }
+
+  function fastClickPick(x, y) {
+    if (!shouldUseGpuPick()) return pickOrbitAnchor(x, y);
+    return pickSceneGpu(x, y, { includeTransparent: false });
+  }
+
+  function preciseOrbitAnchor(x, y, coarseFace = null) {
+    if (!shouldUseGpuPick()) return pickOrbitAnchor(x, y);
+    if (coarseFace?.objectId) {
+      const precise = pickScene(x, y, {
+        forceCpu: true,
+        includeTransparent: false,
+        objectIds: [coarseFace.objectId]
+      });
+      return precise || { depth: 0, point: null, face: coarseFace };
+    }
+    return null;
   }
 
   function projectPoint(point) {
     return scene ? camera.projectPoint(point, scene, canvas) : null;
   }
 
+  function pointInCaptureRange(point, options = {}) {
+    if (!Array.isArray(options.center) || !Number.isFinite(options.radius)) return true;
+    return v.len(v.sub(point, options.center)) <= options.radius;
+  }
+
+  function captureItemPoints(item, options = {}) {
+    const points = item.points || (item.start && item.axisX && item.length ? [item.start, v.add(item.start, v.mul(item.axisX, item.length))] : []);
+    if (!points.length) return [];
+    if (!options.clipMembers || item.collection !== "members") return points;
+    const filtered = points.filter((point) => pointInCaptureRange(point, options));
+    return filtered.length ? points : [];
+  }
+
+  function objectPoints(objectIds = [], options = {}) {
+    if (!scene) return [];
+    const ids = new Set(objectIds);
+    const points = [];
+    for (const item of [...scene.faces, ...scene.lines, ...(scene.memberInstances || [])]) {
+      if (isObjectPreviewed(item)) continue;
+      if (!ids.has(item.objectId)) continue;
+      points.push(...captureItemPoints(item, options));
+    }
+    if (objectPreview) {
+      for (const item of previewCaptureItems()) {
+        if (!ids.has(item.objectId)) continue;
+        points.push(...captureItemPoints(item, options));
+      }
+    }
+    return points;
+  }
+
+  function clonePoint(point) {
+    return Array.isArray(point) ? [...point] : point;
+  }
+
+  function cloneSceneItem(item) {
+    return {
+      ...item,
+      points: (item.points || []).map(clonePoint),
+      start: clonePoint(item.start),
+      axisX: clonePoint(item.axisX),
+      axisY: clonePoint(item.axisY),
+      axisZ: clonePoint(item.axisZ)
+    };
+  }
+
+  function sameIdSet(left, right) {
+    if (!left || left.size !== right.size) return false;
+    for (const id of right) if (!left.has(id)) return false;
+    return true;
+  }
+
+  function previewDelta() {
+    return objectPreview?.delta || [0, 0, 0];
+  }
+
+  function previewOpacity(fallback = 1) {
+    return Number.isFinite(objectPreview?.opacity) ? objectPreview.opacity : fallback;
+  }
+
+  function previewPoint(point) {
+    return v.add(point, previewDelta());
+  }
+
+  function transformedPreviewInstance(instance) {
+    const draft = objectPreview?.memberDrafts?.get(instance.objectId);
+    if (draft) {
+      const length = v.len(v.sub(draft.end, draft.start));
+      if (Number.isFinite(length) && length > 1e-6) {
+        const frame = memberFrame(draft);
+        return {
+          ...instance,
+          start: [...draft.start],
+          axisX: frame.x,
+          axisY: frame.y,
+          axisZ: frame.z,
+          length,
+          opacity: previewOpacity(instance.opacity ?? 1)
+        };
+      }
+    }
+    return { ...instance, start: previewPoint(instance.start), opacity: previewOpacity(instance.opacity ?? 1) };
+  }
+
+  function previewCaptureItems() {
+    if (!objectPreview) return [];
+    const transformedFaces = objectPreview.faces.map((face) => ({
+      ...face,
+      points: face.points.map(previewPoint)
+    }));
+    const transformedLines = objectPreview.lines.map((line) => ({
+      ...line,
+      points: line.points.map(previewPoint)
+    }));
+    const transformedInstances = objectPreview.memberInstances.map(transformedPreviewInstance);
+    return [...transformedFaces, ...transformedLines, ...transformedInstances];
+  }
+
+  function beginObjectPreview(objectIds = []) {
+    if (!scene) return false;
+    const ids = new Set([...objectIds].filter(Boolean));
+    if (!ids.size) return false;
+    if (sameIdSet(objectPreview?.objectIds, ids)) return true;
+    const isPreviewItem = (item) => item?.objectId && ids.has(item.objectId);
+    objectPreview = {
+      objectIds: ids,
+      delta: [0, 0, 0],
+      opacity: null,
+      faces: (scene.faces || []).filter(isPreviewItem).map(cloneSceneItem),
+      lines: (scene.lines || []).filter(isPreviewItem).map(cloneSceneItem),
+      memberInstances: (scene.memberInstances || []).filter(isPreviewItem).map(cloneSceneItem),
+      memberDrafts: new Map()
+    };
+    invalidateStaticSceneCache();
+    invalidateMemberInstanceCache();
+    requestDraw();
+    return true;
+  }
+
+  function updateMemberMovePreview(member, options = {}) {
+    if (!member?.id) return false;
+    const ids = new Set([member.id, ...(options.objectIds || [])].filter(Boolean));
+    if (!beginObjectPreview(ids)) return false;
+    const delta = Array.isArray(options.delta) && options.delta.length === 3 && options.delta.every(Number.isFinite)
+      ? options.delta
+      : [0, 0, 0];
+    objectPreview.delta = [...delta];
+    objectPreview.opacity = Number.isFinite(options.opacity) ? options.opacity : null;
+    objectPreview.memberDrafts.set(member.id, {
+      ...member,
+      start: [...member.start],
+      end: [...member.end]
+    });
+    requestDraw();
+    return true;
+  }
+
+  function clearObjectPreview() {
+    if (!objectPreview) return;
+    objectPreview = null;
+    invalidateStaticSceneCache();
+    invalidateMemberInstanceCache();
+    requestDraw();
+  }
+
+  function translateSceneObjects(objectIds = [], delta = null) {
+    if (!scene || !objectIds.length || !Array.isArray(delta) || delta.length !== 3 || delta.some((value) => !Number.isFinite(value))) return false;
+    const ids = new Set(objectIds);
+    const movedPoints = new WeakSet();
+    let changed = false;
+    const movePoint = (point) => {
+      if (!Array.isArray(point) || movedPoints.has(point)) return;
+      point[0] += delta[0];
+      point[1] += delta[1];
+      point[2] += delta[2];
+      movedPoints.add(point);
+      changed = true;
+    };
+
+    for (const item of [...scene.faces, ...scene.lines]) {
+      if (!ids.has(item.objectId)) continue;
+      for (const point of item.points || []) movePoint(point);
+    }
+    for (const instance of scene.memberInstances || []) {
+      if (!ids.has(instance.objectId)) continue;
+      movePoint(instance.start);
+    }
+    for (const objectId of ids) {
+      const detail = scene.lodDetails?.[objectId];
+      if (detail?.center) detail.center = v.add(detail.center, delta);
+    }
+    return changed;
+  }
+
+  function updateMemberInstance(member, options = {}) {
+    if (!scene || !member?.id) return false;
+    const translatedObjects = translateSceneObjects(options.translateObjectIds || [], options.delta);
+    const translatedMemberDetail = translatedObjects && (options.translateObjectIds || []).includes(member.id);
+    const instance = (scene.memberInstances || []).find((item) => item.objectId === member.id);
+    if (!instance) {
+      if (translatedObjects) {
+        invalidateStaticSceneCache();
+        invalidateMemberInstanceCache();
+        requestDraw();
+      }
+      return translatedObjects;
+    }
+    const length = v.len(v.sub(member.end, member.start));
+    if (!Number.isFinite(length) || length <= 1e-6) return false;
+    const frame = memberFrame(member);
+
+    if (options.project) scene.project = options.project;
+    if (scene.project?.model?.members?.[member.id]) scene.project.model.members[member.id] = member;
+    instance.start = [...member.start];
+    instance.axisX = frame.x;
+    instance.axisY = frame.y;
+    instance.axisZ = frame.z;
+    instance.length = length;
+    if (scene.lodDetails && !translatedMemberDetail) delete scene.lodDetails[member.id];
+
+    invalidateStaticSceneCache();
+    invalidateMemberInstanceCache();
+    requestDraw();
+    return true;
+  }
+
+  function replaceSceneObjects(patchScene, objectIds = []) {
+    const idValues = objectIds && typeof objectIds[Symbol.iterator] === "function" ? [...objectIds] : [];
+    if (!scene || !patchScene || !idValues.length) return false;
+    const ids = new Set(idValues.filter(Boolean));
+    if (!ids.size) return false;
+    const isPatchedObject = (item) => item?.objectId && ids.has(item.objectId);
+    const appendPatched = (target, source = []) => {
+      for (const item of source) {
+        if (isPatchedObject(item)) target.push(item);
+      }
+    };
+
+    scene.faces = (scene.faces || []).filter((item) => !isPatchedObject(item));
+    scene.lines = (scene.lines || []).filter((item) => !isPatchedObject(item));
+    scene.memberInstances = (scene.memberInstances || []).filter((item) => !isPatchedObject(item));
+
+    appendPatched(scene.faces, patchScene.faces);
+    appendPatched(scene.lines, patchScene.lines);
+    appendPatched(scene.memberInstances, patchScene.memberInstances);
+    invalidateMemberInstanceLookup();
+
+    scene.memberInstanceGeometries = {
+      ...(scene.memberInstanceGeometries || {}),
+      ...(patchScene.memberInstanceGeometries || {})
+    };
+    scene.lodDetails = scene.lodDetails || {};
+    for (const objectId of ids) delete scene.lodDetails[objectId];
+    for (const [objectId, detail] of Object.entries(patchScene.lodDetails || {})) {
+      if (ids.has(objectId)) scene.lodDetails[objectId] = detail;
+    }
+
+    scene.project = patchScene.project || scene.project;
+    scene.activeConnectionId = patchScene.activeConnectionId ?? scene.activeConnectionId;
+    scene.activeConnectionObjectIds = patchScene.activeConnectionObjectIds || scene.activeConnectionObjectIds;
+    scene.generatedConnectionObjectIds = patchScene.generatedConnectionObjectIds || scene.generatedConnectionObjectIds;
+    projectedSceneTriangles = null;
+    invalidateStaticSceneCache();
+    invalidateMemberInstanceCache();
+    requestDraw();
+    return true;
+  }
+
   function hideDimensionsBehindGeometry() {
     return settings.render.dimensions?.hideBehindGeometry !== false;
+  }
+
+  function hasDimensionOverlay() {
+    return Boolean((dimensionOverlay.lines || []).length || (dimensionOverlay.labels || []).length);
   }
 
   function pickAuthoringHandle(x, y) {
@@ -205,18 +866,25 @@ export function createWebglViewer(canvas, reset, settings) {
     return best;
   }
 
-  function screenLineDistance(point, a, b) {
+  function screenLineParameter(point, a, b) {
     const abx = b.x - a.x;
     const aby = b.y - a.y;
     const lengthSq = abx * abx + aby * aby;
-    const t = lengthSq <= 0.000001
+    return lengthSq <= 0.000001
       ? 0
       : Math.max(0, Math.min(1, ((point.x - a.x) * abx + (point.y - a.y) * aby) / lengthSq));
+  }
+
+  function screenLineDistance(point, a, b) {
+    const abx = b.x - a.x;
+    const aby = b.y - a.y;
+    const t = screenLineParameter(point, a, b);
     return Math.hypot(point.x - (a.x + abx * t), point.y - (a.y + aby * t));
   }
 
   function pickDimension(x, y) {
     if (!scene || !dimensionUi.hasClickHandler()) return null;
+    if (!hasDimensionOverlay()) return null;
     const labelHit = dimensionTextRenderer?.hitTest(x, y);
     if (labelHit) return labelHit;
     const cursor = { x, y };
@@ -234,6 +902,10 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function updateDimensionHover(event) {
     if (!scene || drag) return;
+    if (!hasDimensionOverlay()) {
+      dimensionUi.setHoveredDimensionId(null, event);
+      return;
+    }
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -277,6 +949,7 @@ export function createWebglViewer(canvas, reset, settings) {
     const state = initRenderer();
 
     gl.useProgram(state.program);
+    resetInstancedAttribs(state.position, state.color);
     gl.bindBuffer(gl.ARRAY_BUFFER, state.positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.DYNAMIC_DRAW);
     gl.enableVertexAttribArray(state.position);
@@ -290,9 +963,530 @@ export function createWebglViewer(canvas, reset, settings) {
     gl.drawArrays(mode, 0, positionData.length / 3);
   }
 
+  function uploadBuffer(data, usage = gl.STATIC_DRAW) {
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data instanceof Float32Array ? data : new Float32Array(data), usage);
+    return buffer;
+  }
+
+  function resetInstancedAttribs(...locations) {
+    if (!memberInstanceRenderer?.instancing) return;
+    for (const location of locations) {
+      if (location >= 0) memberInstanceRenderer.instancing.vertexAttribDivisorANGLE(location, 0);
+    }
+  }
+
+  function deleteRenderGroup(group) {
+    if (!group) return;
+    if (group.positionBuffer) gl.deleteBuffer(group.positionBuffer);
+    if (group.colorBuffer) gl.deleteBuffer(group.colorBuffer);
+    if (group.pickColorBuffer) gl.deleteBuffer(group.pickColorBuffer);
+  }
+
+  function invalidateStaticSceneCache() {
+    if (!staticSceneCache) return;
+    for (const group of [
+      ...(staticSceneCache.opaqueFaces || []),
+      ...(staticSceneCache.transparentFaces || []),
+      ...(staticSceneCache.lines || [])
+    ]) {
+      deleteRenderGroup(group);
+    }
+    staticSceneCache = null;
+  }
+
+  function invalidateMemberInstanceCache() {
+    if (!memberInstanceCache) return;
+    const deleted = new Set();
+    const deleteOnce = (buffer) => {
+      if (!buffer || deleted.has(buffer)) return;
+      gl.deleteBuffer(buffer);
+      deleted.add(buffer);
+    };
+    for (const group of memberInstanceCache.staticGroups || []) {
+      deleteOnce(group.localPositionBuffer);
+      deleteOnce(group.localNormalBuffer);
+      deleteOnce(group.startBuffer);
+      deleteOnce(group.axisXBuffer);
+      deleteOnce(group.axisYBuffer);
+      deleteOnce(group.axisZBuffer);
+      deleteOnce(group.lengthBuffer);
+      deleteOnce(group.colorBuffer);
+      deleteOnce(group.pickColorBuffer);
+    }
+    memberInstanceCache = null;
+  }
+
+  function appendWorldVertex(group, point, rgba, pickRgba = null) {
+    if (Array.isArray(group) && Array.isArray(point) && Array.isArray(rgba)) {
+      const positions = group;
+      const colors = point;
+      const worldPoint = rgba;
+      const color = pickRgba;
+      if (!Array.isArray(color)) return;
+      positions.push(worldPoint[0], worldPoint[1], worldPoint[2]);
+      colors.push(color[0] / 255, color[1] / 255, color[2] / 255, color[3] / 255);
+      return;
+    }
+    group.positions.push(point[0], point[1], point[2]);
+    group.colors.push(rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3] / 255);
+    if (pickRgba) group.pickColors.push(pickRgba[0], pickRgba[1], pickRgba[2], pickRgba[3]);
+  }
+
+  function renderGroupBucket(bucket, key = "__visible") {
+    let group = bucket.get(key);
+    if (!group) {
+      group = { lodDetailObjectId: null, positions: [], colors: [], pickColors: [] };
+      bucket.set(key, group);
+    }
+    return group;
+  }
+
+  function uploadRenderGroups(bucket, mode) {
+    return [...bucket.values()]
+      .filter((group) => group.positions.length)
+      .map((group) => ({
+        mode,
+        lodDetailObjectId: group.lodDetailObjectId,
+        vertexCount: group.positions.length / 3,
+        positionBuffer: uploadBuffer(new Float32Array(group.positions)),
+        colorBuffer: uploadBuffer(new Float32Array(group.colors)),
+        pickColorBuffer: group.pickColors.length ? uploadBuffer(new Float32Array(group.pickColors)) : null
+      }));
+  }
+
+  function buildStaticSceneCache() {
+    const opaqueFaces = new Map();
+    const transparentFaces = new Map();
+    const lineGroups = new Map();
+    const defaultEdgeColor = settings.render.edges.defaultColor;
+
+    for (const face of scene.faces) {
+      if (!shouldDrawSceneItem(face)) continue;
+      const surfaceGroup = renderGroupBucket((face.opacity ?? 1) >= 1 ? opaqueFaces : transparentFaces);
+      const rgba = shadedRgba(shouldBakeHighlight(face) ? highlight.fill : face.color, face.points, face.opacity ?? 1);
+      const pickRgba = pickColorForItem(face);
+      for (const triangle of triangulateFace(face.points)) {
+        for (const point of triangle) appendWorldVertex(surfaceGroup, point, rgba, pickRgba);
+      }
+
+      if (face.hideEdges) continue;
+      const edgeGroup = renderGroupBucket(lineGroups);
+      const edgeRgba = hexToRgba(defaultEdgeColor, face.opacity ?? 1);
+      for (let i = 0; i < face.points.length; i += 1) {
+        appendWorldVertex(edgeGroup, face.points[i], edgeRgba);
+        appendWorldVertex(edgeGroup, face.points[(i + 1) % face.points.length], edgeRgba);
+      }
+    }
+
+    for (const line of scene.lines) {
+      if (!shouldDrawSceneItem(line)) continue;
+      const lineGroup = renderGroupBucket(lineGroups);
+      const rgba = hexToRgba(shouldBakeHighlight(line) ? highlight.edge : line.color, line.opacity ?? 1);
+      appendWorldVertex(lineGroup, line.points[0], rgba);
+      appendWorldVertex(lineGroup, line.points[1], rgba);
+    }
+
+    return {
+      opaqueFaces: uploadRenderGroups(opaqueFaces, gl.TRIANGLES),
+      transparentFaces: uploadRenderGroups(transparentFaces, gl.TRIANGLES),
+      lines: uploadRenderGroups(lineGroups, gl.LINES)
+    };
+  }
+
+  function drawStaticRenderGroups(groups) {
+    if (!groups.length) return;
+    const state = initStaticSceneRenderer();
+    const view = camera.viewUniforms(scene, canvas);
+
+    gl.useProgram(state.program);
+    resetInstancedAttribs(state.position, state.color);
+    gl.uniform1f(state.uniforms.yaw, view.yaw);
+    gl.uniform1f(state.uniforms.pitch, view.pitch);
+    gl.uniform1f(state.uniforms.scale, view.scale);
+    gl.uniform2fv(state.uniforms.pan, view.pan);
+    gl.uniform2fv(state.uniforms.viewport, view.viewport);
+    gl.uniform3fv(state.uniforms.pivot, view.pivot);
+    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
+
+    for (const group of groups) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
+      gl.enableVertexAttribArray(state.position);
+      gl.vertexAttribPointer(state.position, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, group.colorBuffer);
+      gl.enableVertexAttribArray(state.color);
+      gl.vertexAttribPointer(state.color, 4, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(group.mode, 0, group.vertexCount);
+    }
+  }
+
+  function drawWorldArrays(mode, positionData, colorData) {
+    if (!positionData.length) return;
+    const state = initStaticSceneRenderer();
+    const view = camera.viewUniforms(scene, canvas);
+
+    gl.useProgram(state.program);
+    resetInstancedAttribs(state.position, state.color);
+    gl.uniform1f(state.uniforms.yaw, view.yaw);
+    gl.uniform1f(state.uniforms.pitch, view.pitch);
+    gl.uniform1f(state.uniforms.scale, view.scale);
+    gl.uniform2fv(state.uniforms.pan, view.pan);
+    gl.uniform2fv(state.uniforms.viewport, view.viewport);
+    gl.uniform3fv(state.uniforms.pivot, view.pivot);
+    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
+
+    if (!state.dynamicPositionBuffer) state.dynamicPositionBuffer = gl.createBuffer();
+    if (!state.dynamicColorBuffer) state.dynamicColorBuffer = gl.createBuffer();
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, state.dynamicPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(state.position);
+    gl.vertexAttribPointer(state.position, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, state.dynamicColorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(state.color);
+    gl.vertexAttribPointer(state.color, 4, gl.FLOAT, false, 0, 0);
+
+    gl.drawArrays(mode, 0, positionData.length / 3);
+  }
+
+  function instanceRgba(instance) {
+    const rgba = hexToRgba(shouldBakeHighlight(instance) ? highlight.fill : instance.color, instance.opacity ?? 1);
+    return [rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3] / 255];
+  }
+
+  function buildMemberInstanceCache() {
+    if (!scene?.memberInstances?.length) return { staticGroups: [] };
+
+    const geometryBuffers = new Map();
+    const geometryBufferFor = (profileId, geometry) => {
+      const existing = geometryBuffers.get(profileId);
+      if (existing) return existing;
+      const buffers = {
+        vertexCount: geometry.positions.length / 3,
+        localPositionBuffer: uploadBuffer(geometry.positions),
+        localNormalBuffer: uploadBuffer(geometry.normals)
+      };
+      geometryBuffers.set(profileId, buffers);
+      return buffers;
+    };
+
+    const appendInstanceData = (group, instance) => {
+      group.starts.push(...instance.start);
+      group.axesX.push(...instance.axisX);
+      group.axesY.push(...instance.axisY);
+      group.axesZ.push(...instance.axisZ);
+      group.lengths.push(instance.length);
+      group.colors.push(...instanceRgba(instance));
+      group.pickColors.push(...pickColorForItem(instance));
+    };
+
+    const makeDataGroup = (geometry) => ({
+      geometry,
+      starts: [],
+      axesX: [],
+      axesY: [],
+      axesZ: [],
+      lengths: [],
+      colors: [],
+      pickColors: []
+    });
+
+    const staticGroups = new Map();
+
+    for (const instance of scene.memberInstances) {
+      if (isObjectPreviewed(instance)) continue;
+      const geometry = scene.memberInstanceGeometries?.[instance.profileId];
+      if (!geometry?.positions?.length) continue;
+      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
+      const group = staticGroups.get(instance.profileId) || makeDataGroup(geometry);
+      appendInstanceData(group, instance);
+      staticGroups.set(instance.profileId, group);
+    }
+
+    const staticCaches = [...staticGroups.entries()].map(([profileId, group]) => ({
+      ...geometryBufferFor(profileId, group.geometry),
+      instanceCount: group.lengths.length,
+      startBuffer: uploadBuffer(group.starts),
+      axisXBuffer: uploadBuffer(group.axesX),
+      axisYBuffer: uploadBuffer(group.axesY),
+      axisZBuffer: uploadBuffer(group.axesZ),
+      lengthBuffer: uploadBuffer(group.lengths),
+      colorBuffer: uploadBuffer(group.colors),
+      pickColorBuffer: uploadBuffer(group.pickColors)
+    }));
+
+    return { staticGroups: staticCaches };
+  }
+
+  function bindAttribute(location, buffer, size, divisor = 0) {
+    if (location < 0) return;
+    const state = initMemberInstanceRenderer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.enableVertexAttribArray(location);
+    gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+    state.instancing.vertexAttribDivisorANGLE(location, divisor);
+  }
+
+  function drawMemberInstances() {
+    if (!scene?.memberInstances?.length) return;
+    const state = initMemberInstanceRenderer();
+    if (!state) return;
+    if (!memberInstanceCache) memberInstanceCache = buildMemberInstanceCache();
+    const groups = memberInstanceCache.staticGroups;
+    if (!groups.length) return;
+
+    const view = camera.viewUniforms(scene, canvas);
+    gl.useProgram(state.program);
+    gl.uniform1f(state.uniforms.yaw, view.yaw);
+    gl.uniform1f(state.uniforms.pitch, view.pitch);
+    gl.uniform1f(state.uniforms.scale, view.scale);
+    gl.uniform2fv(state.uniforms.pan, view.pan);
+    gl.uniform2fv(state.uniforms.viewport, view.viewport);
+    gl.uniform3fv(state.uniforms.pivot, view.pivot);
+    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
+    gl.uniform3fv(state.uniforms.light, settings.render.lighting.direction);
+    gl.uniform1f(state.uniforms.ambient, settings.render.lighting.ambient);
+    gl.uniform1f(state.uniforms.diffuse, settings.render.lighting.diffuse);
+
+    for (const group of groups) {
+      if (!group.instanceCount) continue;
+      bindAttribute(state.localPosition, group.localPositionBuffer, 3);
+      bindAttribute(state.localNormal, group.localNormalBuffer, 3);
+      bindAttribute(state.start, group.startBuffer, 3, 1);
+      bindAttribute(state.axisX, group.axisXBuffer, 3, 1);
+      bindAttribute(state.axisY, group.axisYBuffer, 3, 1);
+      bindAttribute(state.axisZ, group.axisZBuffer, 3, 1);
+      bindAttribute(state.length, group.lengthBuffer, 1, 1);
+      bindAttribute(state.color, group.colorBuffer, 4, 1);
+      state.instancing.drawArraysInstancedANGLE(gl.TRIANGLES, 0, group.vertexCount, group.instanceCount);
+    }
+
+    for (const location of [state.localPosition, state.localNormal, state.start, state.axisX, state.axisY, state.axisZ, state.length, state.color]) {
+      if (location >= 0) state.instancing.vertexAttribDivisorANGLE(location, 0);
+    }
+  }
+
+  function appendMemberInstanceSurface(positionData, colorData, instance, colorOverride = null) {
+    const geometry = scene.memberInstanceGeometries?.[instance.profileId];
+    if (!geometry?.positions?.length) return;
+    const base = hexToRgba(colorOverride || (shouldBakeHighlight(instance) ? highlight.fill : instance.color), instance.opacity ?? 1);
+    const light = v.norm(settings.render.lighting.direction);
+
+    for (let index = 0; index < geometry.positions.length; index += 3) {
+      const local = [geometry.positions[index], geometry.positions[index + 1], geometry.positions[index + 2]];
+      const normalLocal = [geometry.normals[index], geometry.normals[index + 1], geometry.normals[index + 2]];
+      const world = v.add(instance.start, v.add(
+        v.mul(instance.axisX, local[0] * instance.length),
+        v.add(v.mul(instance.axisY, local[1]), v.mul(instance.axisZ, local[2]))
+      ));
+      const normal = v.norm(v.add(
+        v.mul(instance.axisX, normalLocal[0]),
+        v.add(v.mul(instance.axisY, normalLocal[1]), v.mul(instance.axisZ, normalLocal[2]))
+      ));
+      const shade = settings.render.lighting.ambient + Math.max(0, v.dot(normal, light)) * settings.render.lighting.diffuse;
+      appendWorldVertex(positionData, colorData, world, [
+        Math.round(base[0] * shade),
+        Math.round(base[1] * shade),
+        Math.round(base[2] * shade),
+        base[3]
+      ]);
+    }
+  }
+
+  function appendPreviewMemberInstance(positionData, colorData, instance) {
+    appendMemberInstanceSurface(positionData, colorData, transformedPreviewInstance(instance));
+  }
+
+  function drawObjectPreviewSurfaces(transparent = false) {
+    if (!objectPreview) return;
+    const positions = [];
+    const colors = [];
+    for (const instance of objectPreview.memberInstances) {
+      const opacity = instance.opacity ?? 1;
+      if ((opacity < 1) !== transparent) continue;
+      appendPreviewMemberInstance(positions, colors, instance);
+    }
+    for (const face of objectPreview.faces) {
+      const opacity = previewOpacity(face.opacity ?? 1);
+      if ((opacity < 1) !== transparent) continue;
+      const points = face.points.map(previewPoint);
+      const rgba = shadedRgba(isHighlighted(face) ? highlight.fill : face.color, points, opacity);
+      for (const triangle of triangulateFace(points)) {
+        for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
+      }
+    }
+    drawWorldArrays(gl.TRIANGLES, positions, colors);
+  }
+
+  function drawObjectPreviewLines() {
+    if (!objectPreview) return;
+    const positions = [];
+    const colors = [];
+    const defaultEdgeColor = settings.render.edges.defaultColor;
+
+    for (const face of objectPreview.faces) {
+      if (face.hideEdges) continue;
+      const points = face.points.map(previewPoint);
+      const rgba = hexToRgba(defaultEdgeColor, previewOpacity(face.opacity ?? 1));
+      for (let index = 0; index < points.length; index += 1) {
+        appendWorldVertex(positions, colors, points[index], rgba);
+        appendWorldVertex(positions, colors, points[(index + 1) % points.length], rgba);
+      }
+    }
+
+    for (const line of objectPreview.lines) {
+      const rgba = hexToRgba(isHighlighted(line) ? highlight.edge : line.color, previewOpacity(line.opacity ?? 1));
+      appendWorldVertex(positions, colors, previewPoint(line.points[0]), rgba);
+      appendWorldVertex(positions, colors, previewPoint(line.points[1]), rgba);
+    }
+    drawWorldArrays(gl.LINES, positions, colors);
+  }
+
+  function drawHighlightOverlaySurfaces() {
+    if (!highlightedObjectIds.size || !useHighlightOverlay()) return;
+    const positions = [];
+    const colors = [];
+    for (const instance of memberInstancesForPick(highlightedObjectIds)) {
+      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
+      appendMemberInstanceSurface(positions, colors, instance, highlight.fill);
+    }
+    for (const face of scene.faces || []) {
+      if (!highlightedObjectIds.has(face.objectId)) continue;
+      if (!shouldDrawSceneItem(face)) continue;
+      const rgba = shadedRgba(highlight.fill, face.points, face.opacity ?? 1);
+      for (const triangle of triangulateFace(face.points)) {
+        for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
+      }
+    }
+    drawWorldArrays(gl.TRIANGLES, positions, colors);
+  }
+
+  function drawHighlightOverlayLines() {
+    if (!highlightedObjectIds.size || !useHighlightOverlay()) return;
+    const positions = [];
+    const colors = [];
+    const rgba = hexToRgba(highlight.edge);
+    for (const face of scene.faces || []) {
+      if (!highlightedObjectIds.has(face.objectId) || face.hideEdges) continue;
+      if (!shouldDrawSceneItem(face)) continue;
+      for (let index = 0; index < face.points.length; index += 1) {
+        appendWorldVertex(positions, colors, face.points[index], rgba);
+        appendWorldVertex(positions, colors, face.points[(index + 1) % face.points.length], rgba);
+      }
+    }
+    for (const line of scene.lines || []) {
+      if (!highlightedObjectIds.has(line.objectId)) continue;
+      if (!shouldDrawSceneItem(line)) continue;
+      appendWorldVertex(positions, colors, line.points[0], rgba);
+      appendWorldVertex(positions, colors, line.points[1], rgba);
+    }
+    drawWorldArrays(gl.LINES, positions, colors);
+  }
+
+  function drawStaticPickGroups(groups) {
+    if (!groups.length) return;
+    const state = initStaticSceneRenderer();
+    const view = camera.viewUniforms(scene, canvas);
+
+    gl.useProgram(state.program);
+    resetInstancedAttribs(state.position, state.color);
+    gl.uniform1f(state.uniforms.yaw, view.yaw);
+    gl.uniform1f(state.uniforms.pitch, view.pitch);
+    gl.uniform1f(state.uniforms.scale, view.scale);
+    gl.uniform2fv(state.uniforms.pan, view.pan);
+    gl.uniform2fv(state.uniforms.viewport, view.viewport);
+    gl.uniform3fv(state.uniforms.pivot, view.pivot);
+    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
+
+    for (const group of groups) {
+      if (!group.pickColorBuffer) continue;
+      gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
+      gl.enableVertexAttribArray(state.position);
+      gl.vertexAttribPointer(state.position, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, group.pickColorBuffer);
+      gl.enableVertexAttribArray(state.color);
+      gl.vertexAttribPointer(state.color, 4, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(group.mode, 0, group.vertexCount);
+    }
+  }
+
+  function drawMemberInstancePickGroups() {
+    if (!scene?.memberInstances?.length) return;
+    const state = initMemberInstanceRenderer();
+    if (!state) return;
+    if (!memberInstanceCache) memberInstanceCache = buildMemberInstanceCache();
+    const groups = memberInstanceCache.staticGroups;
+    if (!groups.length) return;
+
+    const view = camera.viewUniforms(scene, canvas);
+    gl.useProgram(state.program);
+    gl.uniform1f(state.uniforms.yaw, view.yaw);
+    gl.uniform1f(state.uniforms.pitch, view.pitch);
+    gl.uniform1f(state.uniforms.scale, view.scale);
+    gl.uniform2fv(state.uniforms.pan, view.pan);
+    gl.uniform2fv(state.uniforms.viewport, view.viewport);
+    gl.uniform3fv(state.uniforms.pivot, view.pivot);
+    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
+    gl.uniform3fv(state.uniforms.light, settings.render.lighting.direction);
+    gl.uniform1f(state.uniforms.ambient, 1);
+    gl.uniform1f(state.uniforms.diffuse, 0);
+
+    for (const group of groups) {
+      if (!group.instanceCount || !group.pickColorBuffer) continue;
+      bindAttribute(state.localPosition, group.localPositionBuffer, 3);
+      bindAttribute(state.localNormal, group.localNormalBuffer, 3);
+      bindAttribute(state.start, group.startBuffer, 3, 1);
+      bindAttribute(state.axisX, group.axisXBuffer, 3, 1);
+      bindAttribute(state.axisY, group.axisYBuffer, 3, 1);
+      bindAttribute(state.axisZ, group.axisZBuffer, 3, 1);
+      bindAttribute(state.length, group.lengthBuffer, 1, 1);
+      bindAttribute(state.color, group.pickColorBuffer, 4, 1);
+      state.instancing.drawArraysInstancedANGLE(gl.TRIANGLES, 0, group.vertexCount, group.instanceCount);
+    }
+
+    for (const location of [state.localPosition, state.localNormal, state.start, state.axisX, state.axisY, state.axisZ, state.length, state.color]) {
+      if (location >= 0) state.instancing.vertexAttribDivisorANGLE(location, 0);
+    }
+  }
+
+  function pickSceneGpu(x, y, options = {}) {
+    if (!scene || !gl) return null;
+    if (!staticSceneCache) staticSceneCache = buildStaticSceneCache();
+    if (!memberInstanceCache) memberInstanceCache = buildMemberInstanceCache();
+
+    const background = [0, 0, 0, 1];
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(background[0], background[1], background[2], background[3]);
+    gl.clearDepth(1);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    gl.enable(gl.POLYGON_OFFSET_FILL);
+    gl.polygonOffset(1, 1);
+    if (options.includeInstances !== false) drawMemberInstancePickGroups();
+    drawStaticPickGroups(staticSceneCache.opaqueFaces);
+    if (options.includeTransparent !== false) drawStaticPickGroups(staticSceneCache.transparentFaces);
+    gl.disable(gl.POLYGON_OFFSET_FILL);
+
+    const pixel = new Uint8Array(4);
+    const pixelX = Math.max(0, Math.min(canvas.width - 1, Math.floor(x)));
+    const pixelY = Math.max(0, Math.min(canvas.height - 1, canvas.height - 1 - Math.floor(y)));
+    gl.readPixels(pixelX, pixelY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    const picked = pickObjectFromPixel(pixel);
+    draw();
+    return picked ? { depth: 0, point: null, face: picked } : null;
+  }
+
   function draw() {
     if (!scene || !gl) return;
     invalidateScenePickCache();
+    if (!staticSceneCache) staticSceneCache = buildStaticSceneCache();
     const background = hexToRgb(settings.render.background).map((value) => value / 255);
 
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -302,62 +1496,43 @@ export function createWebglViewer(canvas, reset, settings) {
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const drawFaces = (faces) => {
-      const trianglePositions = [];
-      const triangleColors = [];
-      for (const face of faces) {
-        const rgba = shadedRgba(isHighlighted(face) ? highlight.fill : face.color, face.points, face.opacity ?? 1);
-        for (const triangle of triangulateFace(face.points)) {
-          for (const point of triangle) pushVertex(trianglePositions, triangleColors, clipPoint(point), rgba);
-        }
-      }
-      drawArrays(gl.TRIANGLES, trianglePositions, triangleColors);
-    };
-    const opaqueFaces = scene.faces.filter((face) => (face.opacity ?? 1) >= 1);
-    const transparentFaces = scene.faces.filter((face) => (face.opacity ?? 1) < 1);
-
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(1, 1);
-    drawFaces(opaqueFaces);
+    drawMemberInstances();
+    drawStaticRenderGroups(staticSceneCache.opaqueFaces);
+    drawObjectPreviewSurfaces(false);
     gl.disable(gl.POLYGON_OFFSET_FILL);
-    if (transparentFaces.length) {
+    if (highlightedObjectIds.size && useHighlightOverlay()) {
+      gl.enable(gl.POLYGON_OFFSET_FILL);
+      gl.polygonOffset(-1, -1);
+      drawHighlightOverlaySurfaces();
+      gl.disable(gl.POLYGON_OFFSET_FILL);
+    }
+    if (staticSceneCache.transparentFaces.length || objectPreview) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
-      drawFaces(transparentFaces);
+      drawStaticRenderGroups(staticSceneCache.transparentFaces);
+      drawObjectPreviewSurfaces(true);
       gl.depthMask(true);
       gl.disable(gl.BLEND);
-    }
-
-    const linePositions = [];
-    const lineColors = [];
-    const edgeColor = settings.render.edges.defaultColor;
-
-    for (const face of scene.faces) {
-      if (face.hideEdges) continue;
-      const rgba = hexToRgba(edgeColor, face.opacity ?? 1);
-      for (let i = 0; i < face.points.length; i += 1) {
-        pushVertex(linePositions, lineColors, clipPoint(face.points[i]), rgba);
-        pushVertex(linePositions, lineColors, clipPoint(face.points[(i + 1) % face.points.length]), rgba);
-      }
-    }
-
-    for (const line of scene.lines) {
-      const rgba = hexToRgba(isHighlighted(line) ? highlight.edge : line.color, line.opacity ?? 1);
-      pushVertex(linePositions, lineColors, clipPoint(line.points[0]), rgba);
-      pushVertex(linePositions, lineColors, clipPoint(line.points[1]), rgba);
-    }
-
-    for (const line of authoringOverlay.lines || []) {
-      const rgba = hexToRgba(line.color);
-      pushVertex(linePositions, lineColors, clipPoint(line.points[0]), rgba);
-      pushVertex(linePositions, lineColors, clipPoint(line.points[1]), rgba);
     }
 
     gl.lineWidth(settings.render.edges.lineWidth);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    drawArrays(gl.LINES, linePositions, lineColors);
+    drawStaticRenderGroups(staticSceneCache.lines);
+    drawObjectPreviewLines();
+    drawHighlightOverlayLines();
+
+    const authoringLinePositions = [];
+    const authoringLineColors = [];
+    for (const line of authoringOverlay.lines || []) {
+      const rgba = hexToRgba(line.color);
+      pushVertex(authoringLinePositions, authoringLineColors, clipPoint(line.points[0]), rgba);
+      pushVertex(authoringLinePositions, authoringLineColors, clipPoint(line.points[1]), rgba);
+    }
+    drawArrays(gl.LINES, authoringLinePositions, authoringLineColors);
     gl.disable(gl.BLEND);
 
     const dimensionPositions = [];
@@ -475,12 +1650,13 @@ export function createWebglViewer(canvas, reset, settings) {
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
       const mode = event.button === 1 || event.button === 2 || event.shiftKey ? "pan" : "pending-orbit";
-      const hitResult = pickScene(x, y);
       if (commandHandler?.active?.() && event.button === 0) {
+        const hitResult = pickScene(x, y);
         commandHandler.pointerDown?.({ event, screen: { x, y }, hit: hitResult });
         return;
       }
       if (pickHandler && event.button === 0 && !event.shiftKey) {
+        const hitResult = pickScene(x, y);
         pickHandler(hitResult?.face || null);
         return;
       }
@@ -504,8 +1680,7 @@ export function createWebglViewer(canvas, reset, settings) {
         return;
       }
       if (mode === "pending-orbit") {
-        const hit = hitResult?.point || null;
-        clickHandler?.(hitResult?.face || null);
+        const hitResult = fastClickPick(x, y);
         drag = {
           x: event.clientX,
           y: event.clientY,
@@ -513,7 +1688,8 @@ export function createWebglViewer(canvas, reset, settings) {
           startY: event.clientY,
           mode,
           face: hitResult?.face || null,
-          hit,
+          hit: hitResult?.point || null,
+          anchorResolved: Boolean(hitResult?.point),
           screen: { x, y },
           pointerId: event.pointerId
         };
@@ -563,14 +1739,19 @@ export function createWebglViewer(canvas, reset, settings) {
         });
         drag.x = event.clientX;
         drag.y = event.clientY;
-        draw();
+        requestDraw();
         return;
       }
       if (drag.mode === "pending-orbit") {
         const totalDx = event.clientX - drag.startX;
         const totalDy = event.clientY - drag.startY;
         if (Math.hypot(totalDx, totalDy) < 4) return;
-        camera.setOrbitPivot(drag.hit || [0, 0, 0], scene, canvas, drag.hit ? drag.screen : null);
+        if (!drag.anchorResolved) {
+          const anchor = preciseOrbitAnchor(drag.screen.x, drag.screen.y, drag.face);
+          drag.hit = anchor?.point || null;
+          drag.anchorResolved = true;
+        }
+        if (drag.hit) camera.setOrbitPivot(drag.hit, scene, canvas, drag.screen);
         drag.mode = "orbit";
         moveOrbitCursor(event.clientX, event.clientY);
         requestOrbitLock();
@@ -585,7 +1766,7 @@ export function createWebglViewer(canvas, reset, settings) {
       }
       drag.x = event.clientX;
       drag.y = event.clientY;
-      draw();
+      requestDraw();
     });
 
     const endDrag = (eventOrOptions = {}) => {
@@ -596,6 +1777,18 @@ export function createWebglViewer(canvas, reset, settings) {
       if (currentDrag?.mode === "authoring") {
         const cancel = eventOrOptions?.type === "pointercancel" || eventOrOptions?.type === "lostpointercapture";
         (cancel ? authoringHandler?.cancel : authoringHandler?.end)?.({ handle: currentDrag.handle });
+      }
+      if (currentDrag?.mode === "pending-orbit" && eventOrOptions?.type === "pointerup" && clickHandler) {
+        if (currentDrag.face) {
+          clickHandler(currentDrag.face);
+        } else if (shouldUseGpuPick()) {
+          clickHandler(null);
+        } else {
+          const rect = canvas.getBoundingClientRect();
+          const x = eventOrOptions.clientX - rect.left;
+          const y = eventOrOptions.clientY - rect.top;
+          clickHandler(pickScene(x, y)?.face || null);
+        }
       }
       drag = null;
       hideOrbitCursor();
@@ -629,16 +1822,16 @@ export function createWebglViewer(canvas, reset, settings) {
 
     canvas.addEventListener("wheel", (event) => {
       if (!scene) return;
-      event.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      camera.zoomAt(event.deltaY, event.clientX - rect.left, event.clientY - rect.top, canvas);
-      draw();
-    }, { passive: false });
+      requestWheelZoom(event.deltaY, event.clientX, event.clientY);
+    }, { passive: true });
 
     reset.addEventListener("click", () => {
       if (!scene) return;
       camera.reset();
       camera.fit(scene, canvas);
+      invalidateStaticSceneCache();
+      invalidateMemberInstanceCache();
+      scheduleDetailScaleChange();
       draw();
     });
   }
@@ -648,6 +1841,12 @@ export function createWebglViewer(canvas, reset, settings) {
   return {
     setScene(nextScene, options = {}) {
       const preserveCamera = options.preserveCamera && scene;
+      invalidateStaticSceneCache();
+      invalidateMemberInstanceCache();
+      invalidateMemberInstanceLookup();
+      clearPendingDetailScaleChange();
+      resetPickObjects();
+      objectPreview = null;
       scene = nextScene;
       resizeCanvas();
       if (!preserveCamera) {
@@ -671,14 +1870,24 @@ export function createWebglViewer(canvas, reset, settings) {
     setCommandHandler(handler) {
       commandHandler = handler;
     },
+    setDetailScaleChangeHandler(handler) {
+      clearPendingDetailScaleChange();
+      detailScaleChangeHandler = handler;
+    },
+    screenScale() {
+      return camera.screenScale();
+    },
+    viewportSize() {
+      return { width: canvas.width, height: canvas.height };
+    },
     setAuthoringOverlay(overlay = { lines: [], handles: [] }) {
       authoringOverlay = overlay || { lines: [], handles: [], labels: [] };
-      draw();
+      requestDraw();
     },
     setDimensionOverlay(overlay = { lines: [], labels: [] }) {
       dimensionOverlay = overlay || { lines: [], labels: [] };
       dimensionUi.setOverlay(dimensionOverlay);
-      draw();
+      requestDraw();
     },
     setDimensionClickHandler(handler) {
       dimensionUi.setClickHandler(handler);
@@ -696,8 +1905,32 @@ export function createWebglViewer(canvas, reset, settings) {
       dimensionUi.setRepairHandler(handler);
     },
     setHighlightedObjects(objectIds = []) {
+      if (sameObjectIdSet(highlightedObjectIds, objectIds)) return;
+      const memberOnlyHighlight = memberOnlyHighlightChange(objectIds);
       highlightedObjectIds = new Set(objectIds);
+      if (!memberOnlyHighlight) {
+        invalidateMemberInstanceCache();
+        invalidateStaticSceneCache();
+      }
+      requestDraw();
+    },
+    objectPoints,
+    beginObjectPreview,
+    updateMemberMovePreview,
+    clearObjectPreview,
+    updateMemberInstance,
+    replaceSceneObjects,
+    fitPoints(points, options = {}) {
+      if (camera.fitPoints(points, canvas, options)) {
+        invalidateStaticSceneCache();
+        invalidateMemberInstanceCache();
+        scheduleDetailScaleChange();
+        draw();
+      }
+    },
+    canvasDataUrl(type = "image/png") {
       draw();
+      return canvas.toDataURL(type);
     },
     projectPoint,
     screenRay(x, y) {

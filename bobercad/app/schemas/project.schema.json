@@ -1328,6 +1328,46 @@
         "operationEnabled": {
           "type": "boolean"
         },
+        "memberEnd": {
+          "enum": [
+            "start",
+            "end"
+          ]
+        },
+        "trim": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "matched-edge-length",
+                "equal-angle-miter",
+                "square-to-own-axis",
+                "cut-to-reference-plane"
+              ]
+            },
+            "jointPoint": {
+              "$ref": "#/$defs/vec3"
+            },
+            "mateMemberId": {
+              "$ref": "#/$defs/id"
+            },
+            "mateMemberEnd": {
+              "enum": [
+                "start",
+                "end"
+              ]
+            },
+            "gap": {
+              "type": "number",
+              "minimum": 0
+            },
+            "targetCutLength": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
         "holePatternRef": {
           "$ref": "#/$defs/id"
         },

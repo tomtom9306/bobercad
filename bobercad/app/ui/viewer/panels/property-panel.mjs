@@ -71,7 +71,7 @@ function objectIdFromFace(face) {
   return face?.objectId || null;
 }
 
-export function mountEditorUi({ panel, api, profiles, selection, memberEdit, onProjectChange, onConnectionSelected, onConnectionDeleted }) {
+export function mountEditorUi({ panel, api, profiles, selection, memberEdit, connectionHighlightObjectIds, onProjectChange, onLocalMemberProjectChange, onConnectionSelected, onConnectionDeleted }) {
   let selectedMemberId = null;
   let selectedConnectionId = null;
   let messageText = "Pick a member or a connection part.";
@@ -83,7 +83,20 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, onP
     render();
   };
 
-  const applyProjectChange = (nextProject) => {
+  const connectedMemberObjectIds = (project, memberId) => {
+    const ids = new Set([memberId]);
+    for (const connection of Object.values(project.model?.connections || {})) {
+      if (connection.mainMemberId !== memberId && connection.secondaryMemberId !== memberId) continue;
+      for (const objectId of api.connectionObjectIds(connection.id)) ids.add(objectId);
+    }
+    return [...ids].filter((objectId) => project.objectIndex?.[objectId]);
+  };
+
+  const applyProjectChange = (nextProject, options = {}) => {
+    if (options.memberId && typeof onLocalMemberProjectChange === "function") {
+      const objectIds = connectedMemberObjectIds(nextProject, options.memberId);
+      if (onLocalMemberProjectChange(nextProject, options.memberId, objectIds) !== false) return;
+    }
     onProjectChange(nextProject);
   };
 
@@ -100,7 +113,9 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, onP
     selectedMemberId = null;
     selectedConnectionId = connectionId;
     memberEdit?.clear({ notify: false });
-    selection.select(api.connectionObjectIds(connectionId));
+    selection.select(typeof connectionHighlightObjectIds === "function"
+      ? connectionHighlightObjectIds(connectionId)
+      : api.connectionObjectIds(connectionId));
     onConnectionSelected(connectionId, options);
     setMessage(`Selected ${connectionId}.`, "ok");
   };
@@ -136,7 +151,7 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, onP
     if (!selectedMemberId) return;
     try {
       const nextProject = operation(selectedMemberId);
-      applyProjectChange(nextProject);
+      applyProjectChange(nextProject, { memberId: selectedMemberId });
       if (memberEdit) memberEdit.selectMember(selectedMemberId, { notify: false });
       else selection.select([selectedMemberId]);
       setMessage("Member updated.", "ok");

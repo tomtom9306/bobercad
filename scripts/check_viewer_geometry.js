@@ -26,6 +26,64 @@ async function main() {
     return 1;
   }
 
+  const largeProject = JSON.parse(JSON.stringify(project));
+  const largeCount = 6000;
+  const stressProfileId = Object.keys(profiles.profiles)[0];
+  largeProject.project.name = "Synthetic Large Member Scene";
+  largeProject.objectIndex = {};
+  largeProject.model.members = {};
+  largeProject.model.plates = {};
+  largeProject.model.holePatterns = {};
+  largeProject.model.objectPatterns = {};
+  largeProject.model.features = {};
+  largeProject.model.fastenerGroups = {};
+  largeProject.model.welds = {};
+  largeProject.model.connections = {};
+  largeProject.model.assemblies = {};
+  for (let index = 0; index < largeCount; index += 1) {
+    const id = `stress_member_${index}`;
+    largeProject.objectIndex[id] = { collection: "members", type: "boolean-demo-beam" };
+    largeProject.model.members[id] = {
+      id,
+      type: "boolean-demo-beam",
+      profile: stressProfileId,
+      start: [index * 12, 0, 0],
+      end: [index * 12 + 1000 + index * 0.01, 0, 0],
+      featureIds: []
+    };
+  }
+  const largeScene = buildScene(largeProject, profiles, fasteners, settings);
+  if (largeScene.memberInstances.length !== largeCount) {
+    console.error(`FAILED: detail-free members should use the instanced path, got ${largeScene.memberInstances.length}/${largeCount}`);
+    return 1;
+  }
+  if (largeScene.faces.length) {
+    console.error(`FAILED: detail-free synthetic members should not build exact member faces, got ${largeScene.faces.length}`);
+    return 1;
+  }
+
+  const smallProject = JSON.parse(JSON.stringify(largeProject));
+  smallProject.project.name = "Synthetic Small Member Scene";
+  smallProject.objectIndex = {};
+  smallProject.model.members = {};
+  for (let index = 0; index < 2; index += 1) {
+    const id = `simple_member_${index}`;
+    smallProject.objectIndex[id] = { collection: "members", type: "boolean-demo-beam" };
+    smallProject.model.members[id] = {
+      id,
+      type: "boolean-demo-beam",
+      profile: stressProfileId,
+      start: [index * 1200, 0, 0],
+      end: [index * 1200 + 900, 0, 0],
+      featureIds: []
+    };
+  }
+  const smallScene = buildScene(smallProject, profiles, fasteners, settings);
+  if (smallScene.memberInstances.length !== 2 || smallScene.faces.length) {
+    console.error(`FAILED: small detail-free scenes should use the same instanced path, got ${smallScene.memberInstances.length} instances and ${smallScene.faces.length} faces`);
+    return 1;
+  }
+
   const camera = createCamera(settings);
   const viewport = { width: 1300, height: 1000 };
   camera.fit(scene, viewport);
