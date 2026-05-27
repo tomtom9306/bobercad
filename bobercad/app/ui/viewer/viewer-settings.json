@@ -67,7 +67,45 @@
     "previewColor": "#2563eb",
     "snapColor": "#38bdf8",
     "workPlaneColor": "#94a3b8",
-    "workPlaneSize": 280
+    "workPlaneSize": 280,
+    "manipulator": {
+      "visible": true,
+      "coordinateSpace": "global",
+      "translation": {
+        "mode": "adaptive",
+        "minStep": 1,
+        "maxStep": 100,
+        "targetPixelsPerStep": 8,
+        "allowedSteps": [
+          1,
+          2,
+          5,
+          10,
+          25,
+          50,
+          100
+        ]
+      },
+      "rotation": {
+        "stepDegrees": 1
+      },
+      "screen": {
+        "axisLengthPx": 108,
+        "arrowHeadPx": 12,
+        "axisStartOffsetPx": 14,
+        "ringCenterOffsetPx": 61,
+        "ringRadiusPx": 18,
+        "ringGapPx": 5,
+        "ringArrowHeadPx": 6,
+        "hitTolerancePx": 14,
+        "hubRadiusPx": 8,
+        "spaceToggleRadiusPx": 10,
+        "spaceToggleOffsetPx": {
+          "x": -30,
+          "y": -30
+        }
+      }
+    }
   },
   "render": {
     "background": "#f5f7fb",

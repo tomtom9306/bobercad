@@ -788,9 +788,9 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       return setProject(reconcileGeneratedConnections(next));
     },
 
-    updateMember(memberId, patch) {
+    updateMember(memberId, patch, options = {}) {
       if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("member patch must be an object");
-      return replaceMember(memberId, (member) => ({ ...member, ...clone(patch) }));
+      return replaceMember(memberId, (member) => ({ ...member, ...clone(patch) }), options);
     },
 
     setMemberProfile(memberId, profileId) {

@@ -1,12 +1,14 @@
 import { createProjectStore } from "../../engine/store/project-store.mjs";
 import { memberAuthoringPoints } from "../../engine/api/project/members.mjs";
 import { loadConnectionDefinitions } from "../../engine/modules/connections/connection-registry.mjs";
-import { buildScene } from "../../rendering/scene/build-scene.mjs?v=member-trim";
+import { buildScene } from "../../rendering/scene/build-scene.mjs?v=member-manipulator-axis-rotation";
+import { memberAxesByTarget, normalizeCoordinateSpace } from "../../rendering/scene/authoring/member-axis-space.mjs";
 import { createCommandController } from "../../rendering/interaction/command-controller.mjs";
 import { createMemberEditController } from "../../rendering/interaction/member-edit-controller.mjs";
 import { createSelectionController } from "../../rendering/interaction/selection-controller.mjs";
 import { createWebglViewer } from "../../rendering/webgl/webgl-renderer.mjs";
 import { createDimensionEditController } from "./dimensions/dimension-edit-controller.mjs";
+import { mountMemberTransformPanel } from "./panels/member-transform-panel.mjs";
 import { mountEditorUi } from "./panels/property-panel.mjs";
 import { mountModelingToolbar } from "./toolbar/modeling-toolbar.mjs";
 
@@ -17,6 +19,7 @@ const reset = document.getElementById("reset");
 const hud = document.getElementById("hud");
 const modelingToolbar = document.getElementById("modeling-toolbar");
 const modelingStatus = document.getElementById("modeling-status");
+const memberTransformPanel = document.getElementById("member-transform-panel");
 const objectEditor = document.getElementById("object-editor");
 const libraryPanel = document.getElementById("library-panel");
 const customPanel = document.getElementById("custom-panel");
@@ -524,10 +527,55 @@ function mountQaApi({ api, profiles, fasteners }) {
     return best;
   };
 
+  const memberManipulatorTargets = (options = {}) => {
+    const target = options.memberId
+      ? memberInteractionTarget({ memberId: options.memberId, connected: false })
+      : memberInteractionTarget(options);
+    const member = api.project().model.members?.[target.memberId];
+    const points = memberAuthoringPoints(member);
+    const axisLengthPx = settings.authoring?.manipulator?.screen?.axisLengthPx || 58;
+    const coordinateSpace = normalizeCoordinateSpace(settings.authoring?.manipulator?.coordinateSpace);
+    const axesByTarget = memberAxesByTarget(member, coordinateSpace);
+    const projectedAxis = (point, axis) => {
+      const origin = viewer.projectPoint(point);
+      const probe = Math.max(10, 42 / Math.max(viewer.screenScale(), 1e-9));
+      const end = viewer.projectPoint(add(point, mul(axis, probe)));
+      if (!origin || !end) return null;
+      const dx = end.x - origin.x;
+      const dy = end.y - origin.y;
+      const length = Math.hypot(dx, dy);
+      if (length <= 1e-6) return null;
+      const ux = dx / length;
+      const uy = dy / length;
+      return {
+        start: { x: origin.x, y: origin.y },
+        mid: { x: origin.x + ux * axisLengthPx * 0.58, y: origin.y + uy * axisLengthPx * 0.58 },
+        end: { x: origin.x + ux * axisLengthPx, y: origin.y + uy * axisLengthPx }
+      };
+    };
+    const anchors = {
+      start: points.physicalStart,
+      center: points.center,
+      end: points.physicalEnd
+    };
+    return {
+      memberId: target.memberId,
+      anchors: Object.fromEntries(Object.entries(anchors).map(([name, point]) => [
+        name,
+        {
+          point,
+          screen: viewer.projectPoint(point),
+          axes: Object.fromEntries(Object.entries(axesByTarget[name]).map(([axisId, spec]) => [axisId, projectedAxis(point, spec.axis)])),
+          coordinateSpace
+        }
+      ]))
+    };
+  };
+
   const memberState = (memberId) => {
     const member = api.project().model.members?.[memberId];
     if (!member) throw new Error(`member not found: ${memberId}`);
-    return { id: member.id, start: [...member.start], end: [...member.end] };
+    return { id: member.id, start: [...member.start], end: [...member.end], rotation: member.rotation || 0 };
   };
 
   const memberConnectionObjectIds = (memberId) => {
@@ -618,6 +666,7 @@ function mountQaApi({ api, profiles, fasteners }) {
     ready: true,
     connectionSummaries,
     memberInteractionTarget,
+    memberManipulatorTargets,
     memberState,
     memberConnectionObjectIds,
     memberConnectionPoints,
@@ -750,10 +799,21 @@ async function main() {
       scheduleDetailRefresh();
     });
     let editorApi = null;
-    const memberEdit = createMemberEditController({
+    let memberEdit = null;
+    const memberTransformUi = mountMemberTransformPanel({
+      panel: memberTransformPanel,
+      onDeltaChange: (axisId, value) => memberEdit?.setPendingTransformDelta(axisId, value),
+      onResultChange: (axisId, value) => memberEdit?.setPendingTransformResult(axisId, value),
+      onNudge: (axisId, direction) => memberEdit?.nudgePendingTransform(axisId, direction),
+      onIncrementChange: (value) => memberEdit?.setPendingTransformIncrement(value),
+      onConfirm: () => memberEdit?.confirmPendingTransform(),
+      onCancel: () => memberEdit?.cancelPendingTransform()
+    });
+    memberEdit = createMemberEditController({
       viewer,
       api,
       selection,
+      settings,
       onProjectChange: rerender,
       onLocalProjectChange: hotSwapMemberDetails,
       onMemberSelected: (memberId) => {
@@ -768,7 +828,8 @@ async function main() {
       onCleared: () => {
         focusedMemberId = null;
         editorApi?.clearSelection({ fromMemberEdit: true });
-      }
+      },
+      onTransformChange: (state) => memberTransformUi.update(state)
     });
     viewer.setClickHandler((face) => {
       if (!face) dimensionEdit?.clearDimension();
@@ -846,7 +907,16 @@ async function main() {
       }
     });
     window.addEventListener("keydown", (event) => {
+      if (event.target instanceof Element && memberTransformPanel.contains(event.target)) return;
+      if (event.key === "Enter" && memberEdit.confirmPendingTransform()) {
+        event.preventDefault();
+        return;
+      }
       if (event.key !== "Escape") return;
+      if (memberEdit.cancelPendingTransform()) {
+        event.preventDefault();
+        return;
+      }
       if (dimensionEdit.clearDimension()) event.preventDefault();
     }, { capture: true });
 

@@ -7,6 +7,7 @@ import { featureDepthDimension } from "./dimensions/feature-depth.mjs";
 import { fastenerLengthDimension } from "./dimensions/fastener-length.mjs";
 import { interfaceOffsetDimension, featurePlaneOffsetDimension } from "./dimensions/interface-offsets.mjs";
 import { clearanceCutOffsetDimension } from "./dimensions/clearance-cut-offset.mjs";
+import { featureOptionCalloutDimension } from "./dimensions/feature-option-callout.mjs";
 import { plateReferencePlaneOffsetDimension } from "./dimensions/plate-reference-plane-offset.mjs";
 import { weldSizeDimension } from "./dimensions/weld-size.mjs";
 
@@ -21,6 +22,7 @@ const handlers = new Map([
   ["fastener-length", fastenerLengthDimension],
   ["interface-offset", interfaceOffsetDimension],
   ["feature-plane-offset", featurePlaneOffsetDimension],
+  ["feature-option-callout", featureOptionCalloutDimension],
   ["plate-reference-plane-offset", plateReferencePlaneOffsetDimension],
   ["clearance-cut-offset", clearanceCutOffsetDimension],
   ["weld-size", weldSizeDimension]

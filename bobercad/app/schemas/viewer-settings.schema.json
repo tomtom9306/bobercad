@@ -158,6 +158,124 @@
         "workPlaneSize": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "manipulator": {
+          "type": "object",
+          "properties": {
+            "visible": {
+              "type": "boolean"
+            },
+            "coordinateSpace": {
+              "enum": [
+                "global",
+                "local"
+              ]
+            },
+            "translation": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "adaptive",
+                    "fixed"
+                  ]
+                },
+                "fixedStep": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "minStep": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "maxStep": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "targetPixelsPerStep": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "allowedSteps": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                }
+              },
+              "additionalProperties": true
+            },
+            "rotation": {
+              "type": "object",
+              "properties": {
+                "stepDegrees": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "additionalProperties": true
+            },
+            "screen": {
+              "type": "object",
+              "properties": {
+                "axisLengthPx": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "arrowHeadPx": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "axisStartOffsetPx": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "ringCenterOffsetPx": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "ringRadiusPx": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "ringGapPx": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "ringArrowHeadPx": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "hitTolerancePx": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "hubRadiusPx": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "spaceToggleRadiusPx": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "spaceToggleOffsetPx": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
         }
       },
       "additionalProperties": true

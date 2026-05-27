@@ -156,6 +156,80 @@
           "normal": 18
         }
       }
+    },
+    {
+      "id": "main-trim-mode",
+      "parameter": "trim.mode",
+      "label": "main trim",
+      "reference": {
+        "kind": "feature-option-callout",
+        "featureRole": "mainTrim",
+        "offset": {
+          "localAxisY": 44,
+          "localAxisZ": 30,
+          "normal": 14
+        },
+        "modeControl": {
+          "path": "trim.mode",
+          "label": "Trim",
+          "options": [
+            {
+              "value": "matched-edge-length",
+              "label": "Matched"
+            },
+            {
+              "value": "equal-angle-miter",
+              "label": "Miter"
+            },
+            {
+              "value": "square-to-own-axis",
+              "label": "Square"
+            }
+          ]
+        },
+        "valueLabels": {
+          "matched-edge-length": "Matched",
+          "equal-angle-miter": "Miter",
+          "square-to-own-axis": "Square"
+        }
+      }
+    },
+    {
+      "id": "secondary-trim-mode",
+      "parameter": "trim.mode",
+      "label": "secondary trim",
+      "reference": {
+        "kind": "feature-option-callout",
+        "featureRole": "secondaryTrim",
+        "offset": {
+          "localAxisY": 44,
+          "localAxisZ": -30,
+          "normal": 14
+        },
+        "modeControl": {
+          "path": "trim.mode",
+          "label": "Trim",
+          "options": [
+            {
+              "value": "matched-edge-length",
+              "label": "Matched"
+            },
+            {
+              "value": "equal-angle-miter",
+              "label": "Miter"
+            },
+            {
+              "value": "square-to-own-axis",
+              "label": "Square"
+            }
+          ]
+        },
+        "valueLabels": {
+          "matched-edge-length": "Matched",
+          "equal-angle-miter": "Miter",
+          "square-to-own-axis": "Square"
+        }
+      }
     }
   ],
   "ui": {

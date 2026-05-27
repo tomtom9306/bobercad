@@ -813,6 +813,8 @@ async function checkAutoConnectionLifecycle(errors) {
 async function checkMemberAuthoringApi(errors) {
   const membersApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/project/members.mjs")).href);
   const snappingApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/project/snapping.mjs")).href);
+  const manipulatorMath = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/interaction/manipulator-math.mjs")).href);
+  const axisSpace = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/scene/authoring/member-axis-space.mjs")).href);
   const member = {
     id: "test_member",
     type: "member",
@@ -854,6 +856,36 @@ async function checkMemberAuthoringApi(errors) {
   const snap = snappingApi.nearestSnapPoint(project, [171, 0, 1500], { tolerance: 5, candidates });
   if (snap?.type !== "member-endpoint" || snap.objectId !== "beam_1") {
     fail(errors, "member authoring api: nearestSnapPoint should find nearby member endpoints");
+  }
+
+  const closeStep = manipulatorMath.translationStepForScale({ minStep: 1, maxStep: 100, targetPixelsPerStep: 8 }, 4);
+  const farStep = manipulatorMath.translationStepForScale({ minStep: 1, maxStep: 100, targetPixelsPerStep: 8 }, 0.04);
+  if (closeStep !== 2 || farStep !== 100) {
+    fail(errors, `member manipulator math: adaptive step should refine near the camera and coarsen far away, got ${closeStep}/${farStep}`);
+  }
+  if (manipulatorMath.quantizeDistance(13, 5) !== 15 || manipulatorMath.quantizeDegrees(12.4, 1) !== 12) {
+    fail(errors, "member manipulator math: drag distances and degrees should quantize to configured steps");
+  }
+  const rotated = manipulatorMath.rotatePointAroundAxis([1, 0, 0], [0, 0, 0], [0, 0, 1], 90);
+  if (Math.abs(rotated[0]) > 1e-9 || Math.abs(rotated[1] - 1) > 1e-9 || Math.abs(rotated[2]) > 1e-9) {
+    fail(errors, `member manipulator math: point rotation around Z failed, got ${JSON.stringify(rotated)}`);
+  }
+  const beam = { id: "m1", start: [-10, 0, 0], end: [10, 0, 0], rotation: 0 };
+  const rotatedBeam = manipulatorMath.rotateMemberAroundAxis(beam, [0, 0, 0], [0, 0, 1], 90);
+  if (Math.abs(rotatedBeam.start[0]) > 1e-9 || Math.abs(rotatedBeam.start[1] + 10) > 1e-9 || Math.abs(rotatedBeam.end[0]) > 1e-9 || Math.abs(rotatedBeam.end[1] - 10) > 1e-9) {
+    fail(errors, `member manipulator math: member should rotate around selected world axis, got ${JSON.stringify(rotatedBeam)}`);
+  }
+  const rolledBeam = manipulatorMath.rotateMemberAroundAxis(beam, [0, 0, 0], [1, 0, 0], 15);
+  if (JSON.stringify(rolledBeam.start) !== JSON.stringify(beam.start) || JSON.stringify(rolledBeam.end) !== JSON.stringify(beam.end) || Math.abs(rolledBeam.rotation - 15) > 1e-9) {
+    fail(errors, `member manipulator math: member-axis rotation should preserve roll around member axis, got ${JSON.stringify(rolledBeam)}`);
+  }
+  const localAxes = axisSpace.memberAxesForTarget({ id: "m2", start: [0, 0, 0], end: [0, 10, 0], rotation: 0 }, "center", "local");
+  if (Math.abs(localAxes.x.axis[1] - 1) > 1e-9 || localAxes.x.coordinateSpace !== "local") {
+    fail(errors, `member axis space: local X should follow member start-end axis, got ${JSON.stringify(localAxes.x)}`);
+  }
+  const globalAxes = axisSpace.memberAxesForTarget({ id: "m3", start: [0, 0, 0], end: [0, 10, 0], rotation: 0 }, "center", "global");
+  if (Math.abs(globalAxes.x.axis[0] - 1) > 1e-9 || globalAxes.x.coordinateSpace !== "global") {
+    fail(errors, `member axis space: global X should stay world X, got ${JSON.stringify(globalAxes.x)}`);
   }
 }
 

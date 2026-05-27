@@ -1,5 +1,7 @@
 import { v } from "../../../engine/core/math.mjs";
 import { memberAuthoringPoints } from "../../../engine/api/project/members.mjs";
+import { coordinateSpaceLabel, memberAxesByTarget, normalizeCoordinateSpace } from "./member-axis-space.mjs";
+import { memberManipulatorHandles } from "./member-manipulator-overlays.mjs";
 
 function line(points, color, meta = {}) {
   return { points, color, collection: "authoring", ...meta };
@@ -33,26 +35,47 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
   if (options.snap?.point) {
     lines.push(line([options.dragPoint || options.snap.point, options.snap.point], "#38bdf8", { objectId: memberId, kind: "snap-line" }));
   }
-  const handles = [
-    handle(memberId, "move-member", points.center, "#0ea5e9", 12),
-    handle(memberId, "physical-start", points.physicalStart, "#22c55e"),
-    handle(memberId, "physical-end", points.physicalEnd, "#22c55e")
-  ];
+  const manipulatorSettings = options.settings?.manipulator || {};
+  const coordinateSpace = normalizeCoordinateSpace(manipulatorSettings.coordinateSpace);
+  const handles = manipulatorSettings.visible === false
+    ? [
+        handle(memberId, "move-member", points.center, "#0ea5e9", 12),
+        handle(memberId, "physical-start", points.physicalStart, "#22c55e"),
+        handle(memberId, "physical-end", points.physicalEnd, "#22c55e")
+      ]
+    : memberManipulatorHandles(memberId, points, {
+        ...manipulatorSettings.screen,
+        ...(options.settings?.axes || {}),
+        coordinateAxesByTarget: memberAxesByTarget(member, coordinateSpace),
+        coordinateSpace,
+        visible: manipulatorSettings.visible
+      });
   if (showLayoutAxis) {
     handles.push(
       handle(memberId, "layout-start", points.layoutStart, "#f59e0b"),
       handle(memberId, "layout-end", points.layoutEnd, "#f59e0b")
     );
   }
+  const labels = options.snap?.point ? [{
+    point: options.snap.point,
+    text: options.snap.label || options.snap.type || "Snap",
+    color: "#38bdf8",
+    className: "snap"
+  }] : [];
+  if (manipulatorSettings.visible !== false) {
+    labels.push({
+      point: points.center,
+      screenOffsetPx: manipulatorSettings.screen?.spaceToggleOffsetPx || { x: -30, y: -30 },
+      text: coordinateSpace === "local" ? "L" : "G",
+      color: coordinateSpace === "local" ? "#0f766e" : "#475569",
+      className: `space-toggle ${coordinateSpace}`,
+      title: `${coordinateSpaceLabel(coordinateSpace)} axes`
+    });
+  }
   return {
     lines,
     handles,
-    labels: options.snap?.point ? [{
-      point: options.snap.point,
-      text: options.snap.label || options.snap.type || "Snap",
-      color: "#38bdf8",
-      className: "snap"
-    }] : []
+    labels
   };
 }
 

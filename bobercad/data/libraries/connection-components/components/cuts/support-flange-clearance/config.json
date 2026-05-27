@@ -44,6 +44,72 @@
       "default": 5
     }
   ],
+  "dimensions": [
+    {
+      "id": "top-notch-mode",
+      "parameter": "notch.topMode",
+      "label": "top trim",
+      "reference": {
+        "kind": "feature-option-callout",
+        "featureRole": "topNotch",
+        "offset": {
+          "localAxisY": 54,
+          "localAxisZ": 22,
+          "normal": 16
+        },
+        "modeControl": {
+          "path": "notch.topMode",
+          "label": "Top trim",
+          "options": [
+            {
+              "value": "auto",
+              "label": "Auto"
+            },
+            {
+              "value": "off",
+              "label": "Off"
+            }
+          ]
+        },
+        "valueLabels": {
+          "auto": "Auto",
+          "off": "Off"
+        }
+      }
+    },
+    {
+      "id": "bottom-notch-mode",
+      "parameter": "notch.bottomMode",
+      "label": "bottom trim",
+      "reference": {
+        "kind": "feature-option-callout",
+        "featureRole": "bottomNotch",
+        "offset": {
+          "localAxisY": 54,
+          "localAxisZ": -22,
+          "normal": 16
+        },
+        "modeControl": {
+          "path": "notch.bottomMode",
+          "label": "Bottom trim",
+          "options": [
+            {
+              "value": "auto",
+              "label": "Auto"
+            },
+            {
+              "value": "off",
+              "label": "Off"
+            }
+          ]
+        },
+        "valueLabels": {
+          "auto": "Auto",
+          "off": "Off"
+        }
+      }
+    }
+  ],
   "dimensionGroups": [
     {
       "kind": "clearanceCutOffsets",

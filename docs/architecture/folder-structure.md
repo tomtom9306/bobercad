@@ -43,6 +43,7 @@ bobercad
 |   |-- check_repo.js
 |   |-- check_repo_structure.js
 |   |-- check_viewer_geometry.js
+|   |-- export_bobercad_ai_review.js
 |   `-- validate_json_schema.js
 |
 `-- bobercad

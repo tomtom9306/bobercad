@@ -30,6 +30,7 @@ export function createWebglViewer(canvas, reset, settings) {
   let wheelZoomFramePending = false;
   let pendingWheelZoom = null;
   let authoringOverlay = { lines: [], handles: [] };
+  let authoringHoveredHandle = null;
   let dimensionOverlay = { lines: [], labels: [] };
   let objectPreview = null;
   let projectedSceneTriangles = null;
@@ -853,11 +854,184 @@ export function createWebglViewer(canvas, reset, settings) {
     return Boolean((dimensionOverlay.lines || []).length || (dimensionOverlay.labels || []).length);
   }
 
+  function fallbackAxisScreen(axisId) {
+    if (axisId === "z") return { x: 0, y: -1 };
+    if (axisId === "y") return { x: 0.62, y: -0.78 };
+    return { x: 1, y: 0 };
+  }
+
+  function projectedAxisHandle(handle) {
+    const origin = projectPoint(handle.point);
+    if (!origin) return null;
+    const axis = v.norm(handle.axis || [1, 0, 0]);
+    const probe = Math.max(10, 42 / Math.max(camera.screenScale(), 1e-9));
+    const projectedEnd = projectPoint(v.add(handle.point, v.mul(axis, probe)));
+    let dx = projectedEnd ? projectedEnd.x - origin.x : 0;
+    let dy = projectedEnd ? projectedEnd.y - origin.y : 0;
+    let length = Math.hypot(dx, dy);
+    let scalePxPerWorld = length > 1e-6 ? length / probe : camera.screenScale();
+    if (length <= 1e-6) {
+      const fallback = fallbackAxisScreen(handle.axisId);
+      dx = fallback.x;
+      dy = fallback.y;
+      length = 1;
+      scalePxPerWorld = camera.screenScale();
+    }
+    return {
+      origin,
+      unit: { x: dx / length, y: dy / length },
+      scalePxPerWorld
+    };
+  }
+
+  function axisHandleSegment(handle) {
+    const projected = projectedAxisHandle(handle);
+    if (!projected) return null;
+    const length = handle.axisLengthPx || 58;
+    const offset = handle.axisStartOffsetPx || 0;
+    return {
+      ...projected,
+      start: {
+        x: projected.origin.x + projected.unit.x * offset,
+        y: projected.origin.y + projected.unit.y * offset
+      },
+      end: {
+        x: projected.origin.x + projected.unit.x * length,
+        y: projected.origin.y + projected.unit.y * length
+      }
+    };
+  }
+
+  function rotationPlaneBasis(axis) {
+    const normal = v.norm(axis || [0, 0, 1]);
+    let seed = Math.abs(v.dot(normal, [0, 0, 1])) > 0.92 ? [0, 1, 0] : [0, 0, 1];
+    let u = v.cross(normal, seed);
+    if (v.len(u) <= 1e-6) {
+      seed = [1, 0, 0];
+      u = v.cross(normal, seed);
+    }
+    u = v.norm(u);
+    return {
+      u,
+      w: v.norm(v.cross(normal, u))
+    };
+  }
+
+  function rotationArcAngles(handle) {
+    const axisOffset = handle.axisId === "x" ? -0.55 : handle.axisId === "y" ? 0.2 : 0.95;
+    const arc = Math.PI * 1.55;
+    return { startAngle: axisOffset, endAngle: axisOffset + arc, arc };
+  }
+
+  function rotationHandleCenter(handle) {
+    const projected = projectedAxisHandle(handle);
+    if (!projected) return null;
+    const axis = v.norm(handle.axis || [1, 0, 0]);
+    const axisLength = handle.axisLengthPx || 58;
+    const axisStartOffset = handle.axisStartOffsetPx || 0;
+    const centerOffsetPx = handle.ringCenterOffsetPx ?? (axisStartOffset + axisLength) / 2;
+    const centerPoint = v.add(handle.point, v.mul(axis, centerOffsetPx / Math.max(projected.scalePxPerWorld, 1e-9)));
+    const screen = projectPoint(centerPoint);
+    return screen ? { point: centerPoint, screen } : null;
+  }
+
+  function projectedRotationArc(handle, segments = 36) {
+    const center = rotationHandleCenter(handle);
+    if (!center) return null;
+    const basis = rotationPlaneBasis(handle.axis);
+    const radiusWorld = (handle.radiusPx || 40) / Math.max(camera.screenScale(), 1e-9);
+    const { startAngle, arc } = rotationArcAngles(handle);
+    const points = [];
+    for (let index = 0; index <= segments; index += 1) {
+      const angle = startAngle + index / segments * arc;
+      const world = v.add(
+        center.point,
+        v.add(v.mul(basis.u, Math.cos(angle) * radiusWorld), v.mul(basis.w, Math.sin(angle) * radiusWorld))
+      );
+      const screen = projectPoint(world);
+      if (screen) points.push(screen);
+    }
+    return points.length >= 2 ? { center: center.screen, points } : null;
+  }
+
+  function screenPolylineDistance(point, points) {
+    let best = Infinity;
+    for (let index = 1; index < points.length; index += 1) {
+      best = Math.min(best, screenLineDistance(point, points[index - 1], points[index]));
+    }
+    return best;
+  }
+
+  function authoringHandleKey(handle) {
+    if (!handle) return "";
+    return [
+      handle.type || "point",
+      handle.kind || "",
+      handle.memberId || "",
+      handle.target || "",
+      handle.axisId || "",
+      handle.coordinateSpace || ""
+    ].join(":");
+  }
+
+  function isAuthoringHovered(handle) {
+    return authoringHandleKey(handle) === authoringHandleKey(authoringHoveredHandle);
+  }
+
+  function updateAuthoringHover(event) {
+    if (!scene || drag) return false;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const next = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height
+      ? pickAuthoringHandle(x, y)
+      : null;
+    if (authoringHandleKey(next) === authoringHandleKey(authoringHoveredHandle)) return Boolean(next);
+    authoringHoveredHandle = next;
+    canvas.classList.toggle("authoring-hover", Boolean(next));
+    requestDraw();
+    return Boolean(next);
+  }
+
+  function clearAuthoringHover() {
+    if (!authoringHoveredHandle) return;
+    authoringHoveredHandle = null;
+    canvas.classList.remove("authoring-hover");
+    requestDraw();
+  }
+
   function pickAuthoringHandle(x, y) {
     if (!scene || !authoringOverlay?.handles?.length) return null;
+    const cursor = { x, y };
     let best = null;
     for (const handle of authoringOverlay.handles) {
-      const projected = projectPoint(handle.point);
+      if (handle.type === "axis") {
+        const segment = axisHandleSegment(handle);
+        if (!segment) continue;
+        const distance = screenLineDistance(cursor, segment.start, segment.end);
+        if (distance > (handle.hitTolerancePx || 10)) continue;
+        if (!best || distance < best.distance) {
+          best = {
+            ...handle,
+            distance,
+            screen: segment.start,
+            axisScreen: segment.unit,
+            screenScalePxPerWorld: segment.scalePxPerWorld
+          };
+        }
+        continue;
+      }
+
+      if (handle.type === "rotation-ring") {
+        const arc = projectedRotationArc(handle);
+        if (!arc) continue;
+        const distance = screenPolylineDistance(cursor, arc.points);
+        if (distance > (handle.hitTolerancePx || 10)) continue;
+        if (!best || distance < best.distance) best = { ...handle, distance, screen: arc.center };
+        continue;
+      }
+
+      const projected = projectOffsetPoint(handle.point, handle.screenOffsetPx);
       if (!projected) continue;
       const distance = Math.hypot(projected.x - x, projected.y - y);
       if (distance > (handle.radius || 10)) continue;
@@ -919,15 +1093,30 @@ export function createWebglViewer(canvas, reset, settings) {
   function renderAuthoringLabels() {
     authoringLabelLayer.replaceChildren();
     for (const label of authoringOverlay?.labels || []) {
-      const projected = projectPoint(label.point);
+      const projected = projectOffsetPoint(label.point, label.screenOffsetPx);
       if (!projected) continue;
       const node = document.createElement("div");
       node.className = `authoring-label ${label.className || ""}`.trim();
       node.textContent = label.text;
+      if (label.title) node.title = label.title;
       if (label.color) node.style.color = label.color;
       node.style.left = `${projected.x}px`;
       node.style.top = `${projected.y}px`;
       authoringLabelLayer.appendChild(node);
+    }
+    if (authoringHoveredHandle?.point) {
+      const projected = authoringHoveredHandle.screen || projectOffsetPoint(authoringHoveredHandle.point, authoringHoveredHandle.screenOffsetPx);
+      if (projected) {
+        const node = document.createElement("div");
+        const axis = authoringHoveredHandle.axisLabel || String(authoringHoveredHandle.axisId || "").toUpperCase();
+        const space = authoringHoveredHandle.spaceLabel ? `${authoringHoveredHandle.spaceLabel} ` : "";
+        const action = authoringHoveredHandle.type === "rotation-ring" ? "rotate" : authoringHoveredHandle.type === "axis" ? "move" : "edit";
+        node.className = "authoring-label manipulator-hover";
+        node.textContent = authoringHoveredHandle.hoverLabel || (axis ? `${space}${axis} ${action}` : action);
+        node.style.left = `${projected.x}px`;
+        node.style.top = `${projected.y}px`;
+        authoringLabelLayer.appendChild(node);
+      }
     }
   }
 
@@ -937,6 +1126,119 @@ export function createWebglViewer(canvas, reset, settings) {
       1 - y / canvas.height * 2,
       depth
     ];
+  }
+
+  function pushScreenLine(positionData, colorData, a, b, rgba, depth = -1) {
+    pushVertex(positionData, colorData, clipFromScreen(a.x, a.y, depth), rgba);
+    pushVertex(positionData, colorData, clipFromScreen(b.x, b.y, depth), rgba);
+  }
+
+  function pushScreenSquare(positionData, colorData, center, radius, rgba) {
+    const left = center.x - radius;
+    const right = center.x + radius;
+    const top = center.y - radius;
+    const bottom = center.y + radius;
+    pushScreenLine(positionData, colorData, { x: left, y: center.y }, { x: right, y: center.y }, rgba);
+    pushScreenLine(positionData, colorData, { x: center.x, y: top }, { x: center.x, y: bottom }, rgba);
+    pushScreenLine(positionData, colorData, { x: left, y: top }, { x: right, y: top }, rgba);
+    pushScreenLine(positionData, colorData, { x: right, y: top }, { x: right, y: bottom }, rgba);
+    pushScreenLine(positionData, colorData, { x: right, y: bottom }, { x: left, y: bottom }, rgba);
+    pushScreenLine(positionData, colorData, { x: left, y: bottom }, { x: left, y: top }, rgba);
+  }
+
+  function pushScreenDiamond(positionData, colorData, center, radius, rgba) {
+    const top = { x: center.x, y: center.y - radius };
+    const right = { x: center.x + radius, y: center.y };
+    const bottom = { x: center.x, y: center.y + radius };
+    const left = { x: center.x - radius, y: center.y };
+    pushScreenLine(positionData, colorData, top, right, rgba);
+    pushScreenLine(positionData, colorData, right, bottom, rgba);
+    pushScreenLine(positionData, colorData, bottom, left, rgba);
+    pushScreenLine(positionData, colorData, left, top, rgba);
+  }
+
+  function projectOffsetPoint(point, offset = null) {
+    const projected = projectPoint(point);
+    if (!projected) return null;
+    return {
+      x: projected.x + (offset?.x || 0),
+      y: projected.y + (offset?.y || 0)
+    };
+  }
+
+  function pushAxisHandle(positionData, colorData, handle) {
+    const segment = axisHandleSegment(handle);
+    if (!segment) return;
+    const hovered = isAuthoringHovered(handle);
+    const rgba = hexToRgba(hovered ? "#fef08a" : handle.color, hovered ? 1 : 0.92);
+    pushScreenLine(positionData, colorData, segment.start, segment.end, rgba);
+
+    const head = (handle.arrowHeadPx || 9) + (hovered ? 3 : 0);
+    const back = {
+      x: segment.end.x - segment.unit.x * head,
+      y: segment.end.y - segment.unit.y * head
+    };
+    const normal = { x: -segment.unit.y, y: segment.unit.x };
+    pushScreenLine(positionData, colorData, segment.end, {
+      x: back.x + normal.x * head * 0.55,
+      y: back.y + normal.y * head * 0.55
+    }, rgba);
+    pushScreenLine(positionData, colorData, segment.end, {
+      x: back.x - normal.x * head * 0.55,
+      y: back.y - normal.y * head * 0.55
+    }, rgba);
+  }
+
+  function pushRotationRing(positionData, colorData, handle) {
+    const arc = projectedRotationArc(handle);
+    if (!arc) return;
+    const hovered = isAuthoringHovered(handle);
+    const rgba = hexToRgba(hovered ? "#fef08a" : handle.color, hovered ? 1 : 0.86);
+    for (let index = 1; index < arc.points.length; index += 1) {
+      pushScreenLine(positionData, colorData, arc.points[index - 1], arc.points[index], rgba);
+    }
+    const tip = arc.points[arc.points.length - 1];
+    const previous = arc.points[arc.points.length - 2];
+    const dx = tip.x - previous.x;
+    const dy = tip.y - previous.y;
+    const length = Math.hypot(dx, dy);
+    if (length <= 1e-6) return;
+    const head = (handle.arrowHeadPx || 6) + (hovered ? 2 : 0);
+    const tangent = { x: dx / length, y: dy / length };
+    const normal = { x: -tangent.y, y: tangent.x };
+    const back = {
+      x: tip.x - tangent.x * head,
+      y: tip.y - tangent.y * head
+    };
+    pushScreenLine(positionData, colorData, tip, {
+      x: back.x + normal.x * head * 0.55,
+      y: back.y + normal.y * head * 0.55
+    }, rgba);
+    pushScreenLine(positionData, colorData, tip, {
+      x: back.x - normal.x * head * 0.55,
+      y: back.y - normal.y * head * 0.55
+    }, rgba);
+  }
+
+  function pushAuthoringHandle(positionData, colorData, handle) {
+    if (handle.type === "axis") {
+      pushAxisHandle(positionData, colorData, handle);
+      return;
+    }
+    if (handle.type === "rotation-ring") {
+      pushRotationRing(positionData, colorData, handle);
+      return;
+    }
+    const projected = projectOffsetPoint(handle.point, handle.screenOffsetPx);
+    if (!projected) return;
+    const hovered = isAuthoringHovered(handle);
+    const radius = (handle.radius || 10) + (hovered ? 3 : 0);
+    const color = hexToRgba(hovered ? "#fef08a" : handle.color);
+    if (handle.type === "space-toggle") {
+      pushScreenDiamond(positionData, colorData, projected, radius, color);
+      return;
+    }
+    pushScreenSquare(positionData, colorData, projected, radius, color);
   }
 
   function pushVertex(positionData, colorData, point, rgba) {
@@ -1559,26 +1861,11 @@ export function createWebglViewer(canvas, reset, settings) {
     const handlePositions = [];
     const handleColors = [];
     for (const handle of authoringOverlay.handles || []) {
-      const projected = projectPoint(handle.point);
-      if (!projected) continue;
-      const radius = handle.radius || 10;
-      const color = hexToRgba(handle.color);
-      const left = projected.x - radius;
-      const right = projected.x + radius;
-      const top = projected.y - radius;
-      const bottom = projected.y + radius;
-      pushVertex(handlePositions, handleColors, clipFromScreen(left, projected.y), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(right, projected.y), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(projected.x, top), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(projected.x, bottom), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(left, top), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(right, top), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(right, top), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(right, bottom), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(right, bottom), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(left, bottom), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(left, bottom), color);
-      pushVertex(handlePositions, handleColors, clipFromScreen(left, top), color);
+      if (isAuthoringHovered(handle)) continue;
+      pushAuthoringHandle(handlePositions, handleColors, handle);
+    }
+    if (authoringHoveredHandle) {
+      pushAuthoringHandle(handlePositions, handleColors, authoringHoveredHandle);
     }
     if (handlePositions.length) {
       gl.disable(gl.DEPTH_TEST);
@@ -1666,7 +1953,16 @@ export function createWebglViewer(canvas, reset, settings) {
         return;
       }
       const handle = event.button === 0 && !event.shiftKey ? pickAuthoringHandle(x, y) : null;
+      if (handle?.kind === "coordinate-space-toggle") {
+        if (authoringHandler?.click?.({ handle, screen: { x, y } }) !== false) {
+          authoringHoveredHandle = null;
+          canvas.classList.remove("authoring-hover");
+          requestDraw();
+        }
+        return;
+      }
       if (handle && authoringHandler?.beginDrag?.({ handle, screen: { x, y } }) !== false) {
+        authoringHoveredHandle = handle;
         drag = {
           x: event.clientX,
           y: event.clientY,
@@ -1725,17 +2021,27 @@ export function createWebglViewer(canvas, reset, settings) {
           commandHandler.pointerMove?.({ event, screen: { x, y }, hit: hitResult });
           return;
         }
+        if (updateAuthoringHover(event)) {
+          dimensionUi.setHoveredDimensionId(null, event);
+          return;
+        }
+        clearAuthoringHover();
         updateDimensionHover(event);
         return;
       }
       dimensionUi.setHoveredDimensionId(null, event);
       if (drag.mode === "authoring") {
+        const rect = canvas.getBoundingClientRect();
         authoringHandler?.drag?.({
           handle: drag.handle,
           dx: event.clientX - drag.x,
           dy: event.clientY - drag.y,
           totalDx: event.clientX - drag.startX,
-          totalDy: event.clientY - drag.startY
+          totalDy: event.clientY - drag.startY,
+          screen: {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+          }
         });
         drag.x = event.clientX;
         drag.y = event.clientY;
@@ -1818,6 +2124,7 @@ export function createWebglViewer(canvas, reset, settings) {
     document.addEventListener("pointermove", (event) => {
       if (event.target === canvas || dimensionUi.contains(event.target)) return;
       dimensionUi.setHoveredDimensionId(null, event);
+      clearAuthoringHover();
     });
 
     canvas.addEventListener("wheel", (event) => {
@@ -1882,6 +2189,9 @@ export function createWebglViewer(canvas, reset, settings) {
     },
     setAuthoringOverlay(overlay = { lines: [], handles: [] }) {
       authoringOverlay = overlay || { lines: [], handles: [], labels: [] };
+      if (!authoringOverlay.handles?.some((handle) => authoringHandleKey(handle) === authoringHandleKey(authoringHoveredHandle))) {
+        clearAuthoringHover();
+      }
       requestDraw();
     },
     setDimensionOverlay(overlay = { lines: [], labels: [] }) {

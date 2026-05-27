@@ -34,6 +34,38 @@
           "localAxisZ": 46
         }
       }
+    },
+    {
+      "id": "beam-trim-option",
+      "parameter": "fit.clipBeam",
+      "label": "trim",
+      "reference": {
+        "kind": "feature-option-callout",
+        "featureRole": "beamFitting",
+        "offset": {
+          "localAxisY": 42,
+          "localAxisZ": 22,
+          "normal": 14
+        },
+        "modeControl": {
+          "path": "fit.clipBeam",
+          "label": "Trimming",
+          "options": [
+            {
+              "value": true,
+              "label": "Clip beam"
+            },
+            {
+              "value": false,
+              "label": "No trim"
+            }
+          ]
+        },
+        "valueLabels": {
+          "true": "Clip beam",
+          "false": "No trim"
+        }
+      }
     }
   ],
   "ui": {
