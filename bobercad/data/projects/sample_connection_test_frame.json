@@ -214,42 +214,6 @@
       "collection": "groups",
       "type": "connection-test-frame"
     },
-    "assembly_connection_test_frame": {
-      "collection": "assemblies",
-      "type": "site-assembly"
-    },
-    "column_c1": {
-      "collection": "members",
-      "type": "test-column"
-    },
-    "column_c2": {
-      "collection": "members",
-      "type": "test-column"
-    },
-    "column_c3": {
-      "collection": "members",
-      "type": "test-column"
-    },
-    "column_c4": {
-      "collection": "members",
-      "type": "test-column"
-    },
-    "beam_b1_south": {
-      "collection": "members",
-      "type": "test-top-beam"
-    },
-    "beam_b2_east": {
-      "collection": "members",
-      "type": "test-top-beam"
-    },
-    "beam_b3_north": {
-      "collection": "members",
-      "type": "test-top-beam"
-    },
-    "beam_b4_west": {
-      "collection": "members",
-      "type": "test-top-beam"
-    },
     "if_c1_east": {
       "collection": "interfaces",
       "type": "member-side-face"
@@ -345,6 +309,42 @@
     "cz_c1_b4": {
       "collection": "connectionZones",
       "type": "connection-candidate-zone"
+    },
+    "assembly_connection_test_frame": {
+      "collection": "assemblies",
+      "type": "site-assembly"
+    },
+    "column_c1": {
+      "collection": "members",
+      "type": "test-column"
+    },
+    "column_c2": {
+      "collection": "members",
+      "type": "test-column"
+    },
+    "column_c3": {
+      "collection": "members",
+      "type": "test-column"
+    },
+    "column_c4": {
+      "collection": "members",
+      "type": "test-column"
+    },
+    "beam_b1_south": {
+      "collection": "members",
+      "type": "test-top-beam"
+    },
+    "beam_b2_east": {
+      "collection": "members",
+      "type": "test-top-beam"
+    },
+    "beam_b3_north": {
+      "collection": "members",
+      "type": "test-top-beam"
+    },
+    "beam_b4_west": {
+      "collection": "members",
+      "type": "test-top-beam"
     }
   },
   "modelDefaults": {

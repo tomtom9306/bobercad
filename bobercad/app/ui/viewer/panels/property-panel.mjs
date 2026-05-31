@@ -1,4 +1,5 @@
 import { v } from "../../../engine/core/math.mjs";
+import { axisRelationLabel } from "../../../engine/api/project/axis-relations.mjs?v=relation-types-1";
 
 function text(tag, className, value) {
   const element = document.createElement(tag);
@@ -71,10 +72,36 @@ function objectIdFromFace(face) {
   return face?.objectId || null;
 }
 
-export function mountEditorUi({ panel, api, profiles, selection, memberEdit, connectionHighlightObjectIds, onProjectChange, onLocalMemberProjectChange, onConnectionSelected, onConnectionDeleted }) {
+function globalAxisSource(axis) {
+  const normalized = String(axis || "").toLowerCase();
+  const directions = { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] };
+  return {
+    type: "global-axis",
+    axis: normalized,
+    direction: directions[normalized],
+    label: `Global ${normalized.toUpperCase()} axis`
+  };
+}
+
+export function mountEditorUi({
+  panel,
+  api,
+  profiles,
+  selection,
+  memberEdit,
+  connectionHighlightObjectIds,
+  onProjectChange,
+  onLocalMemberProjectChange,
+  onConnectionSelected,
+  onConnectionDeleted,
+  onObjectSelected,
+  onObjectCleared
+}) {
   let selectedMemberId = null;
   let selectedConnectionId = null;
-  let messageText = "Pick a member or a connection part.";
+  let selectedObjectId = null;
+  let selectedObjectDetail = null;
+  let messageText = "Pick a member, connection, trim, or cut object.";
   let messageState = "";
 
   const setMessage = (message, state = "") => {
@@ -83,19 +110,18 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, con
     render();
   };
 
-  const connectedMemberObjectIds = (project, memberId) => {
-    const ids = new Set([memberId]);
-    for (const connection of Object.values(project.model?.connections || {})) {
-      if (connection.mainMemberId !== memberId && connection.secondaryMemberId !== memberId) continue;
-      for (const objectId of api.connectionObjectIds(connection.id)) ids.add(objectId);
-    }
-    return [...ids].filter((objectId) => project.objectIndex?.[objectId]);
-  };
+  const connectedMemberObjectIds = (memberId) => api.memberDependencyObjectIds(memberId, { renderableOnly: true });
+
+  const clearObjectWindow = () => onObjectCleared?.();
 
   const applyProjectChange = (nextProject, options = {}) => {
-    if (options.memberId && typeof onLocalMemberProjectChange === "function") {
-      const objectIds = connectedMemberObjectIds(nextProject, options.memberId);
-      if (onLocalMemberProjectChange(nextProject, options.memberId, objectIds) !== false) return;
+    if (options.memberId) {
+      if (typeof onLocalMemberProjectChange !== "function") throw new Error("member update requires affected-object scene patching");
+      const objectIds = connectedMemberObjectIds(options.memberId);
+      if (onLocalMemberProjectChange(nextProject, options.memberId, objectIds) === false) {
+        throw new Error("affected-object scene patch failed");
+      }
+      return;
     }
     onProjectChange(nextProject);
   };
@@ -103,21 +129,48 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, con
   const selectMember = (memberId, options = {}) => {
     selectedMemberId = memberId;
     selectedConnectionId = null;
+    selectedObjectId = null;
+    selectedObjectDetail = null;
     if (options.fromMemberEdit) selection.select([memberId]);
     else if (memberEdit) memberEdit.selectMember(memberId, { notify: false });
     else selection.select([memberId]);
+    clearObjectWindow();
     setMessage(`Selected ${memberId}.`, "ok");
   };
 
   const selectConnection = (connectionId, options = {}) => {
     selectedMemberId = null;
     selectedConnectionId = connectionId;
+    selectedObjectId = null;
+    selectedObjectDetail = null;
     memberEdit?.clear({ notify: false });
     selection.select(typeof connectionHighlightObjectIds === "function"
       ? connectionHighlightObjectIds(connectionId)
       : api.connectionObjectIds(connectionId));
+    clearObjectWindow();
     onConnectionSelected(connectionId, options);
     setMessage(`Selected ${connectionId}.`, "ok");
+  };
+
+  const selectObject = (objectId, detail = {}) => {
+    const entry = api.project().objectIndex?.[objectId];
+    if (!entry?.collection) {
+      setMessage(`Object not found: ${objectId}`, "error");
+      return;
+    }
+    if (entry.collection === "members") {
+      selectMember(objectId);
+      return;
+    }
+    selectedMemberId = null;
+    selectedConnectionId = null;
+    selectedObjectId = objectId;
+    selectedObjectDetail = detail || null;
+    memberEdit?.clear({ notify: false });
+    selection.select([objectId]);
+    if (entry.collection === "features" || entry.collection === "trimJoints") onObjectSelected?.(objectId, selectedObjectDetail);
+    else clearObjectWindow();
+    setMessage(`Selected ${objectId}.`, "ok");
   };
 
   const beginMemberPick = () => {
@@ -147,6 +200,16 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, con
     setMessage("Pick a connection plate or fastener.", "ok");
   };
 
+  const beginObjectPick = () => {
+    selection.beginObjectPick({
+      count: 1,
+      objectIdFromFace,
+      onComplete: ([objectId]) => selectObject(objectId),
+      onError: (message) => setMessage(message, "error")
+    });
+    setMessage("Pick a member, trim, cut, plate, fastener, or weld.", "ok");
+  };
+
   const updateMember = (operation) => {
     if (!selectedMemberId) return;
     try {
@@ -160,6 +223,72 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, con
     }
   };
 
+  const removeMemberRelation = (relationId) => {
+    updateMember(() => api.deleteRelation(relationId));
+  };
+
+  const setMemberAlignment = (source) => {
+    updateMember((memberId) => api.setMemberAlignment(memberId, source));
+  };
+
+  const clearMemberAlignment = () => {
+    updateMember((memberId) => api.clearMemberAlignment(memberId));
+  };
+
+  const beginAlignmentAxisPick = () => {
+    if (!selectedMemberId) return;
+    selection.beginObjectPick({
+      count: 1,
+      objectIdFromFace,
+      onComplete: ([objectId]) => {
+        const entry = api.project().objectIndex?.[objectId];
+        if (entry?.collection !== "members") {
+          setMessage("Pick a member axis.", "error");
+          return;
+        }
+        if (objectId === selectedMemberId) {
+          setMessage("Pick another member as the custom axis.", "error");
+          return;
+        }
+        setMemberAlignment({ type: "member-axis", memberId: objectId, label: `Axis: ${objectId}` });
+      },
+      onError: () => setMessage("Pick a member axis.", "error")
+    });
+    setMessage("Pick a member axis for alignment.", "ok");
+  };
+
+  const relationRows = (relations, emptyText) => {
+    if (!relations.length) return [text("div", "editor-empty", emptyText)];
+    return relations.map((relation) => {
+      const row = document.createElement("div");
+      row.className = "editor-relation-row";
+      row.append(
+        text("span", "editor-value", axisRelationLabel(relation)),
+        button("Remove", "editor-button danger", () => removeMemberRelation(relation.id))
+      );
+      return row;
+    });
+  };
+
+  const memberRelationRows = (member) => {
+    const relations = api.memberAxisRelations(member.id);
+    const pointRelations = relations.filter((relation) => relation.type === "point-on-axis");
+    const alignment = relations.find((relation) => relation.type === "member-align-axis");
+    return [
+      text("div", "editor-subtitle", "Point constraints"),
+      ...relationRows(pointRelations, "No point constraints."),
+      text("div", "editor-subtitle", "Member alignment"),
+      alignment
+        ? relationRows([alignment], "No member alignment.")[0]
+        : text("div", "editor-empty", "No member alignment."),
+      button("Align X", "editor-button", () => setMemberAlignment(globalAxisSource("x"))),
+      button("Align Y", "editor-button", () => setMemberAlignment(globalAxisSource("y"))),
+      button("Align Z", "editor-button", () => setMemberAlignment(globalAxisSource("z"))),
+      button("Pick Custom Axis", "editor-button", beginAlignmentAxisPick),
+      button("Remove Alignment", "editor-button danger", clearMemberAlignment)
+    ];
+  };
+
   const deleteSelectedConnection = () => {
     if (!selectedConnectionId) return;
     try {
@@ -168,6 +297,7 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, con
       selectedConnectionId = null;
       memberEdit?.clear({ notify: false });
       selection.clear();
+      clearObjectWindow();
       applyProjectChange(nextProject);
       onConnectionDeleted?.(deletedId);
       setMessage(`Deleted ${deletedId}.`, "ok");
@@ -191,7 +321,8 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, con
       numericInput("X", center[0], (value) => { centerDraft[0] = value; }),
       numericInput("Y", center[1], (value) => { centerDraft[1] = value; }),
       numericInput("Z", center[2], (value) => { centerDraft[2] = value; }),
-      button("Apply Center", "editor-button primary", applyCenter)
+      button("Apply Center", "editor-button primary", applyCenter),
+      ...memberRelationRows(member)
     ];
   };
 
@@ -210,37 +341,70 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, con
     ];
   };
 
+  const objectEditor = () => {
+    if (!selectedObjectId) return [text("div", "editor-empty", "No object selected.")];
+    const project = api.project();
+    const entry = project.objectIndex?.[selectedObjectId];
+    if (!entry?.collection) return [text("div", "editor-error", "Selected object is no longer in the project.")];
+    const object = api.object(selectedObjectId);
+    const connection = api.connectionForObject(selectedObjectId);
+    const rows = [
+      readout("Object", selectedObjectId),
+      readout("Collection", entry.collection),
+      readout("Type", object.type || entry.type || "-")
+    ];
+    if (object.ownerId) rows.push(readout("Owner", object.ownerId));
+    if (object.memberEnd) rows.push(readout("Member end", object.memberEnd));
+    if (object.cutKind) rows.push(readout("Cut kind", object.cutKind));
+    if (object.booleanType) rows.push(readout("Boolean", object.booleanType));
+    if (entry.collection === "trimJoints") rows.push(readout("Participants", String((object.participants || []).length)));
+    if (entry.collection === "trimJoints" && selectedObjectDetail?.operationId) rows.push(readout("Selected cut", selectedObjectDetail.operationId));
+    if (object.fabrication?.operation) rows.push(readout("Operation", object.fabrication.operation));
+    if (object.operationEnabled === false) rows.push(text("div", "editor-error", "Operation is disabled."));
+    if (connection) rows.push(button("Open Connection", "editor-button", () => selectConnection(connection.id)));
+    if (entry.collection === "features") rows.push(button("Open Feature Editor", "editor-button primary", () => onObjectSelected?.(selectedObjectId)));
+    return rows;
+  };
+
   function render() {
     if (selectedMemberId && !api.project().model.members?.[selectedMemberId]) selectedMemberId = null;
     if (selectedConnectionId && !api.project().model.connections?.[selectedConnectionId]) selectedConnectionId = null;
+    if (selectedObjectId && !api.project().objectIndex?.[selectedObjectId]) selectedObjectId = null;
 
     const title = text("div", "editor-title", "Editor");
     const actions = document.createElement("div");
     const memberSection = document.createElement("section");
     const connectionSection = document.createElement("section");
+    const objectSection = document.createElement("section");
     const message = text("div", "editor-message", messageText);
 
     actions.className = "editor-actions";
     memberSection.className = "editor-section";
     connectionSection.className = "editor-section";
+    objectSection.className = "editor-section";
     message.dataset.state = messageState;
 
     actions.append(
       button("Pick Member", "editor-button", beginMemberPick),
       button("Pick Connection", "editor-button", beginConnectionPick),
+      button("Pick Object", "editor-button", beginObjectPick),
       button("Clear", "editor-button", () => {
         selectedMemberId = null;
         selectedConnectionId = null;
+        selectedObjectId = null;
+        selectedObjectDetail = null;
         memberEdit?.clear({ notify: false });
         selection.clear();
+        clearObjectWindow();
         setMessage("Selection cleared.");
       })
     );
     memberSection.append(text("div", "editor-section-title", "Member"), ...memberEditor());
     connectionSection.append(text("div", "editor-section-title", "Connection"), ...connectionEditor());
+    objectSection.append(text("div", "editor-section-title", "Object"), ...objectEditor());
 
     panel.hidden = false;
-    panel.replaceChildren(title, actions, memberSection, connectionSection, message);
+    panel.replaceChildren(title, actions, memberSection, connectionSection, objectSection, message);
   }
 
   api.subscribe(render);
@@ -249,11 +413,15 @@ export function mountEditorUi({ panel, api, profiles, selection, memberEdit, con
     clearSelection(options = {}) {
       selectedMemberId = null;
       selectedConnectionId = null;
+      selectedObjectId = null;
+      selectedObjectDetail = null;
       if (!options.fromMemberEdit) memberEdit?.clear({ notify: false });
       selection.clear();
+      clearObjectWindow();
       setMessage("Selection cleared.");
     },
     selectMember,
-    selectConnection
+    selectConnection,
+    selectObject
   };
 }

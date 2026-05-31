@@ -1,3 +1,5 @@
+import { planeExtentsFromSize } from "../../geometry/feature-plane.mjs";
+
 function gridPositions({ rows, columns, pitch, gauge }) {
   const positions = [];
   for (let row = 0; row < rows; row += 1) {
@@ -9,8 +11,91 @@ function gridPositions({ rows, columns, pitch, gauge }) {
   return positions;
 }
 
+function trimRegionKey(parts) {
+  return parts.map(({ planeId, side }) => `${planeId}:${side}`).join("|");
+}
+
+function planeTrimRegionKeys(referencePlaneIds) {
+  const keys = [];
+  const walk = (index, parts) => {
+    if (index >= referencePlaneIds.length) {
+      keys.push(trimRegionKey(parts));
+      return;
+    }
+    const planeId = referencePlaneIds[index];
+    walk(index + 1, [...parts, { planeId, side: "-" }]);
+    walk(index + 1, [...parts, { planeId, side: "+" }]);
+  };
+  walk(0, []);
+  return keys;
+}
+
+function defaultPlaneTrimRemovedRegionKeys(referencePlaneIds) {
+  return planeTrimRegionKeys(referencePlaneIds).filter((key) => key.split("|").some((part) => part.endsWith(":-")));
+}
+
 export function createSemanticBuilders(ctx) {
   return {
+    reference: {
+      plane(role, data) {
+        const id = ctx.id(role);
+        const plane = {
+          id,
+          type: data.type || "reference-plane",
+          name: data.name,
+          origin: data.origin,
+          normal: data.normal,
+          axisX: data.axisX,
+          axisY: data.axisY,
+          extents: data.extents || planeExtentsFromSize(data.size),
+          notes: data.notes,
+          display: data.display,
+          fabrication: data.fabrication,
+          bim: data.bim
+        };
+        ctx.add("referencePlanes", id, plane);
+        ctx.role(role, id);
+        return plane;
+      }
+    },
+
+    trim: {
+      planeTrim(role, data) {
+        if (!data.memberId) ctx.fail(`${role}: plane trim missing memberId`);
+        const referencePlaneIds = data.referencePlaneIds;
+        if (!Array.isArray(referencePlaneIds) || !referencePlaneIds.length) ctx.fail(`${role}: plane trim missing referencePlaneIds`);
+        const id = ctx.id(role);
+        const operationId = `${id}_plane_trim`;
+        const trimJoint = {
+          id,
+          type: "member-trim",
+          gap: data.gap || 0,
+          participants: [{
+            memberId: data.memberId,
+            ...(data.memberEnd ? { memberEnd: data.memberEnd } : {}),
+            enabled: data.operationEnabled !== false
+          }],
+          operations: [{
+            id: operationId,
+            type: "plane-trim",
+            memberAId: data.memberId,
+            ...(data.memberEnd ? { memberAEnd: data.memberEnd } : {}),
+            referencePlaneIds,
+            removedRegionKeys: data.removedRegionKeys || defaultPlaneTrimRemovedRegionKeys(referencePlaneIds),
+            gap: data.gap || 0,
+            enabled: data.operationEnabled !== false
+          }],
+          placementIntent: data.placementIntent,
+          fabrication: data.fabrication,
+          display: data.display,
+          bim: data.bim
+        };
+        ctx.add("trimJoints", id, trimJoint);
+        ctx.role(role, id);
+        return trimJoint;
+      }
+    },
+
     part: {
       plate(role, data) {
         const id = ctx.id(role);
@@ -76,48 +161,6 @@ export function createSemanticBuilders(ctx) {
         return feature;
       },
 
-      fitting(role, data) {
-        const id = ctx.id(role);
-        const feature = {
-          id,
-          type: "fitting",
-          cutKind: "fitting",
-          ownerId: data.ownerId,
-          operationEnabled: data.operationEnabled,
-          plane: data.plane,
-          placementIntent: data.placementIntent,
-          fabrication: data.fabrication,
-          display: data.display,
-          bim: data.bim
-        };
-        ctx.add("features", id, feature);
-        ctx.attachFeature(data.ownerId, id);
-        ctx.role(role, id);
-        return feature;
-      },
-
-      memberTrim(role, data) {
-        const id = ctx.id(role);
-        const feature = {
-          id,
-          type: "member-trim",
-          cutKind: "fitting",
-          ownerId: data.ownerId,
-          operationEnabled: data.operationEnabled,
-          memberEnd: data.memberEnd,
-          trim: data.trim,
-          placementIntent: data.placementIntent,
-          fabrication: data.fabrication,
-          display: data.display,
-          bim: data.bim
-        };
-        if (data.plane !== undefined) feature.plane = data.plane;
-        ctx.add("features", id, feature);
-        ctx.attachFeature(data.ownerId, id);
-        ctx.role(role, id);
-        return feature;
-      },
-
       booleanPart(role, data) {
         const id = ctx.id(role);
         const feature = {
@@ -128,6 +171,9 @@ export function createSemanticBuilders(ctx) {
           cutKind: data.cutKind,
           ownerId: data.ownerId,
           operationEnabled: data.operationEnabled,
+          source: data.source,
+          target: data.target,
+          offsets: data.offsets,
           placementIntent: data.placementIntent,
           fabrication: data.fabrication,
           display: data.display,

@@ -31,6 +31,20 @@ function clearanceIntent(feature) {
   return null;
 }
 
+function profileCutIntent(feature) {
+  const source = feature?.source || feature?.cut?.source;
+  if (source?.kind === "member-profile") return { ...feature, source };
+  return null;
+}
+
+function solidProfileOutlines(profile, featureId) {
+  const outlines = (profile.section?.contours || [])
+    .filter((contour) => contour.role === "solid")
+    .map((contour) => contour.points);
+  if (!outlines.length) fail(`${featureId}: source profile must contain at least one solid contour`);
+  return outlines;
+}
+
 function cutStation(project, profiles, intent, sourceMember, sourceFrame) {
   if (typeof intent.source?.station === "number" && Number.isFinite(intent.source.station)) {
     return Math.max(0, Math.min(memberLength(sourceMember), intent.source.station));
@@ -66,6 +80,33 @@ function regionZRange(intent, sourceBounds, sourceWeb) {
 
 function pointAt(basis, x, y, z) {
   return v.add(basis.origin, v.add(v.mul(basis.x, x), v.add(v.mul(basis.y, y), v.mul(basis.z, z))));
+}
+
+export function memberProfileCutGeometry(project, profiles, feature) {
+  const intent = profileCutIntent(feature);
+  if (!intent) return null;
+  if (!intent.source?.memberId) fail(`${feature.id}: member-profile cut missing source.memberId`);
+  const sourceMember = objectById(project, intent.source.memberId);
+  const sourceProfile = profileForMember(profiles, sourceMember);
+  const length = memberLength(sourceMember);
+  const sourceFrame = memberFrameAt(sourceMember, 0);
+  const offsets = cutOffsets(intent);
+  if ([offsets.yMinus, offsets.yPlus, offsets.zMinus, offsets.zPlus].some((offset) => offset > EPSILON)) {
+    fail(`${feature.id}: member-profile cut supports source-axis extension only; profile offsetting is not implemented`);
+  }
+  const depth = length + offsets.xMinus + offsets.xPlus;
+  if (depth <= EPSILON) fail(`${feature.id}: member-profile cut depth must be positive`);
+  const center = v.add(sourceFrame.origin, v.mul(sourceFrame.x, (length + offsets.xPlus - offsets.xMinus) / 2));
+  const bodies = solidProfileOutlines(sourceProfile, feature.id).map((outline) => ({
+    type: "polygonal-prism",
+    center,
+    axisX: sourceFrame.x,
+    axisY: sourceFrame.y,
+    axisZ: sourceFrame.z,
+    depth,
+    outline
+  }));
+  return { bodies, offsets };
 }
 
 export function clearanceCutGeometry(project, profiles, feature) {
@@ -150,6 +191,13 @@ export function clearanceCutGeometry(project, profiles, feature) {
 }
 
 export function cutBodyForFeature(project, profiles, feature) {
-  if (feature?.body) return feature.body;
-  return clearanceCutGeometry(project, profiles, feature)?.body || null;
+  return cutBodiesForFeature(project, profiles, feature)[0] || null;
+}
+
+export function cutBodiesForFeature(project, profiles, feature) {
+  if (feature?.body) return [feature.body];
+  const memberProfileCut = memberProfileCutGeometry(project, profiles, feature);
+  if (memberProfileCut) return memberProfileCut.bodies;
+  const clearanceCut = clearanceCutGeometry(project, profiles, feature);
+  return clearanceCut ? [clearanceCut.body] : [];
 }

@@ -6,14 +6,26 @@ import {
   setMemberLayoutEndpoint,
   setMemberPhysicalEndpoint
 } from "../../engine/api/project/members.mjs";
-import { snapCandidates } from "../../engine/api/project/snapping.mjs";
+import {
+  affectedObjectIdsForMemberChange
+} from "../../engine/api/project/dependencies.mjs";
+import {
+  axisForRelation,
+  axisRelationForEndpoint,
+  axisRelationFromSnap,
+  axisRelationLabel,
+  memberAlignmentRelation,
+  projectPointToAxis
+} from "../../engine/api/project/axis-relations.mjs?v=relation-types-1";
+import { snapCandidates } from "../../engine/api/project/snap-candidates.mjs?v=trim-create-ui-1";
+import { solveSnap } from "../../engine/api/project/snap-solver.mjs?v=trim-create-ui-1";
 import {
   memberAxesForTarget,
   normalizeCoordinateSpace,
   vectorComponentsInAxes,
   vectorFromAxisComponents
 } from "../scene/authoring/member-axis-space.mjs";
-import { memberAuthoringOverlay } from "../scene/build-authoring-overlays.mjs";
+import { memberAuthoringOverlay } from "../scene/build-authoring-overlays.mjs?v=global-axis-guides-1";
 import {
   axisScreenDistance,
   quantizeDegrees,
@@ -22,7 +34,6 @@ import {
   signedScreenAngleDegrees,
   translationStepForScale
 } from "./manipulator-math.mjs";
-import { nearestScreenSnap } from "./snap-controller.mjs";
 
 function memberById(project, memberId) {
   return project.model?.members?.[memberId] || null;
@@ -59,32 +70,6 @@ function localSnapOptions(project, member) {
     radius: Math.max(20000, memberLength(member) * 2.5),
     maxMemberCandidates: 2000
   };
-}
-
-function isLargeProject(project) {
-  return projectMemberCount(project) > 1500;
-}
-
-function flattenIds(value) {
-  if (!value) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap(flattenIds);
-  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
-  return [];
-}
-
-function connectionPreviewObjectIds(project, memberId) {
-  const previewCollections = new Set(["plates", "features", "fastenerGroups", "welds"]);
-  const ids = [];
-  for (const connection of Object.values(project.model?.connections || {})) {
-    if (connection.mainMemberId !== memberId && connection.secondaryMemberId !== memberId) continue;
-    ids.push(
-      ...flattenIds(connection.generator?.objectRoles),
-      ...(connection.generator?.ownedObjectIds || []),
-      ...flattenIds(connection.manualParts)
-    );
-  }
-  return [...new Set(ids)].filter((id) => previewCollections.has(project.objectIndex?.[id]?.collection));
 }
 
 function perfMark(name, data = {}) {
@@ -198,16 +183,33 @@ function moveDeltaBetweenMembers(fromMember, toMember, operation) {
   return v.sub(operationTargetPoint(toMember, operation), operationTargetPoint(fromMember, operation));
 }
 
-export function createMemberEditController({ viewer, api, selection, settings = {}, onProjectChange, onLocalProjectChange, onMemberSelected, onCleared, onMessage, onTransformChange }) {
+function globalAxisOriginForHandle(member, handle) {
+  const target = handleTarget(handle);
+  if (target === "start") return member.end;
+  if (target === "end") return member.start;
+  return handlePoint(member, handle);
+}
+
+function globalAxisGuideForDrag(dragState) {
+  if (!dragState?.handle || handleTarget(dragState.handle) === "center") return null;
+  if (dragState.handle.kind === "rotate-axis") return null;
+  return globalAxisOriginForHandle(dragState.baseMember, dragState.handle);
+}
+
+export function createMemberEditController({ viewer, api, selection, settings = {}, onLocalProjectChange, onMemberSelected, onCleared, onMessage, onTransformChange, autoRelationsEnabled = () => false }) {
   let activeMemberId = null;
   let drag = null;
   let pendingTransform = null;
   let pendingDrag = null;
   let dragFramePending = false;
-  let connectionRefreshTimer = null;
-  let connectionRefreshIdle = null;
+  let smartRebuildTimer = null;
+  let smartRebuildRevision = 0;
+  let semanticPreview = null;
   const authoringSettings = settings.authoring || {};
   const manipulatorSettings = authoringSettings.manipulator || {};
+  const smartRebuildDelayMs = Number.isFinite(authoringSettings.smartRebuildDelayMs)
+    ? Math.max(0, authoringSettings.smartRebuildDelayMs)
+    : 500;
   let coordinateSpace = normalizeCoordinateSpace(manipulatorSettings.coordinateSpace);
 
   function renderOverlay(member = null, snap = null, dragPoint = null) {
@@ -226,7 +228,9 @@ export function createMemberEditController({ viewer, api, selection, settings = 
           coordinateSpace
         },
         axes: settings.render?.axes || {}
-      }
+      },
+      globalAxesOrigin: globalAxisGuideForDrag(drag),
+      globalAxesSpan: authoringSettings.globalAxisGuideSpan || 12000
     }));
   }
 
@@ -274,6 +278,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
 
   function clearPendingTransform({ restoreOverlay = true, clearPreview = true, message = "" } = {}) {
     if (!pendingTransform) return false;
+    if (!pendingTransform.committed) restoreSemanticPreview();
     pendingTransform = null;
     pendingDrag = null;
     if (clearPreview) viewer.clearObjectPreview?.();
@@ -293,11 +298,13 @@ export function createMemberEditController({ viewer, api, selection, settings = 
       };
     }
     if (operation.kind === "physical-endpoint") {
-      const member = setMemberPhysicalEndpoint(baseMember, operation.endpoint, operation.point);
+      const result = endpointAxisDraft(baseMember, operation.endpoint, operation.point, null, operation.axisRelation || null, null, {
+        detachAutoRelation: Boolean(operation.detachedAxisRelationId)
+      });
       return {
-        member,
+        member: result.member,
         operation,
-        snap: null,
+        snap: result.snap,
         dragPoint: operation.point
       };
     }
@@ -322,6 +329,8 @@ export function createMemberEditController({ viewer, api, selection, settings = 
       kind: operation.kind,
       endpoint: operation.endpoint,
       point: v.add(basePoint, delta),
+      axisRelation: operation.axisRelation || null,
+      detachedAxisRelationId: operation.detachedAxisRelationId || null,
       coordinateSpace: pendingTransform.coordinateSpace || coordinateSpace
     };
   }
@@ -402,50 +411,83 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     return true;
   }
 
-  function clearConnectionRefresh() {
-    clearTimeout(connectionRefreshTimer);
-    connectionRefreshTimer = null;
-    if (connectionRefreshIdle !== null && typeof window !== "undefined" && typeof window.cancelIdleCallback === "function") {
-      window.cancelIdleCallback(connectionRefreshIdle);
+  function applyLocalProjectChange(nextProject, memberId, affectedObjectIds) {
+    if (typeof onLocalProjectChange !== "function") {
+      throw new Error("member edit requires an affected-object project patch handler");
     }
-    connectionRefreshIdle = null;
+    if (onLocalProjectChange(nextProject, memberId, affectedObjectIds) === false) {
+      throw new Error("member edit affected-object patch failed");
+    }
   }
 
-  function queueConnectionRefresh(memberId) {
-    if (typeof api.regenerateMemberConnections !== "function") return;
-    clearConnectionRefresh();
-    const useLocalRefresh = typeof onLocalProjectChange === "function";
-    const run = () => {
-      connectionRefreshIdle = null;
-      if (!memberById(api.project(), memberId)) return;
-      perfMark("member-drag-deferred-refresh-start", { memberId });
-      const nextProject = api.regenerateMemberConnections(memberId);
-      const affectedObjectIds = [memberId, ...connectionPreviewObjectIds(nextProject, memberId)];
-      const localRefresh = typeof onLocalProjectChange === "function"
-        ? onLocalProjectChange(nextProject, memberId, affectedObjectIds) !== false
-        : false;
-      if (!localRefresh) onProjectChange(nextProject);
-      perfMark("member-drag-deferred-refresh-finished", { memberId, localRefresh, affectedObjectCount: affectedObjectIds.length });
-      if (activeMemberId === memberId) {
-        selection.select([memberId]);
-        renderOverlay();
-      }
-    };
-    if (useLocalRefresh) {
-      connectionRefreshTimer = setTimeout(() => {
-        connectionRefreshTimer = null;
-        run();
-      }, 0);
+  function clearSmartRebuild() {
+    smartRebuildRevision += 1;
+    if (smartRebuildTimer !== null) {
+      clearTimeout(smartRebuildTimer);
+      smartRebuildTimer = null;
+    }
+  }
+
+  function clearSemanticPreview() {
+    semanticPreview = null;
+  }
+
+  function semanticPreviewBaseDelta(draft) {
+    if (!semanticPreview || !isMoveOperation(draft.operation) || !isMoveOperation(semanticPreview.draft.operation)) return [0, 0, 0];
+    return v.sub(draft.operation.delta, semanticPreview.draft.operation.delta);
+  }
+
+  function restoreSemanticPreview() {
+    if (!semanticPreview?.project || !activeMemberId) {
+      clearSemanticPreview();
       return;
     }
-    connectionRefreshTimer = setTimeout(() => {
-      connectionRefreshTimer = null;
-      if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
-        connectionRefreshIdle = window.requestIdleCallback(run, { timeout: 2400 });
-      } else {
-        run();
+    const memberId = activeMemberId;
+    const baseProject = api.project();
+    const affectedObjectIds = affectedObjectIdsForMemberChange(semanticPreview.project, baseProject, memberId, { renderableOnly: true });
+    viewer.clearObjectPreview?.();
+    applyLocalProjectChange(baseProject, memberId, affectedObjectIds);
+    clearSemanticPreview();
+  }
+
+  function applySemanticPreview(draft, revision) {
+    if (!drag || !activeMemberId || revision !== smartRebuildRevision) return;
+    if (typeof api.draftMemberProject !== "function") throw new Error("member edit requires draft member project API");
+    const memberId = activeMemberId;
+    const baseProject = api.project();
+    const draftProject = api.draftMemberProject(memberId, draft.member);
+    if (!drag || activeMemberId !== memberId || revision !== smartRebuildRevision) return;
+    const affectedObjectIds = affectedObjectIdsForMemberChange(baseProject, draftProject, memberId, { renderableOnly: true });
+    viewer.clearObjectPreview?.();
+    applyLocalProjectChange(draftProject, memberId, affectedObjectIds);
+    semanticPreview = {
+      revision,
+      project: draftProject,
+      draft,
+      affectedObjectIds
+    };
+    renderOverlay(draft.member, draft.snap, draft.dragPoint);
+    perfMark("member-drag-smart-rebuild-finished", { memberId, affectedObjectCount: affectedObjectIds.length });
+  }
+
+  function queueSmartRebuild(draft) {
+    clearSmartRebuild();
+    if (!drag || !activeMemberId || !draft?.member) return;
+    const revision = smartRebuildRevision;
+    smartRebuildTimer = setTimeout(() => {
+      smartRebuildTimer = null;
+      try {
+        perfMark("member-drag-smart-rebuild-start", { memberId: activeMemberId });
+        applySemanticPreview(draft, revision);
+      } catch (error) {
+        semanticPreview = null;
+        if (pendingTransform) {
+          pendingTransform = { ...pendingTransform, error: error.message };
+          emitTransformChange();
+        }
+        onMessage?.(error.message, "error");
       }
-    }, 1600);
+    }, smartRebuildDelayMs);
   }
 
   function selectMember(memberId, options = {}) {
@@ -477,25 +519,130 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   }
 
   function clear(options = {}) {
+    clearSmartRebuild();
+    restoreSemanticPreview();
     activeMemberId = null;
     drag = null;
     pendingTransform = null;
     pendingDrag = null;
-    clearConnectionRefresh();
     viewer.clearObjectPreview?.();
     viewer.setAuthoringOverlay(null);
     emitTransformChange();
     if (options.notify !== false) onCleared?.();
   }
 
-  function snapPoint(point, candidates) {
-    return nearestScreenSnap({
+  function snapAtCursor(screen, candidates) {
+    if (!screen) return null;
+    return solveSnap({
       candidates,
       viewer,
-      point,
+      screen,
+      rawPoint: null,
       excludeObjectId: activeMemberId,
       screenTolerance: authoringSettings.snapTolerancePx || 14
-    });
+    }).snap;
+  }
+
+  function standardDragPoint(basePoint, input) {
+    return v.add(basePoint, viewer.screenDeltaToWorld(input.totalDx, input.totalDy));
+  }
+
+  function pointOnViewPlaneAtCursor(basePoint, input) {
+    if (!input?.screen) return standardDragPoint(basePoint, input);
+    const ray = viewer.screenRay(input.screen.x, input.screen.y);
+    const denominator = v.dot(ray.direction, ray.direction);
+    if (denominator <= 1e-12) return standardDragPoint(basePoint, input);
+    const distance = v.dot(v.sub(basePoint, ray.origin), ray.direction) / denominator;
+    return v.add(ray.origin, v.mul(ray.direction, distance));
+  }
+
+  function visibleHitPoint(input) {
+    if (!input?.hit?.point) return null;
+    if (input.hit.face?.objectId === activeMemberId) return null;
+    return input.hit.point;
+  }
+
+  function cursorDepthPoint(basePoint, input, candidates) {
+    const snap = snapAtCursor(input.screen, candidates);
+    if (snap?.point) return { point: snap.point, snap, dragPoint: snap.point };
+    const hitPoint = visibleHitPoint(input);
+    if (hitPoint) return { point: hitPoint, snap: null, dragPoint: hitPoint };
+    const point = pointOnViewPlaneAtCursor(basePoint, input);
+    return { point, snap: null, dragPoint: point };
+  }
+
+  function closestAxisPoints(axisA, axisB) {
+    const a0 = axisA.a;
+    const b0 = axisB.a;
+    const ad = v.norm(v.sub(axisA.b, axisA.a));
+    const bd = v.norm(v.sub(axisB.b, axisB.a));
+    const r = v.sub(a0, b0);
+    const dot = v.dot(ad, bd);
+    const c = v.dot(ad, r);
+    const f = v.dot(bd, r);
+    const denominator = 1 - dot * dot;
+    const s = Math.abs(denominator) <= 1e-9 ? 0 : (dot * f - c) / denominator;
+    const t = Math.abs(denominator) <= 1e-9 ? f : (f - dot * c) / denominator;
+    const pointA = v.add(a0, v.mul(ad, s));
+    const pointB = v.add(b0, v.mul(bd, t));
+    return { pointA, pointB, distance: v.len(v.sub(pointA, pointB)) };
+  }
+
+  function pointOnAxisNearestScreen(axis, screen, fallbackPoint) {
+    if (!screen) return fallbackPoint;
+    const a = axis.a;
+    const b = axis.b;
+    const screenA = viewer.projectPoint(a);
+    const screenB = viewer.projectPoint(b);
+    if (!screenA || !screenB) return fallbackPoint;
+    const dx = screenB.x - screenA.x;
+    const dy = screenB.y - screenA.y;
+    const lengthSq = dx * dx + dy * dy;
+    if (lengthSq <= 1e-9) return fallbackPoint;
+    const t = ((screen.x - screenA.x) * dx + (screen.y - screenA.y) * dy) / lengthSq;
+    return v.add(a, v.mul(v.sub(b, a), t));
+  }
+
+  function endpointAxisDraft(baseMember, endpoint, rawPoint, snap = null, forcedRelation = null, screen = null, options = {}) {
+    const project = api.project();
+    const snapRelation = autoRelationsEnabled() ? axisRelationFromSnap(baseMember.id, endpoint, snap) : null;
+    let relation = forcedRelation || snapRelation;
+    let detachedAxisRelationId = null;
+    const alignmentRelation = memberAlignmentRelation(project, baseMember.id);
+    let point = snap?.point || rawPoint;
+    if (!relation) {
+      const storedRelation = axisRelationForEndpoint(project, baseMember.id, endpoint);
+      if (options.detachAutoRelation && storedRelation?.createdBy === "auto-snap") {
+        detachedAxisRelationId = storedRelation.id;
+      } else {
+        relation = storedRelation;
+      }
+    }
+    if (relation && alignmentRelation) {
+      const pointAxis = axisForRelation(project, relation, baseMember, endpoint);
+      const alignmentAxis = axisForRelation(project, alignmentRelation, baseMember, endpoint);
+      const closest = closestAxisPoints(pointAxis, alignmentAxis);
+      point = closest.pointB;
+      const label = closest.distance > (authoringSettings.relationConflictTolerance || 1)
+        ? `Relation conflict: ${axisRelationLabel(relation)} + ${axisRelationLabel(alignmentRelation)}`
+        : `${axisRelationLabel(relation)} + ${axisRelationLabel(alignmentRelation)}`;
+      snap = { ...(snap || { kind: "line", type: "axis-relation" }), point, label };
+    } else if (relation || alignmentRelation) {
+      const activeRelation = relation || alignmentRelation;
+      const activeAxis = axisForRelation(project, activeRelation, baseMember, endpoint);
+      point = projectPointToAxis(activeAxis, pointOnAxisNearestScreen(activeAxis, screen, point));
+      snap = snap
+        ? { ...snap, point, label: snap.label || axisRelationLabel(activeRelation) }
+        : {
+            kind: "line",
+            type: activeRelation.source?.type === "global-axis" ? "global-axis" : "axis-relation",
+            axis: activeRelation.source?.axis,
+            point,
+            label: axisRelationLabel(activeRelation)
+          };
+    }
+    const member = setMemberPhysicalEndpoint(baseMember, endpoint, point);
+    return { member, point, snap, relation, detachedAxisRelationId };
   }
 
   function projectedAxisScale(point, axis) {
@@ -523,8 +670,8 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     return v.dot(viewer.screenDeltaToWorld(input.totalDx, input.totalDy), axis);
   }
 
-  function axisSnap(basePoint, axis, rawPoint, candidates) {
-    const snap = snapPoint(rawPoint, candidates);
+  function axisSnap(basePoint, axis, rawPoint, candidates, screen) {
+    const snap = snapAtCursor(screen, candidates);
     if (!snap?.point) return { snap: null, point: rawPoint };
     const distance = v.dot(v.sub(snap.point, basePoint), axis);
     const lockedPoint = v.add(basePoint, v.mul(axis, distance));
@@ -543,7 +690,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     const step = translationStepForScale(manipulatorSettings.translation || {}, viewer.screenScale());
     const distance = quantizeDistance(axisDistanceFromDrag(input, basePoint, axis), step);
     const rawPoint = v.add(basePoint, v.mul(axis, distance));
-    const snapResult = axisSnap(basePoint, axis, rawPoint, candidates);
+    const snapResult = axisSnap(basePoint, axis, rawPoint, candidates, input.screen);
     const point = snapResult.point;
 
     if (target === "center") {
@@ -557,11 +704,20 @@ export function createMemberEditController({ viewer, api, selection, settings = 
       };
     }
 
-    const member = setMemberPhysicalEndpoint(base, target, point);
+    const result = endpointAxisDraft(base, target, point, snapResult.snap, null, input.screen, {
+      detachAutoRelation: true
+    });
     return {
-      member,
-      operation: { kind: "physical-endpoint", endpoint: target, point, coordinateSpace },
-      snap: snapResult.snap,
+      member: result.member,
+      operation: {
+        kind: "physical-endpoint",
+        endpoint: target,
+        point: result.point,
+        axisRelation: result.relation,
+        detachedAxisRelationId: result.detachedAxisRelationId,
+        coordinateSpace
+      },
+      snap: result.snap,
       dragPoint: rawPoint,
       readout: `${drag.handle.spaceLabel || ""} ${Math.round(distance)} mm`.trim()
     };
@@ -585,7 +741,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
         axisId: drag.handle.axisId,
         coordinateSpace,
         degrees,
-        patch: memberGeometryPatch(member)
+        patch: memberGeometryPatch(member, base)
       },
       snap: null,
       dragPoint: pivot,
@@ -605,7 +761,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
 
     if (kind === "move-member") {
       const rawCenter = v.add(points.center, delta);
-      const snap = snapPoint(rawCenter, candidates);
+      const snap = snapAtCursor(input.screen, candidates);
       const moveDelta = snap ? v.sub(snap.point, points.center) : delta;
       return { member: moveMemberWithLayout(base, moveDelta), operation: { kind, delta: moveDelta, coordinateSpace }, snap, dragPoint: rawCenter };
     }
@@ -613,46 +769,66 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     const endpoint = handleEndpoint(kind);
     if (!endpoint) return null;
     const isLayout = kind.startsWith("layout-");
-    const rawPoint = v.add(isLayout ? points[`layout${endpoint === "start" ? "Start" : "End"}`] : base[endpoint], delta);
-    const snap = snapPoint(rawPoint, candidates);
-    const point = snap?.point || rawPoint;
-    const member = isLayout
-      ? setMemberLayoutEndpoint(base, endpoint, point)
-      : setMemberPhysicalEndpoint(base, endpoint, point);
+    const basePoint = isLayout ? points[`layout${endpoint === "start" ? "Start" : "End"}`] : base[endpoint];
+    const resolved = cursorDepthPoint(basePoint, input, candidates);
+    if (isLayout) {
+      const point = resolved.point;
+      const member = setMemberLayoutEndpoint(base, endpoint, point);
+      return {
+        member,
+        operation: { kind: "layout-endpoint", endpoint, point, coordinateSpace },
+        snap: resolved.snap,
+        dragPoint: resolved.dragPoint
+      };
+    }
+    const result = endpointAxisDraft(base, endpoint, resolved.point, resolved.snap, null, input.screen, {
+      detachAutoRelation: true
+    });
     return {
-      member,
-      operation: { kind: isLayout ? "layout-endpoint" : "physical-endpoint", endpoint, point, coordinateSpace },
-      snap,
-      dragPoint: rawPoint
+      member: result.member,
+      operation: {
+        kind: "physical-endpoint",
+        endpoint,
+        point: result.point,
+        axisRelation: result.relation,
+        detachedAxisRelationId: result.detachedAxisRelationId,
+        coordinateSpace
+      },
+      snap: result.snap,
+      dragPoint: resolved.dragPoint
     };
   }
 
   function beginDrag({ handle, screen }) {
     if (handle?.kind === "coordinate-space-toggle") return false;
     if (pendingTransform) clearPendingTransform({ restoreOverlay: false, clearPreview: !pendingTransform.committed });
+    clearSmartRebuild();
+    restoreSemanticPreview();
     const project = api.project();
     const member = memberById(project, handle?.memberId);
     if (!handle?.memberId || !member) return false;
-    clearConnectionRefresh();
     activeMemberId = handle.memberId;
     selection.select([activeMemberId]);
     perfMark("member-drag-begin", { memberId: activeMemberId, handle: handle.kind });
     const snapStart = performance.now();
-    const candidates = snapCandidates(project, localSnapOptions(project, member));
+    const candidates = snapCandidates(project, {
+      ...localSnapOptions(project, member),
+      includeGlobalAxes: true,
+      globalAxisOrigin: globalAxisOriginForHandle(member, handle),
+      globalAxisSpan: authoringSettings.globalAxisSnapSpan || 100000,
+      globalAxisSnapTolerancePx: authoringSettings.globalAxisSnapTolerancePx || 34
+    });
     perfMark("member-drag-snap-candidates-built", {
       memberId: activeMemberId,
       candidateCount: candidates.length,
       durationMs: performance.now() - snapStart
     });
-    const previewsConnectedObjects = handle.kind === "move-member" || (handle.kind === "translate-axis" && handleTarget(handle) === "center");
     drag = {
       handle,
       startScreen: screen || handle.screen || null,
       baseMember: clone(member),
       candidates,
-      previewObjectIds: previewsConnectedObjects
-        ? [activeMemberId, ...connectionPreviewObjectIds(project, activeMemberId)]
-        : []
+      previewObjectIds: []
     };
     if (drag.previewObjectIds.length) viewer.beginObjectPreview?.(drag.previewObjectIds);
     return true;
@@ -677,8 +853,11 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   function updateLivePreview(draft) {
     const move = isMoveOperation(draft.operation);
     const previewObjectIds = drag?.previewObjectIds || pendingTransform?.previewObjectIds || [];
+    const previewDelta = move && semanticPreview
+      ? semanticPreviewBaseDelta(draft)
+      : move ? draft.operation.delta : [0, 0, 0];
     const livePreview = viewer.updateMemberMovePreview?.(draft.member, {
-      delta: move ? draft.operation.delta : [0, 0, 0],
+      delta: previewDelta,
       objectIds: move ? previewObjectIds : []
     });
     if (!move) {
@@ -698,9 +877,9 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     });
   }
 
-  function updateDrag({ totalDx, totalDy, screen }) {
+  function updateDrag({ totalDx, totalDy, screen, hit }) {
     if (!drag || !activeMemberId) return;
-    pendingDrag = { totalDx, totalDy, screen };
+    pendingDrag = { totalDx, totalDy, screen, hit };
     if (dragFramePending) return;
     dragFramePending = true;
     requestAnimationFrame(() => {
@@ -714,6 +893,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
       renderOverlay(draft.member, draft.snap, draft.dragPoint);
       updateLivePreview(draft);
       showTransformDraft(draft);
+      queueSmartRebuild(draft);
     });
   }
 
@@ -730,43 +910,42 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   }
 
   function commitDraft(memberId, draft, options = {}) {
-    const deferConnections = isLargeProject(api.project());
-    const commitOptions = deferConnections ? { regenerateConnections: false } : {};
+    clearSmartRebuild();
+    const beforeProject = api.project();
+    const commitOptions = { regenerateConnections: false };
     const currentMember = clone(memberById(api.project(), memberId));
     const moveDelta = draft.operation.kind === "move-member"
       ? moveDeltaBetweenMembers(currentMember, draft.member, draft.operation)
       : [0, 0, 0];
     let nextProject;
-    perfMark("member-drag-commit-start", { memberId, operation: draft.operation.kind, deferConnections });
+    perfMark("member-drag-commit-start", { memberId, operation: draft.operation.kind, localPatch: true });
     if (draft.operation.kind === "move-member") {
       nextProject = api.moveMemberWithLayout(memberId, moveDelta, commitOptions);
     } else if (draft.operation.kind === "physical-endpoint") {
-      nextProject = api.setMemberPhysicalEndpoint(memberId, draft.operation.endpoint, draft.operation.point, commitOptions);
+      nextProject = api.updateMember(memberId, memberGeometryPatch(draft.member, currentMember), commitOptions);
+      if (draft.operation.axisRelation?.createdBy === "auto-snap") {
+        nextProject = api.upsertRelation(draft.operation.axisRelation);
+      } else if (draft.operation.detachedAxisRelationId && api.project().model?.relations?.[draft.operation.detachedAxisRelationId]) {
+        nextProject = api.deleteRelation(draft.operation.detachedAxisRelationId);
+      }
     } else if (draft.operation.kind === "member-rotation") {
       nextProject = api.updateMember(memberId, draft.operation.patch, commitOptions);
     } else {
-      nextProject = api.setMemberLayoutEndpoint(memberId, draft.operation.endpoint, draft.operation.point, commitOptions);
+      nextProject = api.updateMember(memberId, memberGeometryPatch(draft.member, currentMember), commitOptions);
     }
     perfMark("member-drag-store-updated", { memberId });
-    if (deferConnections) {
-      const previewObjectIds = draft.operation.kind === "move-member"
-        ? [memberId, ...connectionPreviewObjectIds(nextProject, memberId)]
-        : [];
-      const updatedInstance = viewer.updateMemberInstance?.(nextProject.model.members[memberId], {
-        delta: moveDelta,
-        translateObjectIds: previewObjectIds,
-        project: nextProject
-      });
-      perfMark("member-drag-instance-updated", { memberId, updatedInstance: Boolean(updatedInstance), previewObjectCount: previewObjectIds.length });
+
+    if (typeof api.regenerateMemberConnections !== "function") {
+      throw new Error("member edit requires member connection regeneration API");
     }
-    if (!deferConnections) onProjectChange(nextProject);
+    nextProject = api.regenerateMemberConnections(memberId);
+    const affectedObjectIds = affectedObjectIdsForMemberChange(beforeProject, nextProject, memberId, { renderableOnly: true });
     viewer.clearObjectPreview?.();
+    applyLocalProjectChange(nextProject, memberId, affectedObjectIds);
+    clearSemanticPreview();
     selection.select([memberId]);
     renderOverlay();
-    if (deferConnections) {
-      queueConnectionRefresh(memberId);
-      perfMark("member-drag-deferred-refresh-queued", { memberId });
-    }
+    perfMark("member-drag-local-patch-finished", { memberId, affectedObjectCount: affectedObjectIds.length });
     if (options.message !== false) onMessage?.("Member updated.", "ok");
   }
 
@@ -836,11 +1015,13 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   }
 
   function endDrag() {
+    clearSmartRebuild();
     flushPendingDrag();
     if (!drag?.draft || !activeMemberId) {
       drag = null;
       pendingDrag = null;
       viewer.clearObjectPreview?.();
+      restoreSemanticPreview();
       renderOverlay();
       return;
     }
@@ -848,10 +1029,11 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   }
 
   function cancelDrag() {
+    clearSmartRebuild();
     drag = null;
     pendingDrag = null;
-    clearConnectionRefresh();
     viewer.clearObjectPreview?.();
+    restoreSemanticPreview();
     renderOverlay();
   }
 
@@ -882,15 +1064,17 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     if (activeMemberId && !memberById(api.project(), activeMemberId)) clear();
   });
 
-  viewer.setAuthoringHandler({
+  const authoringHandler = {
     beginDrag,
     click: handleAuthoringClick,
     drag: updateDrag,
     end: endDrag,
     cancel: cancelDrag
-  });
+  };
+  viewer.setAuthoringHandler(authoringHandler);
 
   return {
+    authoringHandler,
     cancelPendingTransform,
     clear,
     confirmPendingTransform,

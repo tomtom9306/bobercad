@@ -121,8 +121,7 @@ bobercad
     |   |   |
     |   |   |-- interaction
     |   |   |   |-- member-edit-controller.mjs
-    |   |   |   |-- selection-controller.mjs
-    |   |   |   `-- snap-controller.mjs
+    |   |   |   `-- selection-controller.mjs
     |   |   |
     |   |   `-- webgl
     |   |       |-- camera.mjs
@@ -217,7 +216,7 @@ bobercad
         |           |       `-- build.mjs
         |           |
         |           |-- features
-        |           |   `-- secondary-member-gap-fitting
+        |           |   `-- secondary-member-gap-trim
         |           |       |-- config.json
         |           |       `-- build.mjs
         |           |

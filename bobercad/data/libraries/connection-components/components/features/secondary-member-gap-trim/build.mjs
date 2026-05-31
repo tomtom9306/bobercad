@@ -12,17 +12,20 @@ export function build(ctx, input = {}) {
     clipBeam
   } = secondaryWebConnectionContext(ctx, input);
 
-  const beamFitting = ctx.feature.fitting("beamFitting", {
-    ownerId: supportedBeam.id,
+  const beamTrimPlane = ctx.reference.plane("beamTrimPlane", {
+    origin: ctx.geometry.v.add(supportInterface.origin, ctx.geometry.v.mul(supportNormal, beamGap)),
+    normal: supportNormal,
+    axisX: plateReference.normal,
+    axisY: plateReference.localAxisZ,
+    fabrication: { operation: "secondary-member-gap-plane" }
+  });
+  const beamTrim = ctx.trim.planeTrim("beamTrim", {
+    memberId: supportedBeam.id,
+    memberEnd: beamInterface.memberEnd,
     operationEnabled: clipBeam,
-    plane: {
-      origin: ctx.geometry.v.add(supportInterface.origin, ctx.geometry.v.mul(supportNormal, beamGap)),
-      normal: supportNormal,
-      axisX: plateReference.normal,
-      axisY: plateReference.localAxisZ
-    },
+    referencePlaneIds: [beamTrimPlane.id],
     display: { visible: false },
-    fabrication: { operation: "fit-secondary-member-to-support-gap" },
+    fabrication: { operation: "trim-secondary-member-to-support-gap" },
     placementIntent: {
       role: "set-secondary-member-gap",
       host: { objectId: supportedBeam.id, end: beamInterface.memberEnd },
@@ -31,5 +34,5 @@ export function build(ctx, input = {}) {
     }
   });
 
-  return { beamFitting };
+  return { beamTrim };
 }

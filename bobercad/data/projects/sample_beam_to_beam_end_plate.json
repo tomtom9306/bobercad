@@ -183,26 +183,6 @@
     }
   },
   "objectIndex": {
-    "wp_main_beam_start": {
-      "collection": "workPoints",
-      "type": "work-point"
-    },
-    "wp_main_beam_end": {
-      "collection": "workPoints",
-      "type": "work-point"
-    },
-    "wp_supported_beam_start": {
-      "collection": "workPoints",
-      "type": "work-point"
-    },
-    "wp_supported_beam_end": {
-      "collection": "workPoints",
-      "type": "work-point"
-    },
-    "wp_connection_center": {
-      "collection": "workPoints",
-      "type": "work-point"
-    },
     "rp_main_web_plane": {
       "collection": "referencePlanes",
       "type": "connection-working-plane"
@@ -211,7 +191,19 @@
       "collection": "referencePlanes",
       "type": "connection-working-plane"
     },
+    "cut_test_plane_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "cut_test_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
     "group_beam_to_beam_connection": {
+      "collection": "groups",
+      "type": "object-group"
+    },
+    "group_cut_type_tests": {
       "collection": "groups",
       "type": "object-group"
     },
@@ -247,6 +239,10 @@
       "collection": "members",
       "type": "supported-beam"
     },
+    "cut_test_beam": {
+      "collection": "members",
+      "type": "cut-test-beam"
+    },
     "end_plate_1": {
       "collection": "plates",
       "type": "beam-end-plate"
@@ -267,14 +263,6 @@
       "collection": "features",
       "type": "boolean-part"
     },
-    "group_cut_type_tests": {
-      "collection": "groups",
-      "type": "object-group"
-    },
-    "cut_test_beam": {
-      "collection": "members",
-      "type": "cut-test-beam"
-    },
     "cut_test_round_part_cut": {
       "collection": "features",
       "type": "boolean-part"
@@ -287,14 +275,6 @@
       "collection": "features",
       "type": "boolean-part"
     },
-    "cut_test_cut_plane": {
-      "collection": "features",
-      "type": "cut-plane"
-    },
-    "cut_test_fitting": {
-      "collection": "features",
-      "type": "fitting"
-    },
     "bolts_end_plate_to_main_web": {
       "collection": "fastenerGroups",
       "type": "fastener-group"
@@ -306,6 +286,14 @@
     "conn_beam_to_beam_end_plate_1": {
       "collection": "connections",
       "type": "manual-beam-to-beam-end-plate"
+    },
+    "cut_test_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "cut_test_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
     }
   },
   "modelDefaults": {
@@ -555,6 +543,68 @@
           "yMin": -140,
           "yMax": 140
         }
+      },
+      "cut_test_plane_trim_plane": {
+        "id": "cut_test_plane_trim_plane",
+        "type": "reference-plane",
+        "name": "cut_test_plane_trim plane",
+        "origin": [
+          650,
+          650,
+          450
+        ],
+        "normal": [
+          -1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -90,
+          "xMax": 90,
+          "yMin": -130,
+          "yMax": 130
+        }
+      },
+      "cut_test_trim_plane": {
+        "id": "cut_test_trim_plane",
+        "type": "reference-plane",
+        "name": "cut_test_trim plane",
+        "origin": [
+          -760,
+          650,
+          450
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -90,
+          "xMax": 90,
+          "yMin": -130,
+          "yMax": 130
+        }
       }
     },
     "groups": {
@@ -582,7 +632,7 @@
         ],
         "authoring": {
           "source": "manual-test-fixture",
-          "notes": "Isolated beam carrying sample BooleanPart, CutPlane, Fitting, and weld prep features."
+          "notes": "Isolated beam carrying sample BooleanPart, PlaneTrim, Trim, and weld prep features."
         }
       }
     },
@@ -807,9 +857,7 @@
         "featureIds": [
           "cut_test_round_part_cut",
           "cut_test_polygon_cut",
-          "cut_test_weld_prep",
-          "cut_test_cut_plane",
-          "cut_test_fitting"
+          "cut_test_weld_prep"
         ],
         "fabrication": {
           "partMark": "CT1",
@@ -1148,90 +1196,6 @@
         "fabrication": {
           "operation": "weld-prep"
         }
-      },
-      "cut_test_cut_plane": {
-        "id": "cut_test_cut_plane",
-        "type": "cut-plane",
-        "teklaClass": "CutPlane",
-        "cutKind": "plane-cut",
-        "ownerId": "cut_test_beam",
-        "plane": {
-          "origin": [
-            650,
-            650,
-            450
-          ],
-          "axisX": [
-            0,
-            1,
-            0
-          ],
-          "axisY": [
-            0,
-            0,
-            1
-          ],
-          "normal": [
-            -1,
-            0,
-            0
-          ],
-          "size": [
-            180,
-            260
-          ]
-        },
-        "display": {
-          "visible": true,
-          "transparent": true,
-          "opacity": 0.18,
-          "color": "#ef4444"
-        },
-        "fabrication": {
-          "operation": "cut-plane"
-        }
-      },
-      "cut_test_fitting": {
-        "id": "cut_test_fitting",
-        "type": "fitting",
-        "teklaClass": "Fitting",
-        "cutKind": "fitting",
-        "ownerId": "cut_test_beam",
-        "plane": {
-          "origin": [
-            -760,
-            650,
-            450
-          ],
-          "axisX": [
-            0,
-            1,
-            0
-          ],
-          "axisY": [
-            0,
-            0,
-            1
-          ],
-          "normal": [
-            1,
-            0,
-            0
-          ],
-          "size": [
-            180,
-            260
-          ]
-        },
-        "display": {
-          "visible": true,
-          "transparent": true,
-          "opacity": 0.18,
-          "color": "#22c55e"
-        },
-        "fabrication": {
-          "operation": "fitting"
-        }
       }
     },
     "fastenerGroups": {
@@ -1314,7 +1278,10 @@
           ]
         },
         "generator": {
-          "status": "not-parametric-yet"
+          "status": "not-parametric-yet",
+          "ownedObjectIds": [],
+          "manualObjectIds": [],
+          "objectRoles": {}
         },
         "referenceParameters": {
           "supportedBeamTopFlushWithMainBeamTop": true,
@@ -1325,6 +1292,78 @@
         "authoring": {
           "source": "manual-from-reference-sketch",
           "notes": "Project stores all parts explicitly. Preset id is provenance only."
+        }
+      }
+    },
+    "trimJoints": {
+      "cut_test_plane_trim": {
+        "id": "cut_test_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "cut_test_beam",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "cut_test_plane_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "cut_test_beam",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "cut_test_plane_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "cut_test_plane_trim_plane:-"
+            ]
+          }
+        ],
+        "fabrication": {
+          "operation": "plane-trim"
+        },
+        "display": {
+          "visible": true,
+          "transparent": true,
+          "opacity": 0.18,
+          "color": "#ef4444"
+        }
+      },
+      "cut_test_trim": {
+        "id": "cut_test_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "cut_test_beam",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "cut_test_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "cut_test_beam",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "cut_test_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "cut_test_trim_plane:-"
+            ]
+          }
+        ],
+        "fabrication": {
+          "operation": "trim"
+        },
+        "display": {
+          "visible": true,
+          "transparent": true,
+          "opacity": 0.18,
+          "color": "#22c55e"
         }
       }
     }

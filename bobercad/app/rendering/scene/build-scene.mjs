@@ -1,8 +1,9 @@
 import { v } from "../../engine/core/math.mjs";
 import { collectionObjects, objectById } from "../../engine/core/model.mjs";
-import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgPolygon, csgSubtract, csgUnion, cutBodyPolygons, geometryError, prismPolygons, projectCoincidentTolerance, requiredArray, requiredNumber, requiredVector, setGeometrySettings, slotOutline2d } from "../../engine/geometry/csg.mjs";
-import { clearanceCutGeometry, cutBodyForFeature } from "../../engine/geometry/cut-features.mjs";
-import { memberFrame, resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
+import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgIntersect, csgPolygon, csgSubtract, csgUnion, cutBodyPolygons, geometryError, prismPolygons, projectCoincidentTolerance, requiredArray, requiredNumber, requiredVector, setGeometrySettings, slotOutline2d } from "../../engine/geometry/csg.mjs?v=trim-region-click-2";
+import { clearanceCutGeometry, cutBodiesForFeature } from "../../engine/geometry/cut-features.mjs";
+import { requiredReferencePlane } from "../../engine/geometry/feature-plane.mjs";
+import { memberFrame, memberFrameAt, memberLength, resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
 import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs";
 import { DEFAULT_GHOST_OPACITY, activeConnectionObjectIds, isActiveConnectionObject, shouldRenderObject } from "./scene-object-visibility.mjs";
 
@@ -39,7 +40,7 @@ function renderCollectionObjects(project, collection, renderObjectIds = null) {
   if (!renderObjectIds) return collectionObjects(project, collection);
   return [...renderObjectIds]
     .filter((objectId) => project.objectIndex?.[objectId]?.collection === collection)
-    .map((objectId) => project.model?.[collection]?.[objectId])
+    .map((objectId) => objectById(project, objectId))
     .filter(Boolean);
 }
 
@@ -195,31 +196,132 @@ function addLoopLines(scene, points, color, meta = {}) {
   for (let i = 0; i < points.length; i += 1) addLine(scene, points[i], points[(i + 1) % points.length], color, meta);
 }
 
-function addPlaneMarker(scene, plane, display = {}, meta = {}) {
-  const x = v.norm(requiredVector(plane, "axisX", "plane marker"));
-  const y = v.norm(requiredVector(plane, "axisY", "plane marker"));
-  const origin = requiredVector(plane, "origin", "plane marker");
-  const size = requiredArray(plane, "size", "plane marker");
+function planeMarkerGeometry(plane, label = "plane marker") {
+  const x = v.norm(requiredVector(plane, "axisX", label));
+  const y = v.norm(requiredVector(plane, "axisY", label));
+  const origin = requiredVector(plane, "origin", label);
+  const size = requiredArray(plane, "size", label);
   if (size.length !== 2 || size.some((value) => typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
-    geometryError("plane marker size must contain two positive numbers");
+    geometryError(`${label} size must contain two positive numbers`);
   }
+  const extents = plane.extents && Number.isFinite(plane.extents.xMin) && Number.isFinite(plane.extents.xMax)
+    && Number.isFinite(plane.extents.yMin) && Number.isFinite(plane.extents.yMax)
+    && plane.extents.xMax > plane.extents.xMin && plane.extents.yMax > plane.extents.yMin
+    ? plane.extents
+    : { xMin: -size[0] / 2, xMax: size[0] / 2, yMin: -size[1] / 2, yMax: size[1] / 2 };
+  const points = [
+    v.add(origin, v.add(v.mul(x, extents.xMin), v.mul(y, extents.yMin))),
+    v.add(origin, v.add(v.mul(x, extents.xMax), v.mul(y, extents.yMin))),
+    v.add(origin, v.add(v.mul(x, extents.xMax), v.mul(y, extents.yMax))),
+    v.add(origin, v.add(v.mul(x, extents.xMin), v.mul(y, extents.yMax)))
+  ];
+  return { x, y, origin, size: [extents.xMax - extents.xMin, extents.yMax - extents.yMin], points };
+}
+
+function addPlaneMarker(scene, plane, display = {}, meta = {}) {
+  const { points } = planeMarkerGeometry(plane);
   const color = display.color || "#ef4444";
   const opacity = display.transparent ? display.opacity ?? 0.18 : 0.18;
-  const points = [
-    v.add(origin, v.add(v.mul(x, -size[0] / 2), v.mul(y, -size[1] / 2))),
-    v.add(origin, v.add(v.mul(x, size[0] / 2), v.mul(y, -size[1] / 2))),
-    v.add(origin, v.add(v.mul(x, size[0] / 2), v.mul(y, size[1] / 2))),
-    v.add(origin, v.add(v.mul(x, -size[0] / 2), v.mul(y, size[1] / 2)))
-  ];
 
   scene.faces.push({ points, color, opacity, ...meta });
   addLoopLines(scene, points, color, meta);
 }
 
+function planeDisplay(display = {}, fallbackColor = "#d97706") {
+  return {
+    color: display.planeColor || display.edgeColor || display.color || fallbackColor,
+    transparent: true,
+    opacity: display.planeOpacity ?? 0.1
+  };
+}
+
+function addCutCallout(scene, plane, display = {}, meta = {}, callout = {}) {
+  const { x, y, origin, size } = planeMarkerGeometry(plane, "cut marker");
+  const normal = v.norm(requiredVector(plane, "normal", "cut marker"));
+  const edgeColor = display.edgeColor || display.color || "#be123c";
+  const arrow = Math.max(8, Math.min(size[0], size[1]) * 0.06);
+  const normalLength = Math.max(28, Math.min(size[0], size[1]) * 0.24);
+  const lateral = Math.max(18, Math.min(size[0], size[1]) * 0.14);
+  const hitHalf = Math.max(Math.min(size[0], size[1]) * 0.12, 10);
+  const point = (px, py) => v.add(origin, v.add(v.mul(x, px), v.mul(y, py)));
+  const labelPoint = v.add(v.add(origin, v.mul(normal, normalLength)), v.mul(y, lateral));
+  const hit = [point(-hitHalf, -hitHalf), point(hitHalf, -hitHalf), point(hitHalf, hitHalf), point(-hitHalf, hitHalf)];
+
+  scene.faces.push({ points: hit, color: edgeColor, opacity: 0.025, hideEdges: true, ...meta });
+  addLine(scene, origin, labelPoint, edgeColor, { ...meta, opacity: 0.82 });
+  const normalEnd = v.add(origin, v.mul(normal, arrow));
+  addLine(scene, origin, normalEnd, edgeColor, { ...meta, opacity: 0.82 });
+  scene.callouts.push({
+    point: labelPoint,
+    anchor: origin,
+    color: edgeColor,
+    collection: meta.collection,
+    objectId: meta.objectId,
+    operationId: callout.operationId || meta.operationId || null,
+    iconType: callout.iconType || "plane-trim",
+    label: callout.label || "",
+    colors: callout.colors || {}
+  });
+}
+
+function canonicalPlaneNormal(normal) {
+  let n = v.norm(normal);
+  const abs = n.map(Math.abs);
+  const dominantAxis = abs[0] >= abs[1] && abs[0] >= abs[2] ? 0 : abs[1] >= abs[2] ? 1 : 2;
+  if (n[dominantAxis] < 0) n = v.mul(n, -1);
+  return n;
+}
+
+function planeMarkerKey(project, plane) {
+  const tolerance = Math.max(projectCoincidentTolerance(project), CSG_EPSILON, 0.001);
+  const normal = canonicalPlaneNormal(requiredVector(plane, "normal", "plane marker key"));
+  const origin = requiredVector(plane, "origin", "plane marker key");
+  const quantize = (value) => Math.round(value / tolerance);
+  return [
+    quantize(normal[0]),
+    quantize(normal[1]),
+    quantize(normal[2]),
+    quantize(v.dot(origin, normal))
+  ].join(":");
+}
+
+function addPlaneMarkerOnce(scene, project, plane, display = {}, meta = {}) {
+  const key = planeMarkerKey(project, plane);
+  if (scene.planeMarkerKeys.has(key)) return false;
+  scene.planeMarkerKeys.add(key);
+  addPlaneMarker(scene, plane, display, meta);
+  return true;
+}
+
+function cutCalloutKeys(project, plane, callout = {}) {
+  const keys = [];
+  if (callout.key) keys.push(callout.key);
+  if (Array.isArray(callout.dedupeKeys)) keys.push(...callout.dedupeKeys);
+  keys.push(planeMarkerKey(project, plane));
+  return [...new Set(keys.filter(Boolean))];
+}
+
+function addCutCalloutOnce(scene, project, plane, display = {}, meta = {}, callout = {}) {
+  const keys = cutCalloutKeys(project, plane, callout);
+  if (keys.some((key) => scene.cutCalloutKeys.has(key))) return false;
+  for (const key of keys) scene.cutCalloutKeys.add(key);
+  addCutCallout(scene, plane, display, meta, callout);
+  return true;
+}
+
+function operationCalloutPlane(planes) {
+  if (!planes.length) return null;
+  if (planes.length === 1) return planes[0];
+  const origin = v.mul(planes.reduce((sum, plane) => v.add(sum, requiredVector(plane, "origin", "trim operation marker")), [0, 0, 0]), 1 / planes.length);
+  return { ...planes[0], origin };
+}
+
 function memberFeatures(project, member, scene = null) {
-  return (member.featureIds || [])
+  const storedFeatures = (member.featureIds || [])
     .map((id) => objectById(project, id))
     .filter((feature) => feature.ownerId === member.id && feature.operationEnabled !== false && shouldApplyMemberFeature(scene, feature));
+  const trimJointFeatures = scene?.profiles ? trimJointMemberFeatures(project, scene.profiles, member) : [];
+  return [...storedFeatures, ...trimJointFeatures];
 }
 
 function objectFeatures(project, object) {
@@ -327,7 +429,7 @@ function memberEndPoint(member, memberEnd) {
 function memberEndKeepDirection(member, frame, memberEnd) {
   if (memberEnd === "start") return frame.x;
   if (memberEnd === "end") return v.mul(frame.x, -1);
-  geometryError(`${member.id}: member-trim must set memberEnd to start or end`);
+  geometryError(`${member.id}: trim operation must set memberEnd to start or end`);
 }
 
 function sectionMaxSpan(profile) {
@@ -336,19 +438,22 @@ function sectionMaxSpan(profile) {
   return Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
 }
 
-function mateTrimDirection(project, trim) {
-  const mateId = trim?.mateMemberId;
-  const mate = mateId ? project.model?.members?.[mateId] : null;
-  if (!mate) return null;
-  const frame = memberFrame(mate);
-  let memberEnd = trim.mateMemberEnd;
-  if (memberEnd !== "start" && memberEnd !== "end" && Array.isArray(trim.jointPoint)) {
-    const toStart = v.len(v.sub(trim.jointPoint, mate.start));
-    const toEnd = v.len(v.sub(trim.jointPoint, mate.end));
-    memberEnd = toStart <= toEnd ? "start" : "end";
-  }
-  if (memberEnd !== "start" && memberEnd !== "end") return null;
-  return memberEndKeepDirection(mate, frame, memberEnd);
+function trimPlaneWithAxes(profiles, member, frame, normal, origin, axisHint, sizeHint, featureId) {
+  const axisX = projectedAxis(axisHint, normal)
+    || projectedAxis(frame.y, normal)
+    || projectedAxis(frame.z, normal)
+    || projectedAxis([0, 0, 1], normal)
+    || projectedAxis([0, 1, 0], normal);
+  if (!axisX) geometryError(`${featureId}: trim plane cannot resolve plane axis`);
+  const axisY = v.norm(v.cross(normal, axisX));
+  const markerSpan = sectionMaxSpan(profiles?.[member.profile]) * 1.35;
+  return {
+    origin,
+    normal,
+    axisX,
+    axisY,
+    size: sizeHint || [markerSpan, markerSpan]
+  };
 }
 
 function equalAngleMiterNormal(ownDirection, mateDirection) {
@@ -359,98 +464,287 @@ function equalAngleMiterNormal(ownDirection, mateDirection) {
   return Math.abs(v.dot(normal, ownDirection)) <= CSG_EPSILON ? ownDirection : normal;
 }
 
-function matchedEdgeLengthNormal(project, profiles, member, ownDirection, miterNormal, trim) {
-  const profile = profiles?.[member.profile];
-  const ownSpan = sectionMaxSpan(profile);
-  const mate = trim?.mateMemberId ? project.model?.members?.[trim.mateMemberId] : null;
-  const mateSpan = mate ? sectionMaxSpan(profiles?.[mate.profile]) : ownSpan;
-  const targetCutLength = typeof trim?.targetCutLength === "number" && Number.isFinite(trim.targetCutLength)
-    ? Math.max(trim.targetCutLength, ownSpan)
-    : Math.max(ownSpan, mateSpan);
-  if (targetCutLength <= ownSpan + CSG_EPSILON) return ownDirection;
-
-  const towardMiter = projectedAxis(miterNormal, ownDirection);
-  if (!towardMiter) return ownDirection;
-  const miterDot = Math.max(Math.abs(v.dot(miterNormal, ownDirection)), 0.05);
-  const targetDot = Math.max(Math.min(ownSpan / targetCutLength, 1), miterDot);
-  const side = Math.sqrt(Math.max(0, 1 - targetDot * targetDot));
-  const normal = v.norm(v.add(v.mul(ownDirection, targetDot), v.mul(towardMiter, side)));
-  return v.dot(normal, ownDirection) < 0 ? v.mul(normal, -1) : normal;
+function solidSectionPoints(profile, featureId) {
+  const points = (profile?.section?.contours || [])
+    .filter((contour) => contour.role === "solid")
+    .flatMap((contour) => contour.points || []);
+  if (!points.length) geometryError(`${featureId}: butt trim mate profile has no solid contour points`);
+  return points;
 }
 
-function memberTrimPlane(project, profiles, member, frame, feature) {
-  const trim = feature.trim || {};
-  if (trim.mode === "cut-to-reference-plane" && feature.plane) return feature.plane;
+function sectionWorldPoints(member, profile, station, featureId) {
+  const at = memberFrameAt(member, station);
+  return solidSectionPoints(profile, featureId).map((point) => sectionPoint(at.origin, at, point));
+}
 
-  const memberEnd = feature.memberEnd || trim.memberEnd;
-  const ownDirection = memberEndKeepDirection(member, frame, memberEnd);
-  const mateDirection = mateTrimDirection(project, trim);
-  const miterNormal = equalAngleMiterNormal(ownDirection, mateDirection);
-  const mode = trim.mode || "matched-edge-length";
-  let normal = ownDirection;
-  if (mode === "equal-angle-miter") normal = miterNormal;
-  else if (mode === "matched-edge-length") normal = matchedEdgeLengthNormal(project, profiles, member, ownDirection, miterNormal, trim);
-  else if (mode === "square-to-own-axis") normal = ownDirection;
-  else if (mode !== "cut-to-reference-plane") geometryError(`${feature.id}: unsupported member-trim mode ${mode}`);
+function participantMember(project, participant, trimJointId) {
+  if (!participant?.memberId) geometryError(`${trimJointId}: trim participant missing memberId`);
+  return objectById(project, participant.memberId);
+}
 
-  const jointPoint = Array.isArray(trim.jointPoint) ? requiredVector(trim, "jointPoint", feature.id) : memberEndPoint(member, memberEnd);
-  if (!jointPoint) geometryError(`${feature.id}: member-trim missing jointPoint/memberEnd`);
-  const gap = typeof trim.gap === "number" && Number.isFinite(trim.gap) ? trim.gap : 0;
-  const origin = v.add(jointPoint, v.mul(normal, Math.max(0, gap)));
-  const axisX = projectedAxis(feature.plane?.axisX || trim.axisX, normal)
-    || projectedAxis(frame.y, normal)
-    || projectedAxis(frame.z, normal)
-    || projectedAxis([0, 0, 1], normal)
-    || projectedAxis([0, 1, 0], normal);
-  if (!axisX) geometryError(`${feature.id}: member-trim cannot resolve plane axis`);
-  const axisY = v.norm(v.cross(normal, axisX));
-  const markerSpan = sectionMaxSpan(profiles?.[member.profile]) * 1.35;
+function trimJointParticipants(trimJoint) {
+  return (trimJoint.participants || []).filter((participant) => participant.enabled !== false);
+}
+
+function trimJointOperations(trimJoint) {
+  return (trimJoint.operations || []).filter((operation) => operation.enabled !== false);
+}
+
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function memberAxis(member, trimJointId) {
+  const axis = v.sub(member.end, member.start);
+  const length = v.len(axis);
+  if (length <= CSG_EPSILON) geometryError(`${trimJointId}: trim participant member has zero length: ${member.id}`);
+  return { start: member.start, x: v.mul(axis, 1 / length), length };
+}
+
+function axisPoint(axis, station) {
+  return v.add(axis.start, v.mul(axis.x, station));
+}
+
+function projectAxisStation(axis, point) {
+  return v.dot(v.sub(point, axis.start), axis.x);
+}
+
+function closestSegmentPoints(axisA, axisB) {
+  const candidates = [];
+  const addCandidate = (stationA, stationB) => {
+    const a = axisPoint(axisA, clampNumber(stationA, 0, axisA.length));
+    const b = axisPoint(axisB, clampNumber(stationB, 0, axisB.length));
+    candidates.push({ a, b, distance: v.len(v.sub(a, b)) });
+  };
+
+  const delta = v.sub(axisA.start, axisB.start);
+  const axisDot = v.dot(axisA.x, axisB.x);
+  const aDelta = v.dot(axisA.x, delta);
+  const bDelta = v.dot(axisB.x, delta);
+  const denominator = 1 - axisDot * axisDot;
+  if (Math.abs(denominator) > CSG_EPSILON) {
+    const stationA = (axisDot * bDelta - aDelta) / denominator;
+    addCandidate(stationA, bDelta + axisDot * stationA);
+  }
+
+  addCandidate(0, projectAxisStation(axisB, axisA.start));
+  addCandidate(axisA.length, projectAxisStation(axisB, axisPoint(axisA, axisA.length)));
+  addCandidate(projectAxisStation(axisA, axisB.start), 0);
+  addCandidate(projectAxisStation(axisA, axisPoint(axisB, axisB.length)), axisB.length);
+  return candidates.sort((a, b) => a.distance - b.distance)[0] || null;
+}
+
+function averagePoints(points) {
+  if (!points.length) geometryError("cannot average empty point set");
+  return v.mul(points.reduce((sum, point) => v.add(sum, point), [0, 0, 0]), 1 / points.length);
+}
+
+function trimJointPoint(project, trimJoint) {
+  const axes = trimJointParticipants(trimJoint).map((participant) => (
+    memberAxis(participantMember(project, participant, trimJoint.id), trimJoint.id)
+  ));
+  if (axes.length < 2) geometryError(`${trimJoint.id}: corner trim requires at least two enabled participants`);
+
+  const pairs = [];
+  for (let i = 0; i < axes.length; i += 1) {
+    for (let j = i + 1; j < axes.length; j += 1) {
+      const closest = closestSegmentPoints(axes[i], axes[j]);
+      if (closest) pairs.push(closest);
+    }
+  }
+  if (!pairs.length) geometryError(`${trimJoint.id}: corner trim cannot resolve participant intersection`);
+
+  const bestDistance = Math.min(...pairs.map((pair) => pair.distance));
+  const tolerance = Math.max(projectCoincidentTolerance(project), CSG_EPSILON, 0.001);
+  const usableDistance = Math.max(bestDistance + tolerance, tolerance * 20);
+  const points = pairs
+    .filter((pair) => pair.distance <= usableDistance)
+    .flatMap((pair) => [pair.a, pair.b]);
+  return averagePoints(points);
+}
+
+function trimJointMemberContactOrigin(project, profiles, trimJointId, memberId, normal, jointPoint, side = "far") {
+  if (!memberId) geometryError(`${trimJointId}: trim operation missing cutter member`);
+  const cutter = objectById(project, memberId);
+  const profile = profiles?.[cutter.profile];
+  if (!profile) geometryError(`${trimJointId}: trim operation cutter profile not found: ${cutter.profile}`);
+  const frame = memberFrame(cutter);
+  const station = Math.max(0, Math.min(memberLength(cutter), v.dot(v.sub(jointPoint, cutter.start), frame.x)));
+  const contacts = sectionWorldPoints(cutter, profile, station, trimJointId).map((point) => v.dot(point, normal));
+  if (!contacts.length) return null;
+  const contact = side === "near" ? Math.min(...contacts) : Math.max(...contacts);
+  return v.add(jointPoint, v.mul(normal, contact - v.dot(jointPoint, normal)));
+}
+
+function trimJointOperationEnd(project, trimJoint, member, explicitEnd) {
+  if (explicitEnd === "start" || explicitEnd === "end") return explicitEnd;
+  const frame = memberFrame(member);
+  const station = memberStation(member, frame, trimJointPoint(project, trimJoint));
+  return station <= memberLength(member) / 2 ? "start" : "end";
+}
+
+function trimJointButtFeature(project, profiles, trimJoint, id, owner, ownerEnd, mateId, gap, operation, contactSide = "far") {
+  const frame = memberFrame(owner);
+  const normal = memberEndKeepDirection(owner, frame, ownerEnd);
+  const jointPoint = trimJointPoint(project, trimJoint);
+  const origin = trimJointMemberContactOrigin(project, profiles, trimJoint.id, mateId, normal, jointPoint, contactSide);
+  if (!origin) return null;
   return {
-    ...(feature.plane || {}),
-    origin,
-    normal,
-    axisX,
-    axisY,
-    size: feature.plane?.size || trim.size || [markerSpan, markerSpan]
+    id,
+    type: "member-trim-plane",
+    ownerId: owner.id,
+    trimJointId: trimJoint.id,
+    runtimePlane: trimPlaneWithAxes(profiles, owner, frame, normal, v.add(origin, v.mul(normal, Math.max(0, gap))), operation.axisX, operation.size, trimJoint.id),
+    display: trimJoint.display || {},
+    fabrication: trimJoint.fabrication
   };
 }
 
-function cuttingPlaneForFeature(project, profiles, member, frame, feature) {
-  if (feature.type === "member-trim") return memberTrimPlane(project, profiles, member, frame, feature);
-  return feature.plane;
+function trimJointMiterFeature(project, profiles, trimJoint, id, owner, ownerEnd, mate, mateEnd, gap, operation) {
+  const frame = memberFrame(owner);
+  const mateFrame = memberFrame(mate);
+  const jointPoint = trimJointPoint(project, trimJoint);
+  const normal = equalAngleMiterNormal(
+    memberEndKeepDirection(owner, frame, ownerEnd),
+    memberEndKeepDirection(mate, mateFrame, mateEnd)
+  );
+  return {
+    id,
+    type: "member-trim-plane",
+    ownerId: owner.id,
+    trimJointId: trimJoint.id,
+    runtimePlane: trimPlaneWithAxes(profiles, owner, frame, normal, v.add(jointPoint, v.mul(normal, Math.max(0, gap))), operation.axisX, operation.size, trimJoint.id),
+    display: trimJoint.display || {},
+    fabrication: trimJoint.fabrication
+  };
 }
 
-function memberTrimRange(project, member, frame, length, scene = null) {
-  const range = { start: 0, end: length };
+function trimJointOperationPlaneIds(trimJoint, operation) {
+  const ids = operation.referencePlaneIds;
+  if (!Array.isArray(ids) || !ids.length) geometryError(`${trimJoint.id}: plane trim operation requires referencePlaneIds`);
+  const uniqueIds = [...new Set(ids)];
+  if (uniqueIds.length !== ids.length) geometryError(`${trimJoint.id}: plane trim operation has duplicate referencePlaneIds`);
+  return uniqueIds;
+}
 
-  for (const feature of memberFeatures(project, member, scene)) {
-    if (feature.type !== "cut-plane") continue;
-    if (!feature.plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
-    const normal = v.norm(requiredVector(feature.plane, "normal", feature.id));
-    const station = memberStation(member, frame, requiredVector(feature.plane, "origin", feature.id));
-    const along = v.dot(normal, frame.x);
-    if (along > 0.5) range.start = Math.max(range.start, Math.min(length, station));
-    if (along < -0.5) range.end = Math.min(range.end, Math.max(0, station));
+function trimJointReferencePlane(project, trimJoint, operation, referencePlaneId, gap = 0) {
+  const plane = requiredReferencePlane(project, referencePlaneId, `${trimJoint.id}:${operation.id || "plane_trim"}`, geometryError);
+  const normal = v.norm(requiredVector(plane, "normal", `${trimJoint.id} reference plane`));
+  return {
+    ...plane,
+    id: referencePlaneId,
+    origin: v.add(requiredVector(plane, "origin", `${trimJoint.id} reference plane`), v.mul(normal, Math.max(0, gap)))
+  };
+}
+
+function trimJointReferencePlanes(project, trimJoint, operation, gap = 0) {
+  return trimJointOperationPlaneIds(trimJoint, operation)
+    .map((referencePlaneId) => trimJointReferencePlane(project, trimJoint, operation, referencePlaneId, gap));
+}
+
+function trimJointPlaneTrimFeature(project, trimJoint, id, owner, gap, operation) {
+  return {
+    id,
+    type: "member-trim-region",
+    ownerId: owner.id,
+    trimJointId: trimJoint.id,
+    runtimePlanes: trimJointReferencePlanes(project, trimJoint, operation, gap),
+    removedRegionKeys: Array.isArray(operation.removedRegionKeys) ? [...operation.removedRegionKeys] : [],
+    display: trimJoint.display || {},
+    fabrication: trimJoint.fabrication
+  };
+}
+
+function trimJointOperationFeatures(project, profiles, trimJoint, operation, index) {
+  if (!operation.memberAId) geometryError(`${trimJoint.id}: trim operation missing memberAId`);
+  const memberA = objectById(project, operation.memberAId);
+  const id = `${trimJoint.id}:${operation.id || `operation_${index + 1}`}`;
+  const gap = typeof operation.gap === "number" && Number.isFinite(operation.gap) ? operation.gap : 0;
+  const type = operation.type || "end-butt-1";
+
+  if (type === "plane-trim") {
+    return [trimJointPlaneTrimFeature(project, trimJoint, id, memberA, gap, operation)];
   }
 
-  return range;
+  if (!operation.memberBId) geometryError(`${trimJoint.id}: trim operation missing memberBId`);
+  const memberAEnd = trimJointOperationEnd(project, trimJoint, memberA, operation.memberAEnd);
+  const memberB = objectById(project, operation.memberBId);
+  const memberBEnd = trimJointOperationEnd(project, trimJoint, memberB, operation.memberBEnd);
+
+  if (type === "profile-cope") {
+    if (gap > CSG_EPSILON) geometryError(`${trimJoint.id}: profile cope clearance offsets are not implemented`);
+    return [{
+      id,
+      type: "boolean-part",
+      booleanType: "BOOLEAN_CUT",
+      cutKind: "part-cut",
+      ownerId: memberA.id,
+      trimJointId: trimJoint.id,
+      source: {
+        kind: "member-profile",
+        memberId: memberB.id
+      },
+      display: trimJoint.display || {},
+      fabrication: trimJoint.fabrication
+    }];
+  }
+
+  if (type === "end-butt-1") {
+    return [
+      trimJointButtFeature(project, profiles, trimJoint, id, memberA, memberAEnd, memberB.id, gap, operation)
+    ].filter(Boolean);
+  }
+
+  if (type === "end-butt-2") {
+    return [
+      trimJointButtFeature(project, profiles, trimJoint, id, memberB, memberBEnd, memberA.id, gap, operation)
+    ].filter(Boolean);
+  }
+
+  if (type === "end-butt-both") {
+    return [
+      trimJointButtFeature(project, profiles, trimJoint, `${id}:a`, memberA, memberAEnd, memberB.id, gap, operation),
+      trimJointButtFeature(project, profiles, trimJoint, `${id}:b`, memberB, memberBEnd, memberA.id, gap, operation, "near")
+    ].filter(Boolean);
+  }
+
+  if (type === "end-miter") {
+    return [
+      trimJointMiterFeature(project, profiles, trimJoint, `${id}:a`, memberA, memberAEnd, memberB, memberBEnd, gap, operation),
+      trimJointMiterFeature(project, profiles, trimJoint, `${id}:b`, memberB, memberBEnd, memberA, memberAEnd, gap, operation)
+    ].filter(Boolean);
+  }
+
+  geometryError(`${trimJoint.id}: unsupported trim operation type ${type}`);
 }
 
-function memberFittingExtension(project, member, frame, profile, length, scene = null) {
+function trimJointMemberFeatures(project, profiles, member) {
+  return Object.values(project.model?.trimJoints || {})
+    .flatMap((trimJoint) => trimJointOperations(trimJoint)
+      .flatMap((operation, index) => trimJointOperationFeatures(project, profiles, trimJoint, operation, index))
+      .filter((feature) => feature.ownerId === member.id)
+      .filter(Boolean));
+}
+
+function memberTrimPlaneExtension(project, member, frame, profile, length, scene = null) {
   const bounds = sectionBounds(profile);
   const sectionSpan = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
   const extension = sectionSpan * 2 + projectCoincidentTolerance(project) * 10;
   const range = { start: 0, end: length };
 
   for (const feature of memberFeatures(project, member, scene)) {
-    if (feature.type !== "fitting" && feature.type !== "member-trim") continue;
-    const plane = cuttingPlaneForFeature(project, scene?.profiles || {}, member, frame, feature);
-    if (!plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
-    const normal = v.norm(requiredVector(plane, "normal", feature.id));
-    const station = memberStation(member, frame, requiredVector(plane, "origin", feature.id));
-    const along = v.dot(normal, frame.x);
-    if (along > 0.5) range.start = Math.min(range.start, station - extension);
-    if (along < -0.5) range.end = Math.max(range.end, station + extension);
+    const planes = feature.type === "member-trim-plane"
+      ? [feature.runtimePlane]
+      : feature.type === "member-trim-region"
+        ? feature.runtimePlanes || []
+        : [];
+    for (const plane of planes) {
+      const normal = v.norm(requiredVector(plane, "normal", feature.id));
+      const station = memberStation(member, frame, requiredVector(plane, "origin", feature.id));
+      const along = v.dot(normal, frame.x);
+      if (along > 0.5) range.start = Math.min(range.start, station - extension);
+      if (along < -0.5) range.end = Math.max(range.end, station + extension);
+    }
   }
 
   return range;
@@ -505,20 +799,20 @@ function memberBasePolygons(project, member, frame, profile, color, startStation
   return polygons;
 }
 
-function planeCutPolygons(member, frame, profile, plane, shared = {}) {
-  if (!plane) geometryError("plane cut missing plane");
+function planeTrimDiscardPolygons(member, frame, profile, plane, shared = {}) {
+  if (!plane) geometryError("plane trim missing plane");
   const length = v.len(v.sub(member.end, member.start));
   const bounds = sectionBounds(profile);
   const sectionSpan = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
   const span = Math.max(length, sectionSpan) * 4 + 1000;
   const depth = span * 2;
-  const keepNormal = v.norm(requiredVector(plane, "normal", "plane cut"));
+  const keepNormal = v.norm(requiredVector(plane, "normal", "plane trim"));
   const discardAxis = v.mul(keepNormal, -1);
-  let axisY = v.norm(requiredVector(plane, "axisX", "plane cut"));
+  let axisY = v.norm(requiredVector(plane, "axisX", "plane trim"));
   axisY = v.norm(v.sub(axisY, v.mul(discardAxis, v.dot(axisY, discardAxis))));
-  if (v.len(axisY) <= CSG_EPSILON) geometryError("plane cut axisX cannot be parallel to normal");
+  if (v.len(axisY) <= CSG_EPSILON) geometryError("plane trim axisX cannot be parallel to normal");
   const axisZ = v.norm(v.cross(discardAxis, axisY));
-  const center = v.add(requiredVector(plane, "origin", "plane cut"), v.mul(discardAxis, depth / 2));
+  const center = v.add(requiredVector(plane, "origin", "plane trim"), v.mul(discardAxis, depth / 2));
 
   return prismPolygons(center, discardAxis, axisY, axisZ, depth, [
     [-span, -span],
@@ -528,13 +822,143 @@ function planeCutPolygons(member, frame, profile, plane, shared = {}) {
   ], shared);
 }
 
+function trimRegionSignMap(regionKey) {
+  const map = new Map();
+  if (typeof regionKey !== "string" || !regionKey) geometryError("plane trim region key must be a non-empty string");
+  for (const part of regionKey.split("|")) {
+    const index = part.lastIndexOf(":");
+    if (index <= 0) geometryError(`invalid plane trim region key: ${regionKey}`);
+    const planeId = part.slice(0, index);
+    const side = part.slice(index + 1);
+    if (side !== "+" && side !== "-") geometryError(`invalid plane trim region side in key: ${regionKey}`);
+    if (map.has(planeId)) geometryError(`duplicate plane in trim region key: ${regionKey}`);
+    map.set(planeId, side);
+  }
+  return map;
+}
+
+function trimRegionKey(items) {
+  return items.map((item) => `${item.planeId}:${item.side}`).join("|");
+}
+
+function trimRegionKeysForPlanes(planes) {
+  const keys = [];
+  const walk = (index, items) => {
+    if (index >= planes.length) {
+      keys.push(trimRegionKey(items));
+      return;
+    }
+    const planeId = planes[index].id;
+    walk(index + 1, [...items, { planeId, side: "-" }]);
+    walk(index + 1, [...items, { planeId, side: "+" }]);
+  };
+  walk(0, []);
+  return keys;
+}
+
+function flippedPlane(plane) {
+  return {
+    ...plane,
+    normal: v.mul(v.norm(requiredVector(plane, "normal", "plane trim region")), -1)
+  };
+}
+
+function trimRegionBoxPolygons(project, member, frame, profile, shared = {}) {
+  const length = v.len(v.sub(member.end, member.start));
+  const bounds = sectionBounds(profile);
+  const sectionSpan = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
+  const padding = Math.max(sectionSpan * 5, projectCoincidentTolerance(project) * 100, 100);
+  return cutBodyPolygons({
+    type: "box",
+    center: sectionPoint(member.start, frame, [0, 0], length / 2),
+    axisX: frame.x,
+    axisY: frame.y,
+    axisZ: frame.z,
+    size: [length + padding * 2, sectionSpan + padding * 2, sectionSpan + padding * 2]
+  }, shared);
+}
+
+function trimRegionPolygons(project, member, frame, profile, planes, regionKey, shared = {}) {
+  const signs = trimRegionSignMap(regionKey);
+  if (signs.size !== planes.length) geometryError(`${regionKey}: trim region key does not match selected planes`);
+  let polygons = trimRegionBoxPolygons(project, member, frame, profile, shared);
+  for (const plane of planes) {
+    const side = signs.get(plane.id);
+    if (!side) geometryError(`${regionKey}: missing side for reference plane ${plane.id}`);
+    const cutterPlane = side === "+" ? plane : flippedPlane(plane);
+    polygons = csgSubtract(polygons, planeTrimDiscardPolygons(member, frame, profile, cutterPlane, shared));
+  }
+  return polygons;
+}
+
+function applyPlaneTrimRegionCuts(project, member, frame, profile, polygons, feature, shared = {}) {
+  const planes = feature.runtimePlanes || [];
+  if (!planes.length) geometryError(`${feature.id}: plane trim missing runtime planes`);
+  for (const regionKey of feature.removedRegionKeys || []) {
+    polygons = csgSubtract(polygons, trimRegionPolygons(project, member, frame, profile, planes, regionKey, shared));
+  }
+  return polygons;
+}
+
+function offsetPolygonPoints(polygon, distance) {
+  const normal = v.norm(polygon.plane.normal);
+  return csgCleanPoints(polygon.vertices).map((point) => v.add(point, v.mul(normal, distance)));
+}
+
+function addPlaneTrimRegionHandles(scene, project, profiles, trimJoint, operation, operationMeta) {
+  if (trimJoint.id !== scene.activeTrimJointId) return;
+  if (scene.activeTrimOperationId && operation.id !== scene.activeTrimOperationId) return;
+  if (operation.type !== "plane-trim") return;
+
+  const member = objectById(project, operation.memberAId);
+  const profile = profiles[member.profile];
+  if (!profile) geometryError(`${trimJoint.id}: missing profile for ${member.id}`);
+  const gap = typeof operation.gap === "number" && Number.isFinite(operation.gap) ? operation.gap : 0;
+  const feature = trimJointPlaneTrimFeature(project, trimJoint, `${trimJoint.id}:${operation.id}`, member, gap, operation);
+  const planes = feature.runtimePlanes || [];
+  const regionKeys = trimRegionKeysForPlanes(planes);
+  if (!regionKeys.length) return;
+
+  const frame = memberFrame(member);
+  const length = v.len(v.sub(member.end, member.start));
+  const color = objectDisplayColor(project, member.id, member.display?.color || "#78909c");
+  const edgeColor = trimJoint.display?.edgeColor || "#0ea5e9";
+  const trimRange = memberTrimPlaneExtension(project, member, frame, profile, length, scene);
+  const basePolygons = memberBasePolygons(project, member, frame, profile, color, trimRange.start, trimRange.end, length, scene);
+  const removedRegionKeys = new Set(feature.removedRegionKeys || []);
+  const overlayOffset = Math.min(0.75, projectCoincidentTolerance(project) * 0.25);
+
+  for (const regionKeyValue of regionKeys) {
+    const removed = removedRegionKeys.has(regionKeyValue);
+    const polygons = csgIntersect(
+      basePolygons,
+      trimRegionPolygons(project, member, frame, profile, planes, regionKeyValue, { color })
+    );
+    if (!polygons.length) continue;
+
+    const meta = {
+      ...operationMeta,
+      componentKind: "trim-region",
+      regionKey: regionKeyValue,
+      ownerMemberId: member.id,
+      regionRemoved: removed,
+      opacity: removed ? 0.12 : 0.035,
+      suppressed: removed
+    };
+    for (const polygon of polygons) {
+      const points = offsetPolygonPoints(polygon, overlayOffset);
+      if (points.length >= 3) scene.faces.push({ points, color, hideEdges: true, ...meta });
+    }
+    addMeshCreaseEdges(scene, polygons, edgeColor, { ...meta, opacity: removed ? 0.55 : 0.22 });
+  }
+}
+
 function memberCsgPolygons(project, profiles, member, profile, color, scene = null) {
   const frame = memberFrame(member);
   const length = v.len(v.sub(member.end, member.start));
-  const range = memberTrimRange(project, member, frame, length, scene);
-  const fittingRange = memberFittingExtension(project, member, frame, profile, length, scene);
+  const trimRange = memberTrimPlaneExtension(project, member, frame, profile, length, scene);
   const shared = { color };
-  let polygons = memberBasePolygons(project, member, frame, profile, color, Math.min(range.start, fittingRange.start), Math.max(range.end, fittingRange.end), length, scene);
+  let polygons = memberBasePolygons(project, member, frame, profile, color, trimRange.start, trimRange.end, length, scene);
 
   for (const feature of memberFeatures(project, member, scene)) {
     const cutPolygons = holeOrSlotCut(project, profiles, polygons, feature, null, shared);
@@ -544,24 +968,29 @@ function memberCsgPolygons(project, profiles, member, profile, color, scene = nu
     }
 
     if (feature.type === "clearance-cut") {
-      const body = cutBodyForFeature(project, profiles, feature);
-      if (!body) geometryError(`${feature.id}: clearance-cut missing derivable body`);
-      polygons = csgSubtract(polygons, cutBodyPolygons(body, shared));
+      const bodies = cutBodiesForFeature(project, profiles, feature);
+      if (!bodies.length) geometryError(`${feature.id}: clearance-cut missing derivable body`);
+      for (const body of bodies) polygons = csgSubtract(polygons, cutBodyPolygons(body, shared));
       continue;
     }
 
     if (feature.type === "boolean-part") {
       if (!["BOOLEAN_CUT", "BOOLEAN_ADD", "BOOLEAN_WELDPREP"].includes(feature.booleanType)) geometryError(`${feature.id}: unsupported booleanType ${feature.booleanType}`);
-      const bodyDefinition = cutBodyForFeature(project, profiles, feature);
-      if (!bodyDefinition) geometryError(`${feature.id}: boolean-part missing derivable body`);
-      const body = cutBodyPolygons(bodyDefinition, shared);
-      polygons = feature.booleanType === "BOOLEAN_ADD" ? csgUnion(polygons, body) : csgSubtract(polygons, body);
+      const bodies = cutBodiesForFeature(project, profiles, feature);
+      if (!bodies.length) geometryError(`${feature.id}: boolean-part missing derivable body`);
+      const bodyPolygons = bodies.flatMap((body) => cutBodyPolygons(body, shared));
+      polygons = feature.booleanType === "BOOLEAN_ADD" ? csgUnion(polygons, bodyPolygons) : csgSubtract(polygons, bodyPolygons);
       continue;
     }
 
-    if (feature.type === "cut-plane" || feature.type === "fitting" || feature.type === "member-trim") {
-      const plane = cuttingPlaneForFeature(project, scene?.profiles || {}, member, frame, feature);
-      polygons = csgSubtract(polygons, planeCutPolygons(member, frame, profile, plane, shared));
+    if (feature.type === "member-trim-plane") {
+      const plane = feature.runtimePlane;
+      polygons = csgSubtract(polygons, planeTrimDiscardPolygons(member, frame, profile, plane, shared));
+      continue;
+    }
+
+    if (feature.type === "member-trim-region") {
+      polygons = applyPlaneTrimRegionCuts(project, member, frame, profile, polygons, feature, shared);
       continue;
     }
 
@@ -785,9 +1214,9 @@ function plateCsgPolygons(project, profiles, plate, color) {
     }
 
     if (feature.type === "clearance-cut") {
-      const body = cutBodyForFeature(project, profiles, feature);
-      if (body) {
-        polygons = csgSubtract(polygons, cutBodyPolygons(body, shared));
+      const bodies = cutBodiesForFeature(project, profiles, feature);
+      if (bodies.length) {
+        for (const body of bodies) polygons = csgSubtract(polygons, cutBodyPolygons(body, shared));
         continue;
       }
     }
@@ -927,30 +1356,106 @@ function addCutBody(scene, project, profiles, feature) {
   if (feature.operationEnabled === false) return;
   if (!shouldRenderObject(scene, feature)) return;
   const meta = { collection: "features", objectId: feature.id, ...detailMeta(feature.id) };
-  if (feature.type === "cut-plane" || feature.type === "fitting" || feature.type === "member-trim") {
-    let plane = feature.plane;
-    if (feature.type === "member-trim") {
-      const member = objectById(project, feature.ownerId);
-      plane = memberTrimPlane(project, profiles, member, memberFrame(member), feature);
-    }
-    if (!plane) geometryError(`${feature.id}: ${feature.type} missing plane`);
-    addPlaneMarker(scene, plane, feature.display || {}, meta);
-    return;
-  }
   if (feature.type !== "boolean-part" && feature.type !== "clearance-cut") return;
   if (feature.type === "boolean-part" && !["BOOLEAN_CUT", "BOOLEAN_ADD", "BOOLEAN_WELDPREP"].includes(feature.booleanType)) geometryError(`${feature.id}: unsupported booleanType ${feature.booleanType}`);
   const isCut = feature.type === "clearance-cut" || feature.booleanType === "BOOLEAN_CUT";
   const display = isCut
     ? { ...(feature.display || {}), color: feature.display?.color || "#ff3366", opacity: Math.min(feature.display?.opacity ?? 0.28, 0.06) }
     : { ...(feature.display || {}), color: feature.display?.color || "#f59e0b", opacity: feature.display?.opacity ?? 0.16 };
-  const body = cutBodyForFeature(project, profiles, feature);
-  if (!body) geometryError(`${feature.id}: feature missing derivable body`);
-  const polygons = cutBodyPolygons(body, { color: display.color });
+  const bodies = cutBodiesForFeature(project, profiles, feature);
+  if (!bodies.length) geometryError(`${feature.id}: feature missing derivable body`);
+  const polygons = bodies.flatMap((body) => cutBodyPolygons(body, { color: display.color }));
   for (const polygon of polygons) {
     const points = csgCleanPoints(polygon.vertices);
     if (points.length >= 3) scene.faces.push({ points, color: display.color, opacity: display.opacity, hideEdges: true, ...meta });
   }
   addMeshCreaseEdges(scene, polygons, display.edgeColor || display.color, meta);
+}
+
+function objectDisplayColor(project, objectId, fallback) {
+  if (!objectId) return fallback;
+  const object = project.model?.[project.objectIndex?.[objectId]?.collection]?.[objectId];
+  return object?.display?.color || fallback;
+}
+
+function trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, memberId, memberEnd) {
+  if (!memberId) geometryError(`${trimJoint.id}: trim operation missing marker member`);
+  const member = objectById(project, memberId);
+  const frame = memberFrame(member);
+  const operationEnd = trimJointOperationEnd(project, trimJoint, member, memberEnd);
+  const origin = memberEndPoint(member, operationEnd);
+  if (!origin) geometryError(`${trimJoint.id}: trim operation member end must be start or end`);
+  return trimPlaneWithAxes(
+    profiles,
+    member,
+    frame,
+    memberEndKeepDirection(member, frame, operationEnd),
+    origin,
+    operation.axisX,
+    operation.size,
+    trimJoint.id
+  );
+}
+
+function trimJointOperationMarkerPlanes(project, profiles, trimJoint, operation) {
+  const type = operation.type || "end-butt-1";
+  if (type === "plane-trim") {
+    const gap = typeof operation.gap === "number" && Number.isFinite(operation.gap) ? operation.gap : 0;
+    return trimJointReferencePlanes(project, trimJoint, operation, gap);
+  }
+  if (type === "end-butt-1") {
+    return [trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, operation.memberAId, operation.memberAEnd)];
+  }
+  if (type === "end-butt-2") {
+    return [trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, operation.memberBId, operation.memberBEnd)];
+  }
+  if (type === "end-butt-both" || type === "end-miter") {
+    return [
+      trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, operation.memberAId, operation.memberAEnd),
+      trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, operation.memberBId, operation.memberBEnd)
+    ];
+  }
+  return [trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, operation.memberAId, operation.memberAEnd)];
+}
+
+function addTrimJoint(scene, project, profiles, trimJoint) {
+  if (!shouldRenderObject(scene, trimJoint)) return;
+  const display = {
+    color: "#ff3366",
+    edgeColor: "#be123c",
+    transparent: true,
+    opacity: 0.18,
+    ...(trimJoint.display || {})
+  };
+  const meta = { collection: "trimJoints", objectId: trimJoint.id, ...detailMeta(trimJoint.id) };
+  const operations = trimJointOperations(trimJoint);
+  if (operations.length) {
+    for (const operation of operations) {
+      const operationMeta = { ...meta, operationId: operation.id || null, componentKind: "trim-operation" };
+      const planes = trimJointOperationMarkerPlanes(project, profiles, trimJoint, operation);
+      const dedupeKeys = [];
+      for (const plane of planes) {
+        const planeMeta = { ...operationMeta, referencePlaneId: plane.id || null };
+        dedupeKeys.push(planeMarkerKey(project, plane));
+        addPlaneMarkerOnce(scene, project, plane, planeDisplay(display, display.edgeColor || "#be123c"), planeMeta);
+      }
+      const calloutPlane = operationCalloutPlane(planes);
+      if (!calloutPlane) continue;
+      addCutCalloutOnce(scene, project, calloutPlane, display, operationMeta, {
+        key: `trim-operation:${trimJoint.id}:${operation.id || operation.type || "operation"}`,
+        dedupeKeys,
+        operationId: operation.id || null,
+        iconType: operation.type || "end-butt-1",
+        colors: {
+          memberA: objectDisplayColor(project, operation.memberAId, "#365f74"),
+          memberB: objectDisplayColor(project, operation.memberBId, "#d99200")
+        }
+      });
+      addPlaneTrimRegionHandles(scene, project, profiles, trimJoint, operation, operationMeta);
+    }
+    return;
+  }
+  geometryError(`${trimJoint.id}: trim joint requires operations`);
 }
 
 function fastenerDefinition(scene, fastenerGroup) {
@@ -1250,20 +1755,16 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
 function memberProfilePointOnPlane(member, frame, planeOrigin, planeNormal, point) {
   const sectionOrigin = sectionPoint(member.start, frame, point, 0);
   const denominator = v.dot(planeNormal, frame.x);
-  if (Math.abs(denominator) <= CSG_EPSILON) geometryError(`${member.id}: member axis does not intersect weld fitting plane`);
+  if (Math.abs(denominator) <= CSG_EPSILON) geometryError(`${member.id}: member axis does not intersect weld reference plane`);
   const station = v.dot(planeNormal, v.sub(planeOrigin, sectionOrigin)) / denominator;
   return sectionPoint(member.start, frame, point, station);
 }
 
 function memberWeldProfilePoints(project, profiles, weld, member, profile, frame, contour) {
-  const trimOrFittingFeatureId = weld.reference?.trimFeatureId || weld.reference?.fittingFeatureId;
-  if (trimOrFittingFeatureId) {
-    const feature = objectById(project, trimOrFittingFeatureId);
-    if (feature.type !== "fitting" && feature.type !== "member-trim") geometryError(`${weld.id}: trim/fitting reference must reference a fitting or member-trim feature`);
-    const plane = cuttingPlaneForFeature(project, profiles, member, frame, feature);
-    if (!plane) geometryError(`${weld.id}: trim/fitting reference missing plane`);
-    const planeOrigin = requiredVector(plane, "origin", feature.id);
-    const planeNormal = v.norm(requiredVector(plane, "normal", feature.id));
+  if (weld.reference?.referencePlaneId) {
+    const plane = requiredReferencePlane(project, weld.reference.referencePlaneId, weld.id, geometryError);
+    const planeOrigin = requiredVector(plane, "origin", weld.id);
+    const planeNormal = v.norm(requiredVector(plane, "normal", weld.id));
     return contour.points.map((point) => memberProfilePointOnPlane(member, frame, planeOrigin, planeNormal, point));
   }
 
@@ -1373,6 +1874,7 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
   const sceneData = {
     faces: [],
     lines: [],
+    callouts: [],
     vertices: [],
     memberInstances: [],
     memberInstanceGeometries: {},
@@ -1381,10 +1883,14 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
     fasteners: fasteners.fasteners,
     project,
     activeConnectionId: options.activeConnectionId || null,
+    activeTrimJointId: options.activeTrimJointId || null,
+    activeTrimOperationId: options.activeTrimOperationId || null,
     activeConnectionObjectIds: activeConnectionObjectIds(project, options.activeConnectionId),
     generatedConnectionObjectIds: generatedConnectionObjectIds(project),
     lodDetailFilter: options.lodDetailFilter || null,
-    renderObjectIds
+    renderObjectIds,
+    planeMarkerKeys: new Set(),
+    cutCalloutKeys: new Set()
   };
 
   for (const member of members) {
@@ -1414,6 +1920,11 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
     if (!shouldBuildLodDetail(sceneData, feature.id)) continue;
     addCutBody(sceneData, project, profiles.profiles, feature);
   }
+  for (const trimJoint of renderCollectionObjects(project, "trimJoints", renderObjectIds)) {
+    if (!shouldRenderId(trimJoint.id)) continue;
+    if (!shouldBuildLodDetail(sceneData, trimJoint.id)) continue;
+    addTrimJoint(sceneData, project, profiles.profiles, trimJoint);
+  }
   addFastenerGroups(sceneData, project, renderCollectionObjects(project, "fastenerGroups", renderObjectIds));
   addWelds(sceneData, project, renderCollectionObjects(project, "welds", renderObjectIds));
 
@@ -1421,6 +1932,8 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
   sceneData.vertices = boundsPoints(sceneData.bounds);
   buildLodDetails(sceneData);
   addViewerAxes(sceneData);
+  delete sceneData.planeMarkerKeys;
+  delete sceneData.cutCalloutKeys;
   return sceneData;
 }
 

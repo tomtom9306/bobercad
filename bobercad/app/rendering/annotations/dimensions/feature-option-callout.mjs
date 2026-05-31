@@ -1,6 +1,5 @@
 import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs";
-import { memberFrameAt, memberLength } from "../../../engine/geometry/member-geometry.mjs";
-import { objectById } from "../../../engine/core/model.mjs";
+import { requiredReferencePlane } from "../../../engine/geometry/feature-plane.mjs";
 import {
   clearanceAnnotationBasis,
   dimensionOffset,
@@ -24,8 +23,7 @@ function optionLabel(spec, value) {
   return option?.label || stringValue;
 }
 
-function planeFeaturePlacement(feature) {
-  const plane = feature?.plane;
+function planePlacement(plane) {
   if (!Array.isArray(plane?.origin) || !Array.isArray(plane?.normal)) return null;
   const normal = v.norm(plane.normal);
   const localAxisY = v.norm(plane.axisX || plane.localAxisY || [1, 0, 0]);
@@ -40,6 +38,10 @@ function planeFeaturePlacement(feature) {
     },
     anchor: plane.origin
   };
+}
+
+function trimPlaneOperation(trimJoint) {
+  return (trimJoint?.operations || []).find((operation) => operation.type === "plane-trim" && operation.referencePlaneIds?.length) || null;
 }
 
 function clearanceFeaturePlacement(ctx, feature) {
@@ -57,37 +59,14 @@ function clearanceFeaturePlacement(ctx, feature) {
   };
 }
 
-function memberTrimPlacement(ctx, feature) {
-  if (!feature?.trim || !feature.ownerId) return null;
-  if (!ctx.project.objectIndex?.[feature.ownerId]) return null;
-  const member = objectById(ctx.project, feature.ownerId);
-  if (!member) return null;
-  const station = feature.memberEnd === "start" ? 0 : memberLength(member);
-  const frame = memberFrameAt(member, station);
-  const inward = feature.memberEnd === "start" ? frame.x : v.mul(frame.x, -1);
-  return {
-    basis: {
-      origin: feature.trim.jointPoint || frame.origin,
-      normal: frame.y,
-      localAxisY: inward,
-      localAxisZ: frame.z
-    },
-    anchor: feature.trim.jointPoint || frame.origin
-  };
-}
-
 function featurePlacement(ctx, feature) {
-  const placement = planeFeaturePlacement(feature)
-    || clearanceFeaturePlacement(ctx, feature)
-    || memberTrimPlacement(ctx, feature);
+  const placement = clearanceFeaturePlacement(ctx, feature);
   if (placement) return placement;
   const basis = featureBasis(ctx.project, feature);
   return basis ? { basis, anchor: basis.origin } : null;
 }
 
-export function featureOptionCalloutDimension(ctx, spec) {
-  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
-  const placement = featurePlacement(ctx, feature);
+function optionCalloutDimension(ctx, spec, placement) {
   if (!placement) return null;
   const value = paramValue(ctx.definition, ctx.connection, spec.parameter);
   const label = spec.reference?.showLabel === false
@@ -107,4 +86,15 @@ export function featureOptionCalloutDimension(ctx, spec) {
     titleValue: parameterLabel(ctx.definition, spec.parameter),
     labelAxis: spec.reference.labelAxis || undefined
   });
+}
+
+export function featureOptionCalloutDimension(ctx, spec) {
+  return optionCalloutDimension(ctx, spec, featurePlacement(ctx, roleObject(ctx.project, ctx.connection, spec.reference.featureRole)));
+}
+
+export function trimOptionCalloutDimension(ctx, spec) {
+  const trimJoint = roleObject(ctx.project, ctx.connection, spec.reference.trimRole);
+  const operation = trimPlaneOperation(trimJoint);
+  const plane = operation ? requiredReferencePlane(ctx.project, operation.referencePlaneIds[0], trimJoint.id, () => null) : null;
+  return optionCalloutDimension(ctx, spec, planePlacement(plane));
 }

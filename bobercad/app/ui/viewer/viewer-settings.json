@@ -23,6 +23,9 @@
       "beam-to-beam-end-plate-1": {
         "path": "../../../data/projects/sample_beam_to_beam_end_plate.json"
       },
+      "trimming-lab-1": {
+        "path": "../../../data/projects/sample_trimming_lab.json"
+      },
       "warehouse-12x24": {
         "path": "../../../data/projects/sample_warehouse_12x24.json"
       },
@@ -59,7 +62,11 @@
     "zoomOutFactor": 0.9
   },
   "authoring": {
+    "autoAxisRelations": true,
     "snapTolerancePx": 16,
+    "globalAxisSnapTolerancePx": 34,
+    "globalAxisSnapSpan": 100000,
+    "globalAxisGuideSpan": 12000,
     "defaultColumnHeight": 3000,
     "previewOpacity": 0.32,
     "beamColor": "#3f657d",

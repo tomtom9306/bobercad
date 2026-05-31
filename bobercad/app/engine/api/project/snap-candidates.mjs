@@ -148,6 +148,29 @@ function addGridCandidates(candidates, project) {
   }
 }
 
+function addGlobalAxisCandidates(candidates, options) {
+  if (!options.includeGlobalAxes) return;
+  const origin = finitePoint(options.globalAxisOrigin) ? options.globalAxisOrigin : [0, 0, 0];
+  const span = Number.isFinite(options.globalAxisSpan) ? Math.max(1, options.globalAxisSpan) : 100000;
+  const tolerancePx = Number.isFinite(options.globalAxisSnapTolerancePx) ? options.globalAxisSnapTolerancePx : undefined;
+  pushPoint(candidates, origin, {
+    type: "global-origin",
+    label: "Global origin",
+    priority: 260
+  });
+  for (const [axis, direction] of Object.entries({ x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] })) {
+    pushLine(candidates, v.sub(origin, v.mul(direction, span)), v.add(origin, v.mul(direction, span)), {
+      type: "global-axis",
+      axis,
+      point: [...origin],
+      label: `Global ${axis.toUpperCase()} axis`,
+      priority: 240,
+      screenTolerance: tolerancePx,
+      screenIntersectionMode: "self"
+    });
+  }
+}
+
 export function snapCandidates(project, options = {}) {
   const candidates = [];
   const includeMembers = options.includeMembers !== false;
@@ -223,6 +246,8 @@ export function snapCandidates(project, options = {}) {
   }
 
   addGridCandidates(candidates, project);
+  addGlobalAxisCandidates(candidates, options);
+  if (Array.isArray(options.extraCandidates)) candidates.push(...options.extraCandidates);
   return candidates;
 }
 

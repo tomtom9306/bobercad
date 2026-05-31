@@ -1,8 +1,28 @@
 import { objectById } from "../core/model.mjs";
 import { v } from "../core/math.mjs";
+import { requiredReferencePlane } from "../geometry/feature-plane.mjs";
 import { resolveInterface, sectionBounds } from "../geometry/member-geometry.mjs";
-import { addIndexedObject, removeIndexedObject } from "../api/project/objects.mjs";
-import { createMemberObject } from "../api/project/member-factory.mjs";
+import { addIndexedObject, nextObjectId, removeIndexedObject } from "../api/project/objects.mjs";
+import { createMemberObject } from "../api/project/member-factory.mjs?v=axis-snap-1";
+import {
+  axisRelationFromSnap,
+  memberAlignRelation,
+  memberAxisRelations,
+  relationUpsertKey
+} from "../api/project/axis-relations.mjs?v=relation-types-1";
+import {
+  affectedConnectionsForMember,
+  affectedConnectionIdsForMember,
+  connectionObjectIds,
+  connectionOwnedObjectIds,
+  connectionReferencesObject,
+  featureDependencyObjectIds as projectFeatureDependencyObjectIds,
+  flattenIds,
+  memberDependencyObjectIds as projectMemberDependencyObjectIds,
+  objectCollection,
+  referencePlaneDependencyObjectIds as projectReferencePlaneDependencyObjectIds,
+  trimJointDependencyObjectIds as projectTrimJointDependencyObjectIds
+} from "../api/project/dependencies.mjs";
 import {
   memberLayoutAxis,
   moveMemberWithLayout as moveMemberWithLayoutData,
@@ -17,7 +37,6 @@ import {
   clone,
   connectionById,
   connectionComponentOptions as projectConnectionComponentOptions,
-  connectionOptionalObjectIds,
   connectionPlateOptions as projectConnectionPlateOptions,
   createProjectConnectionFromPreset,
   setConnectionPlateIncluded as setProjectConnectionPlateIncluded,
@@ -64,19 +83,21 @@ function almostSamePoint(a, b, tolerance = FIT_EPSILON) {
   return Array.isArray(a) && Array.isArray(b) && v.len(v.sub(a, b)) <= tolerance;
 }
 
+function memberPointAtEnd(member, memberEnd) {
+  if (memberEnd === "start") return member.start;
+  if (memberEnd === "end") return member.end;
+  return v.mul(v.add(member.start, member.end), 0.5);
+}
+
+function nearestMemberEnd(member, point) {
+  return v.len(v.sub(member.start, point)) <= v.len(v.sub(member.end, point)) ? "start" : "end";
+}
+
 function vec3(value, label) {
   if (!Array.isArray(value) || value.length !== 3 || value.some((item) => typeof item !== "number" || !Number.isFinite(item))) {
     fail(`${label} must be a finite [x, y, z] point`);
   }
   return [...value];
-}
-
-function flattenIds(value) {
-  if (!value) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap(flattenIds);
-  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
-  fail(`unsupported id reference ${value}`);
 }
 
 function profileById(profiles, profileId) {
@@ -90,13 +111,160 @@ function memberById(project, memberId) {
   return project.model.members[memberId];
 }
 
-function objectCollection(project, objectId) {
-  const indexed = project.objectIndex?.[objectId]?.collection;
-  if (indexed && project.model[indexed]?.[objectId]) return indexed;
-  for (const [collection, objects] of Object.entries(project.model || {})) {
-    if (objects && typeof objects === "object" && !Array.isArray(objects) && objects[objectId]) return collection;
+function featureById(project, featureId) {
+  if (!project.model.features?.[featureId]) fail(`feature not found: ${featureId}`);
+  return project.model.features[featureId];
+}
+
+function referencePlaneById(project, referencePlaneId) {
+  if (!project.model.referencePlanes?.[referencePlaneId]) fail(`reference plane not found: ${referencePlaneId}`);
+  return project.model.referencePlanes[referencePlaneId];
+}
+
+function trimJointById(project, trimJointId) {
+  if (!project.model.trimJoints?.[trimJointId]) fail(`trim joint not found: ${trimJointId}`);
+  return project.model.trimJoints[trimJointId];
+}
+
+function trimJointReferencePoint(project, trimJoint) {
+  const points = (trimJoint.participants || [])
+    .map((participant) => project.model.members?.[participant.memberId] ? memberPointAtEnd(project.model.members[participant.memberId], participant.memberEnd) : null)
+    .filter(Boolean);
+  if (!points.length) return [0, 0, 0];
+  return v.mul(points.reduce((sum, point) => v.add(sum, point), [0, 0, 0]), 1 / points.length);
+}
+
+function defaultTrimJointParticipant(project, trimJoint, memberId, patch = {}) {
+  const member = memberById(project, memberId);
+  return {
+    memberId,
+    memberEnd: nearestMemberEnd(member, trimJointReferencePoint(project, trimJoint)),
+    ...clone(patch)
+  };
+}
+
+function trimOperationUsesMemberEnd(type, role) {
+  if (type === "end-butt-1") return role === "memberA";
+  if (type === "end-butt-2") return role === "memberB";
+  if (type === "end-butt-both" || type === "end-miter") return true;
+  return false;
+}
+
+function trimRegionParts(regionKey) {
+  if (typeof regionKey !== "string" || !regionKey) fail("plane trim region key must be a non-empty string");
+  return regionKey.split("|").map((part) => {
+    const index = part.lastIndexOf(":");
+    if (index <= 0) fail(`invalid plane trim region key: ${regionKey}`);
+    const planeId = part.slice(0, index);
+    const side = part.slice(index + 1);
+    if (side !== "+" && side !== "-") fail(`invalid plane trim region side in key: ${regionKey}`);
+    return { planeId, side };
+  });
+}
+
+function validateTrimRegionKeys(trimJointId, operation) {
+  const planeIds = new Set(operation.referencePlaneIds || []);
+  for (const regionKey of operation.removedRegionKeys || []) {
+    const parts = trimRegionParts(regionKey);
+    if (parts.length !== planeIds.size) fail(`${trimJointId}: plane trim region key must include every selected plane`);
+    const seen = new Set();
+    for (const { planeId } of parts) {
+      if (!planeIds.has(planeId)) fail(`${trimJointId}: plane trim region references an unselected plane: ${planeId}`);
+      if (seen.has(planeId)) fail(`${trimJointId}: plane trim region repeats plane: ${planeId}`);
+      seen.add(planeId);
+    }
   }
-  return null;
+}
+
+function normalizedTrimJointOperation(trimJoint, operation) {
+  const type = operation.type || "end-butt-1";
+  const next = { ...operation, type };
+  const memberA = (trimJoint.participants || []).find((participant) => participant.memberId === next.memberAId);
+  const memberB = (trimJoint.participants || []).find((participant) => participant.memberId === next.memberBId);
+  if (trimOperationUsesMemberEnd(type, "memberA")) next.memberAEnd = next.memberAEnd === "start" || next.memberAEnd === "end" ? next.memberAEnd : memberA?.memberEnd || "end";
+  else delete next.memberAEnd;
+  if (trimOperationUsesMemberEnd(type, "memberB")) next.memberBEnd = next.memberBEnd === "start" || next.memberBEnd === "end" ? next.memberBEnd : memberB?.memberEnd || "end";
+  else delete next.memberBEnd;
+  if (type === "plane-trim") {
+    delete next.memberBId;
+    delete next.memberBEnd;
+    next.referencePlaneIds = Array.isArray(next.referencePlaneIds) ? [...new Set(next.referencePlaneIds)] : [];
+    next.removedRegionKeys = Array.isArray(next.removedRegionKeys) ? [...new Set(next.removedRegionKeys)] : [];
+    delete next.referencePlaneId;
+  } else {
+    delete next.referencePlaneId;
+    delete next.referencePlaneIds;
+    delete next.removedRegionKeys;
+  }
+  return next;
+}
+
+function defaultTrimJointOperation(trimJoint, patch = {}) {
+  const participants = trimJoint.participants || [];
+  const memberAId = patch.memberAId || participants[1]?.memberId || participants[0]?.memberId;
+  const memberBId = patch.memberBId || participants.find((participant) => participant.memberId !== memberAId)?.memberId;
+  const existingIds = new Set((trimJoint.operations || []).map((operation) => operation.id));
+  let index = (trimJoint.operations || []).length + 1;
+  let id = patch.id || `end_butt_1_${index}`;
+  while (existingIds.has(id)) {
+    index += 1;
+    id = `end_butt_1_${index}`;
+  }
+  return normalizedTrimJointOperation(trimJoint, {
+    id,
+    type: "end-butt-1",
+    memberAId,
+    memberBId,
+    enabled: true,
+    ...clone(patch),
+    id
+  });
+}
+
+function trimJointHasParticipant(trimJoint, memberId) {
+  return (trimJoint.participants || []).some((participant) => participant.memberId === memberId);
+}
+
+function ensureTrimJointParticipant(project, trimJoint, memberId) {
+  if (trimJointHasParticipant(trimJoint, memberId)) return trimJoint;
+  return {
+    ...trimJoint,
+    participants: [
+      ...(trimJoint.participants || []),
+      defaultTrimJointParticipant(project, trimJoint, memberId)
+    ]
+  };
+}
+
+function validateTrimJointOperation(project, trimJointId, trimJoint, operation) {
+  const participantIds = new Set((trimJoint.participants || []).map((participant) => participant.memberId));
+  if (!operation.memberAId) fail(`${trimJointId}: operation requires member A`);
+  if (!participantIds.has(operation.memberAId)) fail(`${trimJointId}: operation member A must be a participant`);
+  if (operation.type === "plane-trim") {
+    if (!Array.isArray(operation.referencePlaneIds) || !operation.referencePlaneIds.length) {
+      fail(`${trimJointId}: plane trim operation requires referencePlaneIds`);
+    }
+    for (const referencePlaneId of operation.referencePlaneIds) referencePlaneById(project, referencePlaneId);
+    if (!Array.isArray(operation.removedRegionKeys)) fail(`${trimJointId}: plane trim operation requires removedRegionKeys`);
+    validateTrimRegionKeys(trimJointId, operation);
+    return;
+  }
+  if (!operation.memberBId) fail(`${trimJointId}: operation requires member B`);
+  if (!participantIds.has(operation.memberBId)) fail(`${trimJointId}: operation member B must be a participant`);
+  if (operation.memberAId === operation.memberBId) fail(`${trimJointId}: operation members must be different`);
+}
+
+function plainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function mergePatch(target, patch) {
+  if (!plainObject(patch)) return clone(patch);
+  const next = plainObject(target) ? { ...target } : {};
+  for (const [key, value] of Object.entries(patch)) {
+    next[key] = plainObject(value) && plainObject(next[key]) ? mergePatch(next[key], value) : clone(value);
+  }
+  return next;
 }
 
 function removeReferences(value, deletedIds) {
@@ -136,17 +304,37 @@ function cloneProjectForMemberUpdate(project, memberId) {
   };
 }
 
-function connectionOwnedObjectIds(connection) {
-  const generator = connection.generator || {};
-  const owned = Array.isArray(generator.ownedObjectIds) ? generator.ownedObjectIds : [];
-  const manual = Array.isArray(generator.manualObjectIds) ? new Set(generator.manualObjectIds) : new Set();
-  const manualParts = flattenIds(connection.manualParts).filter((id) => !manual.has(id));
-  return unique([...owned, ...flattenIds(generator.objectRoles), ...manualParts]);
+function cloneProjectForFeatureUpdate(project, featureId) {
+  return {
+    ...project,
+    objectIndex: { ...(project.objectIndex || {}) },
+    model: {
+      ...(project.model || {}),
+      features: { ...(project.model?.features || {}) }
+    }
+  };
 }
 
-function connectionObjectIds(project, connection) {
-  return unique([connection.id, ...connectionOwnedObjectIds(connection), ...connectionOptionalObjectIds(connection)])
-    .filter((id) => project.objectIndex?.[id]);
+function cloneProjectForReferencePlaneUpdate(project) {
+  return {
+    ...project,
+    objectIndex: { ...(project.objectIndex || {}) },
+    model: {
+      ...(project.model || {}),
+      referencePlanes: { ...(project.model?.referencePlanes || {}) }
+    }
+  };
+}
+
+function cloneProjectForTrimJointUpdate(project, trimJointId) {
+  return {
+    ...project,
+    objectIndex: { ...(project.objectIndex || {}) },
+    model: {
+      ...(project.model || {}),
+      trimJoints: { ...(project.model?.trimJoints || {}) }
+    }
+  };
 }
 
 function isConnectionGeneratedHelper(object, connectionId) {
@@ -164,17 +352,6 @@ function connectionGeneratedHelperIds(project, connection) {
   return unique(ids);
 }
 
-function affectedConnections(project, memberId) {
-  return Object.values(project.model.connections || {}).filter((connection) => {
-    return connection.mainMemberId === memberId || connection.secondaryMemberId === memberId;
-  });
-}
-
-function connectionReferencesObject(connection, objectId) {
-  if (connection.id === objectId) return true;
-  return connectionOwnedObjectIds(connection).includes(objectId) || connectionOptionalObjectIds(connection).includes(objectId);
-}
-
 function connectionRoleForObject(connection, objectId) {
   for (const [role, value] of Object.entries(connection.generator?.objectRoles || {})) {
     if (flattenIds(value).includes(objectId)) return role;
@@ -187,6 +364,32 @@ function appendMemberToDefaultGroup(project, memberId) {
   if (!group) return;
   group.memberIds = appendUnique(group.memberIds, memberId);
   group.objectIds = appendUnique(group.objectIds, memberId);
+}
+
+function upsertRelationObject(project, relation) {
+  if (!relation?.id) fail("relation id is required");
+  if (!relation.memberId) fail(`${relation.id}: relation memberId is required`);
+  if (!project.model?.members?.[relation.memberId]) fail(`${relation.id}: relation member not found: ${relation.memberId}`);
+  project.model ||= {};
+  project.model.relations ||= {};
+  project.objectIndex ||= {};
+  const key = relationUpsertKey(relation);
+  for (const existing of Object.values(project.model.relations)) {
+    if (existing.id !== relation.id && relationUpsertKey(existing) === key) removeIndexedObject(project, existing.id);
+  }
+  const existingCollection = objectCollection(project, relation.id);
+  if (existingCollection && existingCollection !== "relations") fail(`${relation.id}: relation id already used by ${existingCollection}`);
+  project.model.relations[relation.id] = clone(relation);
+  project.objectIndex[relation.id] = { collection: "relations", type: relation.type };
+  return project.model.relations[relation.id];
+}
+
+function addMemberSnapRelations(project, memberId, options = {}) {
+  if (options.autoAxisRelations === false) return;
+  for (const [endpoint, snap] of [["start", options.startSnap], ["end", options.endSnap]]) {
+    const relation = axisRelationFromSnap(memberId, endpoint, snap, { createdBy: "auto-snap" });
+    if (relation) upsertRelationObject(project, relation);
+  }
 }
 
 function normalizedIndexList(values) {
@@ -455,7 +658,7 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     parameters
   });
   const regenerateMemberConnections = (projectState, memberId) => {
-    const connectionIds = affectedConnections(projectState, memberId)
+    const connectionIds = affectedConnectionsForMember(projectState, memberId)
       .filter((connection) => connection.generator?.status === "generated")
       .map((connection) => connection.id);
     if (!connectionIds.length) return projectState;
@@ -493,12 +696,12 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     if (!interfaceId) fail(`${connectionId}: connection zone missing secondary interface`);
     return projectState.model.interfaces?.[interfaceId] || fail(`${connectionId}: secondary interface not found: ${interfaceId}`);
   };
-  const fittingFeature = (projectState, connection) => {
-    const roleId = connection.generator?.objectRoles?.beamFitting;
-    if (roleId && projectState.model.features?.[roleId]?.type === "fitting") return projectState.model.features[roleId];
+  const memberTrimJoint = (projectState, connection) => {
+    const roleId = connection.generator?.objectRoles?.beamTrim;
+    if (roleId && projectState.model.trimJoints?.[roleId]?.type === "member-trim") return projectState.model.trimJoints[roleId];
     return connectionOwnedObjectIds(connection)
-      .map((id) => projectState.model.features?.[id])
-      .find((feature) => feature?.type === "fitting" && feature.ownerId === connection.secondaryMemberId) || null;
+      .map((id) => projectState.model.trimJoints?.[id])
+      .find((trimJoint) => trimJoint?.type === "member-trim" && (trimJoint.participants || []).some((participant) => participant.memberId === connection.secondaryMemberId)) || null;
   };
   const markConnectionError = (projectState, connectionId, code, message, objectRoles = []) => {
     const connection = projectState.model.connections?.[connectionId];
@@ -512,29 +715,35 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
         : [...diagnostics, { severity: "error", code, message, objectRoles }]
     };
     for (const id of connectionOwnedObjectIds(connection)) {
-      for (const collection of ["plates", "fastenerGroups", "welds", "features"]) {
+      for (const collection of ["plates", "fastenerGroups", "welds", "features", "trimJoints"]) {
         const object = projectState.model[collection]?.[id];
         if (object) object.display = { ...(object.display || {}), ...DIAGNOSTIC_DISPLAY };
       }
     }
   };
-  const fitMemberEndToPlane = (projectState, connectionId) => {
+  const fitMemberEndToTrimPlane = (projectState, connectionId) => {
     const connection = connectionById(projectState, connectionId);
-    const feature = fittingFeature(projectState, connection);
-    if (!feature?.plane) return false;
-    if (feature.operationEnabled === false) return false;
+    const trimJoint = memberTrimJoint(projectState, connection);
+    if (!trimJoint) return false;
+    const operation = (trimJoint.operations || []).find((item) => item.enabled !== false && item.type === "plane-trim" && item.memberAId === connection.secondaryMemberId);
+    if (!operation) return false;
+    if (!Array.isArray(operation.referencePlaneIds) || operation.referencePlaneIds.length !== 1) {
+      markConnectionError(projectState, connectionId, "beam-trim-plane-count", "Generated member trim requires exactly one trim plane.", ["beamTrim"]);
+      return false;
+    }
     const iface = secondaryInterface(projectState, connectionId);
     const memberEnd = iface.memberEnd;
     if (memberEnd !== "start" && memberEnd !== "end") return false;
 
     const member = projectState.model.members?.[connection.secondaryMemberId];
     if (!member) fail(`${connectionId}: secondary member not found: ${connection.secondaryMemberId}`);
-    const normal = v.norm(vec3(feature.plane.normal, `${feature.id}.plane.normal`));
-    const origin = vec3(feature.plane.origin, `${feature.id}.plane.origin`);
+    const plane = requiredReferencePlane(projectState, operation.referencePlaneIds[0], `${trimJoint.id}:${operation.id}`, fail);
+    const normal = v.norm(vec3(plane.normal, `${trimJoint.id}.${operation.id}.referencePlane.normal`));
+    const origin = vec3(plane.origin, `${trimJoint.id}.${operation.id}.referencePlane.origin`);
     const axis = v.sub(member.end, member.start);
     const denominator = v.dot(normal, axis);
     if (Math.abs(denominator) <= FIT_EPSILON) {
-      markConnectionError(projectState, connectionId, "member-axis-parallel-to-fitting-plane", "Secondary member axis does not intersect the fitting plane.", ["beamFitting"]);
+      markConnectionError(projectState, connectionId, "member-axis-parallel-to-trim-plane", "Secondary member axis does not intersect the trim plane.", ["beamTrim"]);
       return false;
     }
 
@@ -556,7 +765,7 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       next = regenerateConnectionsBatch(next, ids);
       let changed = false;
       for (const connectionId of ids) {
-        if (next.model.connections?.[connectionId]) changed = fitMemberEndToPlane(next, connectionId) || changed;
+        if (next.model.connections?.[connectionId]) changed = fitMemberEndToTrimPlane(next, connectionId) || changed;
       }
       if (!changed) return next;
     }
@@ -610,6 +819,51 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     if (options.regenerateConnections === false) return setProject(next);
     return setProject(regenerateMemberConnections(next, memberId));
   };
+  const replaceFeature = (featureId, update) => {
+    const next = cloneProjectForFeatureUpdate(currentProject, featureId);
+    const feature = featureById(next, featureId);
+    const updated = update(feature);
+    if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail("feature update must return an object");
+    if (updated.id !== featureId) fail("feature id cannot be changed");
+    if (updated.ownerId !== feature.ownerId) fail("feature owner cannot be changed");
+    if (updated.type !== feature.type) fail("feature type cannot be changed");
+    next.model.features[featureId] = updated;
+    next.objectIndex[featureId] = {
+      ...(next.objectIndex[featureId] || {}),
+      collection: "features",
+      type: updated.type
+    };
+    return setProject(next);
+  };
+  const replaceReferencePlane = (referencePlaneId, update) => {
+    const next = cloneProjectForReferencePlaneUpdate(currentProject);
+    const plane = referencePlaneById(next, referencePlaneId);
+    const updated = update(plane);
+    if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail("reference plane update must return an object");
+    if (updated.id !== referencePlaneId) fail("reference plane id cannot be changed");
+    next.model.referencePlanes[referencePlaneId] = updated;
+    next.objectIndex[referencePlaneId] = {
+      ...(next.objectIndex[referencePlaneId] || {}),
+      collection: "referencePlanes",
+      type: updated.type || "reference-plane"
+    };
+    return setProject(next);
+  };
+  const replaceTrimJoint = (trimJointId, update) => {
+    const next = cloneProjectForTrimJointUpdate(currentProject, trimJointId);
+    const trimJoint = trimJointById(next, trimJointId);
+    const updated = update(trimJoint);
+    if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail("trim joint update must return an object");
+    if (updated.id !== trimJointId) fail("trim joint id cannot be changed");
+    if (updated.type !== trimJoint.type) fail("trim joint type cannot be changed");
+    next.model.trimJoints[trimJointId] = updated;
+    next.objectIndex[trimJointId] = {
+      ...(next.objectIndex[trimJointId] || {}),
+      collection: "trimJoints",
+      type: updated.type
+    };
+    return setProject(next);
+  };
 
   if (reconcileOnLoad) currentProject = reconcileGeneratedConnections(currentProject);
 
@@ -635,6 +889,10 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
 
     connection(connectionId) {
       return connectionById(currentProject, connectionId);
+    },
+
+    trimJoint(trimJointId) {
+      return trimJointById(currentProject, trimJointId);
     },
 
     connectionForObject(objectId) {
@@ -683,6 +941,31 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
 
     connectionObjectIds(connectionId) {
       return connectionObjectIds(currentProject, connectionById(currentProject, connectionId));
+    },
+
+    affectedConnectionIds(memberId) {
+      memberById(currentProject, memberId);
+      return affectedConnectionIdsForMember(currentProject, memberId);
+    },
+
+    memberDependencyObjectIds(memberId, options = {}) {
+      memberById(currentProject, memberId);
+      return projectMemberDependencyObjectIds(currentProject, memberId, options);
+    },
+
+    featureDependencyObjectIds(featureId, options = {}) {
+      featureById(currentProject, featureId);
+      return projectFeatureDependencyObjectIds(currentProject, featureId, options);
+    },
+
+    referencePlaneDependencyObjectIds(referencePlaneId, options = {}) {
+      referencePlaneById(currentProject, referencePlaneId);
+      return projectReferencePlaneDependencyObjectIds(currentProject, referencePlaneId, options);
+    },
+
+    trimJointDependencyObjectIds(trimJointId, options = {}) {
+      trimJointById(currentProject, trimJointId);
+      return projectTrimJointDependencyObjectIds(currentProject, trimJointId, options);
     },
 
     definition(connectionId) {
@@ -775,22 +1058,227 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       const next = clone(currentProject);
       const member = createMemberObject(next, profiles, options);
       addIndexedObject(next, "members", member);
+      addMemberSnapRelations(next, member.id, options);
       appendMemberToDefaultGroup(next, member.id);
       const updated = setProject(reconcileGeneratedConnections(next));
       return { project: updated, memberId: member.id, member: updated.model.members[member.id] };
     },
 
+    createTrimJoint(options = {}) {
+      if (!options || typeof options !== "object" || Array.isArray(options)) fail("trim joint options must be an object");
+      const memberIds = unique(options.memberIds || []);
+      for (const memberId of memberIds) memberById(currentProject, memberId);
+      const operationPatch = clone(options.operationPatch || {});
+      const operationType = operationPatch.type || options.operationType || "end-butt-both";
+      if (operationType !== "plane-trim" && memberIds.length < 2) fail("member-to-member trim requires two members");
+      if (operationType === "plane-trim" && memberIds.length < 1) fail("plane trim requires one member");
+
+      const next = clone(currentProject);
+      const id = nextObjectId(next, options.id || `trim_${memberIds.join("_") || "joint"}`);
+      let trimJoint = {
+        id,
+        type: operationType === "plane-trim" ? "member-trim" : "corner-trim",
+        gap: 0,
+        participants: [],
+        operations: [],
+        ...(plainObject(options.patch) ? clone(options.patch) : {})
+      };
+      trimJoint.id = id;
+      trimJoint.type = operationType === "plane-trim" ? "member-trim" : "corner-trim";
+      for (const memberId of memberIds) {
+        trimJoint.participants.push(defaultTrimJointParticipant(next, trimJoint, memberId));
+      }
+
+      const operation = defaultTrimJointOperation(trimJoint, {
+        type: operationType,
+        memberAId: operationPatch.memberAId || memberIds[0],
+        memberBId: operationType === "plane-trim" ? undefined : operationPatch.memberBId || memberIds[1],
+        gap: 0,
+        ...operationPatch
+      });
+      validateTrimJointOperation(next, id, trimJoint, operation);
+      trimJoint.operations = [operation];
+      addIndexedObject(next, "trimJoints", trimJoint);
+      const updated = setProject(next);
+      return { project: updated, trimJointId: id, trimJoint: updated.model.trimJoints[id] };
+    },
+
     deleteMember(memberId) {
       if (!currentProject.model.members?.[memberId]) fail(`member not found: ${memberId}`);
       const next = clone(currentProject);
+      const relationIds = memberAxisRelations(next, memberId).map((relation) => relation.id);
+      for (const relationId of relationIds) removeIndexedObject(next, relationId);
       removeIndexedObject(next, memberId);
-      removeReferences(next.model, new Set([memberId]));
+      removeReferences(next.model, new Set([memberId, ...relationIds]));
       return setProject(reconcileGeneratedConnections(next));
     },
 
     updateMember(memberId, patch, options = {}) {
       if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("member patch must be an object");
       return replaceMember(memberId, (member) => ({ ...member, ...clone(patch) }), options);
+    },
+
+    memberAxisRelations(memberId) {
+      memberById(currentProject, memberId);
+      return memberAxisRelations(currentProject, memberId);
+    },
+
+    setMemberAlignment(memberId, source) {
+      memberById(currentProject, memberId);
+      const next = clone(currentProject);
+      upsertRelationObject(next, memberAlignRelation(memberId, source));
+      return setProject(next);
+    },
+
+    clearMemberAlignment(memberId) {
+      memberById(currentProject, memberId);
+      const relation = memberAxisRelations(currentProject, memberId).find((item) => item.type === "member-align-axis");
+      return relation ? setProject(removeObjects(currentProject, [relation.id])) : currentProject;
+    },
+
+    upsertRelation(relation) {
+      const next = clone(currentProject);
+      upsertRelationObject(next, relation);
+      return setProject(next);
+    },
+
+    deleteRelation(relationId) {
+      if (typeof relationId !== "string" || !relationId) fail("relation id must be a non-empty string");
+      if (!currentProject.model.relations?.[relationId]) fail(`relation not found: ${relationId}`);
+      return setProject(removeObjects(currentProject, [relationId]));
+    },
+
+    updateFeature(featureId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("feature patch must be an object");
+      if ("id" in patch && patch.id !== featureId) fail("feature id cannot be changed");
+      if ("ownerId" in patch) fail("feature owner cannot be changed");
+      if ("type" in patch) fail("feature type cannot be changed");
+      return replaceFeature(featureId, (feature) => mergePatch(feature, patch));
+    },
+
+    updateTrimJoint(trimJointId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("trim joint patch must be an object");
+      if ("id" in patch && patch.id !== trimJointId) fail("trim joint id cannot be changed");
+      if ("type" in patch) fail("trim joint type cannot be changed");
+      if ("jointPoint" in patch) fail("trim joint point is derived from participant member axes");
+      return replaceTrimJoint(trimJointId, (trimJoint) => mergePatch(trimJoint, patch));
+    },
+
+    updateTrimJointParticipant(trimJointId, memberId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("trim joint participant patch must be an object");
+      if ("memberId" in patch && patch.memberId !== memberId) fail("participant member cannot be changed");
+      return replaceTrimJoint(trimJointId, (trimJoint) => {
+        const participants = (trimJoint.participants || []).map((participant) => (
+          participant.memberId === memberId ? mergePatch(participant, patch) : participant
+        ));
+        if (!participants.some((participant) => participant.memberId === memberId)) fail(`${trimJointId}: participant not found: ${memberId}`);
+        return { ...trimJoint, participants };
+      });
+    },
+
+    addTrimJointParticipant(trimJointId, memberId, patch = {}) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("trim joint participant patch must be an object");
+      if ("memberId" in patch && patch.memberId !== memberId) fail("participant member cannot be changed");
+      memberById(currentProject, memberId);
+      return replaceTrimJoint(trimJointId, (trimJoint) => {
+        if ((trimJoint.participants || []).some((participant) => participant.memberId === memberId)) {
+          fail(`${trimJointId}: participant already exists: ${memberId}`);
+        }
+        return {
+          ...trimJoint,
+          participants: [
+            ...(trimJoint.participants || []),
+            defaultTrimJointParticipant(currentProject, trimJoint, memberId, patch)
+          ]
+        };
+      });
+    },
+
+    removeTrimJointParticipant(trimJointId, memberId) {
+      return replaceTrimJoint(trimJointId, (trimJoint) => {
+        const participants = (trimJoint.participants || []).filter((participant) => participant.memberId !== memberId);
+        if (participants.length === (trimJoint.participants || []).length) fail(`${trimJointId}: participant not found: ${memberId}`);
+        if (!participants.length) fail(`${trimJointId}: trim requires at least one participant`);
+        const operations = (trimJoint.operations || []).filter((operation) => (
+          operation.memberAId !== memberId && operation.memberBId !== memberId
+        ));
+        return { ...trimJoint, participants, operations };
+      });
+    },
+
+    addTrimJointOperation(trimJointId, patch = {}) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("trim joint operation patch must be an object");
+      return replaceTrimJoint(trimJointId, (trimJoint) => {
+        const operation = defaultTrimJointOperation(trimJoint, patch);
+        validateTrimJointOperation(currentProject, trimJointId, trimJoint, operation);
+        if ((trimJoint.operations || []).some((item) => item.id === operation.id)) fail(`${trimJointId}: operation already exists: ${operation.id}`);
+        return { ...trimJoint, operations: [...(trimJoint.operations || []), operation] };
+      });
+    },
+
+    updateTrimJointOperation(trimJointId, operationId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("trim joint operation patch must be an object");
+      if ("id" in patch && patch.id !== operationId) fail("trim joint operation id cannot be changed");
+      return replaceTrimJoint(trimJointId, (trimJoint) => {
+        const operations = (trimJoint.operations || []).map((operation) => {
+          if (operation.id !== operationId) return operation;
+          const next = normalizedTrimJointOperation(trimJoint, mergePatch(operation, patch));
+          validateTrimJointOperation(currentProject, trimJointId, trimJoint, next);
+          return next;
+        });
+        if (!operations.some((operation) => operation.id === operationId)) fail(`${trimJointId}: operation not found: ${operationId}`);
+        return { ...trimJoint, operations };
+      });
+    },
+
+    setTrimJointOperationMember(trimJointId, operationId, role, memberId) {
+      if (role !== "memberA" && role !== "memberB") fail("trim joint operation role must be memberA or memberB");
+      memberById(currentProject, memberId);
+      return replaceTrimJoint(trimJointId, (trimJoint) => {
+        const nextTrimJoint = ensureTrimJointParticipant(currentProject, trimJoint, memberId);
+        let found = false;
+        const operations = (nextTrimJoint.operations || []).map((operation) => {
+          if (operation.id !== operationId) return operation;
+          found = true;
+          const patch = role === "memberA" ? { memberAId: memberId } : { memberBId: memberId };
+          if (trimOperationUsesMemberEnd(operation.type || "end-butt-1", role)) {
+            patch[`${role}End`] = nearestMemberEnd(memberById(currentProject, memberId), trimJointReferencePoint(currentProject, nextTrimJoint));
+          }
+          const next = normalizedTrimJointOperation(nextTrimJoint, mergePatch(operation, patch));
+          validateTrimJointOperation(currentProject, trimJointId, nextTrimJoint, next);
+          return next;
+        });
+        if (!found) fail(`${trimJointId}: operation not found: ${operationId}`);
+        return { ...nextTrimJoint, operations };
+      });
+    },
+
+    removeTrimJointOperation(trimJointId, operationId) {
+      return replaceTrimJoint(trimJointId, (trimJoint) => {
+        const operations = (trimJoint.operations || []).filter((operation) => operation.id !== operationId);
+        if (operations.length === (trimJoint.operations || []).length) fail(`${trimJointId}: operation not found: ${operationId}`);
+        return { ...trimJoint, operations };
+      });
+    },
+
+    setFeatureOperationEnabled(featureId, enabled) {
+      if (typeof enabled !== "boolean") fail("feature enabled state must be boolean");
+      return replaceFeature(featureId, (feature) => ({ ...feature, operationEnabled: enabled }));
+    },
+
+    setReferencePlane(referencePlaneId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("reference plane patch must be an object");
+      return replaceReferencePlane(referencePlaneId, (plane) => mergePatch(plane, patch));
+    },
+
+    setFeatureBody(featureId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("feature body patch must be an object");
+      return replaceFeature(featureId, (feature) => ({ ...feature, body: mergePatch(feature.body || {}, patch) }));
+    },
+
+    setFeatureSource(featureId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("feature source patch must be an object");
+      return replaceFeature(featureId, (feature) => ({ ...feature, source: mergePatch(feature.source || {}, patch) }));
     },
 
     setMemberProfile(memberId, profileId) {
@@ -840,6 +1328,14 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     regenerateMemberConnections(memberId) {
       memberById(currentProject, memberId);
       return setProject(regenerateMemberConnections(currentProject, memberId));
+    },
+
+    draftMemberProject(memberId, member, options = {}) {
+      memberById(currentProject, memberId);
+      const next = cloneProjectForMemberUpdate(currentProject, memberId);
+      next.model.members[memberId] = clone(member);
+      if (options.regenerateConnections === false) return next;
+      return regenerateMemberConnections(next, memberId);
     },
 
     setMemberCenter(memberId, center) {

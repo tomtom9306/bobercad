@@ -1,6 +1,7 @@
 ﻿import { v } from "../../engine/core/math.mjs";
 import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs";
 import { memberFrame } from "../../engine/geometry/member-geometry.mjs";
+import { trimOperationIconMarkup, trimOperationLabel } from "../trim-operation-icons.mjs?v=plane-region-hard-1";
 import { createCamera } from "./camera.mjs";
 import { createDimensionOverlayUi } from "./dimension-overlay-ui.mjs";
 import { createTextLabelRenderer } from "./text-label-renderer.mjs";
@@ -11,6 +12,7 @@ export function createWebglViewer(canvas, reset, settings) {
   let scene = null;
   const camera = createCamera(settings);
   let drag = null;
+  let authoringAutoPanFrame = null;
   let renderer = null;
   let staticSceneRenderer = null;
   let staticSceneCache = null;
@@ -110,10 +112,12 @@ export function createWebglViewer(canvas, reset, settings) {
   const authoringLabelLayer = document.createElement("div");
   authoringLabelLayer.className = "authoring-label-layer";
   document.body.appendChild(authoringLabelLayer);
+  const calloutLayer = document.createElement("div");
+  calloutLayer.className = "scene-callout-layer";
+  document.body.appendChild(calloutLayer);
   let highlightedObjectIds = new Set();
   const highlight = {
-    fill: "#f59e0b",
-    edge: "#facc15"
+    edge: "#38bdf8"
   };
   const detailPixelThreshold = Number.isFinite(settings.render.lod?.detailPixelThreshold)
     ? settings.render.lod.detailPixelThreshold
@@ -145,14 +149,6 @@ export function createWebglViewer(canvas, reset, settings) {
   function hexToRgba(color, opacity = 1) {
     const rgb = hexToRgb(color);
     return [rgb[0], rgb[1], rgb[2], Math.round(255 * opacity)];
-  }
-
-  function isHighlighted(item) {
-    return highlightedObjectIds.has(item.objectId);
-  }
-
-  function shouldBakeHighlight(item) {
-    return isHighlighted(item) && !useHighlightOverlay();
   }
 
   function isActiveConnectionObject(objectId) {
@@ -188,7 +184,16 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function pickObjectKey(item) {
-    return item?.collection && item?.objectId ? `${item.collection}:${item.objectId}` : null;
+    if (!item?.collection || !item?.objectId) return null;
+    return [
+      item.collection,
+      item.objectId,
+      item.operationId ? `operation:${item.operationId}` : null,
+      item.regionKey ? `region:${item.regionKey}` : null,
+      item.referencePlaneId ? `plane:${item.referencePlaneId}` : null,
+      item.componentKind ? `kind:${item.componentKind}` : null,
+      item.positionIndex !== undefined ? `position:${item.positionIndex}` : null
+    ].filter(Boolean).join(":");
   }
 
   function encodePickColorId(id) {
@@ -208,7 +213,15 @@ export function createWebglViewer(canvas, reset, settings) {
       id = nextPickColorId;
       nextPickColorId += 1;
       pickColorIdByObjectKey.set(key, id);
-      pickObjectByColorId.set(id, { collection: item.collection, objectId: item.objectId });
+      pickObjectByColorId.set(id, {
+        collection: item.collection,
+        objectId: item.objectId,
+        ...(item.operationId ? { operationId: item.operationId } : {}),
+        ...(item.regionKey ? { regionKey: item.regionKey } : {}),
+        ...(item.referencePlaneId ? { referencePlaneId: item.referencePlaneId } : {}),
+        ...(item.componentKind ? { componentKind: item.componentKind } : {}),
+        ...(item.positionIndex !== undefined ? { positionIndex: item.positionIndex } : {})
+      });
     }
     return encodePickColorId(id);
   }
@@ -237,7 +250,7 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function useHighlightOverlay() {
-    return isLargeScene() && [...highlightedObjectIds].every((id) => objectCollection(id) === "members");
+    return highlightedObjectIds.size > 0;
   }
 
   function compileShader(type, source) {
@@ -485,13 +498,16 @@ export function createWebglViewer(canvas, reset, settings) {
     return instances;
   }
 
-  function scenePickTriangles(objectIds = null) {
-    const filteredIds = objectIds ? new Set(objectIds) : null;
-    if (!filteredIds && projectedSceneTriangles) return projectedSceneTriangles;
+  function scenePickTriangles(options = {}) {
+    const filteredIds = options.objectIds ? new Set(options.objectIds) : null;
+    const componentKind = options.componentKind || null;
+    const cacheable = !filteredIds && !componentKind;
+    if (cacheable && projectedSceneTriangles) return projectedSceneTriangles;
     if (!scene) return [];
     const triangles = [];
     for (const face of scene.faces) {
       if (filteredIds && !filteredIds.has(face.objectId)) continue;
+      if (componentKind && face.componentKind !== componentKind) continue;
       if (!shouldDrawSceneItem(face)) continue;
       for (const triangle of triangulateFace(face.points)) {
         const projected = triangle.map((point) => camera.projectPoint(point, scene, canvas));
@@ -508,7 +524,7 @@ export function createWebglViewer(canvas, reset, settings) {
         });
       }
     }
-    if (!filteredIds) projectedSceneTriangles = triangles;
+    if (cacheable) projectedSceneTriangles = triangles;
     return triangles;
   }
 
@@ -551,7 +567,7 @@ export function createWebglViewer(canvas, reset, settings) {
     const cursor = { x, y };
     const objectIds = options.objectIds ? new Set(options.objectIds) : null;
     let best = null;
-    for (const item of scenePickTriangles(objectIds)) {
+    for (const item of scenePickTriangles({ objectIds, componentKind: options.componentKind })) {
       const { face, projected, triangle } = item;
       if (options.includeTransparent === false && (face.opacity ?? 1) < 1) continue;
       if (x < item.minX || x > item.maxX || y < item.minY || y > item.maxY) continue;
@@ -592,6 +608,83 @@ export function createWebglViewer(canvas, reset, settings) {
       return precise || { depth: 0, point: null, face: coarseFace };
     }
     return null;
+  }
+
+  function pickCursorDepth(x, y) {
+    if (!shouldUseGpuPick()) return pickScene(x, y, { forceCpu: true, includeTransparent: false });
+    const coarse = pickSceneGpu(x, y, { includeTransparent: false });
+    if (!coarse?.face?.objectId) return null;
+    const precise = pickScene(x, y, {
+      forceCpu: true,
+      includeTransparent: false,
+      objectIds: [coarse.face.objectId]
+    });
+    return precise || coarse;
+  }
+
+  function authoringPointerState() {
+    if (!drag || drag.mode !== "authoring") return null;
+    const rect = canvas.getBoundingClientRect();
+    const screen = {
+      x: drag.x - rect.left,
+      y: drag.y - rect.top
+    };
+    return { rect, screen };
+  }
+
+  function authoringEdgePan(screen, rect) {
+    const margin = settings.authoring?.autoPanEdgePx || 72;
+    const maxStep = settings.authoring?.autoPanMaxStepPx || 18;
+    const edgeStep = (distance) => {
+      const t = Math.max(0, Math.min(1, (margin - distance) / margin));
+      return maxStep * t * t;
+    };
+    const dx = screen.x < margin
+      ? edgeStep(screen.x)
+      : screen.x > rect.width - margin ? -edgeStep(rect.width - screen.x) : 0;
+    const dy = screen.y < margin
+      ? edgeStep(screen.y)
+      : screen.y > rect.height - margin ? -edgeStep(rect.height - screen.y) : 0;
+    return Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01 ? { dx, dy } : null;
+  }
+
+  function authoringHitAt(screen, rect) {
+    if (screen.x < 0 || screen.y < 0 || screen.x > rect.width || screen.y > rect.height) return null;
+    return pickCursorDepth(screen.x, screen.y);
+  }
+
+  function stopAuthoringAutoPan() {
+    if (authoringAutoPanFrame === null) return;
+    cancelAnimationFrame(authoringAutoPanFrame);
+    authoringAutoPanFrame = null;
+  }
+
+  function scheduleAuthoringAutoPan() {
+    if (authoringAutoPanFrame !== null) return;
+    authoringAutoPanFrame = requestAnimationFrame(() => {
+      authoringAutoPanFrame = null;
+      const state = authoringPointerState();
+      if (!state) return;
+      const pan = authoringEdgePan(state.screen, state.rect);
+      if (!pan) return;
+      camera.pan(pan.dx, pan.dy);
+      authoringHandler?.drag?.({
+        handle: drag.handle,
+        dx: 0,
+        dy: 0,
+        totalDx: drag.x - drag.startX,
+        totalDy: drag.y - drag.startY,
+        screen: state.screen,
+        hit: authoringHitAt(state.screen, state.rect),
+        autoPan: true
+      });
+      requestDraw();
+      scheduleAuthoringAutoPan();
+    });
+  }
+
+  function authoringPanGesture(event) {
+    return Boolean(event.shiftKey || (event.buttons & 2) || (event.buttons & 4));
   }
 
   function projectPoint(point) {
@@ -818,10 +911,12 @@ export function createWebglViewer(canvas, reset, settings) {
 
     scene.faces = (scene.faces || []).filter((item) => !isPatchedObject(item));
     scene.lines = (scene.lines || []).filter((item) => !isPatchedObject(item));
+    scene.callouts = (scene.callouts || []).filter((item) => !isPatchedObject(item));
     scene.memberInstances = (scene.memberInstances || []).filter((item) => !isPatchedObject(item));
 
     appendPatched(scene.faces, patchScene.faces);
     appendPatched(scene.lines, patchScene.lines);
+    appendPatched(scene.callouts, patchScene.callouts);
     appendPatched(scene.memberInstances, patchScene.memberInstances);
     invalidateMemberInstanceLookup();
 
@@ -837,6 +932,8 @@ export function createWebglViewer(canvas, reset, settings) {
 
     scene.project = patchScene.project || scene.project;
     scene.activeConnectionId = patchScene.activeConnectionId ?? scene.activeConnectionId;
+    scene.activeTrimJointId = patchScene.activeTrimJointId ?? scene.activeTrimJointId;
+    scene.activeTrimOperationId = patchScene.activeTrimOperationId ?? scene.activeTrimOperationId;
     scene.activeConnectionObjectIds = patchScene.activeConnectionObjectIds || scene.activeConnectionObjectIds;
     scene.generatedConnectionObjectIds = patchScene.generatedConnectionObjectIds || scene.generatedConnectionObjectIds;
     projectedSceneTriangles = null;
@@ -881,6 +978,17 @@ export function createWebglViewer(canvas, reset, settings) {
       origin,
       unit: { x: dx / length, y: dy / length },
       scalePxPerWorld
+    };
+  }
+
+  function projectedDragAxes(handle) {
+    if (!handle?.dragAxes) return null;
+    const xAxis = projectedAxisHandle({ point: handle.point, axis: handle.dragAxes.x, axisId: "x" });
+    const yAxis = projectedAxisHandle({ point: handle.point, axis: handle.dragAxes.y, axisId: "y" });
+    if (!xAxis || !yAxis) return null;
+    return {
+      x: { unit: xAxis.unit, scalePxPerWorld: xAxis.scalePxPerWorld },
+      y: { unit: yAxis.unit, scalePxPerWorld: yAxis.scalePxPerWorld }
     };
   }
 
@@ -968,6 +1076,9 @@ export function createWebglViewer(canvas, reset, settings) {
       handle.type || "point",
       handle.kind || "",
       handle.memberId || "",
+      handle.objectId || "",
+      handle.referencePlaneId || "",
+      handle.corner || "",
       handle.target || "",
       handle.axisId || "",
       handle.coordinateSpace || ""
@@ -1035,7 +1146,10 @@ export function createWebglViewer(canvas, reset, settings) {
       if (!projected) continue;
       const distance = Math.hypot(projected.x - x, projected.y - y);
       if (distance > (handle.radius || 10)) continue;
-      if (!best || distance < best.distance) best = { ...handle, distance, screen: projected };
+      if (!best || distance < best.distance) {
+        const dragAxes = projectedDragAxes(handle);
+        best = { ...handle, distance, screen: projected, ...(dragAxes ? { dragAxesScreen: dragAxes } : {}) };
+      }
     }
     return best;
   }
@@ -1157,6 +1271,53 @@ export function createWebglViewer(canvas, reset, settings) {
     pushScreenLine(positionData, colorData, left, top, rgba);
   }
 
+  function pushScreenCircle(positionData, colorData, center, radius, rgba) {
+    const segments = 14;
+    let previous = null;
+    for (let index = 0; index <= segments; index += 1) {
+      const angle = index / segments * Math.PI * 2;
+      const point = {
+        x: center.x + Math.cos(angle) * radius,
+        y: center.y + Math.sin(angle) * radius
+      };
+      if (previous) pushScreenLine(positionData, colorData, previous, point, rgba);
+      previous = point;
+    }
+  }
+
+  function renderSceneCallouts() {
+    calloutLayer.replaceChildren();
+    if (!scene?.callouts?.length) return;
+    for (const callout of scene.callouts) {
+      if (!shouldDrawSceneItem(callout)) continue;
+      const projected = projectPoint(callout.point);
+      if (!projected) continue;
+      const node = document.createElement("button");
+      node.type = "button";
+      node.className = "scene-callout trim-callout";
+      if (callout.operationId) node.dataset.operationId = callout.operationId;
+      node.style.left = `${projected.x}px`;
+      node.style.top = `${projected.y}px`;
+      node.title = callout.label || trimOperationLabel(callout.iconType);
+      node.innerHTML = trimOperationIconMarkup(callout.iconType, callout.colors, { class: "trim-callout-icon" });
+      node.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      node.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        clickHandler?.({
+          collection: callout.collection,
+          objectId: callout.objectId,
+          ...(callout.operationId ? { operationId: callout.operationId } : {}),
+          ...(callout.regionKey ? { regionKey: callout.regionKey } : {})
+        });
+      });
+      calloutLayer.appendChild(node);
+    }
+  }
+
   function projectOffsetPoint(point, offset = null) {
     const projected = projectPoint(point);
     if (!projected) return null;
@@ -1236,6 +1397,10 @@ export function createWebglViewer(canvas, reset, settings) {
     const color = hexToRgba(hovered ? "#fef08a" : handle.color);
     if (handle.type === "space-toggle") {
       pushScreenDiamond(positionData, colorData, projected, radius, color);
+      return;
+    }
+    if (handle.type === "circle") {
+      pushScreenCircle(positionData, colorData, projected, radius, color);
       return;
     }
     pushScreenSquare(positionData, colorData, projected, radius, color);
@@ -1367,7 +1532,7 @@ export function createWebglViewer(canvas, reset, settings) {
     for (const face of scene.faces) {
       if (!shouldDrawSceneItem(face)) continue;
       const surfaceGroup = renderGroupBucket((face.opacity ?? 1) >= 1 ? opaqueFaces : transparentFaces);
-      const rgba = shadedRgba(shouldBakeHighlight(face) ? highlight.fill : face.color, face.points, face.opacity ?? 1);
+      const rgba = shadedRgba(face.color, face.points, face.opacity ?? 1);
       const pickRgba = pickColorForItem(face);
       for (const triangle of triangulateFace(face.points)) {
         for (const point of triangle) appendWorldVertex(surfaceGroup, point, rgba, pickRgba);
@@ -1385,7 +1550,7 @@ export function createWebglViewer(canvas, reset, settings) {
     for (const line of scene.lines) {
       if (!shouldDrawSceneItem(line)) continue;
       const lineGroup = renderGroupBucket(lineGroups);
-      const rgba = hexToRgba(shouldBakeHighlight(line) ? highlight.edge : line.color, line.opacity ?? 1);
+      const rgba = hexToRgba(line.color, line.opacity ?? 1);
       appendWorldVertex(lineGroup, line.points[0], rgba);
       appendWorldVertex(lineGroup, line.points[1], rgba);
     }
@@ -1455,7 +1620,7 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function instanceRgba(instance) {
-    const rgba = hexToRgba(shouldBakeHighlight(instance) ? highlight.fill : instance.color, instance.opacity ?? 1);
+    const rgba = hexToRgba(instance.color, instance.opacity ?? 1);
     return [rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3] / 255];
   }
 
@@ -1574,7 +1739,7 @@ export function createWebglViewer(canvas, reset, settings) {
   function appendMemberInstanceSurface(positionData, colorData, instance, colorOverride = null) {
     const geometry = scene.memberInstanceGeometries?.[instance.profileId];
     if (!geometry?.positions?.length) return;
-    const base = hexToRgba(colorOverride || (shouldBakeHighlight(instance) ? highlight.fill : instance.color), instance.opacity ?? 1);
+    const base = hexToRgba(colorOverride || instance.color, instance.opacity ?? 1);
     const light = v.norm(settings.render.lighting.direction);
 
     for (let index = 0; index < geometry.positions.length; index += 3) {
@@ -1598,6 +1763,33 @@ export function createWebglViewer(canvas, reset, settings) {
     }
   }
 
+  function appendWorldLine(positionData, colorData, a, b, rgba) {
+    appendWorldVertex(positionData, colorData, a, rgba);
+    appendWorldVertex(positionData, colorData, b, rgba);
+  }
+
+  function memberInstancePoint(instance, x, y, z) {
+    return v.add(instance.start, v.add(
+      v.mul(instance.axisX, x * instance.length),
+      v.add(v.mul(instance.axisY, y), v.mul(instance.axisZ, z))
+    ));
+  }
+
+  function appendMemberInstanceOutline(positionData, colorData, instance, rgba) {
+    const contours = scene.profiles?.[instance.profileId]?.section?.contours || [];
+    for (const contour of contours) {
+      const points = contour.points || [];
+      if (points.length < 2) continue;
+      for (let index = 0; index < points.length; index += 1) {
+        const a = points[index];
+        const b = points[(index + 1) % points.length];
+        appendWorldLine(positionData, colorData, memberInstancePoint(instance, 0, a[0], a[1]), memberInstancePoint(instance, 0, b[0], b[1]), rgba);
+        appendWorldLine(positionData, colorData, memberInstancePoint(instance, 1, a[0], a[1]), memberInstancePoint(instance, 1, b[0], b[1]), rgba);
+        appendWorldLine(positionData, colorData, memberInstancePoint(instance, 0, a[0], a[1]), memberInstancePoint(instance, 1, a[0], a[1]), rgba);
+      }
+    }
+  }
+
   function appendPreviewMemberInstance(positionData, colorData, instance) {
     appendMemberInstanceSurface(positionData, colorData, transformedPreviewInstance(instance));
   }
@@ -1615,7 +1807,7 @@ export function createWebglViewer(canvas, reset, settings) {
       const opacity = previewOpacity(face.opacity ?? 1);
       if ((opacity < 1) !== transparent) continue;
       const points = face.points.map(previewPoint);
-      const rgba = shadedRgba(isHighlighted(face) ? highlight.fill : face.color, points, opacity);
+      const rgba = shadedRgba(face.color, points, opacity);
       for (const triangle of triangulateFace(points)) {
         for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
       }
@@ -1640,30 +1832,11 @@ export function createWebglViewer(canvas, reset, settings) {
     }
 
     for (const line of objectPreview.lines) {
-      const rgba = hexToRgba(isHighlighted(line) ? highlight.edge : line.color, previewOpacity(line.opacity ?? 1));
+      const rgba = hexToRgba(line.color, previewOpacity(line.opacity ?? 1));
       appendWorldVertex(positions, colors, previewPoint(line.points[0]), rgba);
       appendWorldVertex(positions, colors, previewPoint(line.points[1]), rgba);
     }
     drawWorldArrays(gl.LINES, positions, colors);
-  }
-
-  function drawHighlightOverlaySurfaces() {
-    if (!highlightedObjectIds.size || !useHighlightOverlay()) return;
-    const positions = [];
-    const colors = [];
-    for (const instance of memberInstancesForPick(highlightedObjectIds)) {
-      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
-      appendMemberInstanceSurface(positions, colors, instance, highlight.fill);
-    }
-    for (const face of scene.faces || []) {
-      if (!highlightedObjectIds.has(face.objectId)) continue;
-      if (!shouldDrawSceneItem(face)) continue;
-      const rgba = shadedRgba(highlight.fill, face.points, face.opacity ?? 1);
-      for (const triangle of triangulateFace(face.points)) {
-        for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
-      }
-    }
-    drawWorldArrays(gl.TRIANGLES, positions, colors);
   }
 
   function drawHighlightOverlayLines() {
@@ -1671,19 +1844,21 @@ export function createWebglViewer(canvas, reset, settings) {
     const positions = [];
     const colors = [];
     const rgba = hexToRgba(highlight.edge);
+    for (const instance of memberInstancesForPick(highlightedObjectIds)) {
+      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
+      appendMemberInstanceOutline(positions, colors, instance, rgba);
+    }
     for (const face of scene.faces || []) {
       if (!highlightedObjectIds.has(face.objectId) || face.hideEdges) continue;
       if (!shouldDrawSceneItem(face)) continue;
       for (let index = 0; index < face.points.length; index += 1) {
-        appendWorldVertex(positions, colors, face.points[index], rgba);
-        appendWorldVertex(positions, colors, face.points[(index + 1) % face.points.length], rgba);
+        appendWorldLine(positions, colors, face.points[index], face.points[(index + 1) % face.points.length], rgba);
       }
     }
     for (const line of scene.lines || []) {
       if (!highlightedObjectIds.has(line.objectId)) continue;
       if (!shouldDrawSceneItem(line)) continue;
-      appendWorldVertex(positions, colors, line.points[0], rgba);
-      appendWorldVertex(positions, colors, line.points[1], rgba);
+      appendWorldLine(positions, colors, line.points[0], line.points[1], rgba);
     }
     drawWorldArrays(gl.LINES, positions, colors);
   }
@@ -1804,12 +1979,6 @@ export function createWebglViewer(canvas, reset, settings) {
     drawStaticRenderGroups(staticSceneCache.opaqueFaces);
     drawObjectPreviewSurfaces(false);
     gl.disable(gl.POLYGON_OFFSET_FILL);
-    if (highlightedObjectIds.size && useHighlightOverlay()) {
-      gl.enable(gl.POLYGON_OFFSET_FILL);
-      gl.polygonOffset(-1, -1);
-      drawHighlightOverlaySurfaces();
-      gl.disable(gl.POLYGON_OFFSET_FILL);
-    }
     if (staticSceneCache.transparentFaces.length || objectPreview) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -1825,7 +1994,25 @@ export function createWebglViewer(canvas, reset, settings) {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     drawStaticRenderGroups(staticSceneCache.lines);
     drawObjectPreviewLines();
+    gl.lineWidth(Math.max(2, settings.render.edges.lineWidth));
     drawHighlightOverlayLines();
+    gl.lineWidth(settings.render.edges.lineWidth);
+
+    const authoringFacePositions = [];
+    const authoringFaceColors = [];
+    for (const face of authoringOverlay.faces || []) {
+      const rgba = hexToRgba(face.color, face.opacity ?? 0.32);
+      for (const triangle of triangulateFace(face.points || [])) {
+        for (const point of triangle) appendWorldVertex(authoringFacePositions, authoringFaceColors, point, rgba);
+      }
+    }
+    if (authoringFacePositions.length) {
+      gl.disable(gl.DEPTH_TEST);
+      gl.depthMask(false);
+      drawWorldArrays(gl.TRIANGLES, authoringFacePositions, authoringFaceColors);
+      gl.depthMask(true);
+      gl.enable(gl.DEPTH_TEST);
+    }
 
     const authoringLinePositions = [];
     const authoringLineColors = [];
@@ -1874,6 +2061,7 @@ export function createWebglViewer(canvas, reset, settings) {
     }
     dimensionUi.renderLabels();
     renderAuthoringLabels();
+    renderSceneCallouts();
   }
 
   function resizeCanvas() {
@@ -1938,7 +2126,7 @@ export function createWebglViewer(canvas, reset, settings) {
       const y = event.clientY - rect.top;
       const mode = event.button === 1 || event.button === 2 || event.shiftKey ? "pan" : "pending-orbit";
       if (commandHandler?.active?.() && event.button === 0) {
-        const hitResult = pickScene(x, y);
+        const hitResult = pickCursorDepth(x, y);
         commandHandler.pointerDown?.({ event, screen: { x, y }, hit: hitResult });
         return;
       }
@@ -2017,7 +2205,7 @@ export function createWebglViewer(canvas, reset, settings) {
           const rect = canvas.getBoundingClientRect();
           const x = event.clientX - rect.left;
           const y = event.clientY - rect.top;
-          const hitResult = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height ? pickScene(x, y) : null;
+          const hitResult = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height ? pickCursorDepth(x, y) : null;
           commandHandler.pointerMove?.({ event, screen: { x, y }, hit: hitResult });
           return;
         }
@@ -2031,20 +2219,36 @@ export function createWebglViewer(canvas, reset, settings) {
       }
       dimensionUi.setHoveredDimensionId(null, event);
       if (drag.mode === "authoring") {
+        if (authoringPanGesture(event)) {
+          stopAuthoringAutoPan();
+          const dx = event.clientX - drag.x;
+          const dy = event.clientY - drag.y;
+          camera.pan(dx, dy);
+          drag.x = event.clientX;
+          drag.y = event.clientY;
+          drag.startX += dx;
+          drag.startY += dy;
+          requestDraw();
+          return;
+        }
         const rect = canvas.getBoundingClientRect();
+        const screen = {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+        };
+        const hit = authoringHitAt(screen, rect);
         authoringHandler?.drag?.({
           handle: drag.handle,
           dx: event.clientX - drag.x,
           dy: event.clientY - drag.y,
           totalDx: event.clientX - drag.startX,
           totalDy: event.clientY - drag.startY,
-          screen: {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top
-          }
+          screen,
+          hit
         });
         drag.x = event.clientX;
         drag.y = event.clientY;
+        scheduleAuthoringAutoPan();
         requestDraw();
         return;
       }
@@ -2081,19 +2285,34 @@ export function createWebglViewer(canvas, reset, settings) {
       const pointerId = currentDrag?.pointerId;
       const lockedOrbit = currentDrag?.mode === "orbit" && document.pointerLockElement === canvas;
       if (currentDrag?.mode === "authoring") {
+        stopAuthoringAutoPan();
         const cancel = eventOrOptions?.type === "pointercancel" || eventOrOptions?.type === "lostpointercapture";
         (cancel ? authoringHandler?.cancel : authoringHandler?.end)?.({ handle: currentDrag.handle });
       }
       if (currentDrag?.mode === "pending-orbit" && eventOrOptions?.type === "pointerup" && clickHandler) {
-        if (currentDrag.face) {
-          clickHandler(currentDrag.face);
+        const regionHit = pickScene(currentDrag.screen.x, currentDrag.screen.y, {
+          forceCpu: true,
+          includeInstances: false,
+          componentKind: "trim-region"
+        });
+        if (regionHit?.face) {
+          clickHandler({ ...regionHit.face, ...(regionHit.point ? { hitPoint: regionHit.point } : {}) });
+        } else if (currentDrag.face) {
+          const preciseClick = currentDrag.hit ? null : pickScene(currentDrag.screen.x, currentDrag.screen.y, {
+            forceCpu: true,
+            includeTransparent: false,
+            objectIds: [currentDrag.face.objectId]
+          });
+          const hitPoint = currentDrag.hit || preciseClick?.point || null;
+          clickHandler({ ...(preciseClick?.face || currentDrag.face), ...(hitPoint ? { hitPoint } : {}) });
         } else if (shouldUseGpuPick()) {
           clickHandler(null);
         } else {
           const rect = canvas.getBoundingClientRect();
           const x = eventOrOptions.clientX - rect.left;
           const y = eventOrOptions.clientY - rect.top;
-          clickHandler(pickScene(x, y)?.face || null);
+          const hit = pickScene(x, y);
+          clickHandler(hit?.face ? { ...hit.face, ...(hit.point ? { hitPoint: hit.point } : {}) } : null);
         }
       }
       drag = null;

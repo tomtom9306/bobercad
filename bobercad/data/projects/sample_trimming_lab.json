@@ -1,0 +1,1814 @@
+{
+  "$schema": "../../app/schemas/project.schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_trimming_lab_1",
+    "name": "Trimming Lab",
+    "description": "Several intersecting beams with semantic trim joints, mitres, plane trims, profile copes, and boolean part cuts for trimming development.",
+    "createdWith": "manual-seed-0.5.0",
+    "bim": {
+      "name": "Trimming Lab",
+      "propertySets": {
+        "Identity": {
+          "projectNumber": "PRJ-TRIM-001",
+          "status": "sample"
+        }
+      }
+    }
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axisX": [
+        1,
+        0,
+        0
+      ],
+      "axisY": [
+        0,
+        1,
+        0
+      ],
+      "axisZ": [
+        0,
+        0,
+        1
+      ]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles/profile-libraries/starter-profiles/config.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials/material-libraries/starter-materials/config.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
+    },
+    "connections": {
+      "libraryId": "starter-connection-library",
+      "version": "0.1.0",
+      "path": "../libraries/connections/connection-register.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/model-library/model-register.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_trimming_lab",
+    "nodes": {
+      "site_trimming_lab": {
+        "id": "site_trimming_lab",
+        "type": "site",
+        "name": "Trimming Lab Site",
+        "children": [
+          "zone_trimming_lab"
+        ]
+      },
+      "zone_trimming_lab": {
+        "id": "zone_trimming_lab",
+        "type": "zone",
+        "name": "Trimming Test Zone",
+        "children": []
+      }
+    }
+  },
+  "gridSystems": {},
+  "levels": {},
+  "phases": {
+    "phase_1": {
+      "id": "phase_1",
+      "name": "Phase 1"
+    }
+  },
+  "lots": {
+    "lot_1": {
+      "id": "lot_1",
+      "name": "Lot 1"
+    }
+  },
+  "objectIndex": {
+    "trim_matched_left_joint_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_matched_raker_joint_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_main_start_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_main_sloped_end_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_cross_a_end_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_cross_b_end_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_skew_c_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_stub_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_compound_start_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_compound_end_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "group_trimming_lab": {
+      "collection": "groups",
+      "type": "object-group"
+    },
+    "trim_main_beam": {
+      "collection": "members",
+      "type": "trim-i-beam"
+    },
+    "trim_cross_beam_a": {
+      "collection": "members",
+      "type": "trim-rhs-beam"
+    },
+    "trim_cross_beam_b": {
+      "collection": "members",
+      "type": "trim-i-beam"
+    },
+    "trim_skew_beam_c": {
+      "collection": "members",
+      "type": "trim-i-beam"
+    },
+    "trim_upper_beam": {
+      "collection": "members",
+      "type": "trim-rhs-beam"
+    },
+    "trim_short_stub": {
+      "collection": "members",
+      "type": "trim-shs-beam"
+    },
+    "trim_miter_left_beam": {
+      "collection": "members",
+      "type": "trim-i-beam"
+    },
+    "trim_miter_right_beam": {
+      "collection": "members",
+      "type": "trim-i-beam"
+    },
+    "trim_matched_left_beam": {
+      "collection": "members",
+      "type": "trim-rhs-beam"
+    },
+    "trim_matched_raker_beam": {
+      "collection": "members",
+      "type": "trim-i-beam"
+    },
+    "trim_compound_beam": {
+      "collection": "members",
+      "type": "trim-i-beam"
+    },
+    "trim_profile_cut_support": {
+      "collection": "members",
+      "type": "trim-rhs-beam"
+    },
+    "trim_profile_cut_stub": {
+      "collection": "members",
+      "type": "trim-shs-beam"
+    },
+    "trim_butt_support": {
+      "collection": "members",
+      "type": "trim-rhs-beam"
+    },
+    "trim_butt_stub": {
+      "collection": "members",
+      "type": "trim-shs-beam"
+    },
+    "trim_main_box_notch": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_main_round_web_cut": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_cross_a_intersection_box": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_cross_a_polygon_gap": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_cross_b_cylinder_sleeve": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_skew_c_double_box_1": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_skew_c_double_box_2": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_upper_mid_polygon": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_upper_round_cut": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_stub_box_cut": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_profile_stub_member_profile_cut": {
+      "collection": "features",
+      "type": "boolean-part"
+    },
+    "trim_miter_corner_joint": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_matched_plane_joint": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_butt_corner_joint": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_main_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_cross_a_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_cross_b_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_skew_c_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_stub_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_compound_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": [
+      "collectionDefault",
+      "typeDefault",
+      "object"
+    ],
+    "collections": {
+      "members": {
+        "*": {
+          "material": "S355",
+          "rotation": 0,
+          "cardinalPoint": "middle-center",
+          "featureIds": [],
+          "display": {
+            "visible": true,
+            "color": "#3f657d"
+          },
+          "fabrication": {
+            "numberingStatus": "preliminary",
+            "nc1Ready": false
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_trimming_lab",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "modeled"
+          },
+          "bim": {
+            "ifcClass": "IfcBeam",
+            "propertySets": {
+              "Identity": {
+                "objectType": "Trimming test member"
+              }
+            }
+          }
+        },
+        "trim-i-beam": {
+          "profile": "DEMO_I_200X100X8X12"
+        },
+        "trim-rhs-beam": {
+          "profile": "DEMO_RHS_100X50X5"
+        },
+        "trim-shs-beam": {
+          "profile": "DEMO_SHS_100X100X5"
+        }
+      },
+      "features": {
+        "*": {
+          "operationEnabled": true,
+          "display": {
+            "visible": true,
+            "transparent": true,
+            "opacity": 0.2
+          },
+          "fabrication": {
+            "nc1Ready": false
+          }
+        },
+        "boolean-part": {
+          "teklaClass": "BooleanPart",
+          "booleanType": "BOOLEAN_CUT",
+          "cutKind": "part-cut",
+          "display": {
+            "color": "#ff3366",
+            "edgeColor": "#be123c"
+          }
+        }
+      }
+    }
+  },
+  "model": {
+    "workPoints": {},
+    "referencePlanes": {
+      "trim_matched_left_joint_plane": {
+        "id": "trim_matched_left_joint_plane",
+        "type": "reference-plane",
+        "name": "trim_matched_left_joint plane",
+        "origin": [
+          -85.86896208821165,
+          3298.9325789437025,
+          359.35509977848704
+        ],
+        "normal": [
+          -0.9781603480352746,
+          -0.1779035093828886,
+          -0.10748337025216187
+        ],
+        "axisX": [
+          -0.17683910732221214,
+          0.984047936509829,
+          -0.019431643580270823
+        ],
+        "axisY": [
+          0.10922574629176945,
+          0,
+          -0.9940169698486068
+        ],
+        "extents": {
+          "xMin": -67.5,
+          "xMax": 67.5,
+          "yMin": -67.5,
+          "yMax": 67.5
+        }
+      },
+      "trim_matched_raker_joint_plane": {
+        "id": "trim_matched_raker_joint_plane",
+        "type": "reference-plane",
+        "name": "trim_matched_raker_joint plane",
+        "origin": [
+          -74.13103791178835,
+          3301.0674210562975,
+          360.64490022151296
+        ],
+        "normal": [
+          0.9781603480352746,
+          0.17790350938288826,
+          0.10748337025216166
+        ],
+        "axisX": [
+          -0.20628042260709847,
+          0.8943581073082386,
+          0.39695335134126514
+        ],
+        "axisY": [
+          -0.025509229320924233,
+          -0.4104557433405916,
+          0.9115236486115841
+        ],
+        "extents": {
+          "xMin": -135,
+          "xMax": 135,
+          "yMin": -135,
+          "yMax": 135
+        }
+      },
+      "trim_main_start_plane": {
+        "id": "trim_main_start_plane",
+        "type": "reference-plane",
+        "name": "trim_main_start plane",
+        "origin": [
+          -1500,
+          -650,
+          0
+        ],
+        "normal": [
+          0.96,
+          0,
+          0.28
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          -0.28,
+          0,
+          0.96
+        ],
+        "extents": {
+          "xMin": -230,
+          "xMax": 230,
+          "yMin": -190,
+          "yMax": 190
+        }
+      },
+      "trim_main_sloped_end_plane": {
+        "id": "trim_main_sloped_end_plane",
+        "type": "reference-plane",
+        "name": "trim_main_sloped_end plane",
+        "origin": [
+          1500,
+          -650,
+          0
+        ],
+        "normal": [
+          -0.69,
+          0,
+          -0.72
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0.72,
+          0,
+          -0.69
+        ],
+        "extents": {
+          "xMin": -240,
+          "xMax": 240,
+          "yMin": -210,
+          "yMax": 210
+        }
+      },
+      "trim_cross_a_end_plane": {
+        "id": "trim_cross_a_end_plane",
+        "type": "reference-plane",
+        "name": "trim_cross_a_end plane",
+        "origin": [
+          1020,
+          -215,
+          200
+        ],
+        "normal": [
+          -0.9,
+          0.25,
+          -0.36
+        ],
+        "axisX": [
+          0,
+          0,
+          1
+        ],
+        "axisY": [
+          0.24,
+          0.97,
+          0
+        ],
+        "extents": {
+          "xMin": -180,
+          "xMax": 180,
+          "yMin": -180,
+          "yMax": 180
+        }
+      },
+      "trim_cross_b_end_plane": {
+        "id": "trim_cross_b_end_plane",
+        "type": "reference-plane",
+        "name": "trim_cross_b_end plane",
+        "origin": [
+          -1180,
+          -20,
+          240
+        ],
+        "normal": [
+          0.82,
+          0.18,
+          -0.54
+        ],
+        "axisX": [
+          0,
+          0,
+          1
+        ],
+        "axisY": [
+          -0.23,
+          0.97,
+          0
+        ],
+        "extents": {
+          "xMin": -180,
+          "xMax": 180,
+          "yMin": -210,
+          "yMax": 210
+        }
+      },
+      "trim_skew_c_plane": {
+        "id": "trim_skew_c_plane",
+        "type": "reference-plane",
+        "name": "trim_skew_c plane",
+        "origin": [
+          1350,
+          332,
+          360
+        ],
+        "normal": [
+          -0.78,
+          0.2,
+          -0.59
+        ],
+        "axisX": [
+          0,
+          0,
+          1
+        ],
+        "axisY": [
+          0.24,
+          0.97,
+          0
+        ],
+        "extents": {
+          "xMin": -190,
+          "xMax": 190,
+          "yMin": -210,
+          "yMax": 210
+        }
+      },
+      "trim_stub_plane": {
+        "id": "trim_stub_plane",
+        "type": "reference-plane",
+        "name": "trim_stub plane",
+        "origin": [
+          -150,
+          1150,
+          -220
+        ],
+        "normal": [
+          0.72,
+          -0.46,
+          0.52
+        ],
+        "axisX": [
+          0,
+          0,
+          1
+        ],
+        "axisY": [
+          0.42,
+          0.91,
+          0
+        ],
+        "extents": {
+          "xMin": -170,
+          "xMax": 170,
+          "yMin": -170,
+          "yMax": 170
+        }
+      },
+      "trim_compound_start_plane": {
+        "id": "trim_compound_start_plane",
+        "type": "reference-plane",
+        "name": "trim_compound_start plane",
+        "origin": [
+          -1450,
+          4200,
+          -240
+        ],
+        "normal": [
+          0.9844749574414373,
+          0.03579908936150681,
+          0.1718356289352327
+        ],
+        "axisX": [
+          -0.12181660934208592,
+          0.8441789089967987,
+          0.5220370516480342
+        ],
+        "axisY": [
+          -0.12637156269935795,
+          -0.5348648378851067,
+          0.8354339191911355
+        ],
+        "extents": {
+          "xMin": -135,
+          "xMax": 135,
+          "yMin": -135,
+          "yMax": 135
+        }
+      },
+      "trim_compound_end_plane": {
+        "id": "trim_compound_end_plane",
+        "type": "reference-plane",
+        "name": "trim_compound_end plane",
+        "origin": [
+          1180,
+          4295,
+          220
+        ],
+        "normal": [
+          -0.76,
+          -0.08,
+          -0.64
+        ],
+        "axisX": [
+          0,
+          0,
+          1
+        ],
+        "axisY": [
+          0.3,
+          0.95,
+          0.08
+        ],
+        "extents": {
+          "xMin": -215,
+          "xMax": 215,
+          "yMin": -215,
+          "yMax": 215
+        }
+      }
+    },
+    "groups": {
+      "group_trimming_lab": {
+        "id": "group_trimming_lab",
+        "type": "object-group",
+        "name": "Trimming test members",
+        "objectIds": [
+          "trim_main_beam",
+          "trim_cross_beam_a",
+          "trim_cross_beam_b",
+          "trim_skew_beam_c",
+          "trim_upper_beam",
+          "trim_short_stub",
+          "trim_miter_left_beam",
+          "trim_miter_right_beam",
+          "trim_matched_left_beam",
+          "trim_matched_raker_beam",
+          "trim_compound_beam",
+          "trim_profile_cut_support",
+          "trim_profile_cut_stub",
+          "trim_butt_support",
+          "trim_butt_stub"
+        ],
+        "memberIds": [
+          "trim_main_beam",
+          "trim_cross_beam_a",
+          "trim_cross_beam_b",
+          "trim_skew_beam_c",
+          "trim_upper_beam",
+          "trim_short_stub",
+          "trim_miter_left_beam",
+          "trim_miter_right_beam",
+          "trim_matched_left_beam",
+          "trim_matched_raker_beam",
+          "trim_compound_beam",
+          "trim_profile_cut_support",
+          "trim_profile_cut_stub",
+          "trim_butt_support",
+          "trim_butt_stub"
+        ]
+      }
+    },
+    "interfaces": {},
+    "connectionZones": {},
+    "assemblies": {},
+    "members": {
+      "trim_main_beam": {
+        "id": "trim_main_beam",
+        "type": "trim-i-beam",
+        "start": [
+          -1700,
+          -650,
+          0
+        ],
+        "end": [
+          1700,
+          -650,
+          0
+        ],
+        "featureIds": [
+          "trim_main_box_notch",
+          "trim_main_round_web_cut"
+        ],
+        "fabrication": {
+          "partMark": "TR-MAIN-1"
+        }
+      },
+      "trim_cross_beam_a": {
+        "id": "trim_cross_beam_a",
+        "type": "trim-rhs-beam",
+        "start": [
+          -1250,
+          450,
+          -180
+        ],
+        "end": [
+          1150,
+          -250,
+          220
+        ],
+        "rotation": 18,
+        "featureIds": [
+          "trim_cross_a_intersection_box",
+          "trim_cross_a_polygon_gap"
+        ],
+        "display": {
+          "color": "#4f7f9f"
+        },
+        "fabrication": {
+          "partMark": "TR-XA-1"
+        }
+      },
+      "trim_cross_beam_b": {
+        "id": "trim_cross_beam_b",
+        "type": "trim-i-beam",
+        "start": [
+          -1300,
+          -50,
+          260
+        ],
+        "end": [
+          1200,
+          550,
+          -180
+        ],
+        "rotation": -12,
+        "featureIds": [
+          "trim_cross_b_cylinder_sleeve"
+        ],
+        "display": {
+          "color": "#2f5d73"
+        },
+        "fabrication": {
+          "partMark": "TR-XB-1"
+        }
+      },
+      "trim_skew_beam_c": {
+        "id": "trim_skew_beam_c",
+        "type": "trim-i-beam",
+        "start": [
+          -1500,
+          950,
+          360
+        ],
+        "end": [
+          1500,
+          300,
+          360
+        ],
+        "rotation": 35,
+        "featureIds": [
+          "trim_skew_c_double_box_1",
+          "trim_skew_c_double_box_2"
+        ],
+        "display": {
+          "color": "#446b58"
+        },
+        "fabrication": {
+          "partMark": "TR-SKEW-1"
+        }
+      },
+      "trim_upper_beam": {
+        "id": "trim_upper_beam",
+        "type": "trim-rhs-beam",
+        "start": [
+          -900,
+          -1050,
+          460
+        ],
+        "end": [
+          900,
+          900,
+          120
+        ],
+        "rotation": 10,
+        "featureIds": [
+          "trim_upper_mid_polygon",
+          "trim_upper_round_cut"
+        ],
+        "display": {
+          "color": "#5d6f89"
+        },
+        "fabrication": {
+          "partMark": "TR-UP-1"
+        }
+      },
+      "trim_short_stub": {
+        "id": "trim_short_stub",
+        "type": "trim-shs-beam",
+        "start": [
+          -250,
+          1200,
+          -260
+        ],
+        "end": [
+          850,
+          700,
+          260
+        ],
+        "rotation": 45,
+        "featureIds": [
+          "trim_stub_box_cut"
+        ],
+        "display": {
+          "color": "#7a6546"
+        },
+        "fabrication": {
+          "partMark": "TR-STUB-1"
+        }
+      },
+      "trim_miter_left_beam": {
+        "id": "trim_miter_left_beam",
+        "type": "trim-i-beam",
+        "start": [
+          -1550,
+          2250,
+          40
+        ],
+        "end": [
+          -120,
+          2580,
+          40
+        ],
+        "rotation": -8,
+        "display": {
+          "color": "#365f74"
+        },
+        "fabrication": {
+          "partMark": "TR-MITRE-L"
+        }
+      },
+      "trim_miter_right_beam": {
+        "id": "trim_miter_right_beam",
+        "type": "trim-i-beam",
+        "start": [
+          -120,
+          2580,
+          40
+        ],
+        "end": [
+          1350,
+          2220,
+          40
+        ],
+        "rotation": 14,
+        "display": {
+          "color": "#365f74"
+        },
+        "fabrication": {
+          "partMark": "TR-MITRE-R"
+        }
+      },
+      "trim_matched_left_beam": {
+        "id": "trim_matched_left_beam",
+        "type": "trim-rhs-beam",
+        "start": [
+          -1500,
+          3300,
+          360
+        ],
+        "end": [
+          -80,
+          3300,
+          360
+        ],
+        "rotation": 0,
+        "display": {
+          "color": "#4f7f9f"
+        },
+        "fabrication": {
+          "partMark": "TR-MATCH-L"
+        }
+      },
+      "trim_matched_raker_beam": {
+        "id": "trim_matched_raker_beam",
+        "type": "trim-i-beam",
+        "start": [
+          -80,
+          3300,
+          360
+        ],
+        "end": [
+          1180,
+          3780,
+          650
+        ],
+        "rotation": 22,
+        "display": {
+          "color": "#446b58"
+        },
+        "fabrication": {
+          "partMark": "TR-MATCH-R"
+        }
+      },
+      "trim_compound_beam": {
+        "id": "trim_compound_beam",
+        "type": "trim-i-beam",
+        "start": [
+          -1450,
+          4200,
+          -240
+        ],
+        "end": [
+          1300,
+          4300,
+          240
+        ],
+        "rotation": 32,
+        "display": {
+          "color": "#6a5f8f"
+        },
+        "fabrication": {
+          "partMark": "TR-COMPOUND-1"
+        }
+      },
+      "trim_profile_cut_support": {
+        "id": "trim_profile_cut_support",
+        "type": "trim-rhs-beam",
+        "start": [
+          -900,
+          5200,
+          80
+        ],
+        "end": [
+          900,
+          5200,
+          80
+        ],
+        "rotation": 0,
+        "display": {
+          "color": "#4f7f9f"
+        },
+        "fabrication": {
+          "partMark": "TR-PROFILE-SRC"
+        }
+      },
+      "trim_profile_cut_stub": {
+        "id": "trim_profile_cut_stub",
+        "type": "trim-shs-beam",
+        "start": [
+          0,
+          5200,
+          -760
+        ],
+        "end": [
+          0,
+          5200,
+          320
+        ],
+        "rotation": 0,
+        "featureIds": [
+          "trim_profile_stub_member_profile_cut"
+        ],
+        "display": {
+          "color": "#7a6546"
+        },
+        "fabrication": {
+          "partMark": "TR-PROFILE-TGT"
+        }
+      },
+      "trim_butt_support": {
+        "id": "trim_butt_support",
+        "type": "trim-rhs-beam",
+        "start": [
+          -900,
+          6100,
+          120
+        ],
+        "end": [
+          900,
+          6100,
+          120
+        ],
+        "rotation": 0,
+        "display": {
+          "color": "#4f7f9f"
+        },
+        "fabrication": {
+          "partMark": "TR-BUTT-SUPPORT"
+        }
+      },
+      "trim_butt_stub": {
+        "id": "trim_butt_stub",
+        "type": "trim-shs-beam",
+        "start": [
+          0,
+          6100,
+          -700
+        ],
+        "end": [
+          0,
+          6100,
+          360
+        ],
+        "rotation": 0,
+        "display": {
+          "color": "#7a6546"
+        },
+        "fabrication": {
+          "partMark": "TR-BUTT-STUB"
+        }
+      }
+    },
+    "plates": {},
+    "holePatterns": {},
+    "objectPatterns": {},
+    "features": {
+      "trim_main_box_notch": {
+        "id": "trim_main_box_notch",
+        "type": "boolean-part",
+        "ownerId": "trim_main_beam",
+        "body": {
+          "type": "box",
+          "center": [
+            0,
+            -650,
+            105
+          ],
+          "axisX": [
+            1,
+            0,
+            0
+          ],
+          "axisY": [
+            0,
+            1,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            300,
+            230,
+            120
+          ]
+        },
+        "fabrication": {
+          "operation": "intersection-top-notch"
+        }
+      },
+      "trim_main_round_web_cut": {
+        "id": "trim_main_round_web_cut",
+        "type": "boolean-part",
+        "ownerId": "trim_main_beam",
+        "body": {
+          "type": "cylinder",
+          "center": [
+            -650,
+            -650,
+            0
+          ],
+          "axisX": [
+            0,
+            1,
+            0
+          ],
+          "axisY": [
+            1,
+            0,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "radius": 65,
+          "depth": 240
+        },
+        "fabrication": {
+          "operation": "round-web-cut"
+        }
+      },
+      "trim_cross_a_intersection_box": {
+        "id": "trim_cross_a_intersection_box",
+        "type": "boolean-part",
+        "ownerId": "trim_cross_beam_a",
+        "body": {
+          "type": "box",
+          "center": [
+            0,
+            90,
+            15
+          ],
+          "axisX": [
+            1,
+            0,
+            0
+          ],
+          "axisY": [
+            0,
+            1,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            320,
+            280,
+            220
+          ]
+        },
+        "fabrication": {
+          "operation": "crossing-clearance-box"
+        }
+      },
+      "trim_cross_a_polygon_gap": {
+        "id": "trim_cross_a_polygon_gap",
+        "type": "boolean-part",
+        "cutKind": "polygon-cut",
+        "ownerId": "trim_cross_beam_a",
+        "body": {
+          "type": "polygonal-prism",
+          "center": [
+            450,
+            -60,
+            100
+          ],
+          "axisX": [
+            0,
+            1,
+            0
+          ],
+          "axisY": [
+            1,
+            0,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "depth": 270,
+          "outline": [
+            [
+              -75,
+              -55
+            ],
+            [
+              55,
+              -75
+            ],
+            [
+              85,
+              10
+            ],
+            [
+              25,
+              80
+            ],
+            [
+              -70,
+              55
+            ]
+          ]
+        },
+        "fabrication": {
+          "operation": "multi-edge-polygon-cut"
+        }
+      },
+      "trim_cross_b_cylinder_sleeve": {
+        "id": "trim_cross_b_cylinder_sleeve",
+        "type": "boolean-part",
+        "ownerId": "trim_cross_beam_b",
+        "body": {
+          "type": "cylinder",
+          "center": [
+            140,
+            250,
+            20
+          ],
+          "axisX": [
+            0,
+            1,
+            0
+          ],
+          "axisY": [
+            1,
+            0,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "radius": 78,
+          "depth": 330
+        },
+        "fabrication": {
+          "operation": "skew-round-clearance"
+        }
+      },
+      "trim_skew_c_double_box_1": {
+        "id": "trim_skew_c_double_box_1",
+        "type": "boolean-part",
+        "ownerId": "trim_skew_beam_c",
+        "body": {
+          "type": "box",
+          "center": [
+            -250,
+            650,
+            360
+          ],
+          "axisX": [
+            1,
+            0,
+            0
+          ],
+          "axisY": [
+            0,
+            1,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            230,
+            190,
+            190
+          ]
+        },
+        "fabrication": {
+          "operation": "first-overlapping-cutter"
+        }
+      },
+      "trim_skew_c_double_box_2": {
+        "id": "trim_skew_c_double_box_2",
+        "type": "boolean-part",
+        "ownerId": "trim_skew_beam_c",
+        "body": {
+          "type": "box",
+          "center": [
+            250,
+            520,
+            360
+          ],
+          "axisX": [
+            1,
+            0,
+            0
+          ],
+          "axisY": [
+            0,
+            1,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            230,
+            190,
+            190
+          ]
+        },
+        "fabrication": {
+          "operation": "second-overlapping-cutter"
+        }
+      },
+      "trim_upper_mid_polygon": {
+        "id": "trim_upper_mid_polygon",
+        "type": "boolean-part",
+        "cutKind": "polygon-cut",
+        "ownerId": "trim_upper_beam",
+        "body": {
+          "type": "polygonal-prism",
+          "center": [
+            0,
+            -100,
+            290
+          ],
+          "axisX": [
+            0,
+            1,
+            0
+          ],
+          "axisY": [
+            1,
+            0,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "depth": 260,
+          "outline": [
+            [
+              -90,
+              -45
+            ],
+            [
+              80,
+              -65
+            ],
+            [
+              100,
+              35
+            ],
+            [
+              -20,
+              95
+            ],
+            [
+              -105,
+              25
+            ]
+          ]
+        },
+        "fabrication": {
+          "operation": "irregular-intersection-cut"
+        }
+      },
+      "trim_upper_round_cut": {
+        "id": "trim_upper_round_cut",
+        "type": "boolean-part",
+        "ownerId": "trim_upper_beam",
+        "body": {
+          "type": "cylinder",
+          "center": [
+            520,
+            150,
+            230
+          ],
+          "axisX": [
+            0,
+            1,
+            0
+          ],
+          "axisY": [
+            1,
+            0,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "radius": 45,
+          "depth": 260
+        },
+        "fabrication": {
+          "operation": "round-trim-relief"
+        }
+      },
+      "trim_stub_box_cut": {
+        "id": "trim_stub_box_cut",
+        "type": "boolean-part",
+        "ownerId": "trim_short_stub",
+        "body": {
+          "type": "box",
+          "center": [
+            430,
+            900,
+            10
+          ],
+          "axisX": [
+            1,
+            0,
+            0
+          ],
+          "axisY": [
+            0,
+            1,
+            0
+          ],
+          "axisZ": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            240,
+            260,
+            190
+          ]
+        },
+        "fabrication": {
+          "operation": "stub-penetration-clearance"
+        }
+      },
+      "trim_profile_stub_member_profile_cut": {
+        "id": "trim_profile_stub_member_profile_cut",
+        "type": "boolean-part",
+        "booleanType": "BOOLEAN_CUT",
+        "cutKind": "part-cut",
+        "ownerId": "trim_profile_cut_stub",
+        "source": {
+          "kind": "member-profile",
+          "memberId": "trim_profile_cut_support"
+        },
+        "fabrication": {
+          "operation": "member-profile-trim"
+        }
+      }
+    },
+    "trimJoints": {
+      "trim_miter_corner_joint": {
+        "id": "trim_miter_corner_joint",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_miter_right_beam",
+            "memberEnd": "start"
+          },
+          {
+            "memberId": "trim_miter_left_beam",
+            "memberEnd": "end"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "ordered-corner-trim"
+        },
+        "operations": [
+          {
+            "id": "trim_miter_corner_joint_miter_1",
+            "type": "end-miter",
+            "memberAId": "trim_miter_right_beam",
+            "memberAEnd": "start",
+            "memberBId": "trim_miter_left_beam",
+            "memberBEnd": "end",
+            "gap": 0,
+            "enabled": true
+          }
+        ]
+      },
+      "trim_matched_plane_joint": {
+        "id": "trim_matched_plane_joint",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_matched_left_beam",
+            "memberEnd": "end"
+          },
+          {
+            "memberId": "trim_matched_raker_beam",
+            "memberEnd": "start"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "matched-edge-length-plane-trim"
+        },
+        "operations": [
+          {
+            "id": "trim_matched_left_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "trim_matched_left_beam",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "trim_matched_left_joint_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_matched_left_joint_plane:-"
+            ]
+          },
+          {
+            "id": "trim_matched_raker_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "trim_matched_raker_beam",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "trim_matched_raker_joint_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_matched_raker_joint_plane:-"
+            ]
+          }
+        ]
+      },
+      "trim_butt_corner_joint": {
+        "id": "trim_butt_corner_joint",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_butt_support",
+            "memberEnd": "end"
+          },
+          {
+            "memberId": "trim_butt_stub",
+            "memberEnd": "end"
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_butt_stub_end_butt_1",
+            "type": "end-butt-1",
+            "memberAId": "trim_butt_stub",
+            "memberAEnd": "end",
+            "memberBId": "trim_butt_support",
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "butt-trim-to-support"
+        }
+      },
+      "trim_main_plane_trim": {
+        "id": "trim_main_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_main_beam"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "main-plane-trim"
+        },
+        "operations": [
+          {
+            "id": "trim_main_plane_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "trim_main_beam",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "trim_main_start_plane",
+              "trim_main_sloped_end_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_main_start_plane:-|trim_main_sloped_end_plane:-",
+              "trim_main_start_plane:-|trim_main_sloped_end_plane:+",
+              "trim_main_start_plane:+|trim_main_sloped_end_plane:-"
+            ]
+          }
+        ]
+      },
+      "trim_cross_a_plane_trim": {
+        "id": "trim_cross_a_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_cross_beam_a"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "cross-a-plane-trim"
+        },
+        "operations": [
+          {
+            "id": "trim_cross_a_end_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "trim_cross_beam_a",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "trim_cross_a_end_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_cross_a_end_plane:-"
+            ]
+          }
+        ]
+      },
+      "trim_cross_b_plane_trim": {
+        "id": "trim_cross_b_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_cross_beam_b"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "cross-b-plane-trim"
+        },
+        "operations": [
+          {
+            "id": "trim_cross_b_end_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "trim_cross_beam_b",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "trim_cross_b_end_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_cross_b_end_plane:-"
+            ]
+          }
+        ]
+      },
+      "trim_skew_c_plane_trim": {
+        "id": "trim_skew_c_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_skew_beam_c"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "skew-c-plane-trim"
+        },
+        "operations": [
+          {
+            "id": "trim_skew_c_plane_operation",
+            "type": "plane-trim",
+            "memberAId": "trim_skew_beam_c",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "trim_skew_c_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_skew_c_plane:-"
+            ]
+          }
+        ]
+      },
+      "trim_stub_plane_trim": {
+        "id": "trim_stub_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_short_stub"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "stub-plane-trim"
+        },
+        "operations": [
+          {
+            "id": "trim_stub_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "trim_short_stub",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "trim_stub_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_stub_plane:-"
+            ]
+          }
+        ]
+      },
+      "trim_compound_plane_trim": {
+        "id": "trim_compound_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_compound_beam"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18
+        },
+        "fabrication": {
+          "operation": "compound-plane-trim"
+        },
+        "operations": [
+          {
+            "id": "trim_compound_plane_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "trim_compound_beam",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "trim_compound_start_plane",
+              "trim_compound_end_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_compound_start_plane:-|trim_compound_end_plane:-",
+              "trim_compound_start_plane:-|trim_compound_end_plane:+",
+              "trim_compound_start_plane:+|trim_compound_end_plane:-"
+            ]
+          }
+        ]
+      }
+    },
+    "fastenerGroups": {},
+    "welds": {},
+    "connections": {}
+  }
+}

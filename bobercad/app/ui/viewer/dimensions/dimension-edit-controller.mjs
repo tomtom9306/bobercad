@@ -1,5 +1,5 @@
 import { clone, optionalPath, setPath } from "../../../engine/modules/connections/connection-schema.mjs";
-import { buildConnectionDimensions } from "../../../rendering/annotations/build-dimensions.mjs";
+import { buildConnectionDimensions } from "../../../rendering/annotations/build-dimensions.mjs?v=reference-plane-1";
 
 function sameValue(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);

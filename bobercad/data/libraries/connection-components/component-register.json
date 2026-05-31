@@ -3,7 +3,7 @@
   "components": [
     "./components/metadata/design-status/",
     "./components/plates/secondary-web-plate/",
-    "./components/features/secondary-member-gap-fitting/",
+    "./components/features/secondary-member-gap-trim/",
     "./components/fasteners/web-bolt-pattern/",
     "./components/cuts/support-flange-clearance/",
     "./components/welds/support-edge-fillet/",

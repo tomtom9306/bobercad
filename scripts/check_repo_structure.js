@@ -62,7 +62,6 @@ const REQUIRED_FILES = [
   "bobercad/app/rendering/scene/build-scene.mjs",
   "bobercad/app/rendering/interaction/member-edit-controller.mjs",
   "bobercad/app/rendering/interaction/selection-controller.mjs",
-  "bobercad/app/rendering/interaction/snap-controller.mjs",
   "bobercad/app/rendering/webgl/camera.mjs",
   "bobercad/app/rendering/webgl/webgl-renderer.mjs",
 
@@ -113,8 +112,8 @@ const REQUIRED_FILES = [
   "bobercad/data/libraries/connection-components/components/metadata/design-status/build.mjs",
   "bobercad/data/libraries/connection-components/components/plates/secondary-web-plate/config.json",
   "bobercad/data/libraries/connection-components/components/plates/secondary-web-plate/build.mjs",
-  "bobercad/data/libraries/connection-components/components/features/secondary-member-gap-fitting/config.json",
-  "bobercad/data/libraries/connection-components/components/features/secondary-member-gap-fitting/build.mjs",
+  "bobercad/data/libraries/connection-components/components/features/secondary-member-gap-trim/config.json",
+  "bobercad/data/libraries/connection-components/components/features/secondary-member-gap-trim/build.mjs",
   "bobercad/data/libraries/connection-components/components/fasteners/web-bolt-pattern/config.json",
   "bobercad/data/libraries/connection-components/components/fasteners/web-bolt-pattern/build.mjs",
   "bobercad/data/libraries/connection-components/components/cuts/support-flange-clearance/config.json",
@@ -404,6 +403,7 @@ async function checkAutoConnectionLifecycle(errors) {
     const { buildConnectionDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/annotations/build-dimensions.mjs")).href);
     const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/scene/build-scene.mjs")).href);
     const { resolveInterface } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/geometry/member-geometry.mjs")).href);
+    const { requiredReferencePlane } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/geometry/feature-plane.mjs")).href);
     const { v } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/core/math.mjs")).href);
     const project = emptyGeneratedConnectionModel(readJson("bobercad/data/projects/sample_fin_plate.json"));
     const profiles = readJson("bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json");
@@ -455,13 +455,14 @@ async function checkAutoConnectionLifecycle(errors) {
       referencePoint: secondaryInterface.origin,
       preferReferencePoint: true
     });
-    const activeFitting = angledProject.model.features.connection_fin_plate_1_beam_gap_fitting;
-    const supportNormalDot = Math.abs(v.dot(v.norm(activeFitting.plane.normal), v.norm(supportInterface.normal)));
-    if (supportNormalDot < 0.99) fail(errors, "auto connection lifecycle: active beam fitting should clip to the support face plane");
+    const activeTrim = angledProject.model.trimJoints.connection_fin_plate_1_beam_gap_trim;
+    const activeTrimPlane = requiredReferencePlane(angledProject, activeTrim.operations[0].referencePlaneIds[0]);
+    const supportNormalDot = Math.abs(v.dot(v.norm(activeTrimPlane.normal), v.norm(supportInterface.normal)));
+    if (supportNormalDot < 0.99) fail(errors, "auto connection lifecycle: active beam trim should clip to the support face plane");
     const beamGapDistance = v.dot(v.sub(angledProject.model.members.beam_1.start, supportInterface.origin), supportInterface.normal);
     const beamGap = angledProject.model.connections.connection_fin_plate_1.referenceParameters.fit.beamGap;
     if (Math.abs(beamGapDistance - beamGap) > 1e-6) {
-      fail(errors, `auto connection lifecycle: active beam fitting should keep the requested support gap, got ${beamGapDistance}`);
+      fail(errors, `auto connection lifecycle: active beam trim should keep the requested support gap, got ${beamGapDistance}`);
     }
     const platePoint = (point) => v.add(angledPlate.center, v.add(v.mul(angledPlate.localAxisY, point[0]), v.mul(angledPlate.localAxisZ, point[1])));
     const behindSupport = (angledPlate.outline || []).some((point) => v.dot(v.sub(platePoint(point), supportInterface.origin), supportInterface.normal) < -1e-6);
@@ -703,14 +704,14 @@ async function checkAutoConnectionLifecycle(errors) {
       ...alignedParameters,
       fit: { ...alignedParameters.fit, clipBeam: false }
     });
-    const disabledFitting = angledStore.project().model.features.connection_fin_plate_1_beam_gap_fitting;
-    if (disabledFitting?.operationEnabled !== false) {
-      fail(errors, "auto connection lifecycle: disabled beam clip should leave the fitting stored but inactive");
+    const disabledTrim = angledStore.project().model.trimJoints.connection_fin_plate_1_beam_gap_trim;
+    if (disabledTrim?.operations?.[0]?.enabled !== false) {
+      fail(errors, "auto connection lifecycle: disabled beam clip should leave the trim operation stored but inactive");
     }
     angledStore.setMemberPhysicalEndpoint("beam_1", "start", [0, 0, 1500]);
     const unclippedStart = angledStore.project().model.members.beam_1.start;
     if (Math.abs(unclippedStart[0]) > 1e-6 || Math.abs(unclippedStart[1]) > 1e-6 || Math.abs(unclippedStart[2] - 1500) > 1e-6) {
-      fail(errors, `auto connection lifecycle: disabled beam clip should not force the secondary member end to the fitting plane, got ${JSON.stringify(unclippedStart)}`);
+      fail(errors, `auto connection lifecycle: disabled beam clip should not force the secondary member end to the trim plane, got ${JSON.stringify(unclippedStart)}`);
     }
     const store = createProjectStore({ project, profiles, connectionCatalog, fasteners });
     const created = store.createConnectionFromPreset("beam_to_column_fin_plate_m16_1x3", ["column_1", "beam_1"]);

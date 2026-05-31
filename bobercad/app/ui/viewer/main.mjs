@@ -1,16 +1,21 @@
-import { createProjectStore } from "../../engine/store/project-store.mjs";
+import { createProjectStore } from "../../engine/store/project-store.mjs?v=trim-create-ui-1";
 import { memberAuthoringPoints } from "../../engine/api/project/members.mjs";
+import { memberDependencyObjectIds } from "../../engine/api/project/dependencies.mjs?v=plane-region-hard-1";
 import { loadConnectionDefinitions } from "../../engine/modules/connections/connection-registry.mjs";
-import { buildScene } from "../../rendering/scene/build-scene.mjs?v=member-manipulator-axis-rotation";
+import { buildScene } from "../../rendering/scene/build-scene.mjs?v=trim-region-click-2";
 import { memberAxesByTarget, normalizeCoordinateSpace } from "../../rendering/scene/authoring/member-axis-space.mjs";
-import { createCommandController } from "../../rendering/interaction/command-controller.mjs";
-import { createMemberEditController } from "../../rendering/interaction/member-edit-controller.mjs";
+import { createCommandController } from "../../rendering/interaction/command-controller.mjs?v=axis-snap-fix-8";
+import { createMemberEditController } from "../../rendering/interaction/member-edit-controller.mjs?v=trim-create-ui-1";
+import { createReferencePlaneEditController } from "../../rendering/interaction/reference-plane-edit-controller.mjs?v=solidworks-plane-2";
 import { createSelectionController } from "../../rendering/interaction/selection-controller.mjs";
-import { createWebglViewer } from "../../rendering/webgl/webgl-renderer.mjs";
-import { createDimensionEditController } from "./dimensions/dimension-edit-controller.mjs";
+import { createTrimCreateController } from "../../rendering/interaction/trim-create-controller.mjs?v=trim-create-ui-1";
+import { createWebglViewer } from "../../rendering/webgl/webgl-renderer.mjs?v=axis-snap-1";
+import { createDimensionEditController } from "./dimensions/dimension-edit-controller.mjs?v=reference-plane-1";
+import { mountFeatureEditorPanel } from "./panels/feature-editor-panel.mjs?v=reference-plane-1";
 import { mountMemberTransformPanel } from "./panels/member-transform-panel.mjs";
-import { mountEditorUi } from "./panels/property-panel.mjs";
-import { mountModelingToolbar } from "./toolbar/modeling-toolbar.mjs";
+import { mountEditorUi } from "./panels/property-panel.mjs?v=relation-types-1";
+import { mountTrimJointEditorPanel } from "./panels/trim-joint-editor-panel.mjs?v=trim-region-click-2";
+import { mountModelingToolbar } from "./toolbar/modeling-toolbar.mjs?v=trim-create-ui-1";
 
 const canvas = document.getElementById("view");
 const title = document.getElementById("title");
@@ -21,9 +26,11 @@ const modelingToolbar = document.getElementById("modeling-toolbar");
 const modelingStatus = document.getElementById("modeling-status");
 const memberTransformPanel = document.getElementById("member-transform-panel");
 const objectEditor = document.getElementById("object-editor");
+const featureEditorPanel = document.getElementById("feature-editor");
+const trimJointEditorPanel = document.getElementById("trim-joint-editor");
 const libraryPanel = document.getElementById("library-panel");
 const customPanel = document.getElementById("custom-panel");
-const settingsUrl = new URL("./viewer-settings.json", import.meta.url);
+const settingsUrl = new URL("./viewer-settings.json?v=trim-create-ui-1", import.meta.url);
 let settings = null;
 let viewer = null;
 let authoringPreview = [];
@@ -167,16 +174,7 @@ function estimateObjectRadius(project, profiles, objectId, seen = new Set()) {
 }
 
 function memberConnectionDetailObjectIds(project, memberId) {
-  const ids = [];
-  for (const connection of Object.values(project.model.connections || {})) {
-    if (connection.mainMemberId !== memberId && connection.secondaryMemberId !== memberId) continue;
-    ids.push(
-      ...flattenIds(connection.generator?.objectRoles),
-      ...(connection.generator?.ownedObjectIds || []),
-      ...flattenIds(connection.manualParts)
-    );
-  }
-  return [...new Set(ids)].filter((id) => project.objectIndex?.[id] && id !== memberId);
+  return memberDependencyObjectIds(project, memberId, { includeMember: false, includeConnectionMembers: false, renderableOnly: true });
 }
 
 function averagePoints(points) {
@@ -201,7 +199,6 @@ function objectCenter(project, objectId, seen = new Set()) {
   if (collection === "plates" && Array.isArray(object.center)) return object.center;
   if (collection === "features") {
     if (Array.isArray(object.center)) return object.center;
-    if (Array.isArray(object.plane?.origin)) return object.plane.origin;
     return objectCenter(project, object.ownerId, seen);
   }
   if (collection === "fastenerGroups") {
@@ -407,7 +404,14 @@ function updateMeta(project) {
 }
 
 function renderProject(project, profiles, fasteners, options = {}) {
-  const { activeConnectionId = null, previewMembers = authoringPreview, forceDetailObjectIds = [], ...viewerOptions } = options;
+  const {
+    activeConnectionId = null,
+    activeTrimJointId = null,
+    activeTrimOperationId = null,
+    previewMembers = authoringPreview,
+    forceDetailObjectIds = [],
+    ...viewerOptions
+  } = options;
   const progressiveDetails = shouldUseProgressiveDetails(project);
   const profileMap = profiles.profiles || profiles;
   const detailContext = () => ({
@@ -420,6 +424,8 @@ function renderProject(project, profiles, fasteners, options = {}) {
     const detailToken = ++progressiveDetailRenderToken;
     const coarseScene = buildScene(project, profiles, fasteners, settings, {
       activeConnectionId,
+      activeTrimJointId,
+      activeTrimOperationId,
       previewMembers,
       lodDetailFilter: () => false
     });
@@ -432,6 +438,8 @@ function renderProject(project, profiles, fasteners, options = {}) {
         renderedLodDetailBucket = lodDetailBucket(scheduledScale);
         viewer.setScene(buildScene(project, profiles, fasteners, settings, {
           activeConnectionId,
+          activeTrimJointId,
+          activeTrimOperationId,
           previewMembers,
           lodDetailFilter: createLodDetailFilter(project, profileMap, scheduledScale, detailContext())
         }), { ...viewerOptions, preserveCamera: true });
@@ -449,7 +457,7 @@ function renderProject(project, profiles, fasteners, options = {}) {
   const detailScale = progressiveDetails ? viewer.screenScale() : null;
   renderedLodDetailBucket = progressiveDetails ? lodDetailBucket(detailScale) : null;
   const lodDetailFilter = progressiveDetails ? createLodDetailFilter(project, profileMap, detailScale, detailContext()) : null;
-  viewer.setScene(buildScene(project, profiles, fasteners, settings, { activeConnectionId, previewMembers, lodDetailFilter }), {
+  viewer.setScene(buildScene(project, profiles, fasteners, settings, { activeConnectionId, activeTrimJointId, activeTrimOperationId, previewMembers, lodDetailFilter }), {
     ...viewerOptions,
     preserveCamera: progressiveDetails || viewerOptions.preserveCamera
   });
@@ -695,16 +703,46 @@ async function main() {
     });
     const selection = createSelectionController({ viewer });
     let commandController = null;
+    let trimCreate = null;
+    let autoRelationsEnabled = settings.authoring?.autoAxisRelations !== false;
+    function startTrimCreate() {
+      commandController?.cancel();
+      modelingUi.setActive("trim");
+      dimensionEdit?.clearDimension({ render: false });
+      memberEdit?.clear({ notify: false });
+      referencePlaneEdit?.clear();
+      featureEditorApi?.clear();
+      trimJointEditorApi?.clear();
+      trimCreate?.start();
+    }
     const modelingUi = mountModelingToolbar({
       toolbar: modelingToolbar,
       status: modelingStatus,
       onBeam: () => commandController?.startBeam(),
       onColumn: () => commandController?.startColumn(),
-      onCancel: () => commandController?.cancel()
+      onTrim: () => startTrimCreate(),
+      onCancel: () => {
+        if (trimCreate?.cancel()) {
+          modelingUi.setActive(null);
+          return;
+        }
+        commandController?.cancel();
+      },
+      autoRelationsEnabled,
+      onAutoRelationsChange: (enabled) => {
+        autoRelationsEnabled = enabled;
+        modelingUi.setStatus(enabled ? "Automatic axis relations on." : "Automatic axis relations off.");
+      }
     });
     let dimensionEdit = null;
     let focusedMemberId = null;
+    let editorApi = null;
+    let featureEditorApi = null;
+    let trimJointEditorApi = null;
+    let memberEdit = null;
+    let referencePlaneEdit = null;
     const focusedDetailObjectIds = () => focusedMemberId ? memberConnectionDetailObjectIds(api.project(), focusedMemberId) : [];
+    const activeTrimRenderOptions = () => trimJointEditorApi?.sceneFocus?.() || {};
     let rerenderTimer = null;
     let rerenderIdle = null;
     const clearQueuedRerender = () => {
@@ -719,7 +757,8 @@ async function main() {
       renderProject(nextProject, profiles, fasteners, {
         preserveCamera: true,
         activeConnectionId: dimensionEdit?.connectionId() || null,
-        forceDetailObjectIds: focusedDetailObjectIds()
+        forceDetailObjectIds: focusedDetailObjectIds(),
+        ...activeTrimRenderOptions()
       });
       dimensionEdit?.render();
     };
@@ -772,25 +811,25 @@ async function main() {
       }, 0);
     };
     const hotSwapMemberDetails = (nextProject, memberId, objectIds = []) => {
-      if (!shouldUseProgressiveDetails(nextProject) || typeof viewer.replaceSceneObjects !== "function") return false;
-      const renderIds = new Set([memberId, ...objectIds].filter((objectId) => nextProject.objectIndex?.[objectId]));
+      if (typeof viewer.replaceSceneObjects !== "function") throw new Error("viewer does not support affected-object scene patching");
+      const renderIds = new Set([memberId, ...objectIds].filter(Boolean));
       if (!renderIds.size) return false;
       clearQueuedRerender();
       clearDetailRefresh();
       progressiveDetailRenderToken += 1;
-      renderedLodDetailBucket = lodDetailBucket(viewer.screenScale());
+      renderedLodDetailBucket = shouldUseProgressiveDetails(nextProject) ? lodDetailBucket(viewer.screenScale()) : null;
 
       const patchScene = buildScene(nextProject, profiles, fasteners, settings, {
         activeConnectionId: dimensionEdit?.connectionId() || null,
+        ...activeTrimRenderOptions(),
         renderObjectIds: renderIds,
         lodDetailFilter: (objectId) => renderIds.has(objectId)
       });
       const replaced = viewer.replaceSceneObjects(patchScene, renderIds);
-      if (replaced) {
-        updateMeta(nextProject);
-        dimensionEdit?.render();
-      }
-      return replaced;
+      if (!replaced) throw new Error("affected-object scene patch failed");
+      updateMeta(nextProject);
+      dimensionEdit?.render();
+      return true;
     };
     viewer.setDetailScaleChangeHandler((scale) => {
       if (!shouldUseProgressiveDetails(api.project())) return;
@@ -798,8 +837,6 @@ async function main() {
       if (bucket === null || bucket === renderedLodDetailBucket) return;
       scheduleDetailRefresh();
     });
-    let editorApi = null;
-    let memberEdit = null;
     const memberTransformUi = mountMemberTransformPanel({
       panel: memberTransformPanel,
       onDeltaChange: (axisId, value) => memberEdit?.setPendingTransformDelta(axisId, value),
@@ -814,30 +851,63 @@ async function main() {
       api,
       selection,
       settings,
-      onProjectChange: rerender,
       onLocalProjectChange: hotSwapMemberDetails,
       onMemberSelected: (memberId) => {
         focusedMemberId = memberId;
+        referencePlaneEdit?.clear();
         editorApi?.selectMember(memberId, { fromMemberEdit: true });
         if (dimensionEdit?.connectionId()) {
           dimensionEdit.clearAll();
           customPanel.hidden = true;
           renderProjectNow(api.project());
         }
+        featureEditorApi?.clear();
+        trimJointEditorApi?.clear();
       },
       onCleared: () => {
         focusedMemberId = null;
+        referencePlaneEdit?.clear();
         editorApi?.clearSelection({ fromMemberEdit: true });
+        featureEditorApi?.clear();
+        trimJointEditorApi?.clear();
       },
-      onTransformChange: (state) => memberTransformUi.update(state)
+      onTransformChange: (state) => memberTransformUi.update(state),
+      autoRelationsEnabled: () => autoRelationsEnabled
+    });
+    referencePlaneEdit = createReferencePlaneEditController({
+      viewer,
+      api,
+      onLocalObjectProjectChange: hotSwapMemberDetails
+    });
+    const authoringTarget = (input) => input?.handle?.kind === "reference-plane-corner" ? referencePlaneEdit.authoringHandler : memberEdit.authoringHandler;
+    viewer.setAuthoringHandler({
+      beginDrag: (input) => authoringTarget(input)?.beginDrag?.(input),
+      click: (input) => authoringTarget(input)?.click?.(input),
+      drag: (input) => authoringTarget(input)?.drag?.(input),
+      end: (input) => authoringTarget(input)?.end?.(input),
+      cancel: (input) => authoringTarget(input)?.cancel?.(input)
     });
     viewer.setClickHandler((face) => {
       if (!face) dimensionEdit?.clearDimension();
+      if (trimJointEditorApi?.toggleRegionFromFace(face)) {
+        memberEdit.clear({ notify: false });
+        featureEditorApi?.clear();
+        referencePlaneEdit?.clear({ overlay: true });
+        return;
+      }
+      if (face?.collection && face.collection !== "members" && face.objectId) {
+        memberEdit.clear({ notify: false });
+        editorApi?.selectObject(face.objectId, face);
+        return;
+      }
       memberEdit.handleSceneClick(face);
     });
     const showConnectionEditor = (connectionId, options = {}) => {
       focusedMemberId = null;
       memberEdit.clear({ notify: false });
+      referencePlaneEdit?.clear();
+      featureEditorApi?.clear();
+      trimJointEditorApi?.clear();
       selection.select(connectionHighlightObjectIds(api.project(), api.connectionObjectIds(connectionId)));
       const focus = dimensionEdit.selectConnection(connectionId, options);
       const definition = api.definition(connectionId);
@@ -858,6 +928,9 @@ async function main() {
           customPanel.hidden = true;
           renderProject(api.project(), profiles, fasteners, { preserveCamera: true });
           memberEdit.clear({ notify: false });
+          referencePlaneEdit?.clear();
+          featureEditorApi?.clear();
+          trimJointEditorApi?.clear();
           selection.clear();
         }
       });
@@ -900,10 +973,34 @@ async function main() {
         if (message === "No modeling command") modelingUi.setActive(null);
       },
       onCommandStart: (type) => {
+        trimCreate?.cancel();
         modelingUi.setActive(type);
         dimensionEdit?.clearDimension({ render: false });
         memberEdit.clear({ notify: false });
+        referencePlaneEdit?.clear();
+        featureEditorApi?.clear();
+        trimJointEditorApi?.clear();
         selection.clear();
+      },
+      autoRelationsEnabled: () => autoRelationsEnabled
+    });
+    trimCreate = createTrimCreateController({
+      api,
+      selection,
+      onProjectChange: rerender,
+      onTrimCreated: (trimJointId) => {
+        focusedMemberId = null;
+        dimensionEdit?.clearDimension({ render: false });
+        memberEdit.clear({ notify: false });
+        referencePlaneEdit?.clear({ overlay: true });
+        featureEditorApi?.clear();
+        trimJointEditorApi?.selectTrimJoint(trimJointId);
+        modelingUi.setActive(null);
+      },
+      onCommandEnd: () => modelingUi.setActive(null),
+      onStatusChange: (message) => {
+        modelingUi.setStatus(message);
+        if (message === "No modeling command") modelingUi.setActive(null);
       }
     });
     window.addEventListener("keydown", (event) => {
@@ -913,6 +1010,11 @@ async function main() {
         return;
       }
       if (event.key !== "Escape") return;
+      if (trimCreate?.cancel()) {
+        modelingUi.setActive(null);
+        event.preventDefault();
+        return;
+      }
       if (memberEdit.cancelPendingTransform()) {
         event.preventDefault();
         return;
@@ -927,6 +1029,20 @@ async function main() {
       selection,
       onProjectChange: rerender,
       onConnectionCreated: showConnectionEditor
+    });
+    featureEditorApi = mountFeatureEditorPanel({
+      panel: featureEditorPanel,
+      api,
+      selection,
+      onLocalObjectProjectChange: hotSwapMemberDetails
+    });
+    trimJointEditorApi = mountTrimJointEditorPanel({
+      panel: trimJointEditorPanel,
+      api,
+      profiles: profiles.profiles,
+      selection,
+      onLocalObjectProjectChange: hotSwapMemberDetails,
+      onFocusChange: () => renderProjectNow(api.project())
     });
     editorApi = mountEditorUi({
       panel: objectEditor,
@@ -944,6 +1060,28 @@ async function main() {
       onConnectionDeleted: () => {
         dimensionEdit.clearAll();
         customPanel.hidden = true;
+        referencePlaneEdit?.clear({ overlay: true });
+      },
+      onObjectSelected: (objectId, detail = {}) => {
+        const entry = api.project().objectIndex?.[objectId];
+        if (entry?.collection === "features") {
+          trimJointEditorApi?.clear();
+          featureEditorApi?.selectFeature(objectId);
+          referencePlaneEdit?.selectObject(objectId);
+        } else if (entry?.collection === "trimJoints") {
+          featureEditorApi?.clear();
+          referencePlaneEdit?.clear({ overlay: true });
+          trimJointEditorApi?.selectTrimJoint(objectId, { operationId: detail.operationId, regionKey: detail.regionKey });
+        } else {
+          featureEditorApi?.clear();
+          referencePlaneEdit?.clear({ overlay: true });
+          trimJointEditorApi?.clear();
+        }
+      },
+      onObjectCleared: () => {
+        referencePlaneEdit?.clear({ overlay: true });
+        featureEditorApi?.clear();
+        trimJointEditorApi?.clear();
       }
     });
 

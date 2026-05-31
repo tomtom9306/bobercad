@@ -1,9 +1,10 @@
 {
-  "type": "secondary-member-gap-fitting",
-  "title": "Secondary Member Gap Fitting",
+  "type": "secondary-member-gap-trim",
+  "title": "Secondary Member Gap Trim",
   "version": 1,
   "roles": {
-    "beamFitting": "_beam_gap_fitting"
+    "beamTrimPlane": "_beam_gap_trim_plane",
+    "beamTrim": "_beam_gap_trim"
   },
   "parameters": {
     "fit.beamGap": {
@@ -26,9 +27,9 @@
       "parameter": "fit.beamGap",
       "label": "gap",
       "reference": {
-        "kind": "feature-plane-offset",
+        "kind": "trim-plane-offset",
         "interfaceRole": "main",
-        "featureRole": "beamFitting",
+        "trimRole": "beamTrim",
         "objectRole": "finPlate",
         "offset": {
           "localAxisZ": 46
@@ -40,8 +41,8 @@
       "parameter": "fit.clipBeam",
       "label": "trim",
       "reference": {
-        "kind": "feature-option-callout",
-        "featureRole": "beamFitting",
+        "kind": "trim-option-callout",
+        "trimRole": "beamTrim",
         "offset": {
           "localAxisY": 42,
           "localAxisZ": 22,

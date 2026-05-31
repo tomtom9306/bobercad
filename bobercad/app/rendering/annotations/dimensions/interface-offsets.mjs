@@ -1,3 +1,4 @@
+import { requiredReferencePlane } from "../../../engine/geometry/feature-plane.mjs";
 import { dimensionOffset, distance, finite, interfaceAnnotationBasis, interfaceAxis, interfaceByRole, linePlane, makeDimension, paramValue, plateBasis, pointToPlane, roleObject, v } from "../dimension-context.mjs";
 
 export function interfaceOffsetDimension(ctx, spec) {
@@ -20,15 +21,22 @@ export function interfaceOffsetDimension(ctx, spec) {
 
 
 
-export function featurePlaneOffsetDimension(ctx, spec) {
+function trimPlane(trimJoint) {
+  return (trimJoint?.operations || []).find((operation) => operation.type === "plane-trim" && operation.referencePlaneIds?.length) || null;
+}
+
+export function trimPlaneOffsetDimension(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
-  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
+  const trimJoint = roleObject(ctx.project, ctx.connection, spec.reference.trimRole);
   const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.connection, spec.reference.interfaceRole);
-  if (!plate || !feature?.plane || !iface) return null;
+  const operation = trimPlane(trimJoint);
+  if (!plate || !operation || !iface) return null;
+  const plane = requiredReferencePlane(ctx.project, operation.referencePlaneIds[0], trimJoint.id, () => null);
+  if (!plane) return null;
   const offsetBasis = interfaceAnnotationBasis(plate, iface);
   const axis = interfaceAxis(iface, plate);
   const start = pointToPlane(plate.center, iface.origin, axis);
-  const end = linePlane(start, axis, feature.plane.origin, feature.plane.normal);
+  const end = linePlane(start, axis, plane.origin, plane.normal);
   if (!end) return null;
   return makeDimension({
     ...ctx,

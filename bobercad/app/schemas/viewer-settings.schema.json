@@ -127,7 +127,22 @@
     "authoring": {
       "type": "object",
       "properties": {
+        "autoAxisRelations": {
+          "type": "boolean"
+        },
         "snapTolerancePx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "globalAxisSnapSpan": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "globalAxisSnapTolerancePx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "globalAxisGuideSpan": {
           "type": "number",
           "exclusiveMinimum": 0
         },

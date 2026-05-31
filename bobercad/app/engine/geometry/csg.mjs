@@ -221,6 +221,20 @@ export function csgUnion(aPolygons, bPolygons) {
   return a.allPolygons();
 }
 
+export function csgIntersect(aPolygons, bPolygons) {
+  if (!aPolygons.length || !bPolygons.length) return [];
+  const a = new CsgNode(aPolygons.map(csgClonePolygon));
+  const b = new CsgNode(bPolygons.map(csgClonePolygon));
+  a.invert();
+  b.clipTo(a);
+  b.invert();
+  a.clipTo(b);
+  b.clipTo(a);
+  a.build(b.allPolygons());
+  a.invert();
+  return a.allPolygons();
+}
+
 function polygonArea2d(points) {
   let area = 0;
   for (let i = 0; i < points.length; i += 1) {

@@ -634,6 +634,12 @@
             "$ref": "#/$defs/feature"
           }
         },
+        "trimJoints": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/trimJoint"
+          }
+        },
         "fastenerGroups": {
           "type": "object",
           "additionalProperties": {
@@ -650,6 +656,12 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/connection"
+          }
+        },
+        "relations": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/relation"
           }
         },
         "addonData": {
@@ -1299,8 +1311,6 @@
         "teklaClass": {
           "enum": [
             "BooleanPart",
-            "CutPlane",
-            "Fitting",
             "EdgeChamfer"
           ]
         },
@@ -1316,8 +1326,6 @@
             "part-cut",
             "polygon-cut",
             "line-cut",
-            "plane-cut",
-            "fitting",
             "edge-chamfer",
             "weld-prep"
           ]
@@ -1327,46 +1335,6 @@
         },
         "operationEnabled": {
           "type": "boolean"
-        },
-        "memberEnd": {
-          "enum": [
-            "start",
-            "end"
-          ]
-        },
-        "trim": {
-          "type": "object",
-          "properties": {
-            "mode": {
-              "enum": [
-                "matched-edge-length",
-                "equal-angle-miter",
-                "square-to-own-axis",
-                "cut-to-reference-plane"
-              ]
-            },
-            "jointPoint": {
-              "$ref": "#/$defs/vec3"
-            },
-            "mateMemberId": {
-              "$ref": "#/$defs/id"
-            },
-            "mateMemberEnd": {
-              "enum": [
-                "start",
-                "end"
-              ]
-            },
-            "gap": {
-              "type": "number",
-              "minimum": 0
-            },
-            "targetCutLength": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            }
-          },
-          "additionalProperties": true
         },
         "holePatternRef": {
           "$ref": "#/$defs/id"
@@ -1512,24 +1480,6 @@
         "body": {
           "$ref": "#/$defs/cutBody"
         },
-        "plane": {
-          "type": "object",
-          "properties": {
-            "origin": {
-              "$ref": "#/$defs/vec3"
-            },
-            "axisX": {
-              "$ref": "#/$defs/vec3"
-            },
-            "axisY": {
-              "$ref": "#/$defs/vec3"
-            },
-            "normal": {
-              "$ref": "#/$defs/vec3"
-            }
-          },
-          "additionalProperties": true
-        },
         "dimensions": {
           "type": "object",
           "additionalProperties": true
@@ -1556,6 +1506,205 @@
         "bim": {
           "$ref": "#/$defs/bim"
         }
+      },
+      "allOf": [
+        {
+          "not": {
+            "properties": {
+              "type": {
+                "const": "member-trim"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "plane"
+            ]
+          }
+        },
+        {
+          "not": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "fitting"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "trimJointParticipant": {
+      "type": "object",
+      "required": [
+        "memberId"
+      ],
+      "properties": {
+        "memberId": {
+          "$ref": "#/$defs/id"
+        },
+        "memberEnd": {
+          "enum": [
+            "start",
+            "end"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "trimJointOperation": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "memberAId"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "end-butt-1",
+            "end-butt-2",
+            "end-butt-both",
+            "end-miter",
+            "profile-cope",
+            "plane-trim"
+          ]
+        },
+        "memberAId": {
+          "$ref": "#/$defs/id"
+        },
+        "memberAEnd": {
+          "enum": [
+            "start",
+            "end"
+          ]
+        },
+        "memberBId": {
+          "$ref": "#/$defs/id"
+        },
+        "memberBEnd": {
+          "enum": [
+            "start",
+            "end"
+          ]
+        },
+        "referencePlaneIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "removedRegionKeys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "plane-trim"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "referencePlaneIds",
+              "removedRegionKeys"
+            ]
+          },
+          "else": {
+            "required": [
+              "memberBId"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "trimJoint": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "participants",
+        "operations"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "corner-trim",
+            "member-trim"
+          ]
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/trimJointParticipant"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/trimJointOperation"
+          }
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "fabrication": {
+          "$ref": "#/$defs/fabrication"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        }
+      },
+      "not": {
+        "required": [
+          "jointPoint"
+        ]
       },
       "additionalProperties": true
     },
@@ -1995,6 +2144,99 @@
           "type": "string"
         }
       },
+      "additionalProperties": true
+    },
+    "relation": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "memberId",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "point-on-axis",
+            "member-align-axis"
+          ]
+        },
+        "memberId": {
+          "$ref": "#/$defs/id"
+        },
+        "endpoint": {
+          "enum": [
+            "start",
+            "end"
+          ]
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "member-axis",
+                "layout-axis",
+                "fixed-axis",
+                "global-axis"
+              ]
+            },
+            "memberId": {
+              "$ref": "#/$defs/id"
+            },
+            "a": {
+              "$ref": "#/$defs/vec3"
+            },
+            "b": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axis": {
+              "type": "string"
+            },
+            "direction": {
+              "$ref": "#/$defs/vec3"
+            },
+            "origin": {
+              "$ref": "#/$defs/vec3"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "point-on-axis"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "endpoint"
+            ]
+          }
+        }
+      ],
       "additionalProperties": true
     },
     "placementIntent": {

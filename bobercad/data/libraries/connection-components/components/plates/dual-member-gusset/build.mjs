@@ -3,6 +3,29 @@ function memberDirectionFromJoint(ctx, member, iface) {
   return iface.memberEnd === "end" ? ctx.geometry.v.mul(frame.x, -1) : frame.x;
 }
 
+function equalAngleNormal(ctx, ownDirection, mateDirection) {
+  const v = ctx.geometry.v;
+  let normal = v.norm(v.sub(mateDirection, ownDirection));
+  if (v.len(normal) <= 1e-9) return ownDirection;
+  if (v.dot(normal, ownDirection) < 0) normal = v.mul(normal, -1);
+  return Math.abs(v.dot(normal, ownDirection)) <= 1e-9 ? ownDirection : normal;
+}
+
+function trimPlaneAtJoint(ctx, member, ownDirection, mateDirection, joint) {
+  const v = ctx.geometry.v;
+  const frame = ctx.geometry.memberFrame(member);
+  const normal = equalAngleNormal(ctx, ownDirection, mateDirection);
+  const axisX = ctx.geometry.projectedAxis(frame.y, normal)
+    || ctx.geometry.projectedAxis(frame.z, normal)
+    || ctx.geometry.projectedAxis([0, 0, 1], normal)
+    || ctx.geometry.projectedAxis([0, 1, 0], normal);
+  if (!axisX) ctx.fail(`${member.id}: cannot resolve gusset trim plane axis`);
+  const axisY = v.norm(v.cross(normal, axisX));
+  const bounds = ctx.geometry.sectionBounds(ctx.profiles?.[member.profile] || ctx.profiles?.profiles?.[member.profile]);
+  const span = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1) * 1.35;
+  return { origin: joint, normal, axisX, axisY, size: [span, span] };
+}
+
 function boltPositions(rows, pitch, lineOffset) {
   const positions = [];
   for (let row = 0; row < rows; row += 1) {
@@ -55,7 +78,6 @@ export function build(ctx) {
     height: "plate.height"
   });
   plate.verticalOffset = ctx.optionalParam("plate.verticalOffset", 0);
-  const trimMode = ctx.optionalParam("trim.mode", "matched-edge-length");
   const bolts = ctx.params({
     fastenerRef: "bolts.fastenerRef",
     rows: "bolts.rows",
@@ -106,42 +128,32 @@ export function build(ctx) {
   });
 
   const trimDisplay = { visible: true, suppressed: true, color: "#ff3366", transparent: true, opacity: 0.18 };
-  const mainTrim = ctx.feature.memberTrim("mainTrim", {
-    ownerId: mainMember.id,
+  const mainTrimPlane = ctx.reference.plane("mainTrimPlane", trimPlaneAtJoint(ctx, mainMember, mainDirection, secondaryDirection, joint));
+  ctx.trim.planeTrim("mainTrim", {
+    memberId: mainMember.id,
     memberEnd: mainInterface.memberEnd,
-    trim: {
-      mode: trimMode,
-      jointPoint: joint,
-      mateMemberId: secondaryMember.id,
-      mateMemberEnd: secondaryInterface.memberEnd,
-      gap: 0
-    },
+    referencePlaneIds: [mainTrimPlane.id],
     display: trimDisplay,
     fabrication: { operation: "trim-main-member-to-apex-gusset" },
     placementIntent: {
       role: "trim-main-member-to-apex-gusset",
       host: { objectId: mainMember.id, end: mainInterface.memberEnd },
       references: [{ objectId: gussetPlate.id }, { objectId: secondaryMember.id, end: secondaryInterface.memberEnd }],
-      fit: trimMode
+      fit: "equal-angle-trim"
     }
   });
-  const secondaryTrim = ctx.feature.memberTrim("secondaryTrim", {
-    ownerId: secondaryMember.id,
+  const secondaryTrimPlane = ctx.reference.plane("secondaryTrimPlane", trimPlaneAtJoint(ctx, secondaryMember, secondaryDirection, mainDirection, joint));
+  ctx.trim.planeTrim("secondaryTrim", {
+    memberId: secondaryMember.id,
     memberEnd: secondaryInterface.memberEnd,
-    trim: {
-      mode: trimMode,
-      jointPoint: joint,
-      mateMemberId: mainMember.id,
-      mateMemberEnd: mainInterface.memberEnd,
-      gap: 0
-    },
+    referencePlaneIds: [secondaryTrimPlane.id],
     display: trimDisplay,
     fabrication: { operation: "trim-secondary-member-to-apex-gusset" },
     placementIntent: {
       role: "trim-secondary-member-to-apex-gusset",
       host: { objectId: secondaryMember.id, end: secondaryInterface.memberEnd },
       references: [{ objectId: gussetPlate.id }, { objectId: mainMember.id, end: mainInterface.memberEnd }],
-      fit: trimMode
+      fit: "equal-angle-trim"
     }
   });
 
@@ -192,7 +204,7 @@ export function build(ctx) {
       normal: gussetPlate.normal,
       localAxisY: gussetPlate.localAxisY,
       localAxisZ: gussetPlate.localAxisZ,
-      trimFeatureId: mainTrim.id
+      referencePlaneId: mainTrimPlane.id
     },
     fabrication: { operation: "drill" }
   });
@@ -206,7 +218,7 @@ export function build(ctx) {
       normal: gussetPlate.normal,
       localAxisY: gussetPlate.localAxisY,
       localAxisZ: gussetPlate.localAxisZ,
-      trimFeatureId: secondaryTrim.id
+      referencePlaneId: secondaryTrimPlane.id
     },
     fabrication: { operation: "drill" }
   });

@@ -5,7 +5,7 @@
   "project": {
     "id": "project_boolean_beam_demo_1",
     "name": "Boolean Beam Demo",
-    "description": "Single I beam with Tekla-style semantic boolean cuts: round part cut, polygon cut, top flange notch, and paired end plane cuts.",
+    "description": "Single I beam with Tekla-style semantic boolean cuts: round part cut, polygon cut, top flange notch, and paired end plane trims.",
     "createdWith": "manual-seed-0.5.0",
     "bim": {
       "name": "Boolean Beam Demo",
@@ -138,13 +138,21 @@
       "collection": "features",
       "type": "boolean-part"
     },
-    "demo_top_end_plane_cut": {
-      "collection": "features",
-      "type": "cut-plane"
+    "demo_top_end_plane_plane_trim": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
     },
-    "demo_bottom_end_plane_cut": {
-      "collection": "features",
-      "type": "cut-plane"
+    "demo_bottom_end_plane_plane_trim": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "demo_top_end_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "demo_bottom_end_plane_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
     }
   },
   "modelDefaults": {
@@ -196,9 +204,6 @@
         "boolean-part": {
           "teklaClass": "BooleanPart",
           "booleanType": "BOOLEAN_CUT"
-        },
-        "cut-plane": {
-          "teklaClass": "CutPlane"
         }
       }
     }
@@ -221,9 +226,7 @@
         "featureIds": [
           "demo_round_part_cut",
           "demo_rect_polygon_cut",
-          "demo_top_flange_notch",
-          "demo_top_end_plane_cut",
-          "demo_bottom_end_plane_cut"
+          "demo_top_flange_notch"
         ],
         "fabrication": {
           "partMark": "B-BOOL-1",
@@ -235,7 +238,7 @@
         },
         "authoring": {
           "source": "manual-reference-image",
-          "notes": "All cuts are semantic runtime operations. Moving a cut means editing its body center, axes, size, outline, radius, depth, or fitting plane."
+          "notes": "All cuts are semantic runtime operations. Moving a cut means editing its body center, axes, size, outline, radius, depth, or referenced plane."
         }
       }
     },
@@ -376,89 +379,143 @@
         "fabrication": {
           "operation": "top-flange-notch"
         }
-      },
-      "demo_top_end_plane_cut": {
-        "id": "demo_top_end_plane_cut",
-        "type": "cut-plane",
-        "cutKind": "plane-cut",
-        "ownerId": "demo_boolean_beam",
-        "plane": {
-          "origin": [
-            850,
-            0,
-            0
-          ],
-          "axisX": [
-            0,
-            1,
-            0
-          ],
-          "axisY": [
-            0.92,
-            0,
-            -0.38
-          ],
-          "normal": [
-            -0.38,
-            0,
-            -0.92
-          ],
-          "size": [
-            210,
-            360
-          ]
-        },
-        "display": {
-          "opacity": 0.16,
-          "color": "#ef4444"
-        },
-        "fabrication": {
-          "operation": "top-plane-cut"
-        }
-      },
-      "demo_bottom_end_plane_cut": {
-        "id": "demo_bottom_end_plane_cut",
-        "type": "cut-plane",
-        "cutKind": "plane-cut",
-        "ownerId": "demo_boolean_beam",
-        "plane": {
-          "origin": [
-            850,
-            0,
-            0
-          ],
-          "axisX": [
-            0,
-            1,
-            0
-          ],
-          "axisY": [
-            0.92,
-            0,
-            0.38
-          ],
-          "normal": [
-            -0.38,
-            0,
-            0.92
-          ],
-          "size": [
-            210,
-            360
-          ]
-        },
-        "display": {
-          "opacity": 0.18,
-          "color": "#ef4444"
-        },
-        "fabrication": {
-          "operation": "bottom-plane-cut"
-        }
       }
     },
     "fastenerGroups": {},
     "welds": {},
     "connections": {},
-    "assemblies": {}
+    "assemblies": {},
+    "referencePlanes": {
+      "demo_top_end_plane_plane_trim": {
+        "id": "demo_top_end_plane_plane_trim",
+        "type": "reference-plane",
+        "name": "demo_top_end_plane_trim plane",
+        "origin": [
+          850,
+          0,
+          0
+        ],
+        "normal": [
+          -0.38,
+          0,
+          -0.92
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0.92,
+          0,
+          -0.38
+        ],
+        "extents": {
+          "xMin": -105,
+          "xMax": 105,
+          "yMin": -180,
+          "yMax": 180
+        }
+      },
+      "demo_bottom_end_plane_plane_trim": {
+        "id": "demo_bottom_end_plane_plane_trim",
+        "type": "reference-plane",
+        "name": "demo_bottom_end_plane_trim plane",
+        "origin": [
+          850,
+          0,
+          0
+        ],
+        "normal": [
+          -0.38,
+          0,
+          0.92
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0.92,
+          0,
+          0.38
+        ],
+        "extents": {
+          "xMin": -105,
+          "xMax": 105,
+          "yMin": -180,
+          "yMax": 180
+        }
+      }
+    },
+    "trimJoints": {
+      "demo_top_end_plane_trim": {
+        "id": "demo_top_end_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "demo_boolean_beam",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "demo_top_end_plane_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "demo_boolean_beam",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "demo_top_end_plane_plane_trim"
+            ],
+            "removedRegionKeys": [
+              "demo_top_end_plane_plane_trim:-"
+            ]
+          }
+        ],
+        "fabrication": {
+          "operation": "top-plane-trim"
+        },
+        "display": {
+          "opacity": 0.16,
+          "color": "#ef4444"
+        }
+      },
+      "demo_bottom_end_plane_trim": {
+        "id": "demo_bottom_end_plane_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "demo_boolean_beam",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "demo_bottom_end_plane_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "demo_boolean_beam",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "demo_bottom_end_plane_plane_trim"
+            ],
+            "removedRegionKeys": [
+              "demo_bottom_end_plane_plane_trim:-"
+            ]
+          }
+        ],
+        "fabrication": {
+          "operation": "bottom-plane-trim"
+        },
+        "display": {
+          "opacity": 0.18,
+          "color": "#ef4444"
+        }
+      }
+    }
   }
 }

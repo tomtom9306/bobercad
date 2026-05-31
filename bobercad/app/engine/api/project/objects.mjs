@@ -10,9 +10,11 @@ const MODEL_COLLECTIONS = new Set([
   "assemblies",
   "workPoints",
   "referencePlanes",
+  "trimJoints",
   "groups",
   "objectPatterns",
-  "connections"
+  "connections",
+  "relations"
 ]);
 
 function fail(message) {

@@ -9,6 +9,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - `bobercad/data/projects/sample_connection_test_frame.json` - clean four-column top-frame project for connection add/remove/change workflows.
 - `bobercad/data/projects/sample_beam_to_beam_fin_plate.json` - horizontal beam-to-beam fin plate connection sample with generated flange notches.
 - `bobercad/data/projects/sample_beam_to_beam_end_plate.json` - beam-to-beam end plate connection sample with a stored top flange notch and web bolt pattern.
+- `bobercad/data/projects/sample_trimming_lab.json` - trimming development sample with several intersecting members, trim joints, reference planes, and boolean-part features.
 - `bobercad/data/projects/sample_authoring_nc1_test.json` - compact regression sample for authoring patterns and NC1-ready data.
 - `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json` - point-based profile library.
 - `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json` - material library.
@@ -72,6 +73,8 @@ Viewer and editor work must follow these conventions.
 
 `member.start` and `member.end` are the physical member axis used for geometry. A member may also store `layoutAxis.start` and `layoutAxis.end` as its virtual/layout axis for authoring; when omitted, the physical axis is also the layout axis. Automatic connection creation uses layout axes to find the intended joint, then creates stored interfaces, a connection zone, and a connection assembly against the physical member geometry.
 
+Edit constraints are stored as first-class objects in `model.relations`, indexed through `objectIndex`. Members do not store relation arrays. Current relation types include `point-on-axis` and `member-align-axis`: `member.start` and `member.end` remain the authoritative geometry, and deleting a relation must leave the current member coordinates unchanged. When automatic relations are enabled in the viewer, snapping a member endpoint to another member axis, layout axis, fixed grid axis, or contextual global X/Y/Z creates a `point-on-axis` relation for that endpoint only. Whole-member axis alignment is a separate explicit `member-align-axis` relation created by member UI commands such as Align X/Y/Z or Pick Custom Axis.
+
 ## Work Points And Reference Planes
 
 Use `model.workPoints` for named, stored construction points that AI agents and editors can reference without guessing coordinates.
@@ -108,12 +111,14 @@ Use `model.holePatterns` only for hole, slot, and fastener positions on a stored
 
 Features reference hole patterns with `holePatternRef`. Do not use generic `patternRef`.
 
-For notches and other cuts that should behave like Tekla cuts, use Tekla-aligned feature types:
+For notches and other body cuts, use explicit semantic feature types:
 
 - `boolean-part` with `teklaClass: "BooleanPart"` for part cuts, polygon cuts, boolean adds, and weld prep objects.
-- `cut-plane` with `teklaClass: "CutPlane"` for a cutting plane that cannot extend the part boundary.
-- `fitting` with `teklaClass: "Fitting"` for fitting a part end to a plane; this can make the part shorter or longer.
 - `edge-chamfer` with `teklaClass: "EdgeChamfer"` for chamfers.
+
+Do not store member end trimming as standalone features. Plane and member-to-member trims belong in `model.trimJoints`.
+
+Use `model.trimJoints` for trim management where profiles or reference planes participate in one trim decision. A trim stores `gap`, a `participants` table, and required semantic `operations`; the joint point for multi-member operations is derived from the participant member axes at evaluation time, not stored or edited. Use `corner-trim` for multi-member corner trims and `member-trim` for one member trimmed to reference planes. Participants describe membership only. Member-to-member operations use `memberAId`/`memberBId`; `memberAEnd` and `memberBEnd` are optional explicit overrides and should be stored only for roles where the operation uses that end. `end-butt-1` trims member A to member B, `end-butt-2` trims member B to member A, `end-butt-both` trims both members to opposite contact faces so the profiles overlap by one profile thickness, `end-miter` trims both members to a shared miter plane, and `profile-cope` cuts member A with the profile of member B. `plane-trim` uses `memberAId`, `referencePlaneIds`, and `removedRegionKeys`; it does not require `memberBId`. Multiple planes in one trim operation split the member into selectable regions, and `removedRegionKeys` stores which semantic regions are removed. The viewer/exporter derives planes and temporary cutters from the operation table; do not store generated trim bodies in the project.
 
 For `boolean-part`, store `booleanType` with Tekla-style enum names:
 
@@ -144,7 +149,7 @@ Example:
 }
 ```
 
-Do not duplicate the cut geometry in `dimensions` or `placementIntent`. `body` is the source of truth.
+Do not duplicate the cut geometry in `dimensions` or `placementIntent`. For explicit cut objects, `body` is the source of truth. For semantic cuts, store the referenced source instead, for example `source.kind: "member-profile"` with `source.memberId`; the viewer/exporter derives the temporary cutter from the referenced member profile and current member placement.
 
 Supported `boolean-part.body` primitives at this stage:
 
@@ -185,7 +190,7 @@ Non-rectangular plates use `outline` as local `[y, z]` points in the plate plane
 
 Connection generators should trim flat plates by producing a semantic `outline`, not by storing generated mesh data. For example, a sloped fin plate may clip its local outline against the support face and secondary-member trim plane while keeping the same plate placement axes.
 
-Fin plate generators should start from an oversized semantic outline when slope trimming would otherwise shorten the support edge. `fit.beamGap` is the support-face-to-beam-end clearance; generated fin plate geometry should span that gap plus the configured plate length into the beam. `fit.clipBeam` controls whether the generated beam fitting actively trims the secondary member to the support face plane; when disabled, the fitting can stay stored with `operationEnabled: false` for traceability. `bolts.parallelToSupport` may align the hole pattern axis to the support/column axis without rotating the plate. When `bolts.columns` is greater than one and `bolts.gauge` is zero, generators should report a diagnostic instead of inventing a gauge value.
+Fin plate generators should start from an oversized semantic outline when slope trimming would otherwise shorten the support edge. `fit.beamGap` is the support-face-to-beam-end clearance; generated fin plate geometry should span that gap plus the configured plate length into the beam. `fit.clipBeam` controls whether the generated member trim actively trims the secondary member to the support face plane; when disabled, the trim operation stays stored with `enabled: false` for traceability. `bolts.parallelToSupport` may align the hole pattern axis to the support/column axis without rotating the plate. When `bolts.columns` is greater than one and `bolts.gauge` is zero, generators should report a diagnostic instead of inventing a gauge value.
 
 Hole diameter should be derived from the selected fastener catalog entry and `holes.tolerance` (`tight`, `normal`, `loose`, or `custom`). `normal` uses `fastener.hole.defaultDiameter`; catalog entries may provide explicit `fastener.hole.tolerances`. `custom` uses `holes.customDiameter`. Generators should not overwrite user parameters with derived hole sizes.
 
@@ -247,7 +252,7 @@ Connection `componentOverrides` store user suppression decisions against stable 
 
 Weld objects may split a physical weld into explicit `reference.runs`. For a fin plate `plate-support-edge` weld, each run stores an `edge` (`support`, `top`, or `bottom`), optional `side` (`front` or `back`), and `size`. A zero-size parameter means the generator should omit that run, so connection UIs can support one-sided welds and top/bottom return welds without adding special viewer code.
 
-Fin plate connections should store the secondary member assembly clearance as `fit.beamGap`. The generator enforces it with a stored, hidden `fitting` feature on the secondary member, so the gap is explicit model data and the physical member end remains correct for rendering/export.
+Fin plate connections should store the secondary member assembly clearance as `fit.beamGap`. The generator enforces it with a stored `member-trim` joint containing a `plane-trim` operation, so the gap is explicit model data and the physical member end remains correct for rendering/export.
 
 `generator.status: "generated"` means the connection can be regenerated from `sourcePreset` and `referenceParameters`. `generator.status: "not-parametric-yet"` means the connection is manual/provenance-only.
 

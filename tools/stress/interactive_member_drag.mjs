@@ -90,8 +90,8 @@ async function main() {
       connection: window.__boberCadQa.memberConnectionPoints(memberId)
     }), target.memberId);
     await page.mouse.up();
-    await page.waitForFunction(() => window.__boberCadPerf?.events?.some((event) => event.name === "member-drag-instance-updated"), null, { timeout: 10_000 });
-    const wallToInstance = performance.now() - wallStart;
+    await page.waitForFunction(() => window.__boberCadPerf?.events?.some((event) => event.name === "member-drag-local-patch-finished"), null, { timeout: 10_000 });
+    const wallToPatch = performance.now() - wallStart;
 
     const immediate = await page.evaluate((memberId) => ({
       events: window.__boberCadPerf.events,
@@ -99,13 +99,7 @@ async function main() {
       connection: window.__boberCadQa.memberConnectionPoints(memberId),
       body: document.body.innerText.slice(0, 500)
     }), target.memberId);
-    await page.waitForFunction(() => window.__boberCadPerf?.events?.some((event) => event.name === "member-drag-deferred-refresh-finished"), null, { timeout: 10_000 });
-    const wallToRefresh = performance.now() - wallStart;
-    const final = await page.evaluate((memberId) => ({
-      events: window.__boberCadPerf.events,
-      state: window.__boberCadQa.memberState(memberId),
-      connection: window.__boberCadQa.memberConnectionPoints(memberId)
-    }), target.memberId);
+    const final = immediate;
 
     const changed = JSON.stringify(before.start) !== JSON.stringify(immediate.state.start)
       || JSON.stringify(before.end) !== JSON.stringify(immediate.state.end);
@@ -134,15 +128,10 @@ async function main() {
         dragTo: { x: round(end.x), y: round(end.y) }
       },
       timingsMs: {
-        wallToInstance: round(wallToInstance),
-        wallToRefresh: round(wallToRefresh),
+        wallToPatch: round(wallToPatch),
         dragBeginToLivePreview: eventDelta(live.events, "member-drag-begin", "member-drag-live-preview-updated"),
         commitToStore: eventDelta(immediate.events, "member-drag-commit-start", "member-drag-store-updated"),
-        commitToInstance: eventDelta(immediate.events, "member-drag-commit-start", "member-drag-instance-updated"),
-        commitToRefreshQueued: eventDelta(immediate.events, "member-drag-commit-start", "member-drag-deferred-refresh-queued"),
-        commitToRefreshStart: eventDelta(final.events, "member-drag-commit-start", "member-drag-deferred-refresh-start"),
-        commitToRefreshFinished: eventDelta(final.events, "member-drag-commit-start", "member-drag-deferred-refresh-finished"),
-        refreshDuration: eventDelta(final.events, "member-drag-deferred-refresh-start", "member-drag-deferred-refresh-finished")
+        commitToLocalPatch: eventDelta(immediate.events, "member-drag-commit-start", "member-drag-local-patch-finished")
       },
       connectionPreview: {
         objectCount: connectionBefore.objectIds.length,
@@ -164,9 +153,7 @@ async function main() {
         time: round(event.time),
         memberId: event.memberId,
         livePreview: event.livePreview,
-        updatedInstance: event.updatedInstance,
         previewObjectCount: event.previewObjectCount,
-        localRefresh: event.localRefresh,
         affectedObjectCount: event.affectedObjectCount
       }))
     }, null, 2));

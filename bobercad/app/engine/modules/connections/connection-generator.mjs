@@ -6,7 +6,7 @@ import { objectById } from "../../core/model.mjs";
 import { resolveInterface } from "../../geometry/member-geometry.mjs";
 import { clone, optionalPath, requiredPath, validateConnectionParameters } from "./connection-schema.mjs";
 
-const MODEL_COLLECTIONS = ["groups", "interfaces", "connectionZones", "assemblies", "members", "plates", "holePatterns", "objectPatterns", "features", "fastenerGroups", "welds", "connections"];
+const MODEL_COLLECTIONS = ["groups", "interfaces", "connectionZones", "assemblies", "members", "plates", "holePatterns", "objectPatterns", "referencePlanes", "features", "trimJoints", "fastenerGroups", "welds", "connections"];
 const AXIS_EPSILON = 1e-9;
 const DEFAULT_CONNECTION_TOLERANCE = 25;
 const DEFAULT_GHOST_OPACITY = 0.01;
@@ -243,7 +243,7 @@ function hasDiagnosticErrors(diagnostics) {
 function addDiagnosticDisplay(model, objectIds, diagnostics) {
   if (!hasDiagnosticErrors(diagnostics)) return;
   for (const id of objectIds) {
-    for (const collection of ["plates", "fastenerGroups", "welds", "features"]) {
+    for (const collection of ["plates", "fastenerGroups", "welds", "features", "trimJoints"]) {
       const object = model[collection]?.[id];
       if (object) object.display = { ...(object.display || {}), ...DIAGNOSTIC_DISPLAY };
     }

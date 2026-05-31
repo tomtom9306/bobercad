@@ -183,50 +183,6 @@
     }
   },
   "objectIndex": {
-    "wp_col_1_a_base": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_col_1_a_top": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_col_2_a_base": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_col_2_a_top": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_col_3_a_base": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_col_3_a_top": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_beam_start": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_beam_end": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_purlin_start": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_purlin_end": {
-      "collection": "workPoints",
-      "type": "record"
-    },
-    "wp_bent_coupon_center": {
-      "collection": "workPoints",
-      "type": "record"
-    },
     "rp_base_level": {
       "collection": "referencePlanes",
       "type": "level-plane"

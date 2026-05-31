@@ -2,6 +2,8 @@ __pycache__/
 *.pyc
 server.err.log
 server.out.log
+server-8000.err.log
+server-8000.log
 stress-output/
 qa-output/
 bobercad-ai-review.txt

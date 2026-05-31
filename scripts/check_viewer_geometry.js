@@ -36,6 +36,7 @@ async function main() {
   largeProject.model.holePatterns = {};
   largeProject.model.objectPatterns = {};
   largeProject.model.features = {};
+  largeProject.model.trimJoints = {};
   largeProject.model.fastenerGroups = {};
   largeProject.model.welds = {};
   largeProject.model.connections = {};

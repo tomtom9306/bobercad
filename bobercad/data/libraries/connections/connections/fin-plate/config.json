@@ -5,7 +5,7 @@
   "componentRefs": [
     "design-status",
     "secondary-web-plate",
-    "secondary-member-gap-fitting",
+    "secondary-member-gap-trim",
     "web-bolt-pattern",
     "support-flange-clearance",
     "support-edge-fillet",
@@ -14,7 +14,7 @@
   "recipe": [
     "design-status",
     "secondary-web-plate",
-    "secondary-member-gap-fitting",
+    "secondary-member-gap-trim",
     "web-bolt-pattern",
     "support-flange-clearance",
     "support-edge-fillet",

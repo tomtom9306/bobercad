@@ -55,8 +55,17 @@ function snapRef(snap) {
   const ref = {
     type: snap.type,
     objectId: snap.objectId || undefined,
+    axis: snap.axis || undefined,
     endpoint: snap.endpoint || undefined,
-    label: snap.label || undefined
+    label: snap.label || undefined,
+    sources: Array.isArray(snap.sources)
+      ? snap.sources.map((source) => Object.fromEntries(Object.entries({
+          type: source.type,
+          objectId: source.objectId,
+          axis: source.axis,
+          label: source.label
+        }).filter(([, value]) => value !== undefined)))
+      : undefined
   };
   return Object.fromEntries(Object.entries(ref).filter(([, value]) => value !== undefined));
 }

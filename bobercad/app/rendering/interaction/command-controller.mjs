@@ -1,4 +1,4 @@
-import { createMemberCreateController } from "./member-create-controller.mjs";
+import { createMemberCreateController } from "./member-create-controller.mjs?v=axis-snap-fix-8";
 
 function isTextInput(target) {
   const tag = target?.tagName?.toLowerCase();
@@ -14,7 +14,8 @@ export function createCommandController({
   onOverlayChange,
   onProjectChange,
   onStatusChange,
-  onCommandStart
+  onCommandStart,
+  autoRelationsEnabled
 }) {
   let activeCommand = null;
   const memberCreate = createMemberCreateController({
@@ -25,7 +26,8 @@ export function createCommandController({
     onPreviewChange,
     onOverlayChange,
     onProjectChange,
-    onStatusChange
+    onStatusChange,
+    autoRelationsEnabled
   });
 
   function startMemberCommand(type) {

@@ -29,7 +29,7 @@ export function build(ctx) {
     minDot: 0.5,
     code: "moment-end-plate-secondary-end-not-facing-support",
     message: "The secondary member end is not facing the selected support interface.",
-    objectRoles: ["endPlate", "beamFitting", "weld"],
+    objectRoles: ["endPlate", "beamTrim", "weld"],
     parameters: ["plate.thickness", "plate.offset"]
   });
 
@@ -53,11 +53,19 @@ export function build(ctx) {
     fabrication: { partMark: "EP1" }
   });
 
-  const beamFitting = ctx.feature.fitting("beamFitting", {
-    ownerId: secondaryMember.id,
-    plane: { origin: beamFaceOrigin, normal: plateNormal, axisX: axes.localAxisY, axisY: axes.localAxisZ },
+  const beamTrimPlane = ctx.reference.plane("beamTrimPlane", {
+    origin: beamFaceOrigin,
+    normal: plateNormal,
+    axisX: axes.localAxisY,
+    axisY: axes.localAxisZ,
+    fabrication: { operation: "end-plate-outer-face-plane" }
+  });
+  ctx.trim.planeTrim("beamTrim", {
+    memberId: secondaryMember.id,
+    memberEnd: secondaryInterface.memberEnd,
+    referencePlaneIds: [beamTrimPlane.id],
     display: { visible: false },
-    fabrication: { operation: "fit-to-end-plate" },
+    fabrication: { operation: "trim-to-end-plate" },
     placementIntent: {
       role: "fit-secondary-member-to-end-plate",
       host: { objectId: secondaryMember.id, end: secondaryInterface.memberEnd },
@@ -128,6 +136,6 @@ export function build(ctx) {
   ctx.weld.fillet("weld", {
     size: ctx.param("welds.beamWeb"),
     participants: [secondaryMember.id, endPlate.id],
-    reference: { kind: "member-end-profile", memberId: secondaryMember.id, end: secondaryInterface.memberEnd, fittingFeatureId: beamFitting.id }
+    reference: { kind: "member-end-profile", memberId: secondaryMember.id, end: secondaryInterface.memberEnd, referencePlaneId: beamTrimPlane.id }
   });
 }

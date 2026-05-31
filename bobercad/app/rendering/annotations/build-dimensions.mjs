@@ -1,5 +1,5 @@
 import { combine } from "./dimension-context.mjs";
-import { dimensionHandler } from "./dimension-registry.mjs";
+import { dimensionHandler } from "./dimension-registry.mjs?v=reference-plane-1";
 
 function buildOne(ctx, spec) {
   const activePaths = [spec.parameter, spec.reference?.customParameter].filter(Boolean);

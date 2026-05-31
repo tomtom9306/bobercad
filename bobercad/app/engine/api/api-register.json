@@ -58,6 +58,15 @@
       "returns": "connection object"
     },
     {
+      "id": "store.trimJoint",
+      "module": "../store/project-store.mjs",
+      "description": "Read a semantic corner trim joint by id.",
+      "parameters": {
+        "trimJointId": "string"
+      },
+      "returns": "trim joint object"
+    },
+    {
       "id": "store.connectionForObject",
       "module": "../store/project-store.mjs",
       "description": "Find the connection that owns or references an object.",
@@ -72,6 +81,45 @@
       "description": "List objects owned by a connection.",
       "parameters": {
         "connectionId": "string"
+      },
+      "returns": "array of object ids"
+    },
+    {
+      "id": "store.affectedConnectionIds",
+      "module": "../store/project-store.mjs",
+      "description": "List connection ids related to a member.",
+      "parameters": {
+        "memberId": "string"
+      },
+      "returns": "array of connection ids"
+    },
+    {
+      "id": "store.memberDependencyObjectIds",
+      "module": "../store/project-store.mjs",
+      "description": "List render/model object ids related to a member and its connections.",
+      "parameters": {
+        "memberId": "string",
+        "options": "optional filter flags such as renderableOnly or includeMember"
+      },
+      "returns": "array of object ids"
+    },
+    {
+      "id": "store.featureDependencyObjectIds",
+      "module": "../store/project-store.mjs",
+      "description": "List render/model object ids affected by a feature edit.",
+      "parameters": {
+        "featureId": "string",
+        "options": "optional filter flags such as renderableOnly or includeConnectionMembers"
+      },
+      "returns": "array of object ids"
+    },
+    {
+      "id": "store.trimJointDependencyObjectIds",
+      "module": "../store/project-store.mjs",
+      "description": "List render/model object ids affected by a trim joint edit.",
+      "parameters": {
+        "trimJointId": "string",
+        "options": "optional filter flags such as renderableOnly"
       },
       "returns": "array of object ids"
     },
@@ -116,6 +164,15 @@
         "memberIds": "two member ids"
       },
       "returns": "project and connectionId"
+    },
+    {
+      "id": "store.createTrimJoint",
+      "module": "../store/project-store.mjs",
+      "description": "Create a semantic trim joint with one initial trim operation.",
+      "parameters": {
+        "options": "memberIds, optional operationType, operationPatch, id and patch"
+      },
+      "returns": "project, trimJointId and trimJoint"
     },
     {
       "id": "store.deleteConnection",
@@ -163,6 +220,141 @@
       "parameters": {
         "memberId": "string",
         "patch": "member fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateFeature",
+      "module": "../store/project-store.mjs",
+      "description": "Patch a semantic feature without changing id, owner, or type.",
+      "parameters": {
+        "featureId": "string",
+        "patch": "feature fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateTrimJoint",
+      "module": "../store/project-store.mjs",
+      "description": "Patch a semantic corner trim joint without changing id or type.",
+      "parameters": {
+        "trimJointId": "string",
+        "patch": "trim joint fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateTrimJointParticipant",
+      "module": "../store/project-store.mjs",
+      "description": "Patch one participant row in a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "memberId": "string",
+        "patch": "participant fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.addTrimJointParticipant",
+      "module": "../store/project-store.mjs",
+      "description": "Add one member participant to a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "memberId": "string",
+        "patch": "optional initial participant fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.removeTrimJointParticipant",
+      "module": "../store/project-store.mjs",
+      "description": "Remove one member participant from a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "memberId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.addTrimJointOperation",
+      "module": "../store/project-store.mjs",
+      "description": "Add one cut operation to a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "patch": "operation fields such as type, memberAId, memberAEnd, memberBId, memberBEnd, referencePlaneId, and gap"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateTrimJointOperation",
+      "module": "../store/project-store.mjs",
+      "description": "Patch one cut operation in a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "operationId": "string",
+        "patch": "operation fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setTrimJointOperationMember",
+      "module": "../store/project-store.mjs",
+      "description": "Set member A or member B on a trim joint operation and add the member as a participant when needed.",
+      "parameters": {
+        "trimJointId": "string",
+        "operationId": "string",
+        "role": "memberA or memberB",
+        "memberId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.removeTrimJointOperation",
+      "module": "../store/project-store.mjs",
+      "description": "Remove one cut operation from a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "operationId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setFeatureOperationEnabled",
+      "module": "../store/project-store.mjs",
+      "description": "Enable or disable a semantic feature operation.",
+      "parameters": {
+        "featureId": "string",
+        "enabled": "boolean"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setReferencePlane",
+      "module": "../store/project-store.mjs",
+      "description": "Patch a semantic reference plane object.",
+      "parameters": {
+        "referencePlaneId": "string",
+        "patch": "reference plane fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setFeatureBody",
+      "module": "../store/project-store.mjs",
+      "description": "Patch a feature cutting body object.",
+      "parameters": {
+        "featureId": "string",
+        "patch": "body fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setFeatureSource",
+      "module": "../store/project-store.mjs",
+      "description": "Patch a semantic feature source object such as a member-profile cutting reference.",
+      "parameters": {
+        "featureId": "string",
+        "patch": "source fields"
       },
       "returns": "project JSON"
     },
@@ -258,6 +450,17 @@
         "point": "[x,y,z]"
       },
       "returns": "project JSON"
+    },
+    {
+      "id": "store.draftMemberProject",
+      "module": "../store/project-store.mjs",
+      "description": "Build a non-committed project draft for one member and its affected connections.",
+      "parameters": {
+        "memberId": "string",
+        "member": "complete semantic member object",
+        "options": "optional flags such as regenerateConnections"
+      },
+      "returns": "project JSON draft without mutating the store"
     },
     {
       "id": "project.memberLayoutAxis",
@@ -544,6 +747,16 @@
       "returns": "void"
     },
     {
+      "id": "ctx.reference.plane",
+      "module": "./connections/builders.mjs",
+      "description": "Create a semantic reference plane and assign it to a role.",
+      "parameters": {
+        "role": "role key",
+        "data": "origin, normal, axisX, axisY, optional size/extents and metadata"
+      },
+      "returns": "reference plane object"
+    },
+    {
       "id": "ctx.part.plate",
       "module": "./connections/builders.mjs",
       "description": "Create a semantic plate object and assign it to a role.",
@@ -574,14 +787,14 @@
       "returns": "feature object"
     },
     {
-      "id": "ctx.feature.fitting",
+      "id": "ctx.trim.planeTrim",
       "module": "./connections/builders.mjs",
-      "description": "Create a fitting feature.",
+      "description": "Create a member trim joint with one plane-trim operation.",
       "parameters": {
         "role": "role key",
-        "data": "ownerId, plane and metadata"
+        "data": "memberId, optional memberEnd, referencePlaneIds, removedRegionKeys, operationEnabled, gap and metadata"
       },
-      "returns": "feature object"
+      "returns": "trim joint object"
     },
     {
       "id": "ctx.feature.booleanPart",

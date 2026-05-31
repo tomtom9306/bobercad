@@ -9,7 +9,8 @@
     "memberHoles": "_holes_main",
     "fasteners": "_bolts",
     "weld": "_beam_weld",
-    "beamFitting": "_beam_fitting"
+    "beamTrimPlane": "_beam_trim_plane",
+    "beamTrim": "_beam_trim"
   },
   "componentRefs": [
     "design-status"

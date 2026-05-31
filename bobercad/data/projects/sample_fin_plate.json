@@ -220,10 +220,6 @@
       "collection": "members",
       "type": "beam"
     },
-    "connection_fin_plate_1": {
-      "collection": "connections",
-      "type": "fin-plate"
-    },
     "connection_fin_plate_1_fin_plate": {
       "collection": "plates",
       "type": "rectangular-plate"
@@ -240,10 +236,6 @@
       "collection": "features",
       "type": "hole-pattern"
     },
-    "connection_fin_plate_1_beam_gap_fitting": {
-      "collection": "features",
-      "type": "fitting"
-    },
     "connection_fin_plate_1_bolts": {
       "collection": "fastenerGroups",
       "type": "fastener-group"
@@ -251,6 +243,18 @@
     "connection_fin_plate_1_support_weld": {
       "collection": "welds",
       "type": "fillet-weld"
+    },
+    "connection_fin_plate_1": {
+      "collection": "connections",
+      "type": "fin-plate"
+    },
+    "connection_fin_plate_1_beam_gap_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "connection_fin_plate_1_beam_gap_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
     }
   },
   "modelDefaults": {
@@ -431,7 +435,7 @@
           "connection_fin_plate_1_bolt_grid",
           "connection_fin_plate_1_holes_plate",
           "connection_fin_plate_1_holes_secondary",
-          "connection_fin_plate_1_beam_gap_fitting",
+          "connection_fin_plate_1_beam_gap_trim",
           "connection_fin_plate_1_bolts",
           "connection_fin_plate_1_support_weld"
         ]
@@ -523,9 +527,10 @@
           "connection_fin_plate_1_bolt_grid",
           "connection_fin_plate_1_holes_plate",
           "connection_fin_plate_1_holes_secondary",
-          "connection_fin_plate_1_beam_gap_fitting",
+          "connection_fin_plate_1_beam_gap_trim",
           "connection_fin_plate_1_bolts",
-          "connection_fin_plate_1_support_weld"
+          "connection_fin_plate_1_support_weld",
+          "connection_fin_plate_1_beam_gap_trim_plane"
         ]
       }
     },
@@ -657,8 +662,7 @@
         ],
         "assemblyId": "assembly_beam_1",
         "featureIds": [
-          "connection_fin_plate_1_holes_secondary",
-          "connection_fin_plate_1_beam_gap_fitting"
+          "connection_fin_plate_1_holes_secondary"
         ],
         "fabrication": {
           "partMark": "B1"
@@ -806,54 +810,6 @@
         "fabrication": {
           "operation": "drill"
         }
-      },
-      "connection_fin_plate_1_beam_gap_fitting": {
-        "id": "connection_fin_plate_1_beam_gap_fitting",
-        "type": "fitting",
-        "cutKind": "fitting",
-        "ownerId": "beam_1",
-        "plane": {
-          "origin": [
-            170,
-            0,
-            1500
-          ],
-          "normal": [
-            1,
-            0,
-            0
-          ],
-          "axisX": [
-            0,
-            1,
-            0
-          ],
-          "axisY": [
-            0,
-            0,
-            1
-          ]
-        },
-        "display": {
-          "visible": false
-        },
-        "fabrication": {
-          "operation": "fit-secondary-member-to-fin-plate-gap"
-        },
-        "placementIntent": {
-          "role": "set-secondary-member-gap",
-          "host": {
-            "objectId": "beam_1",
-            "end": "start"
-          },
-          "references": [
-            {
-              "objectId": "column_1",
-              "interfaceId": "if_column_1_x_plus_fin_plate"
-            }
-          ],
-          "fit": "secondary-end-to-support-face-gap"
-        }
       }
     },
     "fastenerGroups": {
@@ -930,8 +886,7 @@
           ],
           "featureIds": [
             "connection_fin_plate_1_holes_plate",
-            "connection_fin_plate_1_holes_secondary",
-            "connection_fin_plate_1_beam_gap_fitting"
+            "connection_fin_plate_1_holes_secondary"
           ],
           "fastenerGroupIds": [
             "connection_fin_plate_1_bolts"
@@ -945,11 +900,12 @@
           "ownedObjectIds": [
             "connection_fin_plate_1_fin_plate",
             "connection_fin_plate_1_bolt_grid",
-            "connection_fin_plate_1_beam_gap_fitting",
+            "connection_fin_plate_1_beam_gap_trim",
             "connection_fin_plate_1_holes_plate",
             "connection_fin_plate_1_holes_secondary",
             "connection_fin_plate_1_bolts",
-            "connection_fin_plate_1_support_weld"
+            "connection_fin_plate_1_support_weld",
+            "connection_fin_plate_1_beam_gap_trim_plane"
           ],
           "manualObjectIds": [],
           "objectRoles": {
@@ -957,7 +913,7 @@
             "holePattern": "connection_fin_plate_1_bolt_grid",
             "plateHoles": "connection_fin_plate_1_holes_plate",
             "memberHoles": "connection_fin_plate_1_holes_secondary",
-            "beamFitting": "connection_fin_plate_1_beam_gap_fitting",
+            "beamTrim": "connection_fin_plate_1_beam_gap_trim",
             "fasteners": "connection_fin_plate_1_bolts",
             "weld": "connection_fin_plate_1_support_weld"
           },
@@ -975,13 +931,13 @@
             "beamGap": 20
           },
           "bolts": {
-          "fastenerRef": "M16_8_8",
-          "rows": 3,
-          "columns": 1,
-          "pitch": 80,
-          "gauge": 0,
-          "length": 60
-        },
+            "fastenerRef": "M16_8_8",
+            "rows": 3,
+            "columns": 1,
+            "pitch": 80,
+            "gauge": 0,
+            "length": 60
+          },
           "holes": {
             "diameter": 18,
             "type": "round"
@@ -1020,7 +976,84 @@
         }
       }
     },
-    "addonData": {}
+    "addonData": {},
+    "referencePlanes": {
+      "connection_fin_plate_1_beam_gap_trim_plane": {
+        "id": "connection_fin_plate_1_beam_gap_trim_plane",
+        "type": "reference-plane",
+        "name": "connection_fin_plate_1_beam_gap_trim plane",
+        "origin": [
+          170,
+          0,
+          1500
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    "trimJoints": {
+      "connection_fin_plate_1_beam_gap_trim": {
+        "id": "connection_fin_plate_1_beam_gap_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "beam_1",
+            "memberEnd": "start",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "connection_fin_plate_1_beam_gap_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "beam_1",
+            "memberAEnd": "start",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "connection_fin_plate_1_beam_gap_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "connection_fin_plate_1_beam_gap_trim_plane:-"
+            ]
+          }
+        ],
+        "placementIntent": {
+          "role": "set-secondary-member-gap",
+          "host": {
+            "objectId": "beam_1",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "column_1",
+              "interfaceId": "if_column_1_x_plus_fin_plate"
+            }
+          ],
+          "fit": "secondary-end-to-support-face-gap"
+        },
+        "fabrication": {
+          "operation": "fit-secondary-member-to-fin-plate-gap"
+        },
+        "display": {
+          "visible": false
+        }
+      }
+    }
   },
   "migrationHistory": [
     {
