@@ -1,4 +1,4 @@
-import { createMemberCreateController } from "./member-create-controller.mjs?v=axis-snap-fix-8";
+import { createMemberCreateController } from "./member-create-controller.mjs?v=snap-settings-json-1";
 
 function isTextInput(target) {
   const tag = target?.tagName?.toLowerCase();

@@ -1,6 +1,9 @@
 import { v } from "../../core/math.mjs";
 import { snapCandidates } from "./snap-candidates.mjs";
 
+const DEFAULT_POINT_PRIORITY_BIAS_PX = 12;
+const DEFAULT_INTERSECTION_PRIORITY_BIAS_PX = 10;
+
 function finitePoint(point) {
   return Array.isArray(point) && point.length === 3 && point.every((value) => typeof value === "number" && Number.isFinite(value));
 }
@@ -149,7 +152,37 @@ function linePairIntersection(viewer, left, right, screen, tolerance) {
   };
 }
 
-function rankSnap(left, right) {
+function snapClass(hit) {
+  if (hit?.kind === "point" && hit.type !== "axis-intersection") return "point";
+  if (hit?.type === "axis-intersection") return "intersection";
+  if (hit?.kind === "line") return "line";
+  return "other";
+}
+
+function snapClassRank(hit) {
+  const hitClass = snapClass(hit);
+  if (hitClass === "point") return 0;
+  if (hitClass === "intersection") return 1;
+  if (hitClass === "line") return 2;
+  return 3;
+}
+
+function snapClassBias(hit, pointBiasPx, intersectionBiasPx) {
+  const hitClass = snapClass(hit);
+  if (hitClass === "point") return pointBiasPx;
+  if (hitClass === "intersection") return intersectionBiasPx;
+  return 0;
+}
+
+function rankSnap(left, right, pointBiasPx, intersectionBiasPx) {
+  const leftClass = snapClassRank(left);
+  const rightClass = snapClassRank(right);
+  if (leftClass !== rightClass) {
+    const leftBias = snapClassBias(left, pointBiasPx, intersectionBiasPx);
+    const rightBias = snapClassBias(right, pointBiasPx, intersectionBiasPx);
+    if (leftClass < rightClass && left.screenDistance <= right.screenDistance + leftBias) return -1;
+    if (rightClass < leftClass && right.screenDistance <= left.screenDistance + rightBias) return 1;
+  }
   const leftPriority = left.priority || 0;
   const rightPriority = right.priority || 0;
   if (Math.abs(left.screenDistance - right.screenDistance) > 1e-6) return left.screenDistance - right.screenDistance;
@@ -180,6 +213,8 @@ export function solveSnap({
   excludeObjectId = null,
   screenTolerance = 14,
   intersectionTolerancePx = null,
+  pointPriorityBiasPx = DEFAULT_POINT_PRIORITY_BIAS_PX,
+  intersectionPriorityBiasPx = DEFAULT_INTERSECTION_PRIORITY_BIAS_PX,
   cycleIndex = 0
 } = {}) {
   if (!viewer || !finiteScreen(screen)) return { snap: null, candidates: [] };
@@ -203,7 +238,7 @@ export function solveSnap({
   }
 
   if (rawPoint && !hits.length) return { snap: null, candidates: [] };
-  hits.sort(rankSnap);
+  hits.sort((left, right) => rankSnap(left, right, pointPriorityBiasPx, intersectionPriorityBiasPx));
   const snap = hits.length ? hits[Math.abs(cycleIndex) % hits.length] : null;
   return { snap, candidates: hits };
 }

@@ -17,15 +17,15 @@ import {
   memberAlignmentRelation,
   projectPointToAxis
 } from "../../engine/api/project/axis-relations.mjs?v=relation-types-1";
-import { snapCandidates } from "../../engine/api/project/snap-candidates.mjs?v=trim-create-ui-1";
-import { solveSnap } from "../../engine/api/project/snap-solver.mjs?v=trim-create-ui-1";
+import { snapCandidates } from "../../engine/api/project/snap-candidates.mjs?v=snap-architecture-1";
+import { solveSnap } from "../../engine/api/project/snap-solver.mjs?v=snap-architecture-1";
 import {
   memberAxesForTarget,
   normalizeCoordinateSpace,
   vectorComponentsInAxes,
   vectorFromAxisComponents
 } from "../scene/authoring/member-axis-space.mjs";
-import { memberAuthoringOverlay } from "../scene/build-authoring-overlays.mjs?v=global-axis-guides-1";
+import { memberAuthoringOverlay } from "../scene/build-authoring-overlays.mjs?v=active-reference-guides-1";
 import {
   axisScreenDistance,
   quantizeDegrees,
@@ -183,6 +183,13 @@ function moveDeltaBetweenMembers(fromMember, toMember, operation) {
   return v.sub(operationTargetPoint(toMember, operation), operationTargetPoint(fromMember, operation));
 }
 
+const WORLD_ORIGIN = [0, 0, 0];
+const WORLD_AXIS_DIRECTIONS = {
+  x: [1, 0, 0],
+  y: [0, 1, 0],
+  z: [0, 0, 1]
+};
+
 function globalAxisOriginForHandle(member, handle) {
   const target = handleTarget(handle);
   if (target === "start") return member.end;
@@ -193,7 +200,23 @@ function globalAxisOriginForHandle(member, handle) {
 function globalAxisGuideForDrag(dragState) {
   if (!dragState?.handle || handleTarget(dragState.handle) === "center") return null;
   if (dragState.handle.kind === "rotate-axis") return null;
-  return globalAxisOriginForHandle(dragState.baseMember, dragState.handle);
+  return WORLD_ORIGIN;
+}
+
+function dragGuideAxisCandidates(origin, span, tolerancePx) {
+  if (!origin) return [];
+  return Object.entries(WORLD_AXIS_DIRECTIONS).map(([axis, direction]) => ({
+    kind: "line",
+    type: "drag-guide-axis",
+    axis,
+    a: v.sub(origin, v.mul(direction, span)),
+    b: v.add(origin, v.mul(direction, span)),
+    point: [...origin],
+    label: `Drag ${axis.toUpperCase()} guide`,
+    priority: 225,
+    screenTolerance: tolerancePx,
+    screenIntersectionMode: "self"
+  }));
 }
 
 export function createMemberEditController({ viewer, api, selection, settings = {}, onLocalProjectChange, onMemberSelected, onCleared, onMessage, onTransformChange, autoRelationsEnabled = () => false }) {
@@ -539,7 +562,9 @@ export function createMemberEditController({ viewer, api, selection, settings = 
       screen,
       rawPoint: null,
       excludeObjectId: activeMemberId,
-      screenTolerance: authoringSettings.snapTolerancePx || 14
+      screenTolerance: authoringSettings.snapTolerancePx || 14,
+      pointPriorityBiasPx: authoringSettings.pointSnapBiasPx,
+      intersectionPriorityBiasPx: authoringSettings.intersectionSnapBiasPx
     }).snap;
   }
 
@@ -814,10 +839,15 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     const candidates = snapCandidates(project, {
       ...localSnapOptions(project, member),
       includeGlobalAxes: true,
-      globalAxisOrigin: globalAxisOriginForHandle(member, handle),
+      globalAxisOrigin: WORLD_ORIGIN,
       globalAxisSpan: authoringSettings.globalAxisSnapSpan || 100000,
       globalAxisSnapTolerancePx: authoringSettings.globalAxisSnapTolerancePx || 34
     });
+    candidates.push(...dragGuideAxisCandidates(
+      globalAxisOriginForHandle(member, handle),
+      authoringSettings.globalAxisSnapSpan || 100000,
+      authoringSettings.globalAxisSnapTolerancePx || 34
+    ));
     perfMark("member-drag-snap-candidates-built", {
       memberId: activeMemberId,
       candidateCount: candidates.length,

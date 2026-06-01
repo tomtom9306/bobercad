@@ -134,6 +134,34 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "pointSnapBiasPx": {
+          "type": "number",
+          "minimum": 0
+        },
+        "intersectionSnapBiasPx": {
+          "type": "number",
+          "minimum": 0
+        },
+        "faceAxisSnapBiasPx": {
+          "type": "number",
+          "minimum": 0
+        },
+        "multiSnapTolerancePx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "startAxisIntersectionBiasPx": {
+          "type": "number",
+          "minimum": 0
+        },
+        "startAxisSnapBiasPx": {
+          "type": "number",
+          "minimum": 0
+        },
+        "profileAxisSnapBiasPx": {
+          "type": "number",
+          "minimum": 0
+        },
         "globalAxisSnapSpan": {
           "type": "number",
           "exclusiveMinimum": 0
@@ -145,6 +173,42 @@
         "globalAxisGuideSpan": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "profileAxisSnapSpan": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "profileAxisSnapTolerancePx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "creationAxisSnapSpan": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "creationAxisSnapTolerancePx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "activeReferenceMemberLimit": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activeReferenceAxisSnapTolerancePx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "compositeSnapTolerancePx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "snapAxisHighlightSpan": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "snapAxisExtensionPadding": {
+          "type": "number",
+          "minimum": 0
         },
         "defaultColumnHeight": {
           "type": "number",
