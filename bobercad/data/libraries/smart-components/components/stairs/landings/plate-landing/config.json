@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "plate-landing",
+  "kind": "stair-landing",
+  "title": "Plate Landing Set",
+  "version": 1,
+  "roles": {
+    "landingPattern": "_landing_pattern",
+    "landingAssembly": "_landing_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "plate-landing": {
+      "id": "plate-landing",
+      "version": "0.1.0",
+      "name": "Plate landing",
+      "parameters": {
+        "meta": {
+          "family": "plate-landing"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "landings",
+        "label": "Landings",
+        "items": []
+      }
+    ]
+  }
+}

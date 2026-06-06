@@ -4,8 +4,9 @@ import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgIntersect, csgPolygon, csgSu
 import { clearanceCutGeometry, cutBodiesForFeature } from "../../engine/geometry/cut-features.mjs";
 import { requiredReferencePlane } from "../../engine/geometry/feature-plane.mjs";
 import { memberFrame, memberFrameAt, memberLength, resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
+import { normalizePath, samplePath } from "../../engine/api/geometry/paths.mjs";
 import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs";
-import { DEFAULT_GHOST_OPACITY, activeConnectionObjectIds, isActiveConnectionObject, shouldRenderObject } from "./scene-object-visibility.mjs";
+import { DEFAULT_GHOST_OPACITY, activeSmartComponentObjectIds, isActiveSmartComponentObject, shouldRenderObject } from "./scene-object-visibility.mjs";
 
 let settings = null;
 
@@ -15,6 +16,11 @@ function sectionPoint(origin, frame, point, xOffset = 0) {
 
 function addLine(scene, a, b, color, meta = {}) {
   scene.lines.push({ points: [a, b], color, ...meta });
+}
+
+function addPolyline(scene, points, color, meta = {}) {
+  const cleanPoints = points.filter((point) => Array.isArray(point) && point.length === 3 && point.every(Number.isFinite));
+  if (cleanPoints.length >= 2) scene.lines.push({ points: cleanPoints, color, ...meta });
 }
 
 function detailMeta(objectId) {
@@ -29,10 +35,10 @@ function flattenIds(value) {
   return [];
 }
 
-function generatedConnectionObjectIds(project) {
-  return new Set(Object.values(project.model.connections || {}).flatMap((connection) => [
-    ...flattenIds(connection.generator?.objectRoles),
-    ...(connection.generator?.ownedObjectIds || [])
+function generatedSmartComponentObjectIds(project) {
+  return new Set(Object.values(project.model.smartComponentInstances || {}).flatMap((smartComponent) => [
+    ...flattenIds(smartComponent.objectRoles),
+    ...(smartComponent.ownedObjectIds || [])
   ]));
 }
 
@@ -46,13 +52,13 @@ function renderCollectionObjects(project, collection, renderObjectIds = null) {
 
 function shouldApplyMemberFeature(scene, feature) {
   if (feature.type !== "hole-pattern") return true;
-  if (!scene?.generatedConnectionObjectIds?.has(feature.id)) return true;
-  return isActiveConnectionObject(scene, feature.id);
+  if (!scene?.generatedSmartComponentObjectIds?.has(feature.id)) return true;
+  return isActiveSmartComponentObject(scene, feature.id);
 }
 
 function shouldBuildLodDetail(scene, objectId) {
   if (!objectId) return true;
-  if (isActiveConnectionObject(scene, objectId)) return true;
+  if (isActiveSmartComponentObject(scene, objectId)) return true;
   return typeof scene?.lodDetailFilter === "function" ? scene.lodDetailFilter(objectId) : true;
 }
 
@@ -460,6 +466,83 @@ function equalAngleMiterNormal(ownDirection, mateDirection) {
   return Math.abs(v.dot(normal, ownDirection)) <= CSG_EPSILON ? ownDirection : normal;
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function profileSolidPoints(profile) {
+  return (profile?.section?.contours || [])
+    .filter((contour) => contour.role === "solid")
+    .flatMap((contour) => contour.points || [])
+    .filter((point) => Array.isArray(point) && point.length >= 2 && point.every((value) => typeof value === "number" && Number.isFinite(value)));
+}
+
+function profileExtentAlong(profile, axis) {
+  const axisLength = Math.hypot(axis[0], axis[1]);
+  if (axisLength <= CSG_EPSILON) return sectionMaxSpan(profile);
+  const unit = [axis[0] / axisLength, axis[1] / axisLength];
+  const points = profileSolidPoints(profile);
+  if (!points.length) return sectionMaxSpan(profile);
+  let min = Infinity;
+  let max = -Infinity;
+  for (const point of points) {
+    const projection = point[0] * unit[0] + point[1] * unit[1];
+    min = Math.min(min, projection);
+    max = Math.max(max, projection);
+  }
+  const extent = max - min;
+  return extent > CSG_EPSILON ? extent : sectionMaxSpan(profile);
+}
+
+function profileCutLengthEstimate(profile, frame, normal, keepDirection) {
+  const along = Math.abs(v.dot(normal, keepDirection));
+  if (along <= 0.04) return Infinity;
+  const sectionAxis = [v.dot(normal, frame.y), v.dot(normal, frame.z)];
+  return profileExtentAlong(profile, sectionAxis) / along;
+}
+
+function candidateMiterNormal(ownKeep, mateKeep, alpha) {
+  const own = v.norm(ownKeep);
+  const mateBack = v.mul(v.norm(mateKeep), -1);
+  const dot = clamp(v.dot(own, mateBack), -1, 1);
+  const tangent = v.norm(v.sub(mateBack, v.mul(own, dot)));
+  if (v.len(tangent) <= CSG_EPSILON) return own;
+  return v.norm(v.add(v.mul(own, Math.cos(alpha)), v.mul(tangent, Math.sin(alpha))));
+}
+
+function profileBalancedMiterNormal(profiles, owner, frame, ownKeep, mate, mateFrame, mateKeep) {
+  const ownerProfile = profiles?.[owner.profile];
+  const mateProfile = profiles?.[mate.profile];
+  if (!ownerProfile || !mateProfile) return equalAngleMiterNormal(ownKeep, mateKeep);
+
+  const own = v.norm(ownKeep);
+  const mateBack = v.mul(v.norm(mateKeep), -1);
+  const beta = Math.acos(clamp(v.dot(own, mateBack), -1, 1));
+  if (beta <= 0.5 * Math.PI / 180 || Math.PI - beta <= 0.5 * Math.PI / 180) {
+    return equalAngleMiterNormal(ownKeep, mateKeep);
+  }
+
+  const samples = 72;
+  let best = null;
+  for (let index = 0; index <= samples; index += 1) {
+    const alpha = beta * index / samples;
+    const normal = candidateMiterNormal(own, mateKeep, alpha);
+    const ownAlong = Math.abs(v.dot(normal, own));
+    const mateAlong = Math.abs(v.dot(v.mul(normal, -1), v.norm(mateKeep)));
+    if (ownAlong <= 0.04 || mateAlong <= 0.04) continue;
+
+    const ownerCut = profileCutLengthEstimate(ownerProfile, frame, normal, own);
+    const mateCut = profileCutLengthEstimate(mateProfile, mateFrame, v.mul(normal, -1), v.norm(mateKeep));
+    if (!Number.isFinite(ownerCut) || !Number.isFinite(mateCut)) continue;
+    const relativeDifference = Math.abs(ownerCut - mateCut) / Math.max(ownerCut, mateCut, 1);
+    const equalAngleBias = Math.abs(alpha - beta / 2) / Math.max(beta, CSG_EPSILON) * 0.0001;
+    const score = relativeDifference + equalAngleBias;
+    if (!best || score < best.score) best = { score, normal };
+  }
+
+  return best?.normal || equalAngleMiterNormal(ownKeep, mateKeep);
+}
+
 function participantMember(project, participant, trimJointId) {
   if (!participant?.memberId) geometryError(`${trimJointId}: trim participant missing memberId`);
   return objectById(project, participant.memberId);
@@ -645,10 +728,11 @@ function trimJointMiterFeature(project, profiles, trimJoint, id, owner, ownerEnd
   const frame = memberFrame(owner);
   const mateFrame = memberFrame(mate);
   const jointPoint = trimJointPoint(project, trimJoint);
-  const normal = equalAngleMiterNormal(
-    memberEndKeepDirection(owner, frame, ownerEnd),
-    memberEndKeepDirection(mate, mateFrame, mateEnd)
-  );
+  const ownerKeep = memberEndKeepDirection(owner, frame, ownerEnd);
+  const mateKeep = memberEndKeepDirection(mate, mateFrame, mateEnd);
+  const normal = operation.miterMode === "profile-balanced"
+    ? profileBalancedMiterNormal(profiles, owner, frame, ownerKeep, mate, mateFrame, mateKeep)
+    : equalAngleMiterNormal(ownerKeep, mateKeep);
   return {
     id,
     type: "member-trim-plane",
@@ -981,6 +1065,7 @@ function addPlaneTrimRegionHandles(scene, project, profiles, trimJoint, operatio
       ...operationMeta,
       componentKind: "trim-region",
       regionKey: regionKeyValue,
+      memberId: member.id,
       ownerMemberId: member.id,
       regionRemoved: removed,
       opacity: removed ? 0.12 : 0.035,
@@ -1094,7 +1179,85 @@ function addMember(scene, project, member, profile, options = {}) {
   addMeshCreaseEdges(scene, polygons, edgeColor, meta);
 }
 
+function curvedMemberPath(member) {
+  const centerline = member.centerline;
+  if (!centerline || !["arc", "helix", "spiral"].includes(centerline.type)) return null;
+  return normalizePath(centerline);
+}
+
+function curvedMemberSampleCount(path, profile) {
+  const bounds = sectionBounds(profile);
+  const sectionSpan = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
+  return Math.min(360, Math.max(24, Math.ceil(path.length / Math.max(sectionSpan * 1.25, 120)) + 1));
+}
+
+function curvedMemberFrame(sample, member) {
+  const baseY = v.mul(sample.frame.binormal, -1);
+  const baseZ = sample.frame.normal;
+  const angle = (member.rotation || 0) * Math.PI / 180;
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return {
+    origin: sample.point,
+    x: sample.frame.tangent,
+    y: v.add(v.mul(baseY, c), v.mul(baseZ, s)),
+    z: v.add(v.mul(baseZ, c), v.mul(baseY, -s))
+  };
+}
+
+function curvedSectionPoint(sample, member, point) {
+  const frame = curvedMemberFrame(sample, member);
+  return sectionPoint(frame.origin, frame, point);
+}
+
+function addCurvedMember(scene, member, profile) {
+  const path = curvedMemberPath(member);
+  if (!path) return false;
+  const color = member.display?.color || "#78909c";
+  const edgeColor = member.display?.edgeColor || color || settings.render.edges.defaultColor;
+  const opacity = member.display?.transparent ? member.display?.opacity ?? DEFAULT_GHOST_OPACITY : member.display?.opacity;
+  const meta = { collection: "members", objectId: member.id };
+  const samples = samplePath(path, { count: curvedMemberSampleCount(path, profile), up: [0, 0, 1] });
+  const hasVoidContour = (profile.section?.contours || []).some((contour) => contour.role === "void");
+  const centerlineMeta = { ...meta, analyticCenterline: true, centerlineType: member.centerline?.type || path.type };
+
+  addPolyline(scene, samples.map((sample) => sample.point), edgeColor, centerlineMeta);
+
+  for (const contour of profile.section?.contours || []) {
+    if (!["solid", "void"].includes(contour.role)) continue;
+    const points = ccwPoints(contour.points || []);
+    if (points.length < 2) continue;
+    const rings = samples.map((sample) => points.map((point) => curvedSectionPoint(sample, member, point)));
+    const reverse = contour.role === "void";
+
+    for (let stationIndex = 0; stationIndex + 1 < rings.length; stationIndex += 1) {
+      const current = rings[stationIndex];
+      const nextRing = rings[stationIndex + 1];
+      for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+        const nextPointIndex = (pointIndex + 1) % points.length;
+        const facePoints = reverse
+          ? [current[pointIndex], nextRing[pointIndex], nextRing[nextPointIndex], current[nextPointIndex]]
+          : [current[pointIndex], current[nextPointIndex], nextRing[nextPointIndex], nextRing[pointIndex]];
+        scene.faces.push({ points: facePoints, color, opacity, hideEdges: true, ...meta });
+      }
+    }
+
+    for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+      addPolyline(scene, rings.map((ring) => ring[pointIndex]), edgeColor, meta);
+    }
+
+    if (contour.role === "solid" && !hasVoidContour) {
+      scene.faces.push({ points: [...rings[0]].reverse(), color, opacity, ...meta });
+      scene.faces.push({ points: rings[rings.length - 1], color, opacity, ...meta });
+    }
+  }
+
+  return true;
+}
+
 function canInstanceMember(scene, member, profile) {
+  if (curvedMemberPath(member)) return false;
+  if (member.display?.forceDetail === true) return false;
   if (member.display?.transparent || member.display?.opacity !== undefined) return false;
   if (!instanceGeometryForProfile(scene, profile)) return false;
   return true;
@@ -1426,16 +1589,19 @@ function trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, opera
   const operationEnd = trimJointOperationEnd(project, trimJoint, member, memberEnd);
   const origin = memberEndPoint(member, operationEnd);
   if (!origin) geometryError(`${trimJoint.id}: trim operation member end must be start or end`);
-  return trimPlaneWithAxes(
-    profiles,
-    member,
-    frame,
-    memberEndKeepDirection(member, frame, operationEnd),
-    origin,
-    operation.axisX,
-    operation.size,
-    trimJoint.id
-  );
+  return {
+    ...trimPlaneWithAxes(
+      profiles,
+      member,
+      frame,
+      memberEndKeepDirection(member, frame, operationEnd),
+      origin,
+      operation.axisX,
+      operation.size,
+      trimJoint.id
+    ),
+    memberId: member.id
+  };
 }
 
 function trimJointOperationMarkerPlanes(project, profiles, trimJoint, operation) {
@@ -1476,7 +1642,7 @@ function addTrimJoint(scene, project, profiles, trimJoint) {
       const planes = trimJointOperationMarkerPlanes(project, profiles, trimJoint, operation);
       const dedupeKeys = [];
       for (const plane of planes) {
-        const planeMeta = { ...operationMeta, referencePlaneId: plane.id || null };
+        const planeMeta = { ...operationMeta, referencePlaneId: plane.id || null, ...(plane.memberId ? { memberId: plane.memberId } : {}) };
         dedupeKeys.push(planeMarkerKey(project, plane));
         if (operation.type === "plane-trim") {
           addPlaneMarkerOnce(scene, project, plane, planeDisplay(display, display.edgeColor || "#be123c"), planeMeta);
@@ -1517,6 +1683,41 @@ function fastenerGripLength(project, fastenerGroup) {
   const fromDepth = owner?.thickness || fromFeature?.depth || 0;
   const toDepth = toFeature?.depth || 0;
   return Math.max(fromDepth + toDepth, settings.render.fasteners.length * 0.45);
+}
+
+function optionalObjectById(project, objectId) {
+  if (!objectId || !project.objectIndex?.[objectId]) return null;
+  return objectById(project, objectId);
+}
+
+function plateLikeFastenerBasis(project, objectId) {
+  const object = optionalObjectById(project, objectId);
+  if (!object || !Array.isArray(object.center) || !Array.isArray(object.normal) || !Array.isArray(object.localAxisY) || !Array.isArray(object.localAxisZ)) return null;
+  return {
+    origin: requiredVector(object, "center", object.id || objectId),
+    normal: v.norm(requiredVector(object, "normal", object.id || objectId)),
+    y: v.norm(requiredVector(object, "localAxisY", object.id || objectId)),
+    z: v.norm(requiredVector(object, "localAxisZ", object.id || objectId))
+  };
+}
+
+function fastenerGroupBasis(project, profiles, fastenerGroup) {
+  const fromFeature = optionalObjectById(project, fastenerGroup.through?.fromFeatureId);
+  if (fromFeature) return featureOrigin(project, profiles, fromFeature);
+
+  const host = fastenerGroup.placementIntent?.host || {};
+  const candidateIds = [
+    host.plateId,
+    host.panelId,
+    host.bracketId,
+    host.basePlateId,
+    ...(Array.isArray(fastenerGroup.participants) ? fastenerGroup.participants : [])
+  ];
+  for (const candidateId of candidateIds) {
+    const basis = plateLikeFastenerBasis(project, candidateId);
+    if (basis) return basis;
+  }
+  geometryError(`${fastenerGroup.id}: fastener group without through.fromFeatureId requires a plate-like host or participant`);
 }
 
 function addFastenerAssembly(scene, project, fastenerGroup, fastener, basis, position, color, edgeColor, meta) {
@@ -1567,6 +1768,23 @@ function addFastenerAssembly(scene, project, fastenerGroup, fastener, basis, pos
     nutStackOffset += washerThickness / 2;
   }
   if (fastener.nut) addPrism(scene, v.add(nutSurface, v.mul(axis, nutStackOffset + nutHeight / 2)), axis, basis.y, basis.z, nutHeight, hexOutline(nutAcrossFlats), componentColor, edgeColor, meta);
+
+  const pickRadius = Math.max(headAcrossFlats * 0.85, washerOuterRadius * 1.25, shankDiameter * 1.8, 60);
+  const pickOffset = headHeight + (useHeadWasher ? washerThickness : 0) + 1;
+  const pickCenter = v.add(center, v.mul(axis, -pickOffset));
+  scene.faces.push({
+    points: [
+      v.add(pickCenter, v.add(v.mul(basis.y, -pickRadius), v.mul(basis.z, -pickRadius))),
+      v.add(pickCenter, v.add(v.mul(basis.y, pickRadius), v.mul(basis.z, -pickRadius))),
+      v.add(pickCenter, v.add(v.mul(basis.y, pickRadius), v.mul(basis.z, pickRadius))),
+      v.add(pickCenter, v.add(v.mul(basis.y, -pickRadius), v.mul(basis.z, pickRadius)))
+    ],
+    color: componentColor,
+    opacity: 0,
+    hideEdges: true,
+    ...meta,
+    lodDetailObjectId: null
+  });
 }
 
 function addFastenerGroups(scene, project, fastenerGroups = collectionObjects(project, "fastenerGroups")) {
@@ -1574,8 +1792,7 @@ function addFastenerGroups(scene, project, fastenerGroups = collectionObjects(pr
     if (!shouldRenderObject(scene, fastenerGroup)) continue;
     if (!shouldBuildLodDetail(scene, fastenerGroup.id)) continue;
     const pattern = objectById(project, fastenerGroup.holePatternRef);
-    const feature = objectById(project, fastenerGroup.through.fromFeatureId);
-    const basis = featureOrigin(project, scene.profiles, feature);
+    const basis = fastenerGroupBasis(project, scene.profiles, fastenerGroup);
     const fastener = fastenerDefinition(scene, fastenerGroup);
     const color = fastenerGroup.display?.color || "#b7791f";
     const edgeColor = fastenerGroup.display?.edgeColor || settings.render.edges.fastenerHeadColor;
@@ -1585,7 +1802,7 @@ function addFastenerGroups(scene, project, fastenerGroups = collectionObjects(pr
 
     for (const [positionIndex, position] of pattern.positions.entries()) {
       const suppressed = groupSuppressed || suppressedPositions.has(positionIndex);
-      if (suppressed && !isActiveConnectionObject(scene, fastenerGroup.id) && !isActiveConnectionObject(scene, pattern.id)) continue;
+      if (suppressed && !isActiveSmartComponentObject(scene, fastenerGroup.id) && !isActiveSmartComponentObject(scene, pattern.id)) continue;
       addFastenerAssembly(scene, project, fastenerGroup, fastener, basis, position, color, edgeColor, {
         ...meta,
         positionIndex,
@@ -1682,7 +1899,7 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
     return [Math.max(0, t0), Math.min(1, t1)];
   };
 
-  const connectionClearanceCuts = () => {
+  const smartComponentClearanceCuts = () => {
     const features = new Map();
     const addFeature = (id) => {
       const entry = project.objectIndex?.[id];
@@ -1692,22 +1909,19 @@ function addPlateSupportEdgeWeld(scene, project, weld) {
     };
 
     for (const feature of objectFeatures(project, plate)) addFeature(feature.id);
-    for (const connection of collectionObjects(project, "connections")) {
-      const manualParts = connection.manualParts || {};
-      const generator = connection.generator || {};
-      const ownsWeld = (manualParts.weldIds || []).includes(weld.id)
-        || generator.objectRoles?.weld === weld.id
-        || (generator.ownedObjectIds || []).includes(weld.id);
+    for (const smartComponent of Object.values(project.model.smartComponentInstances || {})) {
+      const ownsWeld = smartComponent.objectRoles?.weld === weld.id
+        || (smartComponent.ownedObjectIds || []).includes(weld.id)
+        || (smartComponent.detachedObjectIds || []).includes(weld.id);
       if (!ownsWeld) continue;
-      for (const id of manualParts.featureIds || []) addFeature(id);
-      for (const id of generator.ownedObjectIds || []) addFeature(id);
+      for (const id of smartComponent.ownedObjectIds || []) addFeature(id);
     }
 
     return [...features.values()]
       .map((feature) => clearanceCutGeometry(project, scene.profiles, feature))
       .filter(Boolean);
   };
-  const clearanceCuts = connectionClearanceCuts();
+  const clearanceCuts = smartComponentClearanceCuts();
 
   const mergeIntervals = (intervals) => {
     const sorted = intervals
@@ -1828,7 +2042,13 @@ function addWelds(scene, project, welds = collectionObjects(project, "welds")) {
     const profile = scene.profiles[member.profile];
     const frame = memberFrame(member);
     const color = weld.display?.color || "#f6e05e";
-    const meta = { collection: "welds", objectId: weld.id, ...detailMeta(weld.id) };
+    const opacity = weld.display?.transparent || weld.display?.opacity !== undefined ? weld.display?.opacity ?? DEFAULT_GHOST_OPACITY : undefined;
+    const meta = {
+      collection: "welds",
+      objectId: weld.id,
+      ...detailMeta(weld.id),
+      ...(opacity !== undefined ? { opacity } : {})
+    };
 
     for (const contour of profile.section.contours) {
       if (contour.role !== "solid") continue;
@@ -1925,11 +2145,11 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
     profiles: profiles.profiles,
     fasteners: fasteners.fasteners,
     project,
-    activeConnectionId: options.activeConnectionId || null,
+    activeSmartComponentId: options.activeSmartComponentId || null,
     activeTrimJointId: options.activeTrimJointId || null,
     activeTrimOperationId: options.activeTrimOperationId || null,
-    activeConnectionObjectIds: activeConnectionObjectIds(project, options.activeConnectionId),
-    generatedConnectionObjectIds: generatedConnectionObjectIds(project),
+    activeSmartComponentObjectIds: activeSmartComponentObjectIds(project, options.activeSmartComponentId),
+    generatedSmartComponentObjectIds: generatedSmartComponentObjectIds(project),
     lodDetailFilter: options.lodDetailFilter || null,
     renderObjectIds,
     planeMarkerKeys: new Set(),
@@ -1940,6 +2160,10 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
     if (member.display?.visible === false) continue;
     if (!shouldRenderId(member.id)) continue;
     const profile = profiles.profiles[member.profile];
+    if (profile && curvedMemberPath(member)) {
+      addCurvedMember(sceneData, member, profile);
+      continue;
+    }
     const hasDetails = memberFeatures(project, member, sceneData).length > 0;
     const instanced = profile && canInstanceMember(sceneData, member, profile) && addInstancedMember(sceneData, member, profile, { lodDetail: hasDetails });
     if (!instanced || (hasDetails && shouldBuildLodDetail(sceneData, member.id))) {
@@ -1947,7 +2171,9 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
     }
   }
   for (const previewMember of options.previewMembers || []) {
-    addMember(sceneData, project, previewMember, profiles.profiles[previewMember.profile]);
+    const profile = profiles.profiles[previewMember.profile];
+    if (profile && curvedMemberPath(previewMember)) addCurvedMember(sceneData, previewMember, profile);
+    else addMember(sceneData, project, previewMember, profile);
   }
 
   for (const plate of renderCollectionObjects(project, "plates", renderObjectIds)) {

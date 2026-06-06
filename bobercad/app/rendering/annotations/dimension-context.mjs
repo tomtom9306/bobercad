@@ -1,4 +1,4 @@
-import { optionalPath } from "../../engine/modules/connections/connection-schema.mjs";
+import { optionalPath } from "../../engine/modules/smart-components/parameters.mjs?v=stair-route-ui-fit-2";
 import { v } from "../../engine/core/math.mjs";
 import { objectById } from "../../engine/core/model.mjs";
 import { resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
@@ -27,24 +27,24 @@ export function fmt(value) {
   return Number.isInteger(rounded) ? String(rounded) : String(rounded.toFixed(2)).replace(/0+$/, "").replace(/\.$/, "");
 }
 
-export function roleId(connection, role) {
-  return connection.generator?.objectRoles?.[role] || null;
+export function roleId(smartComponent, role) {
+  return smartComponent.objectRoles?.[role] || null;
 }
 
-export function roleObject(project, connection, role) {
-  const id = roleId(connection, role);
+export function roleObject(project, smartComponent, role) {
+  const id = roleId(smartComponent, role);
   return id && project.objectIndex?.[id] ? objectById(project, id) : null;
 }
 
-export function interfaceIdByRole(project, definition, connection, role) {
-  const zone = project.model.connectionZones?.[connection.connectionZoneId];
+export function interfaceIdByRole(project, definition, smartComponent, role) {
+  const zone = project.model.connectionZones?.[smartComponent.inputs?.connectionZoneId];
   const index = (definition.interfaces || []).findIndex((item) => item.role === role);
   return index >= 0 ? zone?.interfaceIds?.[index] : null;
 }
 
-export function paramValue(definition, connection, path) {
+export function paramValue(definition, smartComponent, path) {
   const spec = definition.parameters[path] || {};
-  return optionalPath(connection.referenceParameters, spec.writePath || path, spec.default);
+  return optionalPath(smartComponent.referenceParameters, spec.writePath || path, spec.default);
 }
 
 export function parameterLabel(definition, path) {
@@ -55,8 +55,8 @@ export function parameterUnit(definition, path) {
   return definition.parameters[path]?.unit || "";
 }
 
-export function dimensionText(definition, spec, measured, connection) {
-  const value = finite(measured) ? measured : paramValue(definition, connection, spec.parameter);
+export function dimensionText(definition, spec, measured, smartComponent) {
+  const value = finite(measured) ? measured : paramValue(definition, smartComponent, spec.parameter);
   const unit = parameterUnit(definition, spec.parameter);
   return `${spec.label || parameterLabel(definition, spec.parameter)} ${fmt(value)}${unit ? ` ${unit}` : ""}`;
 }
@@ -67,8 +67,8 @@ export function draftingText(spec, value) {
   return text;
 }
 
-export function fullDimensionText(definition, spec, measured, connection) {
-  const value = finite(measured) ? measured : paramValue(definition, connection, spec.parameter);
+export function fullDimensionText(definition, spec, measured, smartComponent) {
+  const value = finite(measured) ? measured : paramValue(definition, smartComponent, spec.parameter);
   const unit = parameterUnit(definition, spec.parameter);
   return `${parameterLabel(definition, spec.parameter)} ${fmt(value)}${unit ? ` ${unit}` : ""}`;
 }
@@ -88,8 +88,8 @@ export function diagnosticPaths(spec) {
   ].filter(Boolean);
 }
 
-export function issueForDimension(connection, spec) {
-  const diagnostics = (connection.generator?.diagnostics || [])
+export function issueForDimension(smartComponent, spec) {
+  const diagnostics = (smartComponent.diagnostics || [])
     .filter((entry) => entry.severity === "error" || entry.severity === "warning");
   const paths = diagnosticPaths(spec);
   const roles = referenceRoles(spec);
@@ -106,19 +106,19 @@ export function issueColor(issue, active) {
   return active ? ACTIVE_COLOR : COLOR;
 }
 
-export function dimensionTitle(definition, spec, measured, connection, issue) {
-  const title = fullDimensionText(definition, spec, measured, connection);
+export function dimensionTitle(definition, spec, measured, smartComponent, issue) {
+  const title = fullDimensionText(definition, spec, measured, smartComponent);
   return issue?.message ? `${title}\n${issue.message}` : title;
 }
 
-export function dimensionModeControl(definition, connection, spec) {
+export function dimensionModeControl(definition, smartComponent, spec) {
   const control = spec.reference?.modeControl;
   if (!control?.path || !definition.parameters[control.path]) return null;
   const parameter = definition.parameters[control.path];
   return {
     path: control.path,
     label: control.label || parameter.label || control.path,
-    value: paramValue(definition, connection, control.path),
+    value: paramValue(definition, smartComponent, control.path),
     options: Array.isArray(control.options) ? control.options : (parameter.values || []).map((value) => ({
       value,
       label: String(value)
@@ -268,7 +268,7 @@ export function pickedEdgeOffset(axis, edge, basis, rawOffset, settings) {
   return offsetVector(basis, offset, settings);
 }
 
-export function makeDimension({ spec, definition, connection, a, b, extensionA = null, extensionB = null, offset = [0, 0, 0], measured = null, editKind = null, editPath = null, editIndex = null, editValues = null, editValueOffset = null, editValueScale = null, modeSeed = null, modeSeeds = null, active = false, activeDimensionId = null, activeMode = null, activeEditing = false }) {
+export function makeDimension({ spec, definition, smartComponent, a, b, extensionA = null, extensionB = null, offset = [0, 0, 0], measured = null, editKind = null, editPath = null, editIndex = null, editValues = null, editValueOffset = null, editValueScale = null, modeSeed = null, modeSeeds = null, active = false, activeDimensionId = null, activeMode = null, activeEditing = false }) {
   const length = distance(a, b);
   const value = finite(measured) ? measured : length;
   if (value <= EPSILON) return null;
@@ -278,13 +278,13 @@ export function makeDimension({ spec, definition, connection, a, b, extensionA =
   const end = v.add(b, dimensionLineOffset);
   const offsetLength = v.len(dimensionLineOffset);
   const lines = [];
-  const id = `${connection.id}:${spec.id}`;
+  const id = `${smartComponent.id}:${spec.id}`;
   const isActive = active && (!activeDimensionId || activeDimensionId === id);
-  const issue = issueForDimension(connection, spec);
+  const issue = issueForDimension(smartComponent, spec);
   const color = issueColor(issue, isActive);
   const base = {
     dimensionId: id,
-    connectionId: connection.id,
+    smartComponentId: smartComponent.id,
     parameter: spec.parameter,
     color,
     issueSeverity: issue?.severity || null,
@@ -303,7 +303,7 @@ export function makeDimension({ spec, definition, connection, a, b, extensionA =
     dimensionValue: value,
     modeSeed,
     modeSeeds,
-    modeControl: dimensionModeControl(definition, connection, spec),
+    modeControl: dimensionModeControl(definition, smartComponent, spec),
     dimensionStart: start,
     dimensionEnd: end
   };
@@ -329,20 +329,20 @@ export function makeDimension({ spec, definition, connection, a, b, extensionA =
       labelAxis: dimensionAxis,
       labelUpAxis: markerAxis,
       textHeight: spec.textHeight,
-      text: dimensionText(definition, spec, value, connection),
+      text: dimensionText(definition, spec, value, smartComponent),
       displayText: draftingText(spec, value),
-      title: dimensionTitle(definition, spec, value, connection, issue)
+      title: dimensionTitle(definition, spec, value, smartComponent, issue)
     }]
   };
 }
 
-export function makeNote({ spec, definition, connection, point, anchor = null, textValue, displayTextValue = null, titleValue = null, labelAxis = undefined, editKind = null, editValue = null, editTitle = null, editPath = null, editIndex = null, editValues = null, editValueOffset = null, editValueScale = null, editPaths = null, editLabels = null, dimensionValue = null, modeSeed = null, modeSeeds = null, active = false, activeDimensionId = null, activeMode = null, activeEditing = false }) {
-  const id = `${connection.id}:${spec.id}`;
+export function makeNote({ spec, definition, smartComponent, point, anchor = null, textValue, displayTextValue = null, titleValue = null, labelAxis = undefined, editKind = null, editValue = null, editTitle = null, editPath = null, editIndex = null, editValues = null, editValueOffset = null, editValueScale = null, editPaths = null, editLabels = null, dimensionValue = null, modeSeed = null, modeSeeds = null, active = false, activeDimensionId = null, activeMode = null, activeEditing = false }) {
+  const id = `${smartComponent.id}:${spec.id}`;
   const isActive = active && (!activeDimensionId || activeDimensionId === id);
-  const issue = issueForDimension(connection, spec);
+  const issue = issueForDimension(smartComponent, spec);
   const base = {
     dimensionId: id,
-    connectionId: connection.id,
+    smartComponentId: smartComponent.id,
     parameter: spec.parameter,
     color: issueColor(issue, isActive),
     issueSeverity: issue?.severity || null,
@@ -352,7 +352,7 @@ export function makeNote({ spec, definition, connection, point, anchor = null, t
     activeMode: isActive ? activeMode : null,
     editing: isActive && activeEditing,
     editOnCommit: spec.reference?.editOnCommit || null,
-    modeControl: dimensionModeControl(definition, connection, spec)
+    modeControl: dimensionModeControl(definition, smartComponent, spec)
   };
   const lines = [];
   const leaderAxis = anchor && distance(anchor, point) > EPSILON ? v.norm(v.sub(point, anchor)) : [1, 0, 0];
@@ -373,7 +373,7 @@ export function makeNote({ spec, definition, connection, point, anchor = null, t
       textHeight: spec.textHeight,
       text: textValue,
       displayText: displayTextValue || textValue,
-      title: issue?.message ? `${titleValue || fullDimensionText(definition, spec, 0, connection)}\n${issue.message}` : titleValue || fullDimensionText(definition, spec, 0, connection),
+      title: issue?.message ? `${titleValue || fullDimensionText(definition, spec, 0, smartComponent)}\n${issue.message}` : titleValue || fullDimensionText(definition, spec, 0, smartComponent),
       editKind,
       editValue,
       editTitle,
@@ -574,9 +574,9 @@ export function spacingDimension(ctx, options) {
     spec,
     anchor,
     point: v.add(anchor, offset),
-    textValue: dimensionText(ctx.definition, spec, 0, ctx.connection),
+    textValue: dimensionText(ctx.definition, spec, 0, ctx.smartComponent),
     displayTextValue: draftingText(spec, 0),
-    titleValue: fullDimensionText(ctx.definition, spec, 0, ctx.connection),
+    titleValue: fullDimensionText(ctx.definition, spec, 0, ctx.smartComponent),
     editKind,
     editPath,
     editIndex,
@@ -595,13 +595,13 @@ export function uniqueCount(values) {
   return new Set(values.map((value) => Math.round(value / 0.001))).size;
 }
 
-export function interfaceByRole(project, profiles, definition, connection, role) {
-  const interfaceId = interfaceIdByRole(project, definition, connection, role);
+export function interfaceByRole(project, profiles, definition, smartComponent, role) {
+  const interfaceId = interfaceIdByRole(project, definition, smartComponent, role);
   return interfaceId ? resolveInterfaceWithConnectionReference(project, profiles, interfaceId) : null;
 }
 
-export function rawInterfaceByRole(project, definition, connection, role) {
-  const interfaceId = interfaceIdByRole(project, definition, connection, role);
+export function rawInterfaceByRole(project, definition, smartComponent, role) {
+  const interfaceId = interfaceIdByRole(project, definition, smartComponent, role);
   return interfaceId && project.objectIndex?.[interfaceId] ? objectById(project, interfaceId) : null;
 }
 

@@ -1,3 +1,5 @@
+import { shortcutLabel, shortcutSetting } from "../../../rendering/interaction/keyboard-shortcuts.mjs?v=axis-guide-shortcuts-1";
+
 function button(label, title, onClick) {
   const node = document.createElement("button");
   node.type = "button";
@@ -7,11 +9,12 @@ function button(label, title, onClick) {
   return node;
 }
 
-export function mountModelingToolbar({ toolbar, status, onBeam, onColumn, onTrim, onCancel, autoRelationsEnabled = false, onAutoRelationsChange }) {
-  const beam = button("B", "Create beam", onBeam);
-  const column = button("C", "Create column", onColumn);
-  const trim = button("T", "Create trim", onTrim);
-  const cancel = button("Esc", "Cancel command", onCancel);
+export function mountModelingToolbar({ toolbar, status, shortcuts = {}, onBeam, onColumn, onTrim, onCancel, autoRelationsEnabled = false, onAutoRelationsChange }) {
+  const commandShortcuts = shortcuts.commands || {};
+  const beam = button(shortcutLabel(shortcutSetting(commandShortcuts, "createBeam", "B"), "Beam"), "Create beam", onBeam);
+  const column = button(shortcutLabel(shortcutSetting(commandShortcuts, "createColumn", "C"), "Column"), "Create column", onColumn);
+  const trim = button(shortcutLabel(shortcutSetting(commandShortcuts, "createTrim", "T"), "Trim"), "Create trim", onTrim);
+  const cancel = button(shortcutLabel(shortcutSetting(commandShortcuts, "cancel", "Escape"), "Cancel"), "Cancel command", onCancel);
   const autoRelations = button("Rel", "Automatic axis relations", () => setAutoRelations(!autoRelations.classList.contains("active"), { notify: true }));
   toolbar.replaceChildren(beam, column, trim, autoRelations, cancel);
 

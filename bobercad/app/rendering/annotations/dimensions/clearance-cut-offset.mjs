@@ -2,7 +2,7 @@ import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs"
 import { clearanceAnnotationBasis, dimensionOffset, rangeMid, roleObject, spacingDimension } from "../dimension-context.mjs";
 
 export function clearanceCutOffsetDimension(ctx, spec) {
-  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
+  const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);
   if (!feature || feature.operationEnabled === false) return null;
   const geometry = clearanceCutGeometry(ctx.project, ctx.profiles, feature);
   if (!geometry) return null;

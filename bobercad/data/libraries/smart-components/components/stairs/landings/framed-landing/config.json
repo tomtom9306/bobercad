@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "framed-landing",
+  "kind": "stair-landing",
+  "title": "Framed Landing Set",
+  "version": 1,
+  "roles": {
+    "landingPattern": "_landing_pattern",
+    "landingAssembly": "_landing_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "framed-landing": {
+      "id": "framed-landing",
+      "version": "0.1.0",
+      "name": "Framed landing",
+      "parameters": {
+        "meta": {
+          "family": "framed-landing"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "landings",
+        "label": "Landings",
+        "items": []
+      }
+    ]
+  }
+}

@@ -6,7 +6,8 @@ import { snapCandidates } from "../../engine/api/project/snap-candidates.mjs?v=t
 import { composeSnapCandidates } from "../../engine/api/project/snap-composer.mjs?v=active-reference-guides-1";
 import { solveSnap } from "../../engine/api/project/snap-solver.mjs?v=snap-architecture-1";
 import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs";
-import { memberCreationOverlay } from "../scene/build-authoring-overlays.mjs?v=active-reference-guides-1";
+import { memberCreationOverlay } from "../scene/build-authoring-overlays.mjs?v=axis-guide-shortcuts-1";
+import { matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs?v=axis-guide-shortcuts-1";
 
 const NUMBER_KEYS = new Set(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-", ",", "@"]);
 const MIN_MEMBER_LENGTH = 1e-6;
@@ -21,6 +22,14 @@ function distinctPoints(a, b) {
 
 function commandName(type) {
   return type === "column" ? "Column" : "Beam";
+}
+
+function normalizeAxisGuideMode(value) {
+  return value === "local" ? "local" : "global";
+}
+
+function axisGuideModeLabel(value) {
+  return normalizeAxisGuideMode(value) === "local" ? "Local" : "Global";
 }
 
 function clamp01(value) {
@@ -39,14 +48,23 @@ function memberById(project, memberId) {
   return project.model?.members?.[memberId] || null;
 }
 
+function memberEndReference(member) {
+  if (!member?.id || !finitePoint(member.start) || !finitePoint(member.end)) return null;
+  return {
+    memberId: member.id,
+    station: v.len(v.sub(member.end, member.start))
+  };
+}
+
 function statusFor(state, extra = "") {
   if (!state.active) return "No modeling command";
   const base = state.start
     ? `${commandName(state.type)}: pick end, type length/height, or Enter`
     : `${commandName(state.type)}: pick first point`;
   const snap = state.snap?.label ? ` | ${state.snap.label}` : "";
+  const axes = state.start && state.type === "beam" ? ` | Axes: ${axisGuideModeLabel(state.axisGuideModeLabel || state.axisGuideMode)}` : "";
   const input = state.input ? ` | ${state.input}` : "";
-  return `${base}${snap}${input}${extra ? ` | ${extra}` : ""}`;
+  return `${base}${snap}${axes}${input}${extra ? ` | ${extra}` : ""}`;
 }
 
 function parseRelativeInput(value) {
@@ -88,6 +106,7 @@ export function createMemberCreateController({
   onStatusChange
 }) {
   const authoringSettings = settings.authoring || {};
+  const shortcuts = settings.shortcuts?.memberCreate || {};
   const state = {
     active: false,
     type: null,
@@ -103,6 +122,8 @@ export function createMemberCreateController({
     cycleIndex: 0,
     lastPointer: null,
     elevationLock: null,
+    axisGuideMode: normalizeAxisGuideMode(authoringSettings.axisGuideMode),
+    axisGuideModeLabel: normalizeAxisGuideMode(authoringSettings.axisGuideMode),
     activeReferenceMemberIds: []
   };
 
@@ -269,7 +290,7 @@ export function createMemberCreateController({
   }
 
   function startCreationAxisCandidates() {
-    if (!state.start || state.type !== "beam" || startProfileAxes().length) return [];
+    if (!state.start || state.type !== "beam") return [];
     const span = authoringSettings.creationAxisSnapSpan || authoringSettings.globalAxisSnapSpan || 100000;
     const tolerance = authoringSettings.creationAxisSnapTolerancePx || authoringSettings.globalAxisSnapTolerancePx || 34;
     return Object.entries({ x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] }).map(([axis, direction]) => ({
@@ -284,6 +305,18 @@ export function createMemberCreateController({
       screenTolerance: tolerance,
       screenIntersectionMode: "self"
     }));
+  }
+
+  function activeAxisGuideMode() {
+    if (!state.start || state.type !== "beam") return normalizeAxisGuideMode(state.axisGuideMode);
+    if (state.axisGuideMode === "local" && startProfileAxes().length) return "local";
+    return "global";
+  }
+
+  function constructionAxisCandidates() {
+    return activeAxisGuideMode() === "local"
+      ? startProfileAxisCandidates()
+      : startCreationAxisCandidates();
   }
 
   function activateReferenceMemberFromHit(hit) {
@@ -339,10 +372,7 @@ export function createMemberCreateController({
       globalAxisSpan: authoringSettings.globalAxisSnapSpan || 100000,
       globalAxisSnapTolerancePx: authoringSettings.globalAxisSnapTolerancePx || 34
     });
-    const constructionAxes = [
-      ...startProfileAxisCandidates(),
-      ...startCreationAxisCandidates()
-    ];
+    const constructionAxes = constructionAxisCandidates();
     candidates.push(...constructionAxes);
     candidates.push(...activeReferenceAxisCandidates());
     if (state.start && state.type === "beam") {
@@ -406,12 +436,14 @@ export function createMemberCreateController({
 
   function renderOverlay(activePlane = plane()) {
     const end = previewEnd(state.end);
+    const axisGuideMode = activeAxisGuideMode();
+    state.axisGuideModeLabel = axisGuideMode;
     onOverlayChange(memberCreationOverlay({
       start: state.start,
       end,
       rawPoint: state.rawPoint,
       snap: state.snap,
-      profileAxes: startProfileAxes(),
+      profileAxes: axisGuideMode === "local" ? startProfileAxes() : [],
       type: state.type,
       workPlane: activePlane,
       settings: authoringSettings
@@ -465,6 +497,8 @@ export function createMemberCreateController({
     state.input = "";
     state.cycleIndex = 0;
     state.elevationLock = null;
+    state.axisGuideMode = normalizeAxisGuideMode(authoringSettings.axisGuideMode);
+    state.axisGuideModeLabel = state.axisGuideMode;
     state.activeReferenceMemberIds = [];
     renderOverlay();
   }
@@ -482,6 +516,7 @@ export function createMemberCreateController({
     state.end = null;
     state.endReference = null;
     state.input = "";
+    state.axisGuideModeLabel = state.axisGuideMode;
     state.activeReferenceMemberIds = [];
     clearPreview();
     onStatusChange("No modeling command");
@@ -496,6 +531,7 @@ export function createMemberCreateController({
     state.endReference = null;
     state.input = "";
     state.cycleIndex = 0;
+    state.axisGuideModeLabel = state.axisGuideMode;
     renderOverlay();
   }
 
@@ -510,13 +546,20 @@ export function createMemberCreateController({
     });
     onProjectChange(result.project);
     if (state.type === "beam") {
+      const chainReference = memberEndReference(result.member);
       state.start = end;
       state.startSnap = endSnap;
-      state.startReference = endReference;
+      state.startReference = chainReference || endReference;
       state.end = null;
       state.endSnap = null;
       state.endReference = null;
       state.input = "";
+      if (chainReference) {
+        state.activeReferenceMemberIds = [
+          chainReference.memberId,
+          ...state.activeReferenceMemberIds.filter((id) => id !== chainReference.memberId)
+        ].slice(0, Math.max(0, Math.floor(authoringSettings.activeReferenceMemberLimit)));
+      }
       renderOverlay();
     } else {
       resetStage();
@@ -584,27 +627,50 @@ export function createMemberCreateController({
     return true;
   }
 
+  function toggleAxisGuideMode() {
+    if (!state.active || state.type !== "beam") return false;
+    if (!state.start) return true;
+    if (activeAxisGuideMode() === "global") {
+      if (!startProfileAxes().length) {
+        renderOverlay();
+        onStatusChange(statusFor(state, "No local profile axes at start point"));
+        return true;
+      }
+      state.axisGuideMode = "local";
+    } else {
+      state.axisGuideMode = "global";
+    }
+    state.cycleIndex = 0;
+    if (state.lastPointer) setPointerState(state.lastPointer);
+    else renderOverlay();
+    return true;
+  }
+
   function handleKey(event) {
     if (!state.active) return false;
-    if (event.key === "Escape") {
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "cancel", "Escape"))) {
       if (state.start) resetStage();
       else cancel();
       return true;
     }
-    if (event.key === "Tab") {
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "toggleAxisGuideMode", "Tab"))) {
+      toggleAxisGuideMode();
+      return true;
+    }
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "cycleSnap", ""))) {
       cycleSnap();
       return true;
     }
-    if (event.key === "Enter") {
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "confirm", "Enter"))) {
       applyTypedInput();
       return true;
     }
-    if (event.key === "Backspace") {
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "deleteInput", "Backspace"))) {
       state.input = state.input.slice(0, -1);
       renderOverlay();
       return true;
     }
-    if (event.key.toLowerCase() === "z" && !state.input) {
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "elevationInput", "Z")) && !state.input) {
       state.input = "z";
       renderOverlay();
       return true;

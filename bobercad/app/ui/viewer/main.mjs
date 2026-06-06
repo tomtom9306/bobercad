@@ -1,21 +1,22 @@
-import { createProjectStore } from "../../engine/store/project-store.mjs?v=trim-create-ui-1";
+import { createProjectStore } from "../../engine/store/project-store.mjs?v=stair-route-ui-fit-2";
 import { memberAuthoringPoints } from "../../engine/api/project/members.mjs";
-import { memberDependencyObjectIds } from "../../engine/api/project/dependencies.mjs?v=plane-region-hard-1";
-import { loadConnectionDefinitions } from "../../engine/modules/connections/connection-registry.mjs";
-import { buildScene } from "../../rendering/scene/build-scene.mjs?v=butt-contact-plane-1";
+import { memberDependencyObjectIds } from "../../engine/api/project/dependencies.mjs?v=stair-route-ui-fit-2";
+import { loadSmartComponentDefinitions } from "../../engine/modules/smart-components/smart-component-registry.mjs?v=stair-geometry-readouts-1";
+import { buildScene } from "../../rendering/scene/build-scene.mjs?v=stair-route-ui-fit-2";
 import { memberAxesByTarget, normalizeCoordinateSpace } from "../../rendering/scene/authoring/member-axis-space.mjs";
-import { createCommandController } from "../../rendering/interaction/command-controller.mjs?v=snap-settings-json-1";
-import { createMemberEditController } from "../../rendering/interaction/member-edit-controller.mjs?v=snap-settings-json-1";
+import { createCommandController } from "../../rendering/interaction/command-controller.mjs?v=stair-route-ui-fit-2";
+import { createMemberEditController } from "../../rendering/interaction/member-edit-controller.mjs?v=stair-route-ui-fit-2";
 import { createReferencePlaneEditController } from "../../rendering/interaction/reference-plane-edit-controller.mjs?v=solidworks-plane-2";
-import { createSelectionController } from "../../rendering/interaction/selection-controller.mjs";
+import { createSelectionController } from "../../rendering/interaction/selection-controller.mjs?v=stair-route-ui-fit-2";
 import { createTrimCreateController } from "../../rendering/interaction/trim-create-controller.mjs?v=trim-create-ui-1";
-import { createWebglViewer } from "../../rendering/webgl/webgl-renderer.mjs?v=axis-snap-1";
-import { createDimensionEditController } from "./dimensions/dimension-edit-controller.mjs?v=reference-plane-1";
+import { matchesShortcut, shortcutSetting } from "../../rendering/interaction/keyboard-shortcuts.mjs?v=axis-guide-shortcuts-1";
+import { createWebglViewer } from "../../rendering/webgl/webgl-renderer.mjs?v=stair-route-ui-fit-2";
+import { createDimensionEditController } from "./dimensions/dimension-edit-controller.mjs?v=stair-route-ui-fit-2";
 import { mountFeatureEditorPanel } from "./panels/feature-editor-panel.mjs?v=reference-plane-1";
-import { mountMemberTransformPanel } from "./panels/member-transform-panel.mjs";
-import { mountEditorUi } from "./panels/property-panel.mjs?v=relation-types-1";
-import { mountTrimJointEditorPanel } from "./panels/trim-joint-editor-panel.mjs?v=trim-region-click-2";
-import { mountModelingToolbar } from "./toolbar/modeling-toolbar.mjs?v=trim-create-ui-1";
+import { mountMemberTransformPanel } from "./panels/member-transform-panel.mjs?v=stair-route-ui-fit-2";
+import { mountEditorUi } from "./panels/property-panel.mjs?v=stair-route-ui-fit-2";
+import { mountTrimJointEditorPanel } from "./panels/trim-joint-editor-panel.mjs?v=stair-route-ui-fit-2";
+import { mountModelingToolbar } from "./toolbar/modeling-toolbar.mjs?v=stair-route-ui-fit-2";
 
 const canvas = document.getElementById("view");
 const title = document.getElementById("title");
@@ -30,7 +31,7 @@ const featureEditorPanel = document.getElementById("feature-editor");
 const trimJointEditorPanel = document.getElementById("trim-joint-editor");
 const libraryPanel = document.getElementById("library-panel");
 const customPanel = document.getElementById("custom-panel");
-const settingsUrl = new URL("./viewer-settings.json?v=snap-settings-json-1", import.meta.url);
+const settingsUrl = new URL("./viewer-settings.json?v=stair-treads-only-1", import.meta.url);
 let settings = null;
 let viewer = null;
 let authoringPreview = [];
@@ -76,6 +77,23 @@ function flattenIds(value) {
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function smartComponentMainMemberId(instance) {
+  return instance.inputs?.main?.memberId || null;
+}
+
+function smartComponentSecondaryMemberId(instance) {
+  return instance.inputs?.secondary?.memberId || null;
+}
+
+function smartComponentConnectionZoneId(instance) {
+  return instance.inputs?.connectionZoneId || null;
+}
+
+function isTextInput(target) {
+  const tag = target?.tagName?.toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || target?.isContentEditable;
 }
 
 function pointsBounds(points) {
@@ -173,8 +191,8 @@ function estimateObjectRadius(project, profiles, objectId, seen = new Set()) {
   return 1;
 }
 
-function memberConnectionDetailObjectIds(project, memberId) {
-  return memberDependencyObjectIds(project, memberId, { includeMember: false, includeConnectionMembers: false, renderableOnly: true });
+function memberSmartComponentDetailObjectIds(project, memberId) {
+  return memberDependencyObjectIds(project, memberId, { includeMember: false, includeSmartComponentMembers: false, renderableOnly: true });
 }
 
 function averagePoints(points) {
@@ -264,24 +282,24 @@ function expandedPoints(points, basis, margin) {
   return expanded;
 }
 
-function connectionOwnedIds(connection) {
+function smartComponentOwnedIds(instance) {
   return [
-    ...flattenIds(connection.generator?.objectRoles),
-    ...(connection.generator?.ownedObjectIds || []),
-    ...flattenIds(connection.manualParts)
+    ...flattenIds(instance.objectRoles),
+    ...(instance.ownedObjectIds || []),
+    ...(instance.detachedObjectIds || [])
   ];
 }
 
-function connectionHighlightObjectIds(project, objectIds = []) {
-  const highlightCollections = new Set(["plates", "fastenerGroups", "welds"]);
+function smartComponentHighlightObjectIds(project, objectIds = []) {
+  const highlightCollections = new Set(["members", "plates", "fastenerGroups", "welds"]);
   return objectIds.filter((objectId) => highlightCollections.has(project.objectIndex?.[objectId]?.collection));
 }
 
-function isolatedConnectionProject(project, connection, visibleConnectionObjectIds) {
+function isolatedSmartComponentProject(project, instance, visibleSmartComponentObjectIds) {
   const next = clone(project);
-  const visibleObjects = new Set(visibleConnectionObjectIds);
-  visibleObjects.add(connection.mainMemberId);
-  visibleObjects.add(connection.secondaryMemberId);
+  const visibleObjects = new Set(visibleSmartComponentObjectIds);
+  visibleObjects.add(smartComponentMainMemberId(instance));
+  visibleObjects.add(smartComponentSecondaryMemberId(instance));
 
   for (const [memberId, member] of Object.entries(next.model.members || {})) {
     if (visibleObjects.has(memberId)) {
@@ -302,14 +320,14 @@ function isolatedConnectionProject(project, connection, visibleConnectionObjectI
   return next;
 }
 
-function connectionPrimaryPlate(project, connection) {
-  const roles = connection.generator?.objectRoles || {};
+function smartComponentPrimaryPlate(project, instance) {
+  const roles = instance.objectRoles || {};
   const preferredRoles = ["endPlate", "finPlate", "gussetPlate", "basePlate"];
   for (const role of preferredRoles) {
     const plate = project.model.plates?.[roles[role]];
     if (plate) return plate;
   }
-  return connectionOwnedIds(connection).map((id) => project.model.plates?.[id]).find(Boolean) || null;
+  return smartComponentOwnedIds(instance).map((id) => project.model.plates?.[id]).find(Boolean) || null;
 }
 
 function memberAxis(project, memberId) {
@@ -321,8 +339,8 @@ function memberAxis(project, memberId) {
   return { member, axis: mul(axis, 1 / length), length };
 }
 
-function connectionBasis(project, connection) {
-  const plate = connectionPrimaryPlate(project, connection);
+function smartComponentBasis(project, instance) {
+  const plate = smartComponentPrimaryPlate(project, instance);
   if (plate?.normal && plate?.localAxisY && plate?.localAxisZ) {
     return {
       normal: norm(plate.normal),
@@ -330,8 +348,8 @@ function connectionBasis(project, connection) {
       localAxisZ: norm(plate.localAxisZ)
     };
   }
-  const secondary = memberAxis(project, connection.secondaryMemberId);
-  const main = memberAxis(project, connection.mainMemberId);
+  const secondary = memberAxis(project, smartComponentSecondaryMemberId(instance));
+  const main = memberAxis(project, smartComponentMainMemberId(instance));
   const normal = secondary?.axis || [1, 0, 0];
   let localAxisZ = [0, 0, 1];
   if (Math.abs(dot(normal, localAxisZ)) > 0.95) localAxisZ = main?.axis || [0, 1, 0];
@@ -365,6 +383,123 @@ function cameraAnglesForDirection(direction) {
   const horizontal = Math.hypot(d[0], d[1]);
   const yaw = horizontal <= 1e-9 ? 0 : Math.atan2(-d[0], -d[1]);
   return { yaw, pitch };
+}
+
+function qaViewName() {
+  return new URLSearchParams(window.location.search).get("qaView");
+}
+
+function qaCaptureEnabled() {
+  return new URLSearchParams(window.location.search).has("qaCapture");
+}
+
+function qaDebugEnabled() {
+  return new URLSearchParams(window.location.search).has("qaDebug");
+}
+
+function qaViewDirection(view) {
+  const directions = {
+    top: [0, 0, 1],
+    axonometric: norm([-1, -1, -0.62]),
+    "elevation-left": [0, -1, 0],
+    "elevation-right": [0, 1, 0],
+    "elevation-front": [-1, 0, 0],
+    "elevation-back": [1, 0, 0]
+  };
+  return directions[view] || null;
+}
+
+function qaViewCamera(view, direction) {
+  if (view === "axonometric") {
+    return {
+      yaw: finiteNumber(settings?.camera?.home?.yaw) ? settings.camera.home.yaw : -0.55,
+      pitch: finiteNumber(settings?.camera?.home?.pitch) ? settings.camera.home.pitch : -0.62
+    };
+  }
+  const elevations = {
+    "elevation-left": { yaw: Math.PI, pitch: -Math.PI / 2 },
+    "elevation-right": { yaw: 0, pitch: -Math.PI / 2 },
+    "elevation-front": { yaw: -Math.PI / 2, pitch: -Math.PI / 2 },
+    "elevation-back": { yaw: Math.PI / 2, pitch: -Math.PI / 2 }
+  };
+  return elevations[view] || cameraAnglesForDirection(direction);
+}
+
+function enableQaScreenshotMode(view) {
+  document.documentElement.dataset.qaView = view;
+  document.body.dataset.qaView = view;
+  if (document.getElementById("qa-screenshot-style")) return;
+  const style = document.createElement("style");
+  style.id = "qa-screenshot-style";
+  style.textContent = `
+    html[data-qa-view] #hud,
+    html[data-qa-view] #modeling-toolbar,
+    html[data-qa-view] #modeling-status,
+    html[data-qa-view] #member-transform-panel,
+    html[data-qa-view] #object-editor,
+    html[data-qa-view] #feature-editor,
+    html[data-qa-view] #trim-joint-editor,
+    html[data-qa-view] #library-panel,
+    html[data-qa-view] #custom-panel {
+      display: none !important;
+    }
+  `;
+  document.head.append(style);
+}
+
+async function applyQaView(project, options = {}) {
+  const view = qaViewName();
+  const direction = qaViewDirection(view);
+  if (!direction || !viewer) return;
+  if (qaCaptureEnabled()) {
+    enableQaScreenshotMode(view);
+    for (const element of [hud, modelingToolbar, modelingStatus, memberTransformPanel, objectEditor, featureEditorPanel, trimJointEditorPanel, libraryPanel, customPanel]) {
+      if (element) element.hidden = true;
+    }
+  }
+  await waitFrame();
+  await waitFrame();
+  const renderableCollections = new Set(["members", "plates", "features", "trimJoints", "fastenerGroups", "welds"]);
+  const objectIds = Object.entries(project.objectIndex || {})
+    .filter(([, entry]) => renderableCollections.has(entry.collection))
+    .map(([objectId]) => objectId);
+  const points = viewer.objectPoints(objectIds);
+  if (!points.length) return;
+  const boundsData = pointsBounds(points);
+  const focusPoints = expandedPoints([...points, ...boxPoints(boundsData)], {
+    normal: [1, 0, 0],
+    localAxisY: [0, 1, 0],
+    localAxisZ: [0, 0, 1]
+  }, options.margin || 180);
+  viewer.fitPoints(focusPoints, {
+    ...qaViewCamera(view, direction),
+    padding: options.padding || 0.72,
+    minSpan: options.minSpan || 520
+  });
+  if (qaCaptureEnabled()) {
+    await waitFrame();
+    await waitFrame();
+    const payload = {
+      view,
+      dataUrl: viewer.canvasDataUrl("image/png"),
+      capturedAt: new Date().toISOString()
+    };
+    let output = document.getElementById("qa-capture-data");
+    if (!output) {
+      output = document.createElement("textarea");
+      output.id = "qa-capture-data";
+      output.hidden = true;
+      document.body.append(output);
+    }
+    output.value = JSON.stringify(payload);
+    output.textContent = output.value;
+    try {
+      window.localStorage?.setItem?.("bobercadQaCapture", output.value);
+    } catch (error) {
+      console.warn(`QA capture storage unavailable: ${error.message}`);
+    }
+    document.documentElement.dataset.qaCaptureReady = "true";
+  }
 }
 
 function memberContextPoints(project, memberId, center, radius) {
@@ -405,7 +540,7 @@ function updateMeta(project) {
 
 function renderProject(project, profiles, fasteners, options = {}) {
   const {
-    activeConnectionId = null,
+    activeSmartComponentId = null,
     activeTrimJointId = null,
     activeTrimOperationId = null,
     previewMembers = authoringPreview,
@@ -423,7 +558,7 @@ function renderProject(project, profiles, fasteners, options = {}) {
   if (progressiveDetails && !viewerOptions.preserveCamera) {
     const detailToken = ++progressiveDetailRenderToken;
     const coarseScene = buildScene(project, profiles, fasteners, settings, {
-      activeConnectionId,
+      activeSmartComponentId,
       activeTrimJointId,
       activeTrimOperationId,
       previewMembers,
@@ -437,7 +572,7 @@ function renderProject(project, profiles, fasteners, options = {}) {
         const scheduledScale = viewer.screenScale();
         renderedLodDetailBucket = lodDetailBucket(scheduledScale);
         viewer.setScene(buildScene(project, profiles, fasteners, settings, {
-          activeConnectionId,
+          activeSmartComponentId,
           activeTrimJointId,
           activeTrimOperationId,
           previewMembers,
@@ -457,20 +592,21 @@ function renderProject(project, profiles, fasteners, options = {}) {
   const detailScale = progressiveDetails ? viewer.screenScale() : null;
   renderedLodDetailBucket = progressiveDetails ? lodDetailBucket(detailScale) : null;
   const lodDetailFilter = progressiveDetails ? createLodDetailFilter(project, profileMap, detailScale, detailContext()) : null;
-  viewer.setScene(buildScene(project, profiles, fasteners, settings, { activeConnectionId, activeTrimJointId, activeTrimOperationId, previewMembers, lodDetailFilter }), {
+  viewer.setScene(buildScene(project, profiles, fasteners, settings, { activeSmartComponentId, activeTrimJointId, activeTrimOperationId, previewMembers, lodDetailFilter }), {
     ...viewerOptions,
     preserveCamera: progressiveDetails || viewerOptions.preserveCamera
   });
   updateMeta(project);
 }
 function mountQaApi({ api, profiles, fasteners }) {
-  const connectionSummaries = () => Object.values(api.project().model.connections || {}).map((connection) => ({
-    id: connection.id,
-    type: connection.type,
-    name: connection.bim?.name || connection.sourcePreset?.id || connection.id,
-    mainMemberId: connection.mainMemberId,
-    secondaryMemberId: connection.secondaryMemberId,
-    health: connection.generator?.health || "ok"
+  const smartComponentSummaries = () => Object.values(api.project().model.smartComponentInstances || {}).map((instance) => ({
+    id: instance.id,
+    type: instance.type,
+    kind: instance.kind,
+    name: instance.bim?.name || instance.sourceComponent?.id || instance.id,
+    mainMemberId: smartComponentMainMemberId(instance),
+    secondaryMemberId: smartComponentSecondaryMemberId(instance),
+    health: instance.health || "ok"
   }));
 
   const clientPoint = (point) => {
@@ -490,19 +626,19 @@ function mountQaApi({ api, profiles, fasteners }) {
   const memberInteractionTarget = (options = {}) => {
     const project = api.project();
     const profileMap = profiles.profiles || profiles;
-    const connectionCounts = new Map();
-    for (const connection of Object.values(project.model.connections || {})) {
-      for (const memberId of [connection.mainMemberId, connection.secondaryMemberId]) {
+    const smartComponentCounts = new Map();
+    for (const instance of Object.values(project.model.smartComponentInstances || {})) {
+      for (const memberId of [smartComponentMainMemberId(instance), smartComponentSecondaryMemberId(instance)]) {
         if (!memberId) continue;
-        connectionCounts.set(memberId, (connectionCounts.get(memberId) || 0) + 1);
+        smartComponentCounts.set(memberId, (smartComponentCounts.get(memberId) || 0) + 1);
       }
     }
     const members = Object.values(project.model.members || {})
       .filter((member) => member.display?.visible !== false && (!options.memberId || member.id === options.memberId));
     let best = null;
     for (const member of members) {
-      const affectedConnections = connectionCounts.get(member.id) || 0;
-      if (options.connected !== false && !options.memberId && affectedConnections <= 0) continue;
+      const affectedSmartComponents = smartComponentCounts.get(member.id) || 0;
+      if (options.connected !== false && !options.memberId && affectedSmartComponents <= 0) continue;
       const points = memberAuthoringPoints(member);
       const center = clientPoint(points.center);
       if (!center?.inside || !center.hitCanvas) continue;
@@ -512,12 +648,12 @@ function mountQaApi({ api, profiles, fasteners }) {
       const radiusPx = profileRadius(profileMap[member.profile]) * viewer.screenScale();
       const viewport = center.viewport;
       const centerDistance = Math.hypot(center.screen.x - viewport.width / 2, center.screen.y - viewport.height / 2);
-      const score = affectedConnections * 25 + radiusPx * 10 + lengthPx * 0.1 - centerDistance * 0.02;
+      const score = affectedSmartComponents * 25 + radiusPx * 10 + lengthPx * 0.1 - centerDistance * 0.02;
       if (!best || score > best.score) {
         best = {
           memberId: member.id,
           score,
-          affectedConnections,
+          affectedSmartComponents,
           radiusPx,
           lengthPx,
           select: { x: center.x, y: center.y },
@@ -586,22 +722,22 @@ function mountQaApi({ api, profiles, fasteners }) {
     return { id: member.id, start: [...member.start], end: [...member.end], rotation: member.rotation || 0 };
   };
 
-  const memberConnectionObjectIds = (memberId) => {
+  const memberSmartComponentObjectIds = (memberId) => {
     const project = api.project();
     const ids = [];
-    for (const connection of Object.values(project.model.connections || {})) {
-      if (connection.mainMemberId !== memberId && connection.secondaryMemberId !== memberId) continue;
+    for (const instance of Object.values(project.model.smartComponentInstances || {})) {
+      if (smartComponentMainMemberId(instance) !== memberId && smartComponentSecondaryMemberId(instance) !== memberId) continue;
       ids.push(
-        ...flattenIds(connection.generator?.objectRoles),
-        ...(connection.generator?.ownedObjectIds || []),
-        ...flattenIds(connection.manualParts)
+        ...flattenIds(instance.objectRoles),
+        ...(instance.ownedObjectIds || []),
+        ...(instance.detachedObjectIds || [])
       );
     }
     return [...new Set(ids)].filter((id) => project.objectIndex?.[id] && id !== memberId);
   };
 
-  const memberConnectionPoints = (memberId) => {
-    const objectIds = memberConnectionObjectIds(memberId);
+  const memberSmartComponentPoints = (memberId) => {
+    const objectIds = memberSmartComponentObjectIds(memberId);
     const points = viewer.objectPoints(objectIds);
     return {
       memberId,
@@ -611,37 +747,37 @@ function mountQaApi({ api, profiles, fasteners }) {
     };
   };
 
-  const captureConnectionView = async (options = {}) => {
-    const connectionId = options.connectionId;
+  const captureSmartComponentView = async (options = {}) => {
+    const smartComponentId = options.smartComponentId;
     const project = api.project();
-    const connection = project.model.connections?.[connectionId];
-    if (!connection) throw new Error(`connection not found: ${connectionId}`);
+    const instance = project.model.smartComponentInstances?.[smartComponentId];
+    if (!instance) throw new Error(`smart component not found: ${smartComponentId}`);
 
     const previousAxesVisible = settings.render.axes.visible;
-    const connectionObjectIds = api.connectionObjectIds(connectionId);
+    const smartComponentObjectIds = api.smartComponentObjectIds(smartComponentId);
     const captureProject = options.isolate === false
       ? project
-      : isolatedConnectionProject(project, connection, connectionObjectIds);
+      : isolatedSmartComponentProject(project, instance, smartComponentObjectIds);
     if (options.hideAxes !== false) settings.render.axes.visible = false;
-    renderProject(captureProject, profiles, fasteners, { preserveCamera: true, activeConnectionId: connectionId });
+    renderProject(captureProject, profiles, fasteners, { preserveCamera: true, activeSmartComponentId: smartComponentId });
     settings.render.axes.visible = previousAxesVisible;
     viewer.setDimensionOverlay({ lines: [], labels: [] });
 
-    const basis = connectionBasis(project, connection);
-    if (options.highlight) viewer.setHighlightedObjects(connectionHighlightObjectIds(project, connectionObjectIds));
+    const basis = smartComponentBasis(project, instance);
+    if (options.highlight) viewer.setHighlightedObjects(smartComponentHighlightObjectIds(project, smartComponentObjectIds));
     else viewer.setHighlightedObjects([]);
 
-    const zone = project.model.connectionZones?.[connection.connectionZoneId];
+    const zone = project.model.connectionZones?.[smartComponentConnectionZoneId(instance)];
     const seedPoints = [
       ...(Array.isArray(zone?.origin) ? [zone.origin] : []),
-      ...viewer.objectPoints(connectionObjectIds)
+      ...viewer.objectPoints(smartComponentObjectIds)
     ];
     const seedBounds = pointsBounds(seedPoints.length ? seedPoints : [[0, 0, 0]]);
     const memberRadius = Math.max(options.memberContext || 520, seedBounds.maxSize * 1.15);
     const focusPoints = [
       ...seedPoints,
-      ...memberContextPoints(project, connection.mainMemberId, seedBounds.center, memberRadius),
-      ...memberContextPoints(project, connection.secondaryMemberId, seedBounds.center, memberRadius)
+      ...memberContextPoints(project, smartComponentMainMemberId(instance), seedBounds.center, memberRadius),
+      ...memberContextPoints(project, smartComponentSecondaryMemberId(instance), seedBounds.center, memberRadius)
     ];
     const focusBounds = pointsBounds(focusPoints);
     const margin = Math.max(options.margin || 0, Math.min(650, Math.max(140, focusBounds.maxSize * 0.12)));
@@ -658,7 +794,7 @@ function mountQaApi({ api, profiles, fasteners }) {
     const dataUrl = viewer.canvasDataUrl("image/png");
     return {
       dataUrl,
-      connection: connectionSummaries().find((item) => item.id === connectionId),
+      smartComponent: smartComponentSummaries().find((item) => item.id === smartComponentId),
       view: options.view || "iso",
       camera: angles,
       focus: {
@@ -668,18 +804,55 @@ function mountQaApi({ api, profiles, fasteners }) {
       }
     };
   };
+  const captureView = async (options = {}) => {
+    if (options.applyQaView !== false) await applyQaView(api.project(), options);
+    await waitFrame();
+    await waitFrame();
+    return {
+      dataUrl: viewer.canvasDataUrl("image/png"),
+      view: qaViewName() || options.view || "current",
+      focus: {
+        objectCount: projectObjectCount(api.project())
+      }
+    };
+  };
 
   window.__boberCadQa = {
     version: 1,
     ready: true,
-    connectionSummaries,
+    smartComponentSummaries,
     memberInteractionTarget,
     memberManipulatorTargets,
     memberState,
-    memberConnectionObjectIds,
-    memberConnectionPoints,
-    captureConnectionView
+    memberSmartComponentObjectIds,
+    memberSmartComponentPoints,
+    captureView,
+    captureSmartComponentView
   };
+  if (qaDebugEnabled()) {
+    try {
+      const target = memberInteractionTarget({ connected: false });
+      const candidates = Object.values(api.project().model.members || {})
+        .filter((member) => member.display?.visible !== false)
+        .map((member) => {
+          const points = memberAuthoringPoints(member);
+          return {
+            memberId: member.id,
+            center: clientPoint(points.center),
+            start: clientPoint(points.physicalStart),
+            end: clientPoint(points.physicalEnd)
+          };
+        })
+        .filter((candidate) => candidate.center?.inside || candidate.start?.inside || candidate.end?.inside);
+      document.documentElement.dataset.qaMemberTarget = JSON.stringify({
+        target,
+        handles: memberManipulatorTargets({ memberId: target.memberId }),
+        candidates
+      });
+    } catch (error) {
+      document.documentElement.dataset.qaMemberTarget = JSON.stringify({ error: error.message });
+    }
+  }
 }
 
 async function main() {
@@ -689,7 +862,7 @@ async function main() {
     const project = await loadJson(projectUrl);
     const profilesUrl = new URL(project.libraries.profiles.path, projectUrl);
     const fastenersUrl = new URL(project.libraries.fasteners.path, projectUrl);
-    const [profiles, fasteners, connectionCatalog] = await Promise.all([loadJson(profilesUrl), loadJson(fastenersUrl), loadConnectionDefinitions()]);
+    const [profiles, fasteners, smartComponentCatalog] = await Promise.all([loadJson(profilesUrl), loadJson(fastenersUrl), loadSmartComponentDefinitions()]);
 
     viewer = createWebglViewer(canvas, reset, settings);
     applyUiSettings(project);
@@ -697,7 +870,7 @@ async function main() {
     const api = createProjectStore({
       project,
       profiles: profiles.profiles,
-      connectionCatalog,
+      smartComponentCatalog,
       fasteners,
       cloneOnLoad: !shouldUseProgressiveDetails(project)
     });
@@ -718,6 +891,7 @@ async function main() {
     const modelingUi = mountModelingToolbar({
       toolbar: modelingToolbar,
       status: modelingStatus,
+      shortcuts: settings.shortcuts || {},
       onBeam: () => commandController?.startBeam(),
       onColumn: () => commandController?.startColumn(),
       onTrim: () => startTrimCreate(),
@@ -741,7 +915,7 @@ async function main() {
     let trimJointEditorApi = null;
     let memberEdit = null;
     let referencePlaneEdit = null;
-    const focusedDetailObjectIds = () => focusedMemberId ? memberConnectionDetailObjectIds(api.project(), focusedMemberId) : [];
+    const focusedDetailObjectIds = () => focusedMemberId ? memberSmartComponentDetailObjectIds(api.project(), focusedMemberId) : [];
     const activeTrimRenderOptions = () => trimJointEditorApi?.sceneFocus?.() || {};
     let rerenderTimer = null;
     let rerenderIdle = null;
@@ -756,7 +930,7 @@ async function main() {
     const renderProjectNow = (nextProject) => {
       renderProject(nextProject, profiles, fasteners, {
         preserveCamera: true,
-        activeConnectionId: dimensionEdit?.connectionId() || null,
+        activeSmartComponentId: dimensionEdit?.smartComponentId() || null,
         forceDetailObjectIds: focusedDetailObjectIds(),
         ...activeTrimRenderOptions()
       });
@@ -820,7 +994,7 @@ async function main() {
       renderedLodDetailBucket = shouldUseProgressiveDetails(nextProject) ? lodDetailBucket(viewer.screenScale()) : null;
 
       const patchScene = buildScene(nextProject, profiles, fasteners, settings, {
-        activeConnectionId: dimensionEdit?.connectionId() || null,
+        activeSmartComponentId: dimensionEdit?.smartComponentId() || null,
         ...activeTrimRenderOptions(),
         renderObjectIds: renderIds,
         lodDetailFilter: (objectId) => renderIds.has(objectId)
@@ -844,7 +1018,8 @@ async function main() {
       onNudge: (axisId, direction) => memberEdit?.nudgePendingTransform(axisId, direction),
       onIncrementChange: (value) => memberEdit?.setPendingTransformIncrement(value),
       onConfirm: () => memberEdit?.confirmPendingTransform(),
-      onCancel: () => memberEdit?.cancelPendingTransform()
+      onCancel: () => memberEdit?.cancelPendingTransform(),
+      shortcuts: settings.shortcuts?.memberEdit || {}
     });
     memberEdit = createMemberEditController({
       viewer,
@@ -856,7 +1031,7 @@ async function main() {
         focusedMemberId = memberId;
         referencePlaneEdit?.clear();
         editorApi?.selectMember(memberId, { fromMemberEdit: true });
-        if (dimensionEdit?.connectionId()) {
+        if (dimensionEdit?.smartComponentId()) {
           dimensionEdit.clearAll();
           customPanel.hidden = true;
           renderProjectNow(api.project());
@@ -887,6 +1062,60 @@ async function main() {
       end: (input) => authoringTarget(input)?.end?.(input),
       cancel: (input) => authoringTarget(input)?.cancel?.(input)
     });
+    const smartComponentPathForObject = (objectId) => {
+      const instances = api.project().model?.smartComponentInstances || {};
+      const path = [];
+      const seen = new Set();
+      let current = objectId ? api.smartComponentForObject(objectId) : null;
+      while (current && !seen.has(current.id)) {
+        path.unshift(current);
+        seen.add(current.id);
+        current = current.parentInstanceId ? instances[current.parentInstanceId] : null;
+      }
+      return path;
+    };
+    const selectHierarchicalFace = (face) => {
+      const objectId = face?.objectId || null;
+      const entry = objectId ? api.project().objectIndex?.[objectId] : null;
+      const smartComponentPath = smartComponentPathForObject(objectId);
+      const rootSmartComponent = smartComponentPath[0] || null;
+      const selected = editorApi?.selectedState?.() || {};
+      const selectedRootId = selected.smartComponentId
+        ? api.smartComponentRoot(selected.smartComponentId)?.id
+        : selected.objectId
+          ? api.smartComponentRootForObject(selected.objectId)?.id
+          : null;
+
+      if (!rootSmartComponent) {
+        if (face?.collection && face.collection !== "members" && objectId) {
+          memberEdit.clear({ notify: false });
+          editorApi?.selectObject(objectId, face);
+          return true;
+        }
+        return false;
+      }
+
+      if (selectedRootId !== rootSmartComponent.id) {
+        editorApi?.selectSmartComponent(rootSmartComponent.id);
+        return true;
+      }
+
+      const selectedPathIndex = selected.smartComponentId
+        ? smartComponentPath.findIndex((component) => component.id === selected.smartComponentId)
+        : -1;
+      if (selectedPathIndex >= 0 && selectedPathIndex < smartComponentPath.length - 1) {
+        editorApi?.selectSmartComponent(smartComponentPath[selectedPathIndex + 1].id);
+        return true;
+      }
+
+      if (entry?.collection) {
+        memberEdit.clear({ notify: false });
+        editorApi?.selectObject(objectId, face);
+        return true;
+      }
+
+      return false;
+    };
     viewer.setClickHandler((face) => {
       if (!face) dimensionEdit?.clearDimension();
       if (trimJointEditorApi?.toggleRegionFromFace(face)) {
@@ -895,26 +1124,22 @@ async function main() {
         referencePlaneEdit?.clear({ overlay: true });
         return;
       }
-      if (face?.collection && face.collection !== "members" && face.objectId) {
-        memberEdit.clear({ notify: false });
-        editorApi?.selectObject(face.objectId, face);
-        return;
-      }
+      if (selectHierarchicalFace(face)) return;
       memberEdit.handleSceneClick(face);
     });
-    const showConnectionEditor = (connectionId, options = {}) => {
+    const showSmartComponentEditor = (smartComponentId, options = {}) => {
       focusedMemberId = null;
       memberEdit.clear({ notify: false });
       referencePlaneEdit?.clear();
       featureEditorApi?.clear();
       trimJointEditorApi?.clear();
-      selection.select(connectionHighlightObjectIds(api.project(), api.connectionObjectIds(connectionId)));
-      const focus = dimensionEdit.selectConnection(connectionId, options);
-      const definition = api.definition(connectionId);
-      definition.customUi.mountConnectionUi({
+      selection.select(smartComponentHighlightObjectIds(api.project(), api.smartComponentObjectIds(smartComponentId)));
+      const focus = dimensionEdit.selectSmartComponent(smartComponentId, options);
+      const definition = api.definition(smartComponentId);
+      definition.customUi.mountSmartComponentUi({
         panel: customPanel,
         definition,
-        connectionId,
+        smartComponentId,
         api,
         focusPath: focus.path,
         focusMode: focus.mode,
@@ -923,7 +1148,7 @@ async function main() {
           dimensionEdit.stopLabelEdit();
         },
         onProjectChange: rerender,
-        onConnectionDeleted: () => {
+        onSmartComponentDeleted: () => {
           dimensionEdit.clearAll();
           customPanel.hidden = true;
           renderProject(api.project(), profiles, fasteners, { preserveCamera: true });
@@ -934,7 +1159,7 @@ async function main() {
           selection.clear();
         }
       });
-      renderProject(api.project(), profiles, fasteners, { preserveCamera: true, activeConnectionId: dimensionEdit.connectionId() });
+      renderProject(api.project(), profiles, fasteners, { preserveCamera: true, activeSmartComponentId: dimensionEdit.smartComponentId() });
       dimensionEdit.render();
     };
     dimensionEdit = createDimensionEditController({
@@ -944,14 +1169,14 @@ async function main() {
       settings,
       getEditorApi: () => editorApi,
       onProjectChange: rerender,
-      openConnectionEditor: showConnectionEditor
+      openSmartComponentEditor: showSmartComponentEditor
     });
     viewer.setDoubleClickHandler((face) => {
       try {
-        const result = api.toggleConnectionComponentFromFace(face);
+        const result = api.toggleSmartComponentRoleFromFace(face);
         if (!result) return;
         dimensionEdit.clearDimension({ render: false });
-        editorApi?.selectConnection(result.component.connectionId);
+        editorApi?.selectSmartComponent(result.component.smartComponentId);
         rerender(result.project);
       } catch (error) {
         console.error(error);
@@ -964,7 +1189,7 @@ async function main() {
       settings,
       onPreviewChange: (previewMembers) => {
         authoringPreview = previewMembers || [];
-        renderProject(api.project(), profiles, fasteners, { preserveCamera: true, activeConnectionId: dimensionEdit?.connectionId() || null });
+        renderProject(api.project(), profiles, fasteners, { preserveCamera: true, activeSmartComponentId: dimensionEdit?.smartComponentId() || null });
       },
       onOverlayChange: (overlay) => viewer.setAuthoringOverlay(overlay),
       onProjectChange: rerender,
@@ -1005,30 +1230,43 @@ async function main() {
     });
     window.addEventListener("keydown", (event) => {
       if (event.target instanceof Element && memberTransformPanel.contains(event.target)) return;
-      if (event.key === "Enter" && memberEdit.confirmPendingTransform()) {
+      if (!isTextInput(event.target) && matchesShortcut(event, shortcutSetting(settings.shortcuts?.commands, "createTrim", "T"))) {
+        if (!commandController?.activeCommand?.() && !trimCreate?.active?.()) {
+          startTrimCreate();
+          event.preventDefault();
+        }
+        return;
+      }
+      if (matchesShortcut(event, shortcutSetting(settings.shortcuts?.memberEdit, "confirmTransform", "Enter")) && memberEdit.confirmPendingTransform()) {
         event.preventDefault();
         return;
       }
-      if (event.key !== "Escape") return;
-      if (trimCreate?.cancel()) {
+      const cancelCommandBinding = shortcutSetting(settings.shortcuts?.commands, "cancel", "Escape");
+      const cancelTransformBinding = shortcutSetting(settings.shortcuts?.memberEdit, "cancelTransform", cancelCommandBinding);
+      const cancelCommand = matchesShortcut(event, cancelCommandBinding);
+      const cancelTransform = matchesShortcut(event, cancelTransformBinding);
+      if (!cancelCommand && !cancelTransform) return;
+      if (cancelCommand && trimCreate?.cancel()) {
         modelingUi.setActive(null);
         event.preventDefault();
         return;
       }
-      if (memberEdit.cancelPendingTransform()) {
+      if (cancelTransform && memberEdit.cancelPendingTransform()) {
         event.preventDefault();
         return;
       }
-      if (dimensionEdit.clearDimension()) event.preventDefault();
+      if (cancelCommand && dimensionEdit.clearDimension()) event.preventDefault();
     }, { capture: true });
 
     renderProject(api.project(), profiles, fasteners);
-    connectionCatalog.customUi.mountConnectionLibraryUi({
+    mountQaApi({ api, profiles, fasteners });
+    applyQaView(api.project()).catch((error) => console.error(error));
+    smartComponentCatalog.customUi.mountSmartComponentLibraryUi({
       panel: libraryPanel,
       api,
       selection,
       onProjectChange: rerender,
-      onConnectionCreated: showConnectionEditor
+      onSmartComponentCreated: showSmartComponentEditor
     });
     featureEditorApi = mountFeatureEditorPanel({
       panel: featureEditorPanel,
@@ -1050,19 +1288,21 @@ async function main() {
       profiles: profiles.profiles,
       selection,
       memberEdit,
-      connectionHighlightObjectIds: (connectionId) => connectionHighlightObjectIds(api.project(), api.connectionObjectIds(connectionId)),
+      smartComponentHighlightObjectIds: (smartComponentId) => smartComponentHighlightObjectIds(api.project(), api.smartComponentObjectIds(smartComponentId)),
       onProjectChange: rerender,
       onLocalMemberProjectChange: hotSwapMemberDetails,
-      onConnectionSelected: (connectionId, options) => {
+      onSmartComponentSelected: (smartComponentId, options) => {
         focusedMemberId = null;
-        showConnectionEditor(connectionId, options);
+        showSmartComponentEditor(smartComponentId, options);
       },
-      onConnectionDeleted: () => {
+      onSmartComponentDeleted: () => {
         dimensionEdit.clearAll();
         customPanel.hidden = true;
         referencePlaneEdit?.clear({ overlay: true });
       },
       onObjectSelected: (objectId, detail = {}) => {
+        dimensionEdit.clearAll();
+        customPanel.hidden = true;
         const entry = api.project().objectIndex?.[objectId];
         if (entry?.collection === "features") {
           trimJointEditorApi?.clear();
@@ -1086,7 +1326,6 @@ async function main() {
     });
 
     customPanel.hidden = true;
-    mountQaApi({ api, profiles, fasteners });
 
   } catch (error) {
     title.textContent = "Viewer error";

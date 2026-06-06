@@ -77,15 +77,15 @@
       "version": "0.1.0",
       "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
     },
-    "connections": {
-      "libraryId": "starter-connection-library",
-      "version": "0.1.0",
-      "path": "../libraries/connections/connection-register.json"
-    },
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
       "path": "../libraries/model-library/model-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
     }
   },
   "projectTree": {
@@ -268,7 +268,7 @@
       "type": "fillet-weld"
     },
     "connection_beam_to_beam_fin_plate_1": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "fin-plate"
     },
     "connection_beam_to_beam_fin_plate_1_beam_gap_trim": {
@@ -516,7 +516,11 @@
           0,
           0,
           1
-        ]
+        ],
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed"
+        }
       }
     },
     "groups": {
@@ -618,9 +622,6 @@
           "if_main_beam_web",
           "if_supported_beam_end"
         ],
-        "connectionIds": [
-          "connection_beam_to_beam_fin_plate_1"
-        ],
         "objectIds": [
           "main_beam",
           "supported_beam",
@@ -637,7 +638,10 @@
           "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim",
           "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane"
         ],
-        "notes": "Incoming supported beam top is flush with supporting beam top. The generated notch clears the supporting beam top flange with configured clearances."
+        "notes": "Incoming supported beam top is flush with supporting beam top. The generated notch clears the supporting beam top flange with configured clearances.",
+        "smartComponentInstanceIds": [
+          "connection_beam_to_beam_fin_plate_1"
+        ]
       }
     },
     "assemblies": {
@@ -653,7 +657,8 @@
         "memberIds": [
           "main_beam",
           "supported_beam"
-        ]
+        ],
+        "smartComponentInstanceIds": []
       },
       "asm_beam_to_beam_connection": {
         "id": "asm_beam_to_beam_connection",
@@ -664,9 +669,6 @@
         "childAssemblyIds": [],
         "connectionZoneIds": [
           "cz_beam_to_beam_fin_plate"
-        ],
-        "connectionIds": [
-          "connection_beam_to_beam_fin_plate_1"
         ],
         "memberIds": [
           "main_beam",
@@ -693,6 +695,9 @@
         ],
         "weldIds": [
           "connection_beam_to_beam_fin_plate_1_support_weld"
+        ],
+        "smartComponentInstanceIds": [
+          "connection_beam_to_beam_fin_plate_1"
         ]
       }
     },
@@ -826,6 +831,11 @@
         },
         "fabrication": {
           "partMark": "FP1"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "finPlate"
         }
       }
     },
@@ -848,7 +858,12 @@
             -20,
             60
           ]
-        ]
+        ],
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "holePattern"
+        }
       }
     },
     "objectPatterns": {},
@@ -879,6 +894,11 @@
         },
         "fabrication": {
           "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "plateHoles"
         }
       },
       "connection_beam_to_beam_fin_plate_1_holes_secondary": {
@@ -912,6 +932,11 @@
         },
         "fabrication": {
           "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "memberHoles"
         }
       },
       "connection_beam_to_beam_fin_plate_1_top_flange_notch": {
@@ -966,6 +991,11 @@
         },
         "bim": {
           "name": "Top flange notch"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "topNotch"
         }
       },
       "connection_beam_to_beam_fin_plate_1_bottom_flange_notch": {
@@ -1020,6 +1050,11 @@
         },
         "bim": {
           "name": "Bottom flange notch"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "bottomNotch"
         }
       },
       "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim": {
@@ -1076,6 +1111,11 @@
         },
         "bim": {
           "name": "Top flange fin plate trim"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "topPlateNotch"
         }
       },
       "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim": {
@@ -1132,6 +1172,11 @@
         },
         "bim": {
           "name": "Bottom flange fin plate trim"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "bottomPlateNotch"
         }
       }
     },
@@ -1164,6 +1209,11 @@
             "head": true,
             "nut": true
           }
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "fasteners"
         }
       }
     },
@@ -1193,71 +1243,88 @@
               "size": 6
             }
           ]
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "weld"
         }
       }
     },
-    "connections": {
+    "trimJoints": {
+      "connection_beam_to_beam_fin_plate_1_beam_gap_trim": {
+        "id": "connection_beam_to_beam_fin_plate_1_beam_gap_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "supported_beam",
+            "memberEnd": "end",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "supported_beam",
+            "memberAEnd": "end",
+            "gap": 0,
+            "enabled": true,
+            "referencePlaneIds": [
+              "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane:-"
+            ]
+          }
+        ],
+        "placementIntent": {
+          "role": "set-secondary-member-gap",
+          "host": {
+            "objectId": "supported_beam",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "main_beam",
+              "interfaceId": "if_main_beam_web"
+            }
+          ],
+          "fit": "secondary-end-to-support-face-gap"
+        },
+        "fabrication": {
+          "operation": "fit-secondary-member-to-fin-plate-gap"
+        },
+        "display": {
+          "visible": false
+        },
+        "authoring": {
+          "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "beamTrim"
+        }
+      }
+    },
+    "smartComponentInstances": {
       "connection_beam_to_beam_fin_plate_1": {
         "id": "connection_beam_to_beam_fin_plate_1",
         "type": "fin-plate",
-        "mainMemberId": "main_beam",
-        "secondaryMemberId": "supported_beam",
-        "connectionZoneId": "cz_beam_to_beam_fin_plate",
-        "assemblyId": "asm_beam_to_beam_connection",
-        "manualParts": {
-          "plateIds": [
-            "connection_beam_to_beam_fin_plate_1_fin_plate"
-          ],
-          "featureIds": [
-            "connection_beam_to_beam_fin_plate_1_holes_plate",
-            "connection_beam_to_beam_fin_plate_1_holes_secondary",
-            "connection_beam_to_beam_fin_plate_1_top_flange_notch",
-            "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
-            "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
-            "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim"
-          ],
-          "fastenerGroupIds": [
-            "connection_beam_to_beam_fin_plate_1_bolts"
-          ],
-          "weldIds": [
-            "connection_beam_to_beam_fin_plate_1_support_weld"
-          ]
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "beam_to_column_fin_plate_m16_1x3",
+          "version": "0.1.0"
         },
-        "generator": {
-          "status": "generated",
-          "definition": "fin-plate",
-          "version": 1,
-          "ownedObjectIds": [
-            "connection_beam_to_beam_fin_plate_1_fin_plate",
-            "connection_beam_to_beam_fin_plate_1_beam_gap_trim",
-            "connection_beam_to_beam_fin_plate_1_bolt_grid",
-            "connection_beam_to_beam_fin_plate_1_holes_plate",
-            "connection_beam_to_beam_fin_plate_1_holes_secondary",
-            "connection_beam_to_beam_fin_plate_1_top_flange_notch",
-            "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
-            "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
-            "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim",
-            "connection_beam_to_beam_fin_plate_1_bolts",
-            "connection_beam_to_beam_fin_plate_1_support_weld",
-            "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane"
-          ],
-          "manualObjectIds": [],
-          "objectRoles": {
-            "finPlate": "connection_beam_to_beam_fin_plate_1_fin_plate",
-            "beamTrim": "connection_beam_to_beam_fin_plate_1_beam_gap_trim",
-            "holePattern": "connection_beam_to_beam_fin_plate_1_bolt_grid",
-            "plateHoles": "connection_beam_to_beam_fin_plate_1_holes_plate",
-            "memberHoles": "connection_beam_to_beam_fin_plate_1_holes_secondary",
-            "topNotch": "connection_beam_to_beam_fin_plate_1_top_flange_notch",
-            "topPlateNotch": "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
-            "bottomNotch": "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
-            "bottomPlateNotch": "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim",
-            "fasteners": "connection_beam_to_beam_fin_plate_1_bolts",
-            "weld": "connection_beam_to_beam_fin_plate_1_support_weld"
+        "inputs": {
+          "main": {
+            "memberId": "main_beam"
           },
-          "health": "ok",
-          "diagnostics": [],
-          "description": "Horizontal beam-to-beam fin plate connection with generated flange notches."
+          "secondary": {
+            "memberId": "supported_beam"
+          },
+          "connectionZoneId": "cz_beam_to_beam_fin_plate",
+          "assemblyId": "asm_beam_to_beam_connection"
         },
         "referenceParameters": {
           "plate": {
@@ -1327,73 +1394,126 @@
             }
           }
         },
-        "sourcePreset": {
-          "library": "connections",
-          "id": "beam_to_column_fin_plate_m16_1x3",
-          "version": "0.1.0"
+        "parameters": {
+          "plate": {
+            "thickness": 10,
+            "length": 180,
+            "height": 160,
+            "edgeOffset": 0
+          },
+          "fit": {
+            "beamGap": 20,
+            "clipBeam": true
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 3,
+            "columns": 1,
+            "pitch": 60,
+            "gauge": 0,
+            "length": 60,
+            "parallelToSupport": false,
+            "verticalPositionMode": "centered",
+            "horizontalPositionMode": "centered",
+            "rowSpacingMode": "equal",
+            "columnSpacingMode": "equal"
+          },
+          "washers": {
+            "head": true,
+            "nut": true
+          },
+          "holes": {
+            "diameter": 18,
+            "tolerance": "normal",
+            "customDiameter": 18,
+            "type": "round"
+          },
+          "welds": {
+            "front": 6,
+            "back": 6,
+            "top": 0,
+            "bottom": 0
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          },
+          "notch": {
+            "topMode": "auto",
+            "bottomMode": "auto",
+            "topOffsets": {
+              "xMinus": 5,
+              "xPlus": 5,
+              "yMinus": 5,
+              "yPlus": 5,
+              "zMinus": 5,
+              "zPlus": 5
+            },
+            "bottomOffsets": {
+              "xMinus": 5,
+              "xPlus": 5,
+              "yMinus": 5,
+              "yPlus": 5,
+              "zMinus": 5,
+              "zPlus": 5
+            }
+          }
         },
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {
+          "finPlate": "connection_beam_to_beam_fin_plate_1_fin_plate",
+          "beamTrim": "connection_beam_to_beam_fin_plate_1_beam_gap_trim",
+          "holePattern": "connection_beam_to_beam_fin_plate_1_bolt_grid",
+          "plateHoles": "connection_beam_to_beam_fin_plate_1_holes_plate",
+          "memberHoles": "connection_beam_to_beam_fin_plate_1_holes_secondary",
+          "topNotch": "connection_beam_to_beam_fin_plate_1_top_flange_notch",
+          "topPlateNotch": "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
+          "bottomNotch": "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
+          "bottomPlateNotch": "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim",
+          "fasteners": "connection_beam_to_beam_fin_plate_1_bolts",
+          "weld": "connection_beam_to_beam_fin_plate_1_support_weld"
+        },
+        "ownedObjectIds": [
+          "connection_beam_to_beam_fin_plate_1_fin_plate",
+          "connection_beam_to_beam_fin_plate_1_beam_gap_trim",
+          "connection_beam_to_beam_fin_plate_1_bolt_grid",
+          "connection_beam_to_beam_fin_plate_1_holes_plate",
+          "connection_beam_to_beam_fin_plate_1_holes_secondary",
+          "connection_beam_to_beam_fin_plate_1_top_flange_notch",
+          "connection_beam_to_beam_fin_plate_1_fin_plate_top_flange_trim",
+          "connection_beam_to_beam_fin_plate_1_bottom_flange_notch",
+          "connection_beam_to_beam_fin_plate_1_fin_plate_bottom_flange_trim",
+          "connection_beam_to_beam_fin_plate_1_bolts",
+          "connection_beam_to_beam_fin_plate_1_support_weld",
+          "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane"
+        ],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "generated",
+        "definition": "fin-plate",
+        "version": 1,
+        "health": "ok",
+        "diagnostics": [],
         "authoring": {
-          "source": "manual-scenario-seed",
-          "sourcePreset": {
-            "library": "connections",
+          "source": "smart-component-library",
+          "notes": "Seeded from stored beam-to-beam interfaces, then regenerated through the fin plate smart component engine.",
+          "sourceComponent": {
+            "library": "smart-components",
             "id": "beam_to_column_fin_plate_m16_1x3",
             "version": "0.1.0"
-          },
-          "notes": "Seeded from stored beam-to-beam interfaces, then regenerated through the fin plate connection engine."
+          }
         },
         "bim": {
           "name": "Beam To Beam Fin Plate 1",
           "description": "Horizontal beam-to-beam fin plate connection with generated flange notches."
-        }
-      }
-    },
-    "trimJoints": {
-      "connection_beam_to_beam_fin_plate_1_beam_gap_trim": {
-        "id": "connection_beam_to_beam_fin_plate_1_beam_gap_trim",
-        "type": "member-trim",
-        "gap": 0,
-        "participants": [
-          {
-            "memberId": "supported_beam",
-            "memberEnd": "end",
-            "enabled": true
-          }
-        ],
-        "operations": [
-          {
-            "id": "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane_trim",
-            "type": "plane-trim",
-            "memberAId": "supported_beam",
-            "memberAEnd": "end",
-            "gap": 0,
-            "enabled": true,
-            "referencePlaneIds": [
-              "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane"
-            ],
-            "removedRegionKeys": [
-              "connection_beam_to_beam_fin_plate_1_beam_gap_trim_plane:-"
-            ]
-          }
-        ],
-        "placementIntent": {
-          "role": "set-secondary-member-gap",
-          "host": {
-            "objectId": "supported_beam",
-            "end": "end"
-          },
-          "references": [
-            {
-              "objectId": "main_beam",
-              "interfaceId": "if_main_beam_web"
-            }
-          ],
-          "fit": "secondary-end-to-support-face-gap"
-        },
-        "fabrication": {
-          "operation": "fit-secondary-member-to-fin-plate-gap"
-        },
-        "display": {
-          "visible": false
         }
       }
     }

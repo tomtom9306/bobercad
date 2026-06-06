@@ -68,7 +68,7 @@ function featurePlacement(ctx, feature) {
 
 function optionCalloutDimension(ctx, spec, placement) {
   if (!placement) return null;
-  const value = paramValue(ctx.definition, ctx.connection, spec.parameter);
+  const value = paramValue(ctx.definition, ctx.smartComponent, spec.parameter);
   const label = spec.reference?.showLabel === false
     ? optionLabel(spec, value)
     : `${spec.label || parameterLabel(ctx.definition, spec.parameter)}: ${optionLabel(spec, value)}`;
@@ -89,11 +89,11 @@ function optionCalloutDimension(ctx, spec, placement) {
 }
 
 export function featureOptionCalloutDimension(ctx, spec) {
-  return optionCalloutDimension(ctx, spec, featurePlacement(ctx, roleObject(ctx.project, ctx.connection, spec.reference.featureRole)));
+  return optionCalloutDimension(ctx, spec, featurePlacement(ctx, roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole)));
 }
 
 export function trimOptionCalloutDimension(ctx, spec) {
-  const trimJoint = roleObject(ctx.project, ctx.connection, spec.reference.trimRole);
+  const trimJoint = roleObject(ctx.project, ctx.smartComponent, spec.reference.trimRole);
   const operation = trimPlaneOperation(trimJoint);
   const plane = operation ? requiredReferencePlane(ctx.project, operation.referencePlaneIds[0], trimJoint.id, () => null) : null;
   return optionCalloutDimension(ctx, spec, planePlacement(plane));

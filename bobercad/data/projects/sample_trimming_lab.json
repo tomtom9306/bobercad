@@ -77,15 +77,15 @@
       "version": "0.1.0",
       "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
     },
-    "connections": {
-      "libraryId": "starter-connection-library",
-      "version": "0.1.0",
-      "path": "../libraries/connections/connection-register.json"
-    },
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
       "path": "../libraries/model-library/model-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
     }
   },
   "projectTree": {
@@ -1809,6 +1809,6 @@
     },
     "fastenerGroups": {},
     "welds": {},
-    "connections": {}
+    "smartComponentInstances": {}
   }
 }

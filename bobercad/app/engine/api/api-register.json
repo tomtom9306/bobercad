@@ -9,8 +9,8 @@
       "parameters": {
         "project": "project JSON",
         "profiles": "profile map",
-        "connectionCatalog": "loaded connection catalog",
-        "fasteners": "fastener library"
+        "fasteners": "fastener library",
+        "smartComponentCatalog": "loaded Smart Component catalog"
       },
       "returns": "project API object"
     },
@@ -49,13 +49,13 @@
       "returns": "member object"
     },
     {
-      "id": "store.connection",
+      "id": "store.smartComponent",
       "module": "../store/project-store.mjs",
-      "description": "Read a connection by id.",
+      "description": "Read a Smart Component instance by id.",
       "parameters": {
-        "connectionId": "string"
+        "smartComponentId": "string"
       },
-      "returns": "connection object"
+      "returns": "Smart Component instance"
     },
     {
       "id": "store.trimJoint",
@@ -67,36 +67,54 @@
       "returns": "trim joint object"
     },
     {
-      "id": "store.connectionForObject",
+      "id": "store.smartComponentForObject",
       "module": "../store/project-store.mjs",
-      "description": "Find the connection that owns or references an object.",
+      "description": "Find the Smart Component that owns or references an object.",
       "parameters": {
         "objectId": "string"
       },
-      "returns": "connection object or null"
+      "returns": "Smart Component instance or null"
     },
     {
-      "id": "store.connectionObjectIds",
+      "id": "store.smartComponentRoot",
       "module": "../store/project-store.mjs",
-      "description": "List objects owned by a connection.",
+      "description": "Find the highest parent Smart Component for an instance.",
       "parameters": {
-        "connectionId": "string"
+        "smartComponentId": "string"
+      },
+      "returns": "Smart Component instance"
+    },
+    {
+      "id": "store.smartComponentRootForObject",
+      "module": "../store/project-store.mjs",
+      "description": "Find the highest parent Smart Component that owns or references an object.",
+      "parameters": {
+        "objectId": "string"
+      },
+      "returns": "Smart Component instance or null"
+    },
+    {
+      "id": "store.smartComponentObjectIds",
+      "module": "../store/project-store.mjs",
+      "description": "List objects owned by a Smart Component.",
+      "parameters": {
+        "smartComponentId": "string"
       },
       "returns": "array of object ids"
     },
     {
-      "id": "store.affectedConnectionIds",
+      "id": "store.affectedSmartComponentIds",
       "module": "../store/project-store.mjs",
-      "description": "List connection ids related to a member.",
+      "description": "List Smart Component ids related to a member.",
       "parameters": {
         "memberId": "string"
       },
-      "returns": "array of connection ids"
+      "returns": "array of Smart Component ids"
     },
     {
       "id": "store.memberDependencyObjectIds",
       "module": "../store/project-store.mjs",
-      "description": "List render/model object ids related to a member and its connections.",
+      "description": "List render/model object ids related to a member and its Smart Components.",
       "parameters": {
         "memberId": "string",
         "options": "optional filter flags such as renderableOnly or includeMember"
@@ -109,7 +127,7 @@
       "description": "List render/model object ids affected by a feature edit.",
       "parameters": {
         "featureId": "string",
-        "options": "optional filter flags such as renderableOnly or includeConnectionMembers"
+        "options": "optional filter flags such as renderableOnly or includeSmartComponentMembers"
       },
       "returns": "array of object ids"
     },
@@ -133,16 +151,16 @@
       "returns": "connection definition"
     },
     {
-      "id": "store.supportedConnections",
+      "id": "store.supportedSmartComponents",
       "module": "../store/project-store.mjs",
-      "description": "List project connections supported by loaded definitions.",
+      "description": "List project Smart Components supported by loaded definitions.",
       "parameters": {},
-      "returns": "array of connections"
+      "returns": "array of Smart Component instances"
     },
     {
-      "id": "store.connectionPresets",
+      "id": "store.smartComponentPresets",
       "module": "../store/project-store.mjs",
-      "description": "List available connection presets.",
+      "description": "List available Smart Component presets.",
       "parameters": {},
       "returns": "array of presets"
     },
@@ -156,14 +174,14 @@
       "returns": "map of catalog entries"
     },
     {
-      "id": "store.createConnectionFromPreset",
+      "id": "store.createSmartComponentFromPreset",
       "module": "../store/project-store.mjs",
-      "description": "Create and generate a connection from selected members.",
+      "description": "Create and generate a Smart Component from a preset.",
       "parameters": {
         "presetId": "string",
-        "memberIds": "two member ids"
+        "memberIds": "member ids or empty for standalone presets"
       },
-      "returns": "project and connectionId"
+      "returns": "project and smartComponentId"
     },
     {
       "id": "store.createTrimJoint",
@@ -175,48 +193,48 @@
       "returns": "project, trimJointId and trimJoint"
     },
     {
-      "id": "store.deleteConnection",
+      "id": "store.deleteSmartComponent",
       "module": "../store/project-store.mjs",
-      "description": "Delete a connection and its generated objects.",
+      "description": "Delete a Smart Component and its generated objects.",
       "parameters": {
-        "connectionId": "string"
+        "smartComponentId": "string"
       },
       "returns": "project JSON"
     },
     {
-      "id": "store.connectionPlateOptions",
+      "id": "store.smartComponentPlateOptions",
       "module": "../store/project-store.mjs",
-      "description": "List optional plates for a connection.",
+      "description": "List optional plates for a Smart Component.",
       "parameters": {
-        "connectionId": "string"
+        "smartComponentId": "string"
       },
       "returns": "array of plate options"
     },
     {
-      "id": "store.setConnectionPlateIncluded",
+      "id": "store.setSmartComponentPlateIncluded",
       "module": "../store/project-store.mjs",
-      "description": "Toggle an optional connection plate.",
+      "description": "Toggle an optional Smart Component plate.",
       "parameters": {
-        "connectionId": "string",
+        "smartComponentId": "string",
         "plateId": "string",
         "included": "boolean"
       },
       "returns": "project JSON"
     },
     {
-      "id": "store.updateConnection",
+      "id": "store.updateSmartComponent",
       "module": "../store/project-store.mjs",
-      "description": "Regenerate a connection with new parameters.",
+      "description": "Regenerate a Smart Component with new parameters.",
       "parameters": {
-        "connectionId": "string",
-        "parameters": "connection parameter object"
+        "smartComponentId": "string",
+        "parameters": "Smart Component parameter object"
       },
       "returns": "project JSON"
     },
     {
       "id": "store.updateMember",
       "module": "../store/project-store.mjs",
-      "description": "Patch a member and regenerate affected connections.",
+      "description": "Patch a member and regenerate affected Smart Components.",
       "parameters": {
         "memberId": "string",
         "patch": "member fields"
@@ -240,6 +258,16 @@
       "parameters": {
         "trimJointId": "string",
         "patch": "trim joint fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateFastenerGroup",
+      "module": "../store/project-store.mjs",
+      "description": "Patch a semantic fastener group through the common fastener API path, recording Smart Component overrides when applicable.",
+      "parameters": {
+        "fastenerGroupId": "string",
+        "patch": "fastener group fields"
       },
       "returns": "project JSON"
     },
@@ -454,11 +482,11 @@
     {
       "id": "store.draftMemberProject",
       "module": "../store/project-store.mjs",
-      "description": "Build a non-committed project draft for one member and its affected connections.",
+      "description": "Build a non-committed project draft for one member and its affected Smart Components.",
       "parameters": {
         "memberId": "string",
         "member": "complete semantic member object",
-        "options": "optional flags such as regenerateConnections"
+        "options": "optional flags such as regenerateSmartComponents"
       },
       "returns": "project JSON draft without mutating the store"
     },
@@ -503,8 +531,8 @@
     },
     {
       "id": "ctx.param",
-      "module": "../modules/connections/connection-generator.mjs",
-      "description": "Read a connection preset parameter by dotted path.",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
+      "description": "Read a Smart Component parameter by dotted path.",
       "parameters": {
         "path": "string, for example plate.thickness"
       },
@@ -512,8 +540,8 @@
     },
     {
       "id": "ctx.optionalParam",
-      "module": "../modules/connections/connection-generator.mjs",
-      "description": "Read an optional connection preset parameter by dotted path.",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
+      "description": "Read an optional Smart Component parameter by dotted path.",
       "parameters": {
         "path": "string, for example welds.top",
         "fallback": "value returned when the parameter is missing"
@@ -521,9 +549,29 @@
       "returns": "parameter value or fallback"
     },
     {
+      "id": "ctx.parameterValue",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
+      "description": "Read a Smart Component parameter by dotted path, using the definition default when the instance does not store a value and emitting a diagnostic when neither exists.",
+      "parameters": {
+        "path": "string, for example connections.anchorLength",
+        "options": "optional required, code, message and resolve diagnostic metadata"
+      },
+      "returns": "parameter value, definition default, or undefined after recording a diagnostic"
+    },
+    {
+      "id": "ctx.requiredInput",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
+      "description": "Read a child component input by dotted path and emit a diagnostic instead of silently choosing a fallback when the parent did not pass it.",
+      "parameters": {
+        "path": "string, for example connections.anchorLength",
+        "options": "optional code, message and resolve diagnostic metadata"
+      },
+      "returns": "input value or undefined after recording a diagnostic"
+    },
+    {
       "id": "ctx.params",
-      "module": "../modules/connections/connection-generator.mjs",
-      "description": "Read several connection parameters into a flat object.",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
+      "description": "Read several Smart Component parameters into a flat object.",
       "parameters": {
         "paths": "object mapping output keys to dotted parameter paths"
       },
@@ -531,8 +579,8 @@
     },
     {
       "id": "ctx.member",
-      "module": "../modules/connections/connection-generator.mjs",
-      "description": "Read the resolved main or secondary connection member.",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
+      "description": "Read the resolved main or secondary Smart Component member.",
       "parameters": {
         "role": "main | secondary"
       },
@@ -540,8 +588,8 @@
     },
     {
       "id": "ctx.profile",
-      "module": "../modules/connections/connection-generator.mjs",
-      "description": "Read the profile for a connection member.",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
+      "description": "Read the profile for a Smart Component member.",
       "parameters": {
         "role": "main | secondary"
       },
@@ -549,8 +597,8 @@
     },
     {
       "id": "ctx.interface",
-      "module": "../modules/connections/connection-generator.mjs",
-      "description": "Resolve a stored connection-zone interface.",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
+      "description": "Resolve a stored Smart Component-zone interface.",
       "parameters": {
         "role": "interface role declared by the connection definition"
       },
@@ -558,7 +606,7 @@
     },
     {
       "id": "ctx.error",
-      "module": "../modules/connections/connection-generator.mjs",
+      "module": "../modules/smart-components/smart-component-generator.mjs",
       "description": "Attach a validation diagnostic to generated output.",
       "parameters": {
         "code": "stable diagnostic code",
@@ -569,14 +617,14 @@
     },
     {
       "id": "ctx.geometry",
-      "module": "./connections/geometry.mjs",
-      "description": "Geometry helpers for API consumers and connection builders.",
+      "module": "./model/geometry.mjs",
+      "description": "Geometry helpers for API consumers and Smart Component builders.",
       "parameters": {},
       "returns": "geometry helper object"
     },
     {
       "id": "ctx.geometry.rectangleOutline",
-      "module": "./connections/geometry.mjs",
+      "module": "./model/geometry.mjs",
       "description": "Create a local [y,z] rectangular plate outline.",
       "parameters": {
         "width": "number",
@@ -586,7 +634,7 @@
     },
     {
       "id": "ctx.geometry.clipPlateOutlineByPlane",
-      "module": "./connections/geometry.mjs",
+      "module": "./model/geometry.mjs",
       "description": "Clip a flat plate outline by a 3D plane in plate-local coordinates.",
       "parameters": {
         "outline": "array of [y,z] points",
@@ -601,7 +649,7 @@
     },
     {
       "id": "ctx.geometry.plateAxes",
-      "module": "./connections/geometry.mjs",
+      "module": "./model/geometry.mjs",
       "description": "Resolve planar local axes from a web normal, beam direction, and optional preferred vertical axis.",
       "parameters": {
         "webNormal": "plate normal",
@@ -613,7 +661,7 @@
     },
     {
       "id": "ctx.geometry.linePlaneIntersection",
-      "module": "./connections/geometry.mjs",
+      "module": "./model/geometry.mjs",
       "description": "Find where a line intersects a plane, or return null when parallel.",
       "parameters": {
         "point": "point on line",
@@ -625,8 +673,8 @@
     },
     {
       "id": "ctx.geometry.memberFrameAt",
-      "module": "./connections/geometry.mjs",
-      "description": "Read a member local frame at a station for connection geometry.",
+      "module": "./model/geometry.mjs",
+      "description": "Read a member local frame at a station for Smart Component geometry.",
       "parameters": {
         "member": "member object",
         "station": "distance from member start"
@@ -635,7 +683,7 @@
     },
     {
       "id": "ctx.geometry.memberFrame",
-      "module": "./connections/geometry.mjs",
+      "module": "./model/geometry.mjs",
       "description": "Read a member start local frame.",
       "parameters": {
         "member": "member object"
@@ -644,7 +692,7 @@
     },
     {
       "id": "ctx.geometry.memberLength",
-      "module": "./connections/geometry.mjs",
+      "module": "./model/geometry.mjs",
       "description": "Measure member axis length.",
       "parameters": {
         "member": "member object"
@@ -653,7 +701,7 @@
     },
     {
       "id": "ctx.geometry.sectionBounds",
-      "module": "./connections/geometry.mjs",
+      "module": "./model/geometry.mjs",
       "description": "Read profile section y/z bounds.",
       "parameters": {
         "profile": "profile object"
@@ -662,7 +710,7 @@
     },
     {
       "id": "ctx.geometry.sectionWebBounds",
-      "module": "./connections/geometry.mjs",
+      "module": "./model/geometry.mjs",
       "description": "Read profile web y/z bounds.",
       "parameters": {
         "profile": "profile object"
@@ -671,7 +719,7 @@
     },
     {
       "id": "ctx.check.requireMemberEnd",
-      "module": "./connections/checks.mjs",
+      "module": "./model/checks.mjs",
       "description": "Require an interface to identify a member end.",
       "parameters": {
         "iface": "resolved interface",
@@ -681,7 +729,7 @@
     },
     {
       "id": "ctx.check.gridFitsPlate",
-      "module": "./connections/checks.mjs",
+      "module": "./model/checks.mjs",
       "description": "Report if a hole grid falls outside a rectangular or outlined plate.",
       "parameters": {
         "pattern": "hole pattern",
@@ -693,7 +741,7 @@
     },
     {
       "id": "ctx.check.plateOutlineValid",
-      "module": "./connections/checks.mjs",
+      "module": "./model/checks.mjs",
       "description": "Report if a generated plate outline has fewer than three usable points or zero area.",
       "parameters": {
         "outline": "array of [y,z] points",
@@ -703,7 +751,7 @@
     },
     {
       "id": "ctx.check.plateFitsInterface",
-      "module": "./connections/checks.mjs",
+      "module": "./model/checks.mjs",
       "description": "Report if a plate exceeds an interface length or height.",
       "parameters": {
         "iface": "resolved interface",
@@ -715,7 +763,7 @@
     },
     {
       "id": "ctx.check.gridFitsInterface",
-      "module": "./connections/checks.mjs",
+      "module": "./model/checks.mjs",
       "description": "Report if a stationed hole grid falls outside an interface.",
       "parameters": {
         "pattern": "hole pattern",
@@ -726,7 +774,7 @@
     },
     {
       "id": "ctx.check.gridFitsCenteredInterface",
-      "module": "./connections/checks.mjs",
+      "module": "./model/checks.mjs",
       "description": "Report if a centered hole grid falls outside an interface.",
       "parameters": {
         "pattern": "hole pattern",
@@ -737,7 +785,7 @@
     },
     {
       "id": "ctx.check.vectorsAligned",
-      "module": "./connections/checks.mjs",
+      "module": "./model/checks.mjs",
       "description": "Report if two vectors are not aligned enough.",
       "parameters": {
         "a": "vector",
@@ -748,7 +796,7 @@
     },
     {
       "id": "ctx.reference.plane",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a semantic reference plane and assign it to a role.",
       "parameters": {
         "role": "role key",
@@ -758,7 +806,7 @@
     },
     {
       "id": "ctx.part.plate",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a semantic plate object and assign it to a role.",
       "parameters": {
         "role": "role key",
@@ -768,7 +816,7 @@
     },
     {
       "id": "ctx.pattern.rectangularGrid",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a rectangular hole pattern.",
       "parameters": {
         "role": "role key",
@@ -778,7 +826,7 @@
     },
     {
       "id": "ctx.feature.holePattern",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a hole-pattern feature.",
       "parameters": {
         "role": "role key",
@@ -788,7 +836,7 @@
     },
     {
       "id": "ctx.trim.planeTrim",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a member trim joint with one plane-trim operation.",
       "parameters": {
         "role": "role key",
@@ -798,7 +846,7 @@
     },
     {
       "id": "ctx.feature.booleanPart",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a Tekla-style boolean part feature for cuts such as beam notches.",
       "parameters": {
         "role": "role key",
@@ -808,7 +856,7 @@
     },
     {
       "id": "ctx.feature.clearanceCut",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a semantic clearance-cut feature. The project stores references and offsets; cutter geometry is derived by viewer/exporter code.",
       "parameters": {
         "role": "role key",
@@ -818,23 +866,90 @@
     },
     {
       "id": "ctx.fastener.group",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a fastener group through a stored hole pattern.",
       "parameters": {
         "role": "role key",
-        "data": "fastenerRef, holePatternRef, participants, through, optional assembly and metadata"
+        "data": "fastenerRef, holePatternRef, participants, through, optional assembly, authoring and metadata"
       },
       "returns": "fastener group object"
     },
     {
+      "id": "ctx.fastener.patternedGroup",
+      "module": "./model/builders.mjs",
+      "description": "Create the standard layered fastener set: hole pattern, hole-pattern feature(s), and the actual fastener group. Component values are written into the fastener group while direct fastener object overrides remain supported.",
+      "parameters": {
+        "role": "fastener group role key",
+        "data": "patternRole, feature/feature roles, fastenerRef, positions or grid layout, participants, orientation, assembly, parameterPaths and metadata"
+      },
+      "returns": "object with pattern, feature(s), fasteners and their ids"
+    },
+    {
       "id": "ctx.weld.fillet",
-      "module": "./connections/builders.mjs",
+      "module": "./model/builders.mjs",
       "description": "Create a fillet weld.",
       "parameters": {
         "role": "role key",
         "data": "size, participants, reference/runs and metadata"
       },
       "returns": "weld object"
+    },
+    {
+      "id": "geometry.paths",
+      "module": "./geometry/paths.mjs",
+      "description": "Generic path, station and frame helpers for Smart Component generators.",
+      "parameters": {
+        "spec": "line, polyline, arc, helix, spiral or custom segment path spec"
+      },
+      "returns": "normalized path, station points, tangents, frames, samples and offset paths"
+    },
+    {
+      "id": "model.createSolverResult",
+      "module": "./model/solver-result.mjs",
+      "description": "Create a generic semantic solver result before generating project objects.",
+      "parameters": {
+        "input": "inputParameters, resolvedParameters, computedValues, diagnostics and objectRoleHints"
+      },
+      "returns": "normalized solver result"
+    },
+    {
+      "id": "model.solverDiagnostic",
+      "module": "./model/solver-result.mjs",
+      "description": "Normalize a solver or compliance diagnostic with parameter and object role references.",
+      "parameters": {
+        "input": "severity, code, message, rule/source references, measured/allowed values and fix hints"
+      },
+      "returns": "normalized diagnostic"
+    },
+    {
+      "id": "model.createRulePack",
+      "module": "./model/compliance.mjs",
+      "description": "Create a generic compliance rule pack descriptor.",
+      "parameters": {
+        "config": "id, title, jurisdiction, edition, sourceReferences, applicableComponentKinds and rules"
+      },
+      "returns": "normalized rule pack"
+    },
+    {
+      "id": "model.runRulePack",
+      "module": "./model/compliance.mjs",
+      "description": "Run a generic compliance rule pack against a component context and return diagnostics.",
+      "parameters": {
+        "rulePack": "rule pack descriptor",
+        "context": "componentKind, componentType, tags, measurements, parameters and object role context"
+      },
+      "returns": "rule pack run result with diagnostics"
+    },
+    {
+      "id": "model.sectioning",
+      "module": "./model/sectioning.mjs",
+      "description": "Estimate object weights, create transport sections and produce section schedules.",
+      "parameters": {
+        "project": "project JSON",
+        "libraries": "profiles and materials libraries",
+        "objectIds": "stored object ids to estimate or section"
+      },
+      "returns": "object estimates, transport sections and section schedule rows"
     }
   ],
   "$schema": "../../schemas/api-register.schema.json"

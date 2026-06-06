@@ -93,6 +93,14 @@ export function createMemberObject(project, profiles, options = {}) {
   const profile = options.profile || options.profileId || defaultProfileId(project, profiles, type);
   const material = options.material || projectDefaultMaterial(project);
   const modelType = options.memberType || type;
+  const defaultBim = {
+    name: `${titleCase(type)} ${mark}`,
+    propertySets: {
+      Identity: {
+        mark
+      }
+    }
+  };
   const member = {
     id,
     type: modelType,
@@ -103,18 +111,19 @@ export function createMemberObject(project, profiles, options = {}) {
     rotation: options.rotation || 0,
     cardinalPoint: options.cardinalPoint || "middle-center",
     fabrication: {
-      partMark: mark
+      ...(options.fabrication || {}),
+      partMark: options.fabrication?.partMark || mark
     },
     display: {
       color: type === "column" ? "#406b85" : "#3f657d",
       ...(options.display || {})
     },
     bim: {
-      name: `${titleCase(type)} ${mark}`,
+      ...defaultBim,
+      ...(options.bim || {}),
       propertySets: {
-        Identity: {
-          mark
-        }
+        ...defaultBim.propertySets,
+        ...(options.bim?.propertySets || {})
       }
     },
     authoring: {
@@ -128,6 +137,11 @@ export function createMemberObject(project, profiles, options = {}) {
   if (options.startPointRef) member.startPointRef = options.startPointRef;
   if (options.endPointRef) member.endPointRef = options.endPointRef;
   if (options.layoutAxis) member.layoutAxis = options.layoutAxis;
+  if (options.centerline) member.centerline = options.centerline;
+  if (options.sectionPlacement) member.sectionPlacement = options.sectionPlacement;
+  if (options.shapeModifiers) member.shapeModifiers = options.shapeModifiers;
+  if (options.placementIntent) member.placementIntent = options.placementIntent;
+  if (options.assemblyId) member.assemblyId = options.assemblyId;
   return member;
 }
 

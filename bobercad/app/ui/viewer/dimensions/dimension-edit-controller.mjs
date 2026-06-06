@@ -1,5 +1,5 @@
-import { clone, optionalPath, setPath } from "../../../engine/modules/connections/connection-schema.mjs";
-import { buildConnectionDimensions } from "../../../rendering/annotations/build-dimensions.mjs?v=reference-plane-1";
+import { clone, optionalPath, setPath } from "../../../engine/modules/smart-components/parameters.mjs?v=stair-route-ui-fit-2";
+import { buildSmartComponentDimensions } from "../../../rendering/annotations/build-dimensions.mjs?v=reference-plane-1";
 
 function sameValue(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -86,15 +86,15 @@ function applyDimensionValue(parameters, definition, dimension, value) {
   return true;
 }
 
-export function createDimensionEditController({ viewer, api, profiles, settings, getEditorApi, onProjectChange, openConnectionEditor }) {
-  let connectionId = null;
+export function createDimensionEditController({ viewer, api, profiles, settings, getEditorApi, onProjectChange, openSmartComponentEditor }) {
+  let smartComponentId = null;
   let path = null;
   let dimensionId = null;
   let mode = null;
   let editingLabel = false;
 
   function focus() {
-    return { connectionId, path, dimensionId, mode, editingLabel };
+    return { smartComponentId, path, dimensionId, mode, editingLabel };
   }
 
   function clearDimension({ render = true } = {}) {
@@ -108,13 +108,13 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
   }
 
   function clearAll() {
-    connectionId = null;
+    smartComponentId = null;
     clearDimension({ render: false });
     viewer.setDimensionOverlay(null);
   }
 
-  function selectConnection(nextConnectionId, options = {}) {
-    connectionId = nextConnectionId;
+  function selectSmartComponent(nextSmartComponentId, options = {}) {
+    smartComponentId = nextSmartComponentId;
     path = options.focusPath || null;
     dimensionId = options.focusDimensionId || null;
     mode = path ? options.focusMode || "select" : null;
@@ -131,16 +131,16 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
   }
 
   function renderDimensions() {
-    const connection = connectionId ? api.project().model.connections?.[connectionId] : null;
-    if (!connection) {
+    const smartComponent = smartComponentId ? api.project().model.smartComponentInstances?.[smartComponentId] : null;
+    if (!smartComponent) {
       viewer.setDimensionOverlay(null);
       return;
     }
-    viewer.setDimensionOverlay(buildConnectionDimensions({
+    viewer.setDimensionOverlay(buildSmartComponentDimensions({
       project: api.project(),
       profiles,
-      definition: api.definition(connectionId),
-      connectionId,
+      definition: api.definition(smartComponentId),
+      smartComponentId,
       activeParameterPath: path,
       activeDimensionId: dimensionId,
       activeParameterMode: mode,
@@ -150,7 +150,7 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
   }
 
   function refocusDimension(dimension) {
-    getEditorApi()?.selectConnection(dimension.connectionId, {
+    getEditorApi()?.selectSmartComponent(dimension.smartComponentId, {
       focusPath: dimension.parameter,
       focusDimensionId: dimension.dimensionId,
       focusMode: mode || "select",
@@ -160,9 +160,9 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
 
   function wireViewer() {
     viewer.setDimensionClickHandler((dimension) => {
-      const sameDimension = connectionId === dimension.connectionId && dimensionId === dimension.dimensionId;
+      const sameDimension = smartComponentId === dimension.smartComponentId && dimensionId === dimension.dimensionId;
       const nextMode = sameDimension && mode === "cursor" ? "select" : sameDimension ? "cursor" : "select";
-      getEditorApi()?.selectConnection(dimension.connectionId, {
+      getEditorApi()?.selectSmartComponent(dimension.smartComponentId, {
         focusPath: dimension.parameter,
         focusDimensionId: dimension.dimensionId,
         focusMode: nextMode,
@@ -172,13 +172,13 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
 
     viewer.setDimensionModeHandler((dimension, modePath, modeValue) => {
       try {
-        const definition = api.definition(dimension.connectionId);
+        const definition = api.definition(dimension.smartComponentId);
         if (!definition.parameters[modePath]) return false;
-        const parameters = clone(api.connection(dimension.connectionId).referenceParameters);
+        const parameters = clone(api.smartComponent(dimension.smartComponentId).referenceParameters);
         let changed = writeParameter(parameters, definition, modePath, modeValue);
         changed = seedModeValue(definition, parameters, dimension, modePath, modeValue) || changed;
         refocusDimension(dimension);
-        if (changed) onProjectChange(api.updateConnection(dimension.connectionId, parameters));
+        if (changed) onProjectChange(api.updateSmartComponent(dimension.smartComponentId, parameters));
         return true;
       } catch (error) {
         console.error(error);
@@ -192,8 +192,8 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
 
     viewer.setDimensionRepairHandler((dimension) => {
       try {
-        const nextProject = api.resolveConnectionDiagnostics(dimension.connectionId);
-        openConnectionEditor(dimension.connectionId);
+        const nextProject = api.resolveSmartComponentDiagnostics(dimension.smartComponentId);
+        openSmartComponentEditor(dimension.smartComponentId);
         onProjectChange(nextProject);
         return true;
       } catch (error) {
@@ -204,11 +204,11 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
 
     viewer.setDimensionValueHandler((dimension, value) => {
       try {
-        const definition = api.definition(dimension.connectionId);
-        const parameters = clone(api.connection(dimension.connectionId).referenceParameters);
+        const definition = api.definition(dimension.smartComponentId);
+        const parameters = clone(api.smartComponent(dimension.smartComponentId).referenceParameters);
         if (!applyDimensionValue(parameters, definition, dimension, value)) return false;
-        const nextProject = api.updateConnection(dimension.connectionId, parameters);
-        openConnectionEditor(dimension.connectionId);
+        const nextProject = api.updateSmartComponent(dimension.smartComponentId, parameters);
+        openSmartComponentEditor(dimension.smartComponentId);
         onProjectChange(nextProject);
         return true;
       } catch (error) {
@@ -221,9 +221,9 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
   wireViewer();
 
   return {
-    connectionId: () => connectionId,
+    smartComponentId: () => smartComponentId,
     focus,
-    selectConnection,
+    selectSmartComponent,
     clearDimension,
     clearAll,
     stopLabelEdit,

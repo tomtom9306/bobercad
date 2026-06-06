@@ -1,7 +1,7 @@
 import { dimensionOffset, featureBasis, finite, makeDimension, roleObject, v } from "../dimension-context.mjs";
 
 export function featureDepthDimension(ctx, spec) {
-  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
+  const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);
   const basis = featureBasis(ctx.project, feature);
   const depth = feature?.depth;
   if (!basis || !finite(depth) || depth <= 0) return null;

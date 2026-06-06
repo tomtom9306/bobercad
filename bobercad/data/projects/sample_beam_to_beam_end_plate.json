@@ -77,15 +77,15 @@
       "version": "0.1.0",
       "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
     },
-    "connections": {
-      "libraryId": "starter-connection-library",
-      "version": "0.1.0",
-      "path": "../libraries/connections/connection-register.json"
-    },
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
       "path": "../libraries/model-library/model-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
     }
   },
   "projectTree": {
@@ -284,7 +284,7 @@
       "type": "fillet-weld"
     },
     "conn_beam_to_beam_end_plate_1": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "manual-beam-to-beam-end-plate"
     },
     "cut_test_plane_trim": {
@@ -744,16 +744,16 @@
           "if_supported_beam_end",
           "if_end_plate_back"
         ],
-        "connectionIds": [
-          "conn_beam_to_beam_end_plate_1"
-        ],
         "objectIds": [
           "main_beam",
           "supported_beam",
           "end_plate_1",
           "bolts_end_plate_to_main_web"
         ],
-        "notes": "Incoming supported beam top is flush with supporting beam top. Supported beam top flange notch is stored as a member feature."
+        "notes": "Incoming supported beam top is flush with supporting beam top. Supported beam top flange notch is stored as a member feature.",
+        "smartComponentInstanceIds": [
+          "conn_beam_to_beam_end_plate_1"
+        ]
       }
     },
     "assemblies": {
@@ -765,7 +765,8 @@
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "asm_beam_to_beam_connection"
-        ]
+        ],
+        "smartComponentInstanceIds": []
       },
       "asm_beam_to_beam_connection": {
         "id": "asm_beam_to_beam_connection",
@@ -777,7 +778,7 @@
         "connectionZoneIds": [
           "cz_beam_to_beam_end_plate"
         ],
-        "connectionIds": [
+        "smartComponentInstanceIds": [
           "conn_beam_to_beam_end_plate_1"
         ]
       }
@@ -1248,53 +1249,6 @@
         }
       }
     },
-    "connections": {
-      "conn_beam_to_beam_end_plate_1": {
-        "id": "conn_beam_to_beam_end_plate_1",
-        "type": "manual-beam-to-beam-end-plate",
-        "mainMemberId": "main_beam",
-        "secondaryMemberId": "supported_beam",
-        "connectionZoneId": "cz_beam_to_beam_end_plate",
-        "assemblyId": "asm_beam_to_beam_connection",
-        "sourcePreset": {
-          "library": "connections",
-          "id": "beam_to_beam_end_plate_m16_2x3",
-          "version": "0.1.0"
-        },
-        "manualParts": {
-          "plateIds": [
-            "end_plate_1"
-          ],
-          "featureIds": [
-            "holes_end_plate_1",
-            "holes_main_beam_web_1",
-            "supported_beam_top_flange_notch"
-          ],
-          "fastenerGroupIds": [
-            "bolts_end_plate_to_main_web"
-          ],
-          "weldIds": [
-            "weld_supported_beam_to_end_plate"
-          ]
-        },
-        "generator": {
-          "status": "not-parametric-yet",
-          "ownedObjectIds": [],
-          "manualObjectIds": [],
-          "objectRoles": {}
-        },
-        "referenceParameters": {
-          "supportedBeamTopFlushWithMainBeamTop": true,
-          "topFlangeNotched": true,
-          "boltRows": 3,
-          "boltColumns": 2
-        },
-        "authoring": {
-          "source": "manual-from-reference-sketch",
-          "notes": "Project stores all parts explicitly. Preset id is provenance only."
-        }
-      }
-    },
     "trimJoints": {
       "cut_test_plane_trim": {
         "id": "cut_test_plane_trim",
@@ -1364,6 +1318,63 @@
           "transparent": true,
           "opacity": 0.18,
           "color": "#22c55e"
+        }
+      }
+    },
+    "smartComponentInstances": {
+      "conn_beam_to_beam_end_plate_1": {
+        "id": "conn_beam_to_beam_end_plate_1",
+        "type": "manual-beam-to-beam-end-plate",
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "beam_to_beam_end_plate_m16_2x3",
+          "version": "0.1.0"
+        },
+        "inputs": {
+          "main": {
+            "memberId": "main_beam"
+          },
+          "secondary": {
+            "memberId": "supported_beam"
+          },
+          "connectionZoneId": "cz_beam_to_beam_end_plate",
+          "assemblyId": "asm_beam_to_beam_connection"
+        },
+        "referenceParameters": {
+          "supportedBeamTopFlushWithMainBeamTop": true,
+          "topFlangeNotched": true,
+          "boltRows": 3,
+          "boltColumns": 2
+        },
+        "parameters": {
+          "supportedBeamTopFlushWithMainBeamTop": true,
+          "topFlangeNotched": true,
+          "boltRows": 3,
+          "boltColumns": 2
+        },
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {},
+        "ownedObjectIds": [],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "not-parametric-yet",
+        "definition": "manual-beam-to-beam-end-plate",
+        "health": "ok",
+        "diagnostics": [],
+        "authoring": {
+          "source": "smart-component-library",
+          "notes": "Project stores all parts explicitly. Preset id is provenance only.",
+          "sourceComponent": {
+            "library": "smart-components",
+            "id": "beam_to_beam_end_plate_m16_2x3",
+            "version": "0.1.0"
+          }
         }
       }
     }

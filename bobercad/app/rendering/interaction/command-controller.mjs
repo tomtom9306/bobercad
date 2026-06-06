@@ -1,4 +1,5 @@
-import { createMemberCreateController } from "./member-create-controller.mjs?v=snap-settings-json-1";
+import { matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs?v=axis-guide-shortcuts-1";
+import { createMemberCreateController } from "./member-create-controller.mjs?v=chain-local-axes-1";
 
 function isTextInput(target) {
   const tag = target?.tagName?.toLowerCase();
@@ -18,6 +19,7 @@ export function createCommandController({
   autoRelationsEnabled
 }) {
   let activeCommand = null;
+  const shortcuts = settings.shortcuts?.commands || {};
   const memberCreate = createMemberCreateController({
     viewer,
     api,
@@ -57,13 +59,12 @@ export function createCommandController({
 
   document.addEventListener("keydown", (event) => {
     if (isTextInput(event.target)) return;
-    const key = event.key.toLowerCase();
-    if (!commandActive() && key === "b") {
+    if (!commandActive() && matchesShortcut(event, shortcutSetting(shortcuts, "createBeam", "B"))) {
       event.preventDefault();
       startMemberCommand("beam");
       return;
     }
-    if (!commandActive() && key === "c") {
+    if (!commandActive() && matchesShortcut(event, shortcutSetting(shortcuts, "createColumn", "C"))) {
       event.preventDefault();
       startMemberCommand("column");
       return;

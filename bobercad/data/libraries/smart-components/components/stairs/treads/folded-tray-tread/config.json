@@ -1,0 +1,121 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "folded-tray-tread",
+  "kind": "stair-tread",
+  "title": "Folded Tray Tread Set",
+  "version": 1,
+  "roles": {
+    "treadPattern": "_tread_pattern",
+    "treadAssembly": "_tread_assembly"
+  },
+  "parameters": {
+    "geometry.width": {
+      "kind": "positiveNumber",
+      "label": "Tread width",
+      "unit": "mm",
+      "default": 900
+    },
+    "geometry.rise": {
+      "kind": "positiveNumber",
+      "label": "Rise",
+      "unit": "mm",
+      "default": 180
+    },
+    "treads.thickness": {
+      "kind": "positiveNumber",
+      "label": "Tray thickness",
+      "unit": "mm",
+      "default": 8
+    },
+    "treads.depth": {
+      "kind": "positiveNumber",
+      "label": "Tread depth",
+      "unit": "mm",
+      "default": 280
+    },
+    "treads.material": {
+      "kind": "text",
+      "label": "Tray material",
+      "default": "S355"
+    },
+    "treads.frontLip": {
+      "kind": "positiveNumber",
+      "label": "Front lip",
+      "unit": "mm",
+      "default": 50
+    },
+    "treads.closedRisers": {
+      "kind": "boolean",
+      "label": "Closed risers",
+      "default": false
+    },
+    "treads.finish": {
+      "kind": "text",
+      "label": "Tray finish",
+      "default": "powder-coated"
+    },
+    "treads.woodThickness": {
+      "kind": "positiveNumber",
+      "label": "Timber thickness",
+      "unit": "mm",
+      "default": 32
+    },
+    "treads.woodInset": {
+      "kind": "nonNegativeNumber",
+      "label": "Timber side inset",
+      "unit": "mm",
+      "default": 35
+    },
+    "treads.woodNosing": {
+      "kind": "nonNegativeNumber",
+      "label": "Timber nosing",
+      "unit": "mm",
+      "default": 25
+    },
+    "treads.woodMaterial": {
+      "kind": "text",
+      "label": "Timber material",
+      "default": "OAK_TIMBER"
+    },
+    "treads.woodFinish": {
+      "kind": "text",
+      "label": "Timber finish",
+      "default": "clear-sealed-oak"
+    }
+  },
+  "presets": {
+    "folded-tray-tread": {
+      "id": "folded-tray-tread",
+      "version": "0.1.0",
+      "name": "Folded tray tread",
+      "parameters": {
+        "meta": {
+          "family": "folded-tray-tread"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "treads",
+        "label": "Treads",
+        "items": [
+          "geometry.width",
+          "geometry.rise",
+          "treads.thickness",
+          "treads.depth",
+          "treads.material",
+          "treads.frontLip",
+          "treads.closedRisers",
+          "treads.finish",
+          "treads.woodThickness",
+          "treads.woodInset",
+          "treads.woodNosing",
+          "treads.woodMaterial",
+          "treads.woodFinish"
+        ]
+      }
+    ]
+  }
+}

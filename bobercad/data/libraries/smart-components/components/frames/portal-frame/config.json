@@ -1,0 +1,78 @@
+{
+  "$schema": "../../../../../../app/schemas/smart-component.schema.json",
+  "type": "portal-frame",
+  "kind": "frame",
+  "title": "Portal Frame",
+  "version": 1,
+  "roles": {
+    "leftColumn": "_left_column",
+    "rightColumn": "_right_column",
+    "leftRafter": "_left_rafter",
+    "rightRafter": "_right_rafter",
+    "frameAssembly": "_assembly"
+  },
+  "parameters": {
+    "geometry.span": {
+      "kind": "positiveNumber",
+      "label": "Span",
+      "unit": "mm"
+    },
+    "geometry.eavesHeight": {
+      "kind": "positiveNumber",
+      "label": "Eaves height",
+      "unit": "mm"
+    },
+    "geometry.apexRise": {
+      "kind": "nonNegativeNumber",
+      "label": "Apex rise",
+      "unit": "mm"
+    },
+    "members.columnProfile": {
+      "kind": "text",
+      "label": "Column profile"
+    },
+    "members.rafterProfile": {
+      "kind": "text",
+      "label": "Rafter profile"
+    }
+  },
+  "presets": {
+    "portal_frame_demo": {
+      "id": "portal_frame_demo",
+      "version": "0.1.0",
+      "name": "Portal frame",
+      "parameters": {
+        "geometry": {
+          "span": 6000,
+          "eavesHeight": 3600,
+          "apexRise": 900
+        },
+        "members": {
+          "columnProfile": "DEMO_I_300X150X8X12",
+          "rafterProfile": "DEMO_I_200X100X8X12"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "geometry",
+        "label": "Geometry",
+        "items": [
+          "geometry.span",
+          "geometry.eavesHeight",
+          "geometry.apexRise"
+        ]
+      },
+      {
+        "id": "members",
+        "label": "Members",
+        "items": [
+          "members.columnProfile",
+          "members.rafterProfile"
+        ]
+      }
+    ]
+  }
+}

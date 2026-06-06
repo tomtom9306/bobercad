@@ -40,37 +40,73 @@ function filterProjectIds(project, ids, options = {}) {
   });
 }
 
-export function connectionOptionalObjectIds(connection) {
-  const ids = connection.generator?.manualObjectIds;
+export function smartComponentDetachedObjectIds(instance) {
+  const ids = instance.detachedObjectIds;
   if (ids === undefined) return [];
-  if (!Array.isArray(ids)) fail(`${connection.id}: generator.manualObjectIds must be an array`);
+  if (!Array.isArray(ids)) fail(`${instance.id}: detachedObjectIds must be an array`);
   return ids;
 }
 
-export function connectionOwnedObjectIds(connection) {
-  const generator = connection.generator || {};
-  const owned = Array.isArray(generator.ownedObjectIds) ? generator.ownedObjectIds : [];
-  const manual = new Set(connectionOptionalObjectIds(connection));
-  const manualParts = flattenIds(connection.manualParts).filter((id) => !manual.has(id));
-  return unique([...owned, ...flattenIds(generator.objectRoles), ...manualParts]);
+export function smartComponentOwnedObjectIds(instance) {
+  const owned = Array.isArray(instance.ownedObjectIds) ? instance.ownedObjectIds : [];
+  return unique([...owned, ...flattenIds(instance.objectRoles)]);
 }
 
-export function connectionObjectIds(project, connection, options = {}) {
-  return filterProjectIds(project, [
-    connection.id,
-    ...connectionOwnedObjectIds(connection),
-    ...connectionOptionalObjectIds(connection)
-  ], options);
+export function smartComponentObjectIds(project, instance, options = {}) {
+  if (!instance) return [];
+  const seen = options.seenSmartComponentIds instanceof Set ? options.seenSmartComponentIds : new Set();
+  if (seen.has(instance.id)) fail(`${instance.id}: cyclic Smart Component object ownership`);
+  seen.add(instance.id);
+  const directIds = [
+    instance.id,
+    ...smartComponentOwnedObjectIds(instance),
+    ...smartComponentDetachedObjectIds(instance)
+  ];
+  const childIds = directIds.flatMap((objectId) => {
+    const child = objectId !== instance.id ? project.model?.smartComponentInstances?.[objectId] : null;
+    return child ? smartComponentObjectIds(project, child, { ...options, seenSmartComponentIds: seen }) : [];
+  });
+  return filterProjectIds(project, [...directIds, ...childIds], options);
 }
 
-export function affectedConnectionsForMember(project, memberId) {
-  return Object.values(project.model?.connections || {}).filter((connection) => (
-    connection.mainMemberId === memberId || connection.secondaryMemberId === memberId
+export function smartComponentRoot(project, instance) {
+  let current = instance || null;
+  const seen = new Set();
+  while (current?.parentInstanceId) {
+    if (seen.has(current.id)) fail(`${current.id}: cyclic Smart Component parent chain`);
+    seen.add(current.id);
+    const parent = project.model?.smartComponentInstances?.[current.parentInstanceId];
+    if (!parent) break;
+    current = parent;
+  }
+  return current;
+}
+
+export function smartComponentForObject(project, objectId) {
+  return Object.values(project.model?.smartComponentInstances || {}).find((instance) => (
+    smartComponentReferencesObject(instance, objectId)
+  )) || null;
+}
+
+export function smartComponentRootForObject(project, objectId) {
+  return smartComponentRoot(project, smartComponentForObject(project, objectId));
+}
+
+function instanceMemberIds(instance) {
+  return unique([
+    instance.inputs?.main?.memberId,
+    instance.inputs?.secondary?.memberId
+  ]);
+}
+
+export function affectedSmartComponentsForMember(project, memberId) {
+  return Object.values(project.model?.smartComponentInstances || {}).filter((instance) => (
+    instanceMemberIds(instance).includes(memberId)
   ));
 }
 
-export function affectedConnectionIdsForMember(project, memberId) {
-  return affectedConnectionsForMember(project, memberId).map((connection) => connection.id);
+export function affectedSmartComponentIdsForMember(project, memberId) {
+  return affectedSmartComponentsForMember(project, memberId).map((instance) => instance.id);
 }
 
 function featureSourceMemberId(feature) {
@@ -115,9 +151,9 @@ export function memberDependencyObjectIds(project, memberId, options = {}) {
   const ids = options.includeMember === false ? [] : [memberId];
   ids.push(...memberSourceFeatureObjectIds(project, memberId));
   for (const trimJoint of affectedTrimJointsForMember(project, memberId)) ids.push(...trimJointObjectIds(project, trimJoint, options));
-  for (const connection of affectedConnectionsForMember(project, memberId)) {
-    if (options.includeConnectionMembers !== false) ids.push(connection.mainMemberId, connection.secondaryMemberId);
-    ids.push(...connectionObjectIds(project, connection, options));
+  for (const instance of affectedSmartComponentsForMember(project, memberId)) {
+    if (options.includeSmartComponentMembers !== false) ids.push(...instanceMemberIds(instance));
+    ids.push(...smartComponentObjectIds(project, instance, options));
   }
   return unique(ids);
 }
@@ -127,10 +163,10 @@ export function featureDependencyObjectIds(project, featureId, options = {}) {
   const ids = [featureId];
   if (feature?.ownerId) ids.push(feature.ownerId);
   ids.push(featureSourceMemberId(feature));
-  for (const connection of Object.values(project.model?.connections || {})) {
-    if (!connectionReferencesObject(connection, featureId) && !connectionReferencesObject(connection, feature?.ownerId)) continue;
-    if (options.includeConnectionMembers) ids.push(connection.mainMemberId, connection.secondaryMemberId);
-    ids.push(...connectionObjectIds(project, connection, options));
+  for (const instance of Object.values(project.model?.smartComponentInstances || {})) {
+    if (!smartComponentReferencesObject(instance, featureId) && !smartComponentReferencesObject(instance, feature?.ownerId)) continue;
+    if (options.includeSmartComponentMembers) ids.push(...instanceMemberIds(instance));
+    ids.push(...smartComponentObjectIds(project, instance, options));
   }
   return filterProjectIds(project, ids, options);
 }
@@ -162,7 +198,7 @@ export function affectedObjectIdsForFeatureChange(beforeProject, afterProject, f
   ]);
 }
 
-export function connectionReferencesObject(connection, objectId) {
-  if (connection.id === objectId) return true;
-  return connectionOwnedObjectIds(connection).includes(objectId) || connectionOptionalObjectIds(connection).includes(objectId);
+export function smartComponentReferencesObject(instance, objectId) {
+  if (instance.id === objectId) return true;
+  return smartComponentOwnedObjectIds(instance).includes(objectId) || smartComponentDetachedObjectIds(instance).includes(objectId);
 }

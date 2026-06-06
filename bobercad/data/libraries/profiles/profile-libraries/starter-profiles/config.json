@@ -421,6 +421,124 @@
         "massPerLength": 10.99
       }
     },
+    "DEMO_RHS_60X40X4": {
+      "id": "DEMO_RHS_60X40X4",
+      "designation": "Demo RHS 60x40x4",
+      "profileType": "rhs",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                -20,
+                -30
+              ],
+              [
+                20,
+                -30
+              ],
+              [
+                20,
+                30
+              ],
+              [
+                -20,
+                30
+              ]
+            ]
+          },
+          {
+            "id": "inner",
+            "role": "void",
+            "points": [
+              [
+                -16,
+                -26
+              ],
+              [
+                -16,
+                26
+              ],
+              [
+                16,
+                26
+              ],
+              [
+                16,
+                -26
+              ]
+            ]
+          }
+        ]
+      },
+      "properties": {
+        "area": 736,
+        "massPerLength": 5.78
+      }
+    },
+    "DEMO_SHS_50X50X4": {
+      "id": "DEMO_SHS_50X50X4",
+      "designation": "Demo SHS 50x50x4",
+      "profileType": "shs",
+      "section": {
+        "type": "polygonal-section",
+        "origin": "centroid",
+        "contours": [
+          {
+            "id": "outer",
+            "role": "solid",
+            "points": [
+              [
+                -25,
+                -25
+              ],
+              [
+                25,
+                -25
+              ],
+              [
+                25,
+                25
+              ],
+              [
+                -25,
+                25
+              ]
+            ]
+          },
+          {
+            "id": "inner",
+            "role": "void",
+            "points": [
+              [
+                -21,
+                -21
+              ],
+              [
+                -21,
+                21
+              ],
+              [
+                21,
+                21
+              ],
+              [
+                21,
+                -21
+              ]
+            ]
+          }
+        ]
+      },
+      "properties": {
+        "area": 736,
+        "massPerLength": 5.78
+      }
+    },
     "DEMO_SHS_100X100X5": {
       "id": "DEMO_SHS_100X100X5",
       "designation": "Demo SHS 100x100x5",

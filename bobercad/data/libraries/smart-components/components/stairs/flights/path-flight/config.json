@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "path-flight",
+  "kind": "stair-flight",
+  "title": "Path Flight",
+  "version": 1,
+  "roles": {
+    "flightPattern": "_flight_pattern"
+  },
+  "parameters": {},
+  "presets": {
+    "path-flight": {
+      "id": "path-flight",
+      "version": "0.1.0",
+      "name": "Path flight",
+      "parameters": {
+        "meta": {
+          "family": "path-flight"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "flight",
+        "label": "Flight",
+        "items": []
+      }
+    ]
+  }
+}

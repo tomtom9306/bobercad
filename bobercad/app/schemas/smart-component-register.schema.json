@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bobercad/app/schemas/smart-component-register.schema.json",
+  "title": "Smart Component Register Schema",
+  "description": "Schema for a Smart Component library register. The register is the app-visible list of component folders.",
+  "type": "object",
+  "required": [
+    "libraryUi",
+    "components"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "libraryUi": {
+      "type": "string",
+      "pattern": "^\\./"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^\\./"
+      }
+    }
+  },
+  "additionalProperties": false
+}

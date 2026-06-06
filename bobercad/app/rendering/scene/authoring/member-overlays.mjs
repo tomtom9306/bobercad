@@ -23,8 +23,9 @@ function axisColor(axis, settings = {}, active = false) {
   return axes.zColor || "#2563eb";
 }
 
-function globalAxisGuides(origin, settings = {}, activeAxis = null) {
-  if (!origin) return { lines: [], labels: [] };
+function globalAxisGuides(origins, settings = {}, activeAxis = null) {
+  const originList = Array.isArray(origins?.[0]) ? origins : finitePoint(origins) ? [origins] : [];
+  if (!originList.length) return { lines: [], labels: [] };
   const span = settings.globalAxesSpan || settings.globalAxisGuideSpan || 1600;
   const guides = [
     { axis: "x", direction: [1, 0, 0] },
@@ -33,18 +34,21 @@ function globalAxisGuides(origin, settings = {}, activeAxis = null) {
   ];
   const lines = [];
   const labels = [];
-  for (const guide of guides) {
-    const active = activeAxis === guide.axis;
-    const color = axisColor(guide.axis, settings, active);
-    const negative = v.sub(origin, v.mul(guide.direction, span));
-    const positive = v.add(origin, v.mul(guide.direction, span));
-    lines.push(line([negative, positive], color, { kind: `global-${guide.axis}-axis-guide`, axis: guide.axis }));
-    labels.push({
-      point: positive,
-      text: guide.axis.toUpperCase(),
-      color,
-      className: active ? "snap global-axis active" : "snap global-axis"
-    });
+  for (const [originIndex, origin] of originList.entries()) {
+    if (!finitePoint(origin)) continue;
+    for (const guide of guides) {
+      const active = activeAxis === guide.axis;
+      const color = axisColor(guide.axis, settings, active);
+      const negative = v.sub(origin, v.mul(guide.direction, span));
+      const positive = v.add(origin, v.mul(guide.direction, span));
+      lines.push(line([negative, positive], color, { kind: `global-${guide.axis}-axis-guide`, axis: guide.axis, originIndex }));
+      labels.push({
+        point: positive,
+        text: guide.axis.toUpperCase(),
+        color,
+        className: active ? "snap global-axis active" : "snap global-axis"
+      });
+    }
   }
   return { lines, labels };
 }
@@ -62,7 +66,7 @@ function profileAxisGuides(profileAxes = [], settings = {}, activeAxis = null) {
     lines.push(line([negative, positive], color, { kind: `profile-${guide.axis}-axis-guide`, axis: guide.axis, objectId: guide.memberId }));
     labels.push({
       point: positive,
-      text: `L${String(guide.axis || "").toUpperCase()}`,
+      text: String(guide.axis || "").toUpperCase(),
       color,
       className: active ? "snap profile-axis active" : "snap profile-axis"
     });
@@ -166,7 +170,7 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
   }
   lines.push(...snapAxisSourceLines(options.snap, options.settings || {}));
   const axisGuides = globalAxisGuides(
-    options.globalAxesOrigin,
+    options.globalAxesOrigins || options.globalAxesOrigin,
     { ...(options.settings || {}), globalAxesSpan: options.globalAxesSpan },
     activeAxisFromSnap(options.snap, "global-axis")
   );

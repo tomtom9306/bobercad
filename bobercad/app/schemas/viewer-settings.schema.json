@@ -124,11 +124,42 @@
       },
       "additionalProperties": true
     },
+    "shortcuts": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/shortcutBinding"
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/shortcutBinding"
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/shortcutBinding"
+              }
+            }
+          }
+        ]
+      }
+    },
     "authoring": {
       "type": "object",
       "properties": {
         "autoAxisRelations": {
           "type": "boolean"
+        },
+        "axisGuideMode": {
+          "enum": [
+            "global",
+            "local"
+          ]
         },
         "snapTolerancePx": {
           "type": "number",
@@ -599,6 +630,19 @@
         },
         {
           "type": "number"
+        }
+      ]
+    },
+    "shortcutBinding": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       ]
     },

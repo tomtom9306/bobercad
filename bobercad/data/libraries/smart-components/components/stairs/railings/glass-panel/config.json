@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "glass-panel-railing",
+  "kind": "stair-railing",
+  "title": "Glass Panel Railing",
+  "version": 1,
+  "roles": {
+    "railingPattern": "_railing_pattern",
+    "railingAssembly": "_railing_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "glass-panel-railing": {
+      "id": "glass-panel-railing",
+      "version": "0.1.0",
+      "name": "Glass panel railing",
+      "parameters": {
+        "meta": {
+          "family": "glass-panel-railing"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "railing",
+        "label": "Railing",
+        "items": []
+      }
+    ]
+  }
+}

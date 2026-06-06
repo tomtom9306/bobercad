@@ -1,3 +1,5 @@
+import { matchesShortcut, shortcutSetting } from "../../../rendering/interaction/keyboard-shortcuts.mjs?v=axis-guide-shortcuts-1";
+
 const AXES = [
   { id: "x", label: "X", index: 0 },
   { id: "y", label: "Y", index: 1 },
@@ -53,7 +55,7 @@ function parseNumber(input) {
   return finiteNumber(value) ? value : null;
 }
 
-function input(className, value, label, onApply, onConfirm, onCancel) {
+function input(className, value, label, shortcuts, onApply, onConfirm, onCancel) {
   const node = document.createElement("input");
   node.type = "text";
   node.inputMode = "decimal";
@@ -69,11 +71,11 @@ function input(className, value, label, onApply, onConfirm, onCancel) {
 
   node.addEventListener("change", apply);
   node.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "confirmTransform", "Enter"))) {
       event.preventDefault();
       event.stopPropagation();
       if (apply()) onConfirm();
-    } else if (event.key === "Escape") {
+    } else if (matchesShortcut(event, shortcutSetting(shortcuts, "cancelTransform", "Escape"))) {
       event.preventDefault();
       event.stopPropagation();
       onCancel();
@@ -100,7 +102,8 @@ export function mountMemberTransformPanel({
   onNudge,
   onIncrementChange,
   onConfirm,
-  onCancel
+  onCancel,
+  shortcuts = {}
 }) {
   let state = null;
 
@@ -140,6 +143,7 @@ export function mountMemberTransformPanel({
         "member-transform-input",
         formatDelta(delta),
         `${axis.label} move`,
+        shortcuts,
         (value) => onDeltaChange(axis.id, value),
         onConfirm,
         onCancel
@@ -148,6 +152,7 @@ export function mountMemberTransformPanel({
         "member-transform-input",
         formatNumber(after),
         `${axis.label} coordinate`,
+        shortcuts,
         (value) => onResultChange(axis.id, value),
         onConfirm,
         onCancel
@@ -174,6 +179,7 @@ export function mountMemberTransformPanel({
         "member-transform-step-input",
         formatNumber(state.increment),
         "Move step",
+        shortcuts,
         (value) => onIncrementChange(value),
         onConfirm,
         onCancel

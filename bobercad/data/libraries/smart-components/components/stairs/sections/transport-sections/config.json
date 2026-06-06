@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "transport-sections",
+  "kind": "sectioning",
+  "title": "Transport Sections",
+  "version": 1,
+  "roles": {
+    "sectionPattern": "_section_pattern"
+  },
+  "parameters": {},
+  "presets": {
+    "transport-sections": {
+      "id": "transport-sections",
+      "version": "0.1.0",
+      "name": "Transport sections",
+      "parameters": {
+        "meta": {
+          "family": "transport-sections"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "sections",
+        "label": "Sections",
+        "items": []
+      }
+    ]
+  }
+}

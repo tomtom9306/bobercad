@@ -187,10 +187,9 @@ function validateFile(filePath) {
 
 function defaultFiles() {
   const projects = walk(path.join(ROOT, "bobercad/data/projects")).filter((file) => file.endsWith(".json"));
-  const connectionConfigs = walk(path.join(ROOT, "bobercad/data/libraries/connections/connections")).filter((file) => file.endsWith(`${path.sep}config.json`));
-  const componentRegister = path.join(ROOT, "bobercad/data/libraries/connection-components/component-register.json");
-  const componentConfigs = walk(path.join(ROOT, "bobercad/data/libraries/connection-components/components")).filter((file) => file.endsWith(`${path.sep}config.json`));
-  return [...projects, ...connectionConfigs, componentRegister, ...componentConfigs];
+  const smartComponentRegister = path.join(ROOT, "bobercad/data/libraries/smart-components/smart-component-register.json");
+  const smartComponentConfigs = walk(path.join(ROOT, "bobercad/data/libraries/smart-components/components")).filter((file) => file.endsWith(`${path.sep}config.json`));
+  return [...projects, smartComponentRegister, ...smartComponentConfigs];
 }
 
 function formatError(result, error) {

@@ -1,0 +1,61 @@
+{
+  "$schema": "../../../../../../app/schemas/smart-component.schema.json",
+  "type": "warehouse",
+  "kind": "building",
+  "title": "Warehouse",
+  "version": 1,
+  "roles": {
+    "framePattern": "_frame_pattern",
+    "accessStair": "_access_stair"
+  },
+  "parameters": {
+    "building.frameCount": {
+      "kind": "positiveInteger",
+      "label": "Frames"
+    },
+    "building.frameSpacing": {
+      "kind": "positiveNumber",
+      "label": "Frame spacing",
+      "unit": "mm"
+    },
+    "building.span": {
+      "kind": "positiveNumber",
+      "label": "Span",
+      "unit": "mm"
+    },
+    "building.eavesHeight": {
+      "kind": "positiveNumber",
+      "label": "Eaves height",
+      "unit": "mm"
+    }
+  },
+  "presets": {
+    "warehouse_demo": {
+      "id": "warehouse_demo",
+      "version": "0.1.0",
+      "name": "Warehouse",
+      "parameters": {
+        "building": {
+          "frameCount": 4,
+          "frameSpacing": 6000,
+          "span": 8000,
+          "eavesHeight": 4200
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "building",
+        "label": "Building",
+        "items": [
+          "building.frameCount",
+          "building.frameSpacing",
+          "building.span",
+          "building.eavesHeight"
+        ]
+      }
+    ]
+  }
+}

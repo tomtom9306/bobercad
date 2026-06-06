@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "post-and-rail",
+  "kind": "stair-railing",
+  "title": "Post And Rail",
+  "version": 1,
+  "roles": {
+    "railingPattern": "_railing_pattern",
+    "railingAssembly": "_railing_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "post-and-rail": {
+      "id": "post-and-rail",
+      "version": "0.1.0",
+      "name": "Post and rail",
+      "parameters": {
+        "meta": {
+          "family": "post-and-rail"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "railing",
+        "label": "Railing",
+        "items": []
+      }
+    ]
+  }
+}

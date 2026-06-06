@@ -13,6 +13,7 @@ const REQUIRED_FILES = [
   "docs/workflows/codex-workflow.md",
   "scripts/check_repo.js",
   "scripts/check_repo_structure.js",
+  "scripts/generate_stair_samples.mjs",
   "scripts/validate_json_schema.js",
   "scripts/check_viewer_geometry.js",
 
@@ -23,10 +24,9 @@ const REQUIRED_FILES = [
   "bobercad/app/schemas/profile-library.schema.json",
   "bobercad/app/schemas/fastener-library.schema.json",
   "bobercad/app/schemas/model-library.schema.json",
-  "bobercad/app/schemas/connection.schema.json",
-  "bobercad/app/schemas/connection-register.schema.json",
-  "bobercad/app/schemas/connection-component.schema.json",
-  "bobercad/app/schemas/connection-component-register.schema.json",
+  "bobercad/app/schemas/smart-component.schema.json",
+  "bobercad/app/schemas/smart-component-register.schema.json",
+  "bobercad/app/schemas/rule-pack.schema.json",
 
   "bobercad/app/engine/api/api-register.json",
   "bobercad/app/engine/api/project/project-api.mjs",
@@ -36,10 +36,15 @@ const REQUIRED_FILES = [
   "bobercad/app/engine/api/geometry/geometry-api.mjs",
   "bobercad/app/engine/api/geometry/vectors.mjs",
   "bobercad/app/engine/api/geometry/planes.mjs",
-  "bobercad/app/engine/api/connections/connection-api.mjs",
-  "bobercad/app/engine/api/connections/builders.mjs",
-  "bobercad/app/engine/api/connections/checks.mjs",
-  "bobercad/app/engine/api/connections/geometry.mjs",
+  "bobercad/app/engine/api/geometry/paths.mjs",
+  "bobercad/app/engine/api/model/authoring-context.mjs",
+  "bobercad/app/engine/api/model/builders.mjs",
+  "bobercad/app/engine/api/model/checks.mjs",
+  "bobercad/app/engine/api/model/compliance.mjs",
+  "bobercad/app/engine/api/model/connection-primitives.mjs",
+  "bobercad/app/engine/api/model/sectioning.mjs",
+  "bobercad/app/engine/api/model/solver-result.mjs",
+  "bobercad/app/engine/api/model/geometry.mjs",
   "bobercad/app/engine/core/math.mjs",
   "bobercad/app/engine/core/model.mjs",
   "bobercad/app/engine/geometry/csg.mjs",
@@ -47,13 +52,10 @@ const REQUIRED_FILES = [
   "bobercad/app/engine/geometry/member-geometry.mjs",
   "bobercad/app/engine/geometry/polygon.mjs",
   "bobercad/app/engine/store/project-store.mjs",
-  "bobercad/app/engine/modules/connections/connection-registry.mjs",
-  "bobercad/app/engine/modules/connections/component-registry.mjs",
-  "bobercad/app/engine/modules/connections/component-config-groups.mjs",
-  "bobercad/app/engine/modules/connections/connection-generator.mjs",
-  "bobercad/app/engine/modules/connections/connection-recipe.mjs",
-  "bobercad/app/engine/modules/connections/connection-schema.mjs",
-  "bobercad/app/engine/modules/connections/README.md",
+  "bobercad/app/engine/modules/smart-components/smart-component-registry.mjs",
+  "bobercad/app/engine/modules/smart-components/smart-component-generator.mjs",
+  "bobercad/app/engine/modules/smart-components/smart-component-recipe.mjs",
+  "bobercad/app/engine/modules/smart-components/parameters.mjs",
   "bobercad/app/engine/modules/drawings/drawing-generator.mjs",
   "bobercad/app/engine/modules/reports/report-generator.mjs",
 
@@ -91,6 +93,20 @@ const REQUIRED_FILES = [
   "bobercad/data/projects/sample_beam_to_beam_end_plate.json",
   "bobercad/data/projects/sample_authoring_nc1_test.json",
   "bobercad/data/projects/sample_boolean_beam.json",
+  "bobercad/data/projects/sample_stair_straight_basic.json",
+  "bobercad/data/projects/sample_stair_straight_with_landing.json",
+  "bobercad/data/projects/sample_stair_l_shape.json",
+  "bobercad/data/projects/sample_stair_u_switchback.json",
+  "bobercad/data/projects/sample_stair_winder.json",
+  "bobercad/data/projects/sample_stair_curved.json",
+  "bobercad/data/projects/sample_stair_spiral.json",
+  "bobercad/data/projects/sample_stair_helical.json",
+  "bobercad/data/projects/sample_stair_mono_stringer.json",
+  "bobercad/data/projects/sample_stair_grating_treads.json",
+  "bobercad/data/projects/sample_stair_glass_rail.json",
+  "bobercad/data/projects/sample_stair_transport_split_weight.json",
+  "bobercad/data/projects/sample_stair_manual_split.json",
+  "bobercad/data/projects/sample_stair_compliance_failures.json",
   "bobercad/data/libraries/materials/material-register.json",
   "bobercad/data/libraries/materials/material-libraries/starter-materials/config.json",
   "bobercad/data/libraries/profiles/profile-register.json",
@@ -99,31 +115,18 @@ const REQUIRED_FILES = [
   "bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json",
   "bobercad/data/libraries/model-library/model-register.json",
   "bobercad/data/libraries/model-library/models/starter-frames/config.json",
-  "bobercad/data/libraries/connections/connection-register.json",
-  "bobercad/data/libraries/connections/README.md",
-  "bobercad/data/libraries/connections/connection-library-ui.mjs",
-  "bobercad/data/libraries/connections/connection-ui.mjs",
-  "bobercad/data/libraries/connections/parameter-values.mjs",
-  "bobercad/data/libraries/connections/connections/fin-plate/config.json",
-  "bobercad/data/libraries/connections/connections/moment-end-plate/config.json",
-  "bobercad/data/libraries/connection-components/component-register.json",
-  "bobercad/data/libraries/connection-components/README.md",
-  "bobercad/data/libraries/connection-components/components/metadata/design-status/config.json",
-  "bobercad/data/libraries/connection-components/components/metadata/design-status/build.mjs",
-  "bobercad/data/libraries/connection-components/components/plates/secondary-web-plate/config.json",
-  "bobercad/data/libraries/connection-components/components/plates/secondary-web-plate/build.mjs",
-  "bobercad/data/libraries/connection-components/components/features/secondary-member-gap-trim/config.json",
-  "bobercad/data/libraries/connection-components/components/features/secondary-member-gap-trim/build.mjs",
-  "bobercad/data/libraries/connection-components/components/fasteners/web-bolt-pattern/config.json",
-  "bobercad/data/libraries/connection-components/components/fasteners/web-bolt-pattern/build.mjs",
-  "bobercad/data/libraries/connection-components/components/cuts/support-flange-clearance/config.json",
-  "bobercad/data/libraries/connection-components/components/cuts/support-flange-clearance/build.mjs",
-  "bobercad/data/libraries/connection-components/components/welds/support-edge-fillet/config.json",
-  "bobercad/data/libraries/connection-components/components/welds/support-edge-fillet/build.mjs",
-  "bobercad/data/libraries/connection-components/components/stiffeners/support-web-stiffeners/config.json",
-  "bobercad/data/libraries/connection-components/components/stiffeners/support-web-stiffeners/build.mjs",
-  "bobercad/data/libraries/connection-components/components/plates/member-end-plate/config.json",
-  "bobercad/data/libraries/connection-components/components/plates/member-end-plate/build.mjs"
+  "bobercad/data/libraries/smart-components/smart-component-register.json",
+  "bobercad/data/libraries/smart-components/smart-component-library-ui.mjs",
+  "bobercad/data/libraries/smart-components/smart-component-ui.mjs",
+  "bobercad/data/libraries/smart-components/parameter-values.mjs",
+  "bobercad/data/libraries/smart-components/components/connections/fin-plate/config.json",
+  "bobercad/data/libraries/smart-components/components/connections/moment-end-plate/config.json",
+  "bobercad/data/libraries/smart-components/components/connections/base-plate/config.json",
+  "bobercad/data/libraries/smart-components/components/connections/apex-gusset/config.json",
+  "bobercad/data/libraries/smart-components/components/frames/portal-frame/config.json",
+  "bobercad/data/libraries/smart-components/components/frames/portal-frame/build.mjs",
+  "bobercad/data/libraries/smart-components/components/buildings/warehouse/config.json",
+  "bobercad/data/libraries/smart-components/components/buildings/warehouse/build.mjs"
 ];
 
 const FORBIDDEN_ROOT_DIRS = ["viewer", "libraries", "projects", "schemas"];
@@ -196,9 +199,8 @@ function checkJsonSchemaRefs(errors) {
 function checkJsonSchemas(errors) {
   const targets = [
     ...walk(path.join(ROOT, "bobercad/data/projects")).filter((item) => item.endsWith(".json")),
-    ...walk(path.join(ROOT, "bobercad/data/libraries/connections/connections")).filter((item) => item.endsWith(`${path.sep}config.json`)),
-    path.join(ROOT, "bobercad/data/libraries/connection-components/component-register.json"),
-    ...walk(path.join(ROOT, "bobercad/data/libraries/connection-components/components")).filter((item) => item.endsWith(`${path.sep}config.json`))
+    path.join(ROOT, "bobercad/data/libraries/smart-components/smart-component-register.json"),
+    ...walk(path.join(ROOT, "bobercad/data/libraries/smart-components/components")).filter((item) => item.endsWith(`${path.sep}config.json`))
   ];
   for (const file of targets) {
     try {
@@ -221,8 +223,8 @@ function checkFolderRegister(errors, registerRelative, key) {
   }
 }
 
-function checkConnectionFolders(errors) {
-  const registerRelative = "bobercad/data/libraries/connections/connection-register.json";
+function checkSmartComponentFolders(errors) {
+  const registerRelative = "bobercad/data/libraries/smart-components/smart-component-register.json";
   const registerPath = path.join(ROOT, registerRelative);
   const register = readJson(registerRelative);
   if (typeof register.libraryUi !== "string") {
@@ -233,7 +235,7 @@ function checkConnectionFolders(errors) {
       fail(errors, `${registerRelative}: libraryUi file does not exist: ${register.libraryUi}`);
     }
   }
-  for (const item of register.connections || []) {
+  for (const item of register.components || []) {
     const folder = path.resolve(path.dirname(registerPath), item);
     for (const fileName of ["config.json"]) {
       const filePath = path.join(folder, fileName);
@@ -241,21 +243,16 @@ function checkConnectionFolders(errors) {
         fail(errors, `${registerRelative}: ${item} missing ${fileName}`);
       }
     }
-    for (const fileName of ["build.mjs", "ui.mjs"]) {
-      const filePath = path.join(folder, fileName);
-      if (fs.existsSync(filePath)) fail(errors, `${registerRelative}: ${item} should use recipe/component JSON, not ${fileName}`);
-    }
     const definition = JSON.parse(fs.readFileSync(path.join(folder, "config.json"), "utf8"));
-    if (!Array.isArray(definition.recipe) || !definition.recipe.length) {
-      fail(errors, `${registerRelative}: ${item} must declare a recipe`);
+    if (!definition.kind) fail(errors, `${registerRelative}: ${item} must declare kind`);
+    const buildPath = path.join(folder, "build.mjs");
+    if ((!Array.isArray(definition.recipe) || !definition.recipe.length) && (!fs.existsSync(buildPath) || !fs.statSync(buildPath).isFile())) {
+      fail(errors, `${registerRelative}: ${item} must declare a recipe or build.mjs`);
     }
-    if (!Array.isArray(definition.componentRefs) || !definition.componentRefs.length) {
-      fail(errors, `${registerRelative}: ${item} must declare componentRefs`);
-    }
-    for (const ownedField of ["roles", "requiredPlateRoles", "components", "parameters", "dimensions", "ui"]) {
-      if (Object.hasOwn(definition, ownedField)) {
-        fail(errors, `${registerRelative}: ${item} should keep ${ownedField} in reusable connection components, not the connection config`);
-      }
+    if (Object.hasOwn(definition, "componentRefs")) fail(errors, `${registerRelative}: ${item} must not declare componentRefs`);
+    const normalizedItem = item.replaceAll("\\", "/");
+    if (definition.kind === "connection" && !normalizedItem.includes("/connections/")) {
+      fail(errors, `${registerRelative}: connection Smart Component should live under components/connections: ${item}`);
     }
     if (item.endsWith("fin-plate")) {
       if (definition.parameters?.["holes.memberDepth"]) {
@@ -266,25 +263,6 @@ function checkConnectionFolders(errors) {
       }
       if ((definition.dimensions || []).some((entry) => entry.parameter === "holes.memberDepth")) {
         fail(errors, `${item}: fin plate dimensions should not show member hole depth`);
-      }
-    }
-  }
-}
-
-function checkConnectionComponentFolders(errors) {
-  const registerRelative = "bobercad/data/libraries/connection-components/component-register.json";
-  const registerPath = path.join(ROOT, registerRelative);
-  const register = readJson(registerRelative);
-  const forbiddenComponentPathWords = ["fin-plate", "moment-end-plate", "assembly"];
-  for (const item of register.components || []) {
-    if (forbiddenComponentPathWords.some((word) => item.includes(word))) {
-      fail(errors, `${registerRelative}: component folder should be generic, not connection-specific: ${item}`);
-    }
-    const folder = path.resolve(path.dirname(registerPath), item);
-    for (const fileName of ["config.json", "build.mjs"]) {
-      const filePath = path.join(folder, fileName);
-      if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-        fail(errors, `${registerRelative}: ${item} missing ${fileName}`);
       }
     }
   }
@@ -333,28 +311,41 @@ function checkProjectFiles(errors) {
       }
     }
 
-    for (const connection of Object.values(model.connections || {})) {
-      if (!connection.connectionZoneId || !connection.assemblyId) continue;
-      const zone = model.connectionZones?.[connection.connectionZoneId];
-      const assembly = model.assemblies?.[connection.assemblyId];
+    if (model.connections) fail(errors, `${relative}: use model.smartComponentInstances, not model.connections`);
+
+    for (const smartComponent of Object.values(model.smartComponentInstances || {})) {
+      if (smartComponent.sourcePreset || smartComponent.manualParts || smartComponent.generator) {
+        fail(errors, `${relative}: ${smartComponent.id} still has old connection generator fields`);
+      }
+      const zoneId = smartComponent.inputs?.connectionZoneId;
+      const assemblyId = smartComponent.inputs?.assemblyId;
+      if (!zoneId || !assemblyId) continue;
+      const zone = model.connectionZones?.[zoneId];
+      const assembly = model.assemblies?.[assemblyId];
       if (!zone) {
-        fail(errors, `${relative}: ${connection.id} points to missing connection zone ${connection.connectionZoneId}`);
+        fail(errors, `${relative}: ${smartComponent.id} points to missing connection zone ${zoneId}`);
         continue;
       }
       if (!assembly) {
-        fail(errors, `${relative}: ${connection.id} points to missing assembly ${connection.assemblyId}`);
+        fail(errors, `${relative}: ${smartComponent.id} points to missing assembly ${assemblyId}`);
         continue;
       }
-      if (!(assembly.connectionZoneIds || []).includes(connection.connectionZoneId)) {
-        fail(errors, `${relative}: ${connection.assemblyId} must list connectionZoneIds entry ${connection.connectionZoneId}`);
+      if (!(assembly.connectionZoneIds || []).includes(zoneId)) {
+        fail(errors, `${relative}: ${assemblyId} must list connectionZoneIds entry ${zoneId}`);
+      }
+      if (!(zone.smartComponentInstanceIds || []).includes(smartComponent.id)) {
+        fail(errors, `${relative}: ${zoneId} must list smartComponentInstanceIds entry ${smartComponent.id}`);
+      }
+      if (!(assembly.smartComponentInstanceIds || []).includes(smartComponent.id)) {
+        fail(errors, `${relative}: ${assemblyId} must list smartComponentInstanceIds entry ${smartComponent.id}`);
       }
     }
   }
 }
 
-function emptyGeneratedConnectionModel(project) {
+function emptyGeneratedSmartComponentModel(project) {
   const next = clone(project);
-  for (const collection of ["groups", "interfaces", "connectionZones", "assemblies", "plates", "holePatterns", "objectPatterns", "features", "fastenerGroups", "welds", "connections"]) {
+  for (const collection of ["groups", "interfaces", "connectionZones", "assemblies", "plates", "holePatterns", "objectPatterns", "features", "fastenerGroups", "welds", "smartComponentInstances"]) {
     next.model[collection] = {};
   }
   next.objectIndex = {};
@@ -396,421 +387,350 @@ async function withFileFetch(callback) {
   }
 }
 
-async function checkAutoConnectionLifecycle(errors) {
+async function checkAutoSmartComponentLifecycle(errors) {
   await withFileFetch(async () => {
-    const { loadConnectionDefinitions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/modules/connections/connection-registry.mjs")).href);
+    const { loadSmartComponentDefinitions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/modules/smart-components/smart-component-registry.mjs")).href);
     const { createProjectStore } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/store/project-store.mjs")).href);
-    const { buildConnectionDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/annotations/build-dimensions.mjs")).href);
+    const { buildSmartComponentDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/annotations/build-dimensions.mjs")).href);
     const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/scene/build-scene.mjs")).href);
-    const { resolveInterface } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/geometry/member-geometry.mjs")).href);
-    const { requiredReferencePlane } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/geometry/feature-plane.mjs")).href);
-    const { v } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/core/math.mjs")).href);
-    const project = emptyGeneratedConnectionModel(readJson("bobercad/data/projects/sample_fin_plate.json"));
-    const profiles = readJson("bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json");
+
+    const baseProject = readJson("bobercad/data/projects/sample_fin_plate.json");
+    const profilesLibrary = readJson("bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json");
+    const profiles = profilesLibrary.profiles;
     const fasteners = readJson("bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json");
     const viewerSettings = readJson("bobercad/app/ui/viewer/viewer-settings.json");
-    const connectionCatalog = await loadConnectionDefinitions();
+    const smartComponentCatalog = await loadSmartComponentDefinitions();
+    const sceneHasObject = (scene, objectId, predicate = () => true) => [...scene.faces, ...scene.lines].some((item) => item.objectId === objectId && predicate(item));
+
     const beamToBeamProject = readJson("bobercad/data/projects/sample_beam_to_beam_fin_plate.json");
-    const beamToBeamConnectionId = "connection_beam_to_beam_fin_plate_1";
-    const beamToBeamScene = buildScene(beamToBeamProject, profiles, fasteners, viewerSettings);
-    const activeBeamToBeamScene = buildScene(beamToBeamProject, profiles, fasteners, viewerSettings, { activeConnectionId: beamToBeamConnectionId });
-    for (const notchId of ["connection_beam_to_beam_fin_plate_1_top_flange_notch", "connection_beam_to_beam_fin_plate_1_bottom_flange_notch"]) {
+    const beamToBeamSmartComponentId = "connection_beam_to_beam_fin_plate_1";
+    const beamToBeamSmartComponent = beamToBeamProject.model.smartComponentInstances[beamToBeamSmartComponentId];
+    if (!beamToBeamSmartComponent) fail(errors, "Smart Component lifecycle: beam-to-beam sample should store a smartComponentInstances entry");
+    const beamToBeamScene = buildScene(beamToBeamProject, profilesLibrary, fasteners, viewerSettings);
+    const activeBeamToBeamScene = buildScene(beamToBeamProject, profilesLibrary, fasteners, viewerSettings, { activeSmartComponentId: beamToBeamSmartComponentId });
+    for (const notchRole of ["topNotch", "bottomNotch"]) {
+      const notchId = beamToBeamSmartComponent?.objectRoles?.[notchRole];
       const notch = beamToBeamProject.model.features[notchId];
       if (notch?.display?.visible !== true || notch.display?.suppressed !== true) {
-        fail(errors, `beam-to-beam notch ${notchId} should be active-connection-only cutter geometry`);
+        fail(errors, `Smart Component lifecycle: beam-to-beam notch ${notchId} should be active-component-only cutter geometry`);
       }
-      if (beamToBeamScene.lines.some((line) => line.objectId === notchId)) {
-        fail(errors, `beam-to-beam notch ${notchId} should stay hidden outside connection editing`);
+      if (sceneHasObject(beamToBeamScene, notchId)) {
+        fail(errors, `Smart Component lifecycle: beam-to-beam notch ${notchId} should stay hidden outside Smart Component editing`);
       }
-      if (!activeBeamToBeamScene.lines.some((line) => line.objectId === notchId)) {
-        fail(errors, `beam-to-beam notch ${notchId} should contribute visible cutter edges while editing its connection`);
-      }
-    }
-    const beamToBeamStore = createProjectStore({ project: beamToBeamProject, profiles, connectionCatalog, fasteners });
-    const beamToBeamParameters = beamToBeamStore.project().model.connections[beamToBeamConnectionId].referenceParameters;
-    beamToBeamStore.updateConnection(beamToBeamConnectionId, beamToBeamParameters);
-    for (const notchId of ["connection_beam_to_beam_fin_plate_1_top_flange_notch", "connection_beam_to_beam_fin_plate_1_bottom_flange_notch"]) {
-      const regeneratedNotch = beamToBeamStore.project().model.features[notchId];
-      if (regeneratedNotch?.display?.visible !== true || regeneratedNotch.display?.suppressed !== true || regeneratedNotch.display?.opacity < 0.2) {
-        fail(errors, `generated beam-to-beam notch ${notchId} should be stored as active-connection-only cutter geometry`);
+      if (!sceneHasObject(activeBeamToBeamScene, notchId)) {
+        fail(errors, `Smart Component lifecycle: beam-to-beam notch ${notchId} should render while editing its Smart Component`);
       }
     }
-    const storedStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
+
+    const storedStore = createProjectStore({ project: baseProject, profiles, smartComponentCatalog, fasteners });
     const storedBefore = storedStore.project().model.plates.connection_fin_plate_1_fin_plate.center;
     storedStore.moveMemberWithLayout("beam_1", [0, 0, 125]);
     const storedAfter = storedStore.project().model.plates.connection_fin_plate_1_fin_plate.center;
     if (Math.abs(storedAfter[2] - (storedBefore[2] + 125)) > 1e-6) {
-      fail(errors, `auto connection lifecycle: stored fin plate should follow secondary member vertical moves, got ${JSON.stringify(storedAfter)}`);
+      fail(errors, `Smart Component lifecycle: stored fin plate should follow secondary member vertical moves, got ${JSON.stringify(storedAfter)}`);
     }
-    const angledStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
-    const angledBeam = angledStore.project().model.members.beam_1;
-    angledStore.setMemberPhysicalEndpoint("beam_1", "end", [angledBeam.end[0], angledBeam.end[1], angledBeam.end[2] + 450]);
-    const angledProject = angledStore.project();
-    const angledPlate = angledProject.model.plates.connection_fin_plate_1_fin_plate;
-    if (!Array.isArray(angledPlate.outline) || angledPlate.outline.length < 4) {
-      fail(errors, `auto connection lifecycle: angled fin plate should store a clipped outline, got ${JSON.stringify(angledPlate.outline)}`);
-    }
-    const secondaryInterface = resolveInterface(angledProject, profiles, "if_beam_1_start_web");
-    const supportInterface = resolveInterface(angledProject, profiles, "if_column_1_x_plus_fin_plate", {
-      referencePoint: secondaryInterface.origin,
-      preferReferencePoint: true
+
+    const diagnosticsStore = createProjectStore({ project: baseProject, profiles, smartComponentCatalog, fasteners });
+    const finPlateId = "connection_fin_plate_1";
+    const badParameters = diagnosticsStore.smartComponent(finPlateId).referenceParameters;
+    diagnosticsStore.updateSmartComponent(finPlateId, {
+      ...badParameters,
+      plate: { ...badParameters.plate, height: 1000 },
+      bolts: { ...badParameters.bolts, columns: 2, gauge: 0 }
     });
-    const activeTrim = angledProject.model.trimJoints.connection_fin_plate_1_beam_gap_trim;
-    const activeTrimPlane = requiredReferencePlane(angledProject, activeTrim.operations[0].referencePlaneIds[0]);
-    const supportNormalDot = Math.abs(v.dot(v.norm(activeTrimPlane.normal), v.norm(supportInterface.normal)));
-    if (supportNormalDot < 0.99) fail(errors, "auto connection lifecycle: active beam trim should clip to the support face plane");
-    const beamGapDistance = v.dot(v.sub(angledProject.model.members.beam_1.start, supportInterface.origin), supportInterface.normal);
-    const beamGap = angledProject.model.connections.connection_fin_plate_1.referenceParameters.fit.beamGap;
-    if (Math.abs(beamGapDistance - beamGap) > 1e-6) {
-      fail(errors, `auto connection lifecycle: active beam trim should keep the requested support gap, got ${beamGapDistance}`);
+    const diagnostics = diagnosticsStore.smartComponent(finPlateId).diagnostics || [];
+    if (!diagnostics.some((entry) => entry.code === "fin-plate-bolt-gauge-required")) {
+      fail(errors, `Smart Component lifecycle: invalid bolt columns should report a diagnostic, got ${JSON.stringify(diagnostics)}`);
     }
-    const platePoint = (point) => v.add(angledPlate.center, v.add(v.mul(angledPlate.localAxisY, point[0]), v.mul(angledPlate.localAxisZ, point[1])));
-    const behindSupport = (angledPlate.outline || []).some((point) => v.dot(v.sub(platePoint(point), supportInterface.origin), supportInterface.normal) < -1e-6);
-    if (behindSupport) fail(errors, "auto connection lifecycle: angled fin plate outline crosses behind the support face");
-    const supportEdge = (angledPlate.outline || [])
-      .map((point) => ({ point, distance: Math.abs(v.dot(v.sub(platePoint(point), supportInterface.origin), supportInterface.normal)) }))
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 2)
-      .map((entry) => entry.point);
-    const supportEdgeHeight = Math.abs((supportEdge[0]?.[1] || 0) - (supportEdge[1]?.[1] || 0));
-    if (supportEdgeHeight < (angledPlate.height || 0) - 1e-6) {
-      fail(errors, `auto connection lifecycle: angled fin plate should extend before trimming, support edge height ${supportEdgeHeight}`);
-    }
-    const highGapStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
-    const highGapBeam = highGapStore.project().model.members.beam_1;
-    highGapStore.setMemberPhysicalEndpoint("beam_1", "end", [highGapBeam.end[0], highGapBeam.end[1], highGapBeam.end[2] + 450]);
-    const highGapParameters = highGapStore.project().model.connections.connection_fin_plate_1.referenceParameters;
-    highGapStore.updateConnection("connection_fin_plate_1", {
-      ...highGapParameters,
-      fit: { ...highGapParameters.fit, beamGap: 200 }
-    });
-    const highGapProject = highGapStore.project();
-    const highGapPlate = highGapProject.model.plates.connection_fin_plate_1_fin_plate;
-    const highGapPlateHoles = highGapProject.model.features.connection_fin_plate_1_holes_plate;
-    const highGapSecondary = resolveInterface(highGapProject, profiles, "if_beam_1_start_web");
-    const highGapSupport = resolveInterface(highGapProject, profiles, "if_column_1_x_plus_fin_plate", {
-      referencePoint: highGapSecondary.origin,
-      preferReferencePoint: true
-    });
-    const highGapSupportNormal = v.dot(highGapSupport.normal, highGapPlate.localAxisY) < 0 ? v.mul(highGapSupport.normal, -1) : highGapSupport.normal;
-    const highGapSupportPlane = v.add(highGapSupport.origin, v.mul(highGapSupportNormal, highGapParameters.plate.edgeOffset || 0));
-    const highGapLineDenominator = v.dot(highGapPlate.localAxisY, highGapSupportNormal);
-    const highGapSupportEdge = Math.abs(highGapLineDenominator) <= 1e-9
-      ? highGapSupportPlane
-      : v.add(
-        highGapProject.model.members.beam_1.start,
-        v.mul(highGapPlate.localAxisY, v.dot(v.sub(highGapSupportPlane, highGapProject.model.members.beam_1.start), highGapSupportNormal) / highGapLineDenominator)
-      );
-    const highGapToBeam = v.dot(v.sub(highGapProject.model.members.beam_1.start, highGapSupportEdge), highGapPlate.localAxisY);
-    const expectedHighGapWidth = highGapParameters.plate.length;
-    const highGapCenterStation = v.dot(v.sub(highGapPlate.center, highGapSupportEdge), highGapPlate.localAxisY);
-    const highGapHoleStation = v.dot(v.sub(highGapPlateHoles.reference.origin, highGapSupportEdge), highGapPlate.localAxisY);
-    if (Math.abs(highGapPlate.width - expectedHighGapWidth) > 1e-6 || Math.abs(highGapCenterStation - expectedHighGapWidth / 2) > 1e-6) {
-      fail(errors, `auto connection lifecycle: fin plate should keep its parameter length across large beam gaps, width ${highGapPlate.width}, center station ${highGapCenterStation}, expected width ${expectedHighGapWidth}`);
-    }
-    if (Math.abs(highGapHoleStation - (highGapToBeam + highGapParameters.plate.length / 2)) > 1e-6) {
-      fail(errors, `auto connection lifecycle: fin plate holes should stay referenced from the fitted beam end, station ${highGapHoleStation}`);
-    }
-    const twoColumnStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
-    const twoColumnParameters = twoColumnStore.project().model.connections.connection_fin_plate_1.referenceParameters;
-    twoColumnStore.updateConnection("connection_fin_plate_1", {
-      ...twoColumnParameters,
-      bolts: { ...twoColumnParameters.bolts, columns: 2, gauge: 0 }
-    });
-    const twoColumnConnection = twoColumnStore.project().model.connections.connection_fin_plate_1;
-    const twoColumnDiagnostics = twoColumnConnection.generator?.diagnostics || [];
-    if (!twoColumnDiagnostics.some((entry) => entry.code === "fin-plate-bolt-gauge-required")) {
-      fail(errors, `auto connection lifecycle: two bolt columns with zero gauge should report a diagnostic, got ${JSON.stringify(twoColumnDiagnostics)}`);
-    }
-    const twoColumnPattern = twoColumnStore.project().model.holePatterns.connection_fin_plate_1_bolt_grid;
-    const distinctColumns = new Set((twoColumnPattern.positions || []).map((point) => Math.round(point[0] * 1000) / 1000));
-    if (distinctColumns.size !== 1) {
-      fail(errors, `auto connection lifecycle: zero gauge should stay literal instead of auto-spacing, got ${JSON.stringify(twoColumnPattern.positions)}`);
-    }
-    const resolverStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
-    const resolverParameters = resolverStore.project().model.connections.connection_fin_plate_1.referenceParameters;
-    resolverStore.updateConnection("connection_fin_plate_1", {
-      ...resolverParameters,
-      plate: { ...resolverParameters.plate, height: 1000 },
-      bolts: { ...resolverParameters.bolts, columns: 2, gauge: 0 }
-    });
-    const diagnosticProject = resolverStore.project();
-    const diagnosticDimensions = buildConnectionDimensions({
-      project: diagnosticProject,
-      profiles: profiles.profiles,
-      definition: connectionCatalog.connectionDefinitions?.["fin-plate"] || resolverStore.definition("connection_fin_plate_1"),
-      connectionId: "connection_fin_plate_1"
+    const diagnosticDimensions = buildSmartComponentDimensions({
+      project: diagnosticsStore.project(),
+      profiles,
+      definition: diagnosticsStore.definition(finPlateId),
+      smartComponentId: finPlateId
     });
     const issueParameters = new Set((diagnosticDimensions.labels || [])
       .filter((label) => label.issueSeverity === "error")
       .map((label) => label.parameter));
     if (!issueParameters.has("plate.height")) {
-      fail(errors, `auto connection lifecycle: diagnostic dimensions should highlight bad parameters, got ${[...issueParameters].join(", ")}`);
+      fail(errors, `Smart Component lifecycle: diagnostic dimensions should highlight bad parameters, got ${[...issueParameters].join(", ")}`);
     }
-    resolverStore.resolveConnectionDiagnostics("connection_fin_plate_1");
-    const resolvedConnection = resolverStore.project().model.connections.connection_fin_plate_1;
-    if (resolvedConnection.generator?.diagnostics?.length) {
-      fail(errors, `auto connection lifecycle: resolver should clear adjustable fin plate diagnostics, got ${resolvedConnection.generator.diagnostics.map((item) => item.code).join(", ")}`);
+    diagnosticsStore.resolveSmartComponentDiagnostics(finPlateId);
+    if ((diagnosticsStore.smartComponent(finPlateId).diagnostics || []).length) {
+      fail(errors, "Smart Component lifecycle: resolver should clear adjustable fin plate diagnostics");
     }
-    const fastenerHoleStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
-    const fastenerHoleParameters = fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters;
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...fastenerHoleParameters,
-      holes: { ...fastenerHoleParameters.holes, tolerance: "normal" }
+
+    const fastenerHoleStore = createProjectStore({ project: baseProject, profiles, smartComponentCatalog, fasteners });
+    const normalParameters = fastenerHoleStore.smartComponent(finPlateId).referenceParameters;
+    fastenerHoleStore.updateSmartComponent(finPlateId, {
+      ...normalParameters,
+      holes: { ...normalParameters.holes, tolerance: "normal" }
     });
     if (fastenerHoleStore.project().model.holePatterns.connection_fin_plate_1_bolt_grid.holeDiameter !== 18) {
-      fail(errors, "auto connection lifecycle: normal hole tolerance should use the selected fastener default hole diameter");
+      fail(errors, "Smart Component lifecycle: normal hole tolerance should use the selected fastener default hole diameter");
     }
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters,
-      bolts: { ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.bolts, fastenerRef: "HOOK_M12" },
-      holes: { ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.holes, tolerance: "normal" }
+    const hookParameters = fastenerHoleStore.smartComponent(finPlateId).referenceParameters;
+    fastenerHoleStore.updateSmartComponent(finPlateId, {
+      ...hookParameters,
+      bolts: { ...hookParameters.bolts, fastenerRef: "HOOK_M12" },
+      holes: { ...hookParameters.holes, tolerance: "normal" }
     });
     if (fastenerHoleStore.project().model.holePatterns.connection_fin_plate_1_bolt_grid.holeDiameter !== 14) {
-      fail(errors, "auto connection lifecycle: changing fastener should change normal hole diameter from fastener catalog data");
+      fail(errors, "Smart Component lifecycle: changing fastener should change normal hole diameter from fastener catalog data");
     }
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters,
-      bolts: { ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.bolts, fastenerRef: "M16_8_8" },
-      holes: { ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.holes, tolerance: "tight" }
-    });
-    if (fastenerHoleStore.project().model.holePatterns.connection_fin_plate_1_bolt_grid.holeDiameter !== 17) {
-      fail(errors, "auto connection lifecycle: tight tolerance should use fastener catalog tight hole diameter");
-    }
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters,
-      holes: { ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.holes, tolerance: "loose" }
-    });
-    if (fastenerHoleStore.project().model.holePatterns.connection_fin_plate_1_bolt_grid.holeDiameter !== 20) {
-      fail(errors, "auto connection lifecycle: loose tolerance should use fastener catalog loose hole diameter");
-    }
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters,
-      holes: { ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.holes, tolerance: "custom", customDiameter: 21 }
-    });
-    if (fastenerHoleStore.project().model.holePatterns.connection_fin_plate_1_bolt_grid.holeDiameter !== 21) {
-      fail(errors, "auto connection lifecycle: custom hole tolerance should use custom diameter");
-    }
-    const washerParameters = fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters;
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...washerParameters,
-      bolts: { ...washerParameters.bolts, length: 80 },
-      washers: { head: false, nut: true }
-    });
-    const washerFastenerGroup = fastenerHoleStore.project().model.fastenerGroups.connection_fin_plate_1_bolts;
-    const washerAssembly = washerFastenerGroup.assembly?.washers;
-    if (washerAssembly?.head !== false || washerAssembly?.nut !== true) {
-      fail(errors, `auto connection lifecycle: fin plate washer options should be stored on the generated fastener group, got ${JSON.stringify(washerAssembly)}`);
-    }
-    if (washerFastenerGroup.assembly?.length !== 80) {
-      fail(errors, `auto connection lifecycle: fin plate bolt length should be stored on the generated fastener group, got ${washerFastenerGroup.assembly?.length}`);
-    }
-    if (Math.abs((washerFastenerGroup.assembly?.gripLength || 0) - 18) > 1e-6) {
-      fail(errors, `auto connection lifecycle: fin plate grip length should be plate plus secondary web thickness, got ${washerFastenerGroup.assembly?.gripLength}`);
-    }
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters,
-      bolts: {
-        ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.bolts,
-        nutPositionMode: "custom",
-        nutOffset: 7
-      }
-    });
-    if (fastenerHoleStore.project().model.fastenerGroups.connection_fin_plate_1_bolts.assembly?.nutOffset !== 7) {
-      fail(errors, "auto connection lifecycle: custom fin plate nut offset should be stored only when custom nut position is selected");
-    }
-    fastenerHoleStore.updateConnection("connection_fin_plate_1", {
-      ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters,
-      bolts: {
-        ...fastenerHoleStore.project().model.connections.connection_fin_plate_1.referenceParameters.bolts,
-        nutPositionMode: "auto",
-        nutOffset: 7
-      }
-    });
-    if (Object.hasOwn(fastenerHoleStore.project().model.fastenerGroups.connection_fin_plate_1_bolts.assembly || {}, "nutOffset")) {
-      fail(errors, "auto connection lifecycle: auto fin plate nut position should not store custom nut offset on the generated fastener group");
-    }
-    const customPatternStore = createProjectStore({ project: readJson("bobercad/data/projects/sample_fin_plate.json"), profiles, connectionCatalog, fasteners });
-    const customPatternParameters = customPatternStore.project().model.connections.connection_fin_plate_1.referenceParameters;
-    customPatternStore.updateConnection("connection_fin_plate_1", {
-      ...customPatternParameters,
-      plate: { ...customPatternParameters.plate, height: 176 },
-      bolts: {
-        ...customPatternParameters.bolts,
-        rows: 4,
-        columns: 2,
-        verticalPositionMode: "custom",
-        horizontalPositionMode: "custom",
-        topEdgeDistance: 25,
-        supportEdgeDistance: 35,
-        rowSpacingMode: "custom",
-        columnSpacingMode: "custom",
-        rowSpacings: [35, 40, 45],
-        columnSpacings: [50]
-      }
-    });
-    const customPatternProject = customPatternStore.project();
-    const customPatternConnection = customPatternProject.model.connections.connection_fin_plate_1;
-    if (customPatternConnection.generator?.diagnostics?.length) {
-      fail(errors, `auto connection lifecycle: custom fin plate bolt pattern should be valid, got ${customPatternConnection.generator.diagnostics.map((item) => item.code).join(", ")}`);
-    }
-    const customPattern = customPatternProject.model.holePatterns.connection_fin_plate_1_bolt_grid;
-    const customFeature = customPatternProject.model.features.connection_fin_plate_1_holes_plate;
-    const customPlate = customPatternProject.model.plates.connection_fin_plate_1_fin_plate;
-    const toPlateLocal = (position) => {
-      const world = v.add(customFeature.reference.origin, v.add(v.mul(customFeature.reference.localAxisY, position[0]), v.mul(customFeature.reference.localAxisZ, position[1])));
-      const offset = v.sub(world, customPlate.center);
-      return [
-        Math.round(v.dot(offset, customPlate.localAxisY) * 1000) / 1000,
-        Math.round(v.dot(offset, customPlate.localAxisZ) * 1000) / 1000
-      ];
-    };
-    const customPlatePositions = customPattern.positions.map(toPlateLocal);
-    const customYs = [...new Set(customPlatePositions.map((position) => position[0]))].sort((a, b) => a - b);
-    const customZs = [...new Set(customPlatePositions.map((position) => position[1]))].sort((a, b) => b - a);
-    if (JSON.stringify(customYs) !== JSON.stringify([-55, -5]) || JSON.stringify(customZs) !== JSON.stringify([63, 28, -12, -57])) {
-      fail(errors, `auto connection lifecycle: custom fin plate bolt positions are wrong, got y=${JSON.stringify(customYs)} z=${JSON.stringify(customZs)}`);
-    }
-    const washerGroup = washerFastenerGroup;
-    const washerPlate = fastenerHoleStore.project().model.plates.connection_fin_plate_1_fin_plate;
-    if (v.dot(v.norm(washerGroup.orientation.axis), v.norm(washerPlate.normal)) > -0.99) {
-      fail(errors, "auto connection lifecycle: fin plate fastener axis should run from the fin plate side into the secondary web");
-    }
-    const angledParameters = angledProject.model.connections.connection_fin_plate_1.referenceParameters;
-    angledStore.updateConnection("connection_fin_plate_1", {
-      ...angledParameters,
-      bolts: { ...angledParameters.bolts, parallelToSupport: true }
-    });
-    const supportAlignedPlate = angledStore.project().model.plates.connection_fin_plate_1_fin_plate;
-    const plateYDot = Math.abs(v.dot(v.norm(supportAlignedPlate.localAxisY), v.norm(angledPlate.localAxisY)));
-    const plateZDot = Math.abs(v.dot(v.norm(supportAlignedPlate.localAxisZ), v.norm(angledPlate.localAxisZ)));
-    if (plateYDot < 0.999 || plateZDot < 0.999) fail(errors, "auto connection lifecycle: support-parallel bolts should not rotate the fin plate");
-    const supportAlignedPlateHoles = angledStore.project().model.features.connection_fin_plate_1_holes_plate;
-    const supportAlignedPattern = angledStore.project().model.holePatterns.connection_fin_plate_1_bolt_grid;
-    const layout = supportAlignedPattern.layoutReference;
-    if (!layout) fail(errors, "auto connection lifecycle: parallel fin plate bolts should store a placement layout reference");
-    const beamAxisDot = Math.abs(v.dot(v.norm(layout.localAxisY), v.norm(supportAlignedPlateHoles.reference.localAxisY)));
-    const plateNormal = supportAlignedPlate.normal;
-    const projectedSupportZ = v.norm(v.sub(
-      supportInterface.localAxisZ,
-      v.mul(plateNormal, v.dot(supportInterface.localAxisZ, plateNormal))
-    ));
-    const supportAxisDot = Math.abs(v.dot(v.norm(layout.localAxisZ), projectedSupportZ));
-    if (beamAxisDot < 0.99 || supportAxisDot < 0.99) {
-      fail(errors, "auto connection lifecycle: parallel fin plate bolts should place one axis with the beam and one with the support");
-    }
-    const alignedParameters = angledStore.project().model.connections.connection_fin_plate_1.referenceParameters;
-    angledStore.updateConnection("connection_fin_plate_1", {
-      ...alignedParameters,
-      fit: { ...alignedParameters.fit, clipBeam: false }
-    });
-    const disabledTrim = angledStore.project().model.trimJoints.connection_fin_plate_1_beam_gap_trim;
-    if (disabledTrim?.operations?.[0]?.enabled !== false) {
-      fail(errors, "auto connection lifecycle: disabled beam clip should leave the trim operation stored but inactive");
-    }
-    angledStore.setMemberPhysicalEndpoint("beam_1", "start", [0, 0, 1500]);
-    const unclippedStart = angledStore.project().model.members.beam_1.start;
-    if (Math.abs(unclippedStart[0]) > 1e-6 || Math.abs(unclippedStart[1]) > 1e-6 || Math.abs(unclippedStart[2] - 1500) > 1e-6) {
-      fail(errors, `auto connection lifecycle: disabled beam clip should not force the secondary member end to the trim plane, got ${JSON.stringify(unclippedStart)}`);
-    }
-    const store = createProjectStore({ project, profiles, connectionCatalog, fasteners });
-    const created = store.createConnectionFromPreset("beam_to_column_fin_plate_m16_1x3", ["column_1", "beam_1"]);
-    const afterCreate = store.project();
-    const connection = afterCreate.model.connections?.[created.connectionId];
-    const zone = afterCreate.model.connectionZones?.[connection?.connectionZoneId];
-    const assembly = afterCreate.model.assemblies?.[connection?.assemblyId];
 
-    if (!connection) fail(errors, "auto connection lifecycle: connection was not created");
-    if (zone?.authoring?.generatedBy !== created.connectionId || zone.authoring?.lifecycle !== "delete-with-connection") {
-      fail(errors, "auto connection lifecycle: generated zone is not tagged for delete-with-connection");
+    const project = emptyGeneratedSmartComponentModel(baseProject);
+    const store = createProjectStore({ project, profiles, smartComponentCatalog, fasteners });
+    const created = store.createSmartComponentFromPreset("beam_to_column_fin_plate_m16_1x3", ["column_1", "beam_1"]);
+    const afterCreate = store.project();
+    const smartComponent = afterCreate.model.smartComponentInstances?.[created.smartComponentId];
+    const zone = afterCreate.model.connectionZones?.[smartComponent?.inputs?.connectionZoneId];
+    const assembly = afterCreate.model.assemblies?.[smartComponent?.inputs?.assemblyId];
+
+    if (!smartComponent) fail(errors, "Smart Component lifecycle: Smart Component was not created");
+    if (smartComponent?.status !== "generated" || smartComponent?.health !== "ok") {
+      fail(errors, `Smart Component lifecycle: created Smart Component should be generated and healthy, got ${smartComponent?.status}/${smartComponent?.health}`);
     }
-    if (assembly?.authoring?.generatedBy !== created.connectionId || assembly.authoring?.lifecycle !== "delete-with-connection") {
-      fail(errors, "auto connection lifecycle: generated assembly is not tagged for delete-with-connection");
+    if (zone?.authoring?.componentInstanceId !== created.smartComponentId || zone.authoring?.lifecycle !== "delete-with-smart-component") {
+      fail(errors, "Smart Component lifecycle: generated zone is not tagged for delete-with-smart-component");
     }
-    if ((zone?.interfaceIds || []).length !== 2) fail(errors, "auto connection lifecycle: generated zone should have two interfaces");
+    if (assembly?.authoring?.componentInstanceId !== created.smartComponentId || assembly.authoring?.lifecycle !== "delete-with-smart-component") {
+      fail(errors, "Smart Component lifecycle: generated assembly is not tagged for delete-with-smart-component");
+    }
+    if ((zone?.interfaceIds || []).length !== 2) fail(errors, "Smart Component lifecycle: generated zone should have two interfaces");
     for (const interfaceId of zone?.interfaceIds || []) {
       const iface = afterCreate.model.interfaces?.[interfaceId];
-      if (iface?.authoring?.generatedBy !== created.connectionId || iface.authoring?.lifecycle !== "delete-with-connection") {
-        fail(errors, `auto connection lifecycle: generated interface is not tagged for delete-with-connection: ${interfaceId}`);
+      if (iface?.authoring?.componentInstanceId !== created.smartComponentId || iface.authoring?.lifecycle !== "delete-with-smart-component") {
+        fail(errors, `Smart Component lifecycle: generated interface is not tagged for delete-with-smart-component: ${interfaceId}`);
       }
     }
-    if (!afterCreate.model.plates?.[connection.generator.objectRoles.finPlate]) fail(errors, "auto connection lifecycle: fin plate was not generated");
-    if (Object.keys(afterCreate.model.fastenerGroups || {}).length !== 1) fail(errors, "auto connection lifecycle: fastener group was not generated");
-    const beamStart = afterCreate.model.members.beam_1.start;
-    if (JSON.stringify(beamStart) !== JSON.stringify([170, 0, 1500])) {
-      fail(errors, `auto connection lifecycle: beam gap should fit beam start to [170,0,1500], got ${JSON.stringify(beamStart)}`);
-    }
-    const weld = Object.values(afterCreate.model.welds || {})[0];
-    const runKeys = (weld?.reference?.runs || []).map((run) => `${run.edge}:${run.side || ""}:${run.size}`).sort();
-    if (runKeys.join("|") !== "support:back:6|support:front:6") {
-      fail(errors, `auto connection lifecycle: fin plate weld runs are not explicit front/back runs: ${runKeys.join("|")}`);
-    }
-    const plateToggleStore = createProjectStore({ project: afterCreate, profiles, connectionCatalog, fasteners });
-    plateToggleStore.toggleConnectionComponentFromFace({ objectId: connection.generator.objectRoles.finPlate });
-    const plateToggleProject = plateToggleStore.project();
-    const hiddenWeld = plateToggleProject.model.welds?.[plateToggleProject.model.connections[created.connectionId].generator.objectRoles.weld];
-    if (!hiddenWeld?.display?.suppressed) {
-      fail(errors, "auto connection lifecycle: suppressing the fin plate should also suppress its weld");
-    }
-    const sceneHasObject = (scene, objectId, predicate = () => true) => {
-      return [...scene.faces, ...scene.lines].some((item) => item.objectId === objectId && predicate(item));
-    };
-    const hiddenPlateId = connection.generator.objectRoles.finPlate;
-    const hiddenWeldId = connection.generator.objectRoles.weld;
-    const inactivePlateScene = buildScene(plateToggleProject, profiles, fasteners, viewerSettings);
-    if (sceneHasObject(inactivePlateScene, hiddenPlateId) || sceneHasObject(inactivePlateScene, hiddenWeldId)) {
-      fail(errors, "auto connection lifecycle: suppressed plate ghosts should not render without an active connection editor");
-    }
-    const activePlateScene = buildScene(plateToggleProject, profiles, fasteners, viewerSettings, { activeConnectionId: created.connectionId });
-    if (!sceneHasObject(activePlateScene, hiddenPlateId, (item) => item.suppressed) || !sceneHasObject(activePlateScene, hiddenWeldId, (item) => item.suppressed)) {
-      fail(errors, "auto connection lifecycle: suppressed plate and weld ghosts should render while editing their connection");
+    if (!afterCreate.model.plates?.[smartComponent?.objectRoles?.finPlate]) fail(errors, "Smart Component lifecycle: fin plate was not generated");
+    if (Object.keys(afterCreate.model.fastenerGroups || {}).length < 1) fail(errors, "Smart Component lifecycle: fastener group was not generated");
+
+    const optionalRole = store.smartComponentRoleOptions(created.smartComponentId).find((option) => !option.required)?.role;
+    if (optionalRole) {
+      store.setSmartComponentRoleActive(created.smartComponentId, optionalRole, false);
+      const toggled = store.smartComponent(created.smartComponentId);
+      if (!(toggled.suppressedRoles || []).includes(optionalRole)) {
+        fail(errors, `Smart Component lifecycle: optional role ${optionalRole} should be suppressible`);
+      }
     }
 
-    const boltToggleStore = createProjectStore({ project: afterCreate, profiles, connectionCatalog, fasteners });
-    boltToggleStore.toggleConnectionComponentFromFace({ objectId: connection.generator.objectRoles.fasteners, positionIndex: 0 });
-    const boltToggleProject = boltToggleStore.project();
-    const skippedBoltPattern = boltToggleProject.model.holePatterns?.[boltToggleProject.model.connections[created.connectionId].generator.objectRoles.holePattern];
-    if (!skippedBoltPattern?.suppressedPositionIndices?.includes(0)) {
-      fail(errors, "auto connection lifecycle: suppressing one bolt should also suppress the matching hole");
-    }
-    const hiddenFastenerId = connection.generator.objectRoles.fasteners;
-    const inactiveBoltScene = buildScene(boltToggleProject, profiles, fasteners, viewerSettings);
-    if (sceneHasObject(inactiveBoltScene, hiddenFastenerId, (item) => item.positionIndex === 0)) {
-      fail(errors, "auto connection lifecycle: suppressed bolt ghosts should not render without an active connection editor");
-    }
-    const activeBoltScene = buildScene(boltToggleProject, profiles, fasteners, viewerSettings, { activeConnectionId: created.connectionId });
-    if (!sceneHasObject(activeBoltScene, hiddenFastenerId, (item) => item.positionIndex === 0 && item.suppressed)) {
-      fail(errors, "auto connection lifecycle: suppressed bolt ghosts should render while editing their connection");
-    }
-
-    const fastenerToggleStore = createProjectStore({ project: afterCreate, profiles, connectionCatalog, fasteners });
-    fastenerToggleStore.toggleConnectionComponentFromFace({ objectId: connection.generator.objectRoles.fasteners });
-    const fastenerToggleProject = fastenerToggleStore.project();
-    const hiddenFastenerPattern = fastenerToggleProject.model.holePatterns?.[fastenerToggleProject.model.connections[created.connectionId].generator.objectRoles.holePattern];
-    if ((hiddenFastenerPattern?.suppressedPositionIndices || []).length !== (hiddenFastenerPattern?.positions || []).length) {
-      fail(errors, "auto connection lifecycle: suppressing the fastener group should also suppress all matching holes");
-    }
-
-    const plateBeforeMove = afterCreate.model.plates?.[connection.generator.objectRoles.finPlate];
+    const plateBeforeMove = afterCreate.model.plates?.[smartComponent?.objectRoles?.finPlate];
     store.moveMemberWithLayout("beam_1", [0, 0, 250]);
     const afterMove = store.project();
-    const movedConnection = afterMove.model.connections?.[created.connectionId];
-    const plateAfterMove = afterMove.model.plates?.[movedConnection?.generator?.objectRoles?.finPlate];
+    const movedSmartComponent = afterMove.model.smartComponentInstances?.[created.smartComponentId];
+    const plateAfterMove = afterMove.model.plates?.[movedSmartComponent?.objectRoles?.finPlate];
     if (Math.abs((plateAfterMove?.center?.[2] || 0) - ((plateBeforeMove?.center?.[2] || 0) + 250)) > 1e-6) {
-      fail(errors, `auto connection lifecycle: fin plate should follow secondary member vertical moves, got ${JSON.stringify(plateAfterMove?.center)}`);
+      fail(errors, `Smart Component lifecycle: fin plate should follow secondary member vertical moves, got ${JSON.stringify(plateAfterMove?.center)}`);
     }
 
-    store.deleteConnection(created.connectionId);
+    store.deleteSmartComponent(created.smartComponentId);
     const afterDelete = store.project();
-    for (const collection of ["connections", "connectionZones", "interfaces", "assemblies", "plates", "holePatterns", "features", "fastenerGroups", "welds"]) {
-      assertNoObjects(errors, afterDelete, collection, "auto connection lifecycle");
+    for (const collection of ["smartComponentInstances", "connectionZones", "interfaces", "assemblies", "plates", "holePatterns", "features", "fastenerGroups", "welds"]) {
+      assertNoObjects(errors, afterDelete, collection, "Smart Component lifecycle");
     }
     for (const member of Object.values(afterDelete.model.members || {})) {
-      if ((member.featureIds || []).length) fail(errors, `auto connection lifecycle: ${member.id} still references deleted features`);
+      if ((member.featureIds || []).length) fail(errors, `Smart Component lifecycle: ${member.id} still references deleted features`);
+    }
+
+    const warehouseStore = createProjectStore({ project: emptyGeneratedSmartComponentModel(baseProject), profiles, smartComponentCatalog, fasteners });
+    const warehouse = warehouseStore.createSmartComponentFromPreset("warehouse_demo", []);
+    const warehouseProject = warehouseStore.project();
+    const warehouseInstances = Object.values(warehouseProject.model.smartComponentInstances || {});
+    if (!warehouseProject.model.smartComponentInstances?.[warehouse.smartComponentId]) fail(errors, "Smart Component lifecycle: warehouse parent Smart Component was not created");
+    if (!warehouseInstances.some((instance) => instance.kind === "frame") || !warehouseInstances.some((instance) => instance.type === "stair-system")) {
+      fail(errors, `Smart Component lifecycle: warehouse should create nested frame and stair Smart Components, got ${warehouseInstances.map((instance) => instance.kind).join(", ")}`);
+    }
+    if (!warehouseInstances.some((instance) => instance.type === "stair-system" && instance.parentRole === "accessStair")) {
+      fail(errors, "Smart Component lifecycle: warehouse access stair should use stair-system, not the legacy stair generator");
     }
   });
 }
 
+async function checkStairSystemGenerator(errors) {
+  await withFileFetch(async () => {
+    const { loadSmartComponentDefinitions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/modules/smart-components/smart-component-registry.mjs")).href);
+    const { createProjectStore } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/store/project-store.mjs")).href);
+    const baseProject = readJson("bobercad/data/projects/sample_fin_plate.json");
+    const profilesLibrary = readJson("bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json");
+    const fasteners = readJson("bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json");
+    const catalog = await loadSmartComponentDefinitions();
+    const baseParameters = catalog.smartComponents?.stair_system_straight_basic?.parameters;
+
+    if (!catalog.definitions?.["stair-system"]) fail(errors, "stair-system generator: missing top-level stair-system definition");
+    for (const type of ["path-flight", "plate-tread", "grating-tread", "twin-stringer", "mono-stringer", "post-and-rail", "standard-hardware", "member-splice", "transport-sections"]) {
+      if (!catalog.definitions?.[type]) fail(errors, `stair-system generator: missing family definition ${type}`);
+    }
+
+    const emptyProject = () => {
+      const project = clone(baseProject);
+      project.objectIndex = {};
+      for (const collection of ["groups", "interfaces", "connectionZones", "assemblies", "members", "plates", "holePatterns", "objectPatterns", "features", "trimJoints", "fastenerGroups", "welds", "smartComponentInstances"]) {
+        project.model[collection] = {};
+      }
+      return project;
+    };
+    const store = () => createProjectStore({ project: emptyProject(), profiles: profilesLibrary.profiles, smartComponentCatalog: catalog, fasteners });
+    const topInstance = (project) => Object.values(project.model.smartComponentInstances || {}).find((instance) => instance.type === "stair-system");
+    const child = (project, parent, role) => project.model.smartComponentInstances?.[parent.childComponentRoles?.[role]];
+    const roleCount = (instance, pattern) => Object.keys(instance?.objectRoles || {}).filter((role) => pattern.test(role)).length;
+
+    const straightStore = store();
+    const created = straightStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
+    let project = straightStore.project();
+    let top = project.model.smartComponentInstances[created.smartComponentId];
+    if (!top?.childComponentRoles?.support || !top.childComponentRoles?.treads || !top.childComponentRoles?.connections || !top.childComponentRoles?.railing) {
+      fail(errors, `stair-system generator: straight preset should create support/treads/connections/railing children, got ${JSON.stringify(top?.childComponentRoles)}`);
+    }
+    if (roleCount(child(project, top, "treads"), /^tread\d+$/) !== 8) {
+      fail(errors, "stair-system generator: straight preset should create 8 tread roles");
+    }
+    const standardHardware = child(project, top, "connections");
+    const standardHardwareZone = project.model.connectionZones?.[standardHardware?.inputs?.connectionZoneId];
+    if (standardHardware?.type !== "standard-hardware" || standardHardware.kind !== "connection" || !standardHardwareZone?.interfaceIds?.length || Object.keys(project.model.fastenerGroups || {}).length < 1) {
+      fail(errors, "stair-system generator: straight preset should create standard-hardware as a real connection with zone/interfaces and fasteners");
+    }
+
+    straightStore.updateSmartComponent(created.smartComponentId, {
+      ...top.referenceParameters,
+      levels: { ...top.referenceParameters.levels, ffl2: 900 }
+    });
+    project = straightStore.project();
+    top = project.model.smartComponentInstances[created.smartComponentId];
+    if (roleCount(child(project, top, "treads"), /^tread\d+$/) !== 5) {
+      fail(errors, "stair-system generator: FFL edit should leave exactly 5 managed treads");
+    }
+    if (project.model.plates?.sc_stair_system_treads_tread_8 || project.objectIndex?.sc_stair_system_treads_tread_8) {
+      fail(errors, "stair-system generator: removed nested tread should be deleted from model and objectIndex");
+    }
+
+    const treadsChildId = top.childComponentRoles.treads;
+    straightStore.updateSmartComponent(created.smartComponentId, {
+      ...top.referenceParameters,
+      treads: { ...top.referenceParameters.treads, family: "grating-tread" }
+    });
+    project = straightStore.project();
+    top = project.model.smartComponentInstances[created.smartComponentId];
+    if (top.childComponentRoles.treads !== treadsChildId || child(project, top, "treads")?.type !== "grating-tread") {
+      fail(errors, "stair-system generator: changing tread family should keep child role id and update child type");
+    }
+
+    const overrideStore = store();
+    const overrideCreated = overrideStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
+    project = overrideStore.project();
+    top = project.model.smartComponentInstances[overrideCreated.smartComponentId];
+    const supportChild = child(project, top, "support");
+    const supportMemberId = Object.values(supportChild.objectRoles || {}).find((id) => project.model.members?.[id]);
+    const supportBefore = project.model.members[supportMemberId];
+    const movedStart = [supportBefore.start[0], supportBefore.start[1] + 125, supportBefore.start[2]];
+    overrideStore.moveMemberWithLayout(supportMemberId, [0, 125, 0], { regenerateSmartComponents: false });
+    if (JSON.stringify(overrideStore.project().model.smartComponentInstances[supportChild.id].fieldOverrides?.[supportMemberId]?.start) !== JSON.stringify(movedStart)) {
+      fail(errors, "stair-system generator: nested support member move should be stored as child field override");
+    }
+    top = overrideStore.project().model.smartComponentInstances[overrideCreated.smartComponentId];
+    overrideStore.updateSmartComponent(overrideCreated.smartComponentId, {
+      ...top.referenceParameters,
+      geometry: { ...top.referenceParameters.geometry, width: top.referenceParameters.geometry.width + 100 }
+    });
+    if (JSON.stringify(overrideStore.project().model.members[supportMemberId]?.start) !== JSON.stringify(movedStart)) {
+      fail(errors, "stair-system generator: parent regeneration should preserve nested child field override");
+    }
+
+    const detachStore = store();
+    const detachCreated = detachStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
+    project = detachStore.project();
+    top = project.model.smartComponentInstances[detachCreated.smartComponentId];
+    const detachSupportChild = child(project, top, "support");
+    const detachMemberId = Object.values(detachSupportChild.objectRoles || {}).find((id) => project.model.members?.[id]);
+    detachStore.detachSmartComponentObject(detachSupportChild.id, detachMemberId);
+    project = detachStore.project();
+    const detachedChild = project.model.smartComponentInstances[detachSupportChild.id];
+    const replacementIds = Object.values(detachedChild.objectRoles || {});
+    if (!detachedChild.detachedObjectIds?.includes(detachMemberId) || !project.model.members?.[detachMemberId] || replacementIds.includes(detachMemberId)) {
+      fail(errors, "stair-system generator: detach should keep old object and replace the managed role id");
+    }
+    detachStore.reattachSmartComponentObject(detachSupportChild.id, detachMemberId);
+    project = detachStore.project();
+    if (project.model.members?.[detachMemberId] || project.objectIndex?.[detachMemberId] || project.model.smartComponentInstances[detachSupportChild.id].detachedObjectIds?.includes(detachMemberId)) {
+      fail(errors, "stair-system generator: reattach should remove detached object and clear detachedObjectIds");
+    }
+
+    const landingStore = store();
+    const landingCreated = landingStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
+    landingStore.updateSmartComponent(landingCreated.smartComponentId, {
+      ...baseParameters,
+      route: {
+        ...baseParameters.route,
+        modules: [
+          { id: "flight_1", type: "flight.straight" },
+          { id: "landing_1", type: "landing.straight" },
+          { id: "flight_2", type: "flight.straight" }
+        ]
+      },
+      landings: { ...baseParameters.landings, family: "framed-landing" }
+    });
+    project = landingStore.project();
+    top = project.model.smartComponentInstances[landingCreated.smartComponentId];
+    if (!top.childComponentRoles.landings || roleCount(child(project, top, "landings"), /^landing\d+$/) < 1) {
+      fail(errors, "stair-system generator: straight-landing route should create a landing child with landing roles");
+    }
+
+    const sectionStore = store();
+    const sectionCreated = sectionStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
+    sectionStore.updateSmartComponent(sectionCreated.smartComponentId, {
+      ...baseParameters,
+      levels: { ...baseParameters.levels, ffl2: 2520 },
+      sections: { ...baseParameters.sections, strategy: "max-weight", maxWeightKg: 90, targetLength: 1800 }
+    });
+    project = sectionStore.project();
+    top = project.model.smartComponentInstances[sectionCreated.smartComponentId];
+    if (!top.childComponentRoles.sections || Object.values(project.model.assemblies || {}).filter((assembly) => assembly.type === "transport-section").length < 2) {
+      fail(errors, "stair-system generator: max-weight sectioning should create multiple transport-section assemblies");
+    }
+    const spliceChild = child(project, top, "sectionSplices");
+    const spliceZone = project.model.connectionZones?.[spliceChild?.inputs?.connectionZoneId];
+    if (spliceChild?.type !== "member-splice" || spliceChild.kind !== "connection" || !spliceZone?.interfaceIds?.length) {
+      fail(errors, "stair-system generator: section splits should use generic member-splice as a real connection");
+    }
+
+    const complianceStore = store();
+    const complianceCreated = complianceStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
+    complianceStore.updateSmartComponent(complianceCreated.smartComponentId, {
+      ...baseParameters,
+      geometry: { ...baseParameters.geometry, maxStepHeight: 230, going: 180 },
+      levels: { ...baseParameters.levels, ffl2: 1610 },
+      compliance: { ...baseParameters.compliance, rulePack: "uk-part-k", category: "utility", headroom: 1800 },
+      railings: { ...baseParameters.railings, height: 760 }
+    });
+    top = complianceStore.project().model.smartComponentInstances[complianceCreated.smartComponentId];
+    const diagnosticCodes = new Set((top.diagnostics || []).map((diagnostic) => diagnostic.code));
+    if (top.health !== "error" || !diagnosticCodes.has("uk-part-k-rise") || !diagnosticCodes.has("uk-part-k-going")) {
+      fail(errors, `stair-system generator: compliance failures should report rise/going errors, got health=${top.health} diagnostics=${[...diagnosticCodes].join(",")}`);
+    }
+
+    const healthySamples = [
+      "sample_stair_straight_basic.json",
+      "sample_stair_straight_with_landing.json",
+      "sample_stair_l_shape.json",
+      "sample_stair_u_switchback.json",
+      "sample_stair_winder.json",
+      "sample_stair_curved.json",
+      "sample_stair_spiral.json",
+      "sample_stair_helical.json",
+      "sample_stair_mono_stringer.json",
+      "sample_stair_grating_treads.json",
+      "sample_stair_glass_rail.json",
+      "sample_stair_transport_split_weight.json",
+      "sample_stair_manual_split.json"
+    ];
+    for (const sample of healthySamples) {
+      const sampleTop = topInstance(readJson(`bobercad/data/projects/${sample}`));
+      if (!sampleTop || sampleTop.health !== "ok") fail(errors, `stair-system sample should have ok top-level health: ${sample}`);
+    }
+    const failureTop = topInstance(readJson("bobercad/data/projects/sample_stair_compliance_failures.json"));
+    if (!failureTop || failureTop.health !== "error") fail(errors, "stair-system compliance failure sample should have error health");
+  });
+}
 async function checkMemberAuthoringApi(errors) {
   const membersApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/project/members.mjs")).href);
   const snappingApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/project/snapping.mjs")).href);
@@ -890,6 +810,146 @@ async function checkMemberAuthoringApi(errors) {
   }
 }
 
+async function checkGenericPathApi(errors) {
+  const paths = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/geometry/paths.mjs")).href);
+  const line = paths.normalizePath({ type: "line", start: [0, 0, 0], end: [100, 0, 0] });
+  if (Math.abs(line.length - 100) > 1e-9) fail(errors, `path api: line length should be 100, got ${line.length}`);
+  if (JSON.stringify(paths.pointAtStation(line, 40)) !== "[40,0,0]") {
+    fail(errors, `path api: line point at station 40 is wrong, got ${JSON.stringify(paths.pointAtStation(line, 40))}`);
+  }
+
+  const polyline = paths.normalizePath({ type: "polyline", points: [[0, 0, 0], [100, 0, 0], [100, 100, 0]] });
+  if (Math.abs(polyline.length - 200) > 1e-9 || JSON.stringify(paths.pointAtStation(polyline, 150)) !== "[100,50,0]") {
+    fail(errors, `path api: polyline stationing failed, length=${polyline.length} point=${JSON.stringify(paths.pointAtStation(polyline, 150))}`);
+  }
+
+  const arc = paths.normalizePath({ type: "arc", center: [0, 0, 0], radius: 10, startAngle: 0, endAngle: Math.PI / 2 });
+  const arcEnd = paths.pointAtStation(arc, arc.length);
+  if (Math.abs(arc.length - Math.PI * 5) > 1e-9 || Math.abs(arcEnd[0]) > 1e-9 || Math.abs(arcEnd[1] - 10) > 1e-9) {
+    fail(errors, `path api: quarter arc failed, length=${arc.length} end=${JSON.stringify(arcEnd)}`);
+  }
+
+  const helix = paths.normalizePath({ type: "helix", center: [0, 0, 0], radius: 10, startAngle: 0, endAngle: Math.PI * 2, height: 100 });
+  const expectedHelixLength = Math.hypot(Math.PI * 20, 100);
+  const helixEnd = paths.pointAtStation(helix, helix.length);
+  if (Math.abs(helix.length - expectedHelixLength) > 1e-9 || Math.abs(helixEnd[2] - 100) > 1e-9) {
+    fail(errors, `path api: helix failed, length=${helix.length} end=${JSON.stringify(helixEnd)}`);
+  }
+
+  const frame = paths.frameAtStation(line, 25);
+  if (Math.abs(frame.tangent[0] - 1) > 1e-9 || Math.abs(frame.origin[0] - 25) > 1e-9) {
+    fail(errors, `path api: frame at station failed, got ${JSON.stringify(frame)}`);
+  }
+  const offset = paths.offsetPath(line, 50, { count: 3 });
+  if (offset.type !== "polyline" || offset.points.length !== 3) {
+    fail(errors, `path api: offset path should return sampled polyline, got ${JSON.stringify(offset)}`);
+  }
+}
+
+async function checkGenericSolverApi(errors) {
+  const solver = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/model/solver-result.mjs")).href);
+  const result = solver.createSolverResult({
+    inputParameters: { target: 10 },
+    resolvedParameters: { target: 10, count: 2 },
+    computedValues: { spacing: 5 },
+    objectRoleHints: { first: "object_1" },
+    diagnostics: [{
+      severity: "warning",
+      code: "demo-warning",
+      message: "Demo warning",
+      parameterPaths: ["target"],
+      objectRoles: ["first"],
+      measured: 12,
+      allowed: { max: 10 }
+    }]
+  });
+  if (result.resolvedParameters.count !== 2 || result.diagnostics[0]?.severity !== "warning") {
+    fail(errors, `solver api: createSolverResult normalized wrong result ${JSON.stringify(result)}`);
+  }
+  const withError = solver.addSolverDiagnostic(result, {
+    code: "demo-error",
+    message: "Demo error",
+    parameterPaths: ["count"]
+  });
+  if (!solver.hasSolverErrors(withError) || withError.diagnostics.length !== 2) {
+    fail(errors, `solver api: addSolverDiagnostic/hasSolverErrors failed ${JSON.stringify(withError)}`);
+  }
+  const merged = solver.mergeSolverResults(result, {
+    computedValues: { width: 900 },
+    objectRoleHints: { second: "object_2" }
+  });
+  if (merged.computedValues.spacing !== 5 || merged.computedValues.width !== 900 || merged.objectRoleHints.second !== "object_2") {
+    fail(errors, `solver api: mergeSolverResults failed ${JSON.stringify(merged)}`);
+  }
+}
+
+async function checkGenericComplianceApi(errors) {
+  const compliance = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/model/compliance.mjs")).href);
+  const pack = compliance.createRulePack({
+    id: "demo-pack",
+    title: "Demo Pack",
+    jurisdiction: "test",
+    applicableComponentKinds: ["demo-system"],
+    rules: [{
+      id: "demo-range",
+      type: "number-range",
+      severity: "warning",
+      measurementPath: "height",
+      min: 100,
+      max: 200,
+      parameterPath: "geometry.height",
+      objectRoles: ["body"],
+      clause: "D1"
+    }]
+  });
+  const skipped = compliance.runRulePack(pack, { componentKind: "other", measurements: { height: 250 } });
+  if (skipped.diagnostics.length) fail(errors, `compliance api: rule pack should skip other component kinds, got ${JSON.stringify(skipped)}`);
+  const result = compliance.runRulePack(pack, { componentKind: "demo-system", measurements: { height: 250 } });
+  const diagnostic = result.diagnostics[0];
+  if (diagnostic?.severity !== "warning" || diagnostic.measured !== 250 || diagnostic.allowed?.max !== 200 || diagnostic.parameterPaths?.[0] !== "geometry.height") {
+    fail(errors, `compliance api: number-range diagnostic is wrong, got ${JSON.stringify(result)}`);
+  }
+  const custom = compliance.runRule({
+    id: "custom-rule",
+    check: () => ({ code: "custom-rule", message: "Custom rule", severity: "info" })
+  }, { componentKind: "demo-system" });
+  if (custom[0]?.severity !== "info") fail(errors, `compliance api: function rule failed, got ${JSON.stringify(custom)}`);
+}
+
+async function checkGenericSectioningApi(errors) {
+  const sectioning = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/model/sectioning.mjs")).href);
+  const profilesLibrary = readJson("bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json");
+  const materialsLibrary = readJson("bobercad/data/libraries/materials/material-libraries/starter-materials/config.json");
+  const project = {
+    objectIndex: {
+      m1: { collection: "members", type: "beam" },
+      p1: { collection: "plates", type: "plate" }
+    },
+    model: {
+      members: {
+        m1: { id: "m1", type: "beam", profile: "DEMO_I_200X100X8X12", material: "S355", start: [0, 0, 0], end: [1000, 0, 0] }
+      },
+      plates: {
+        p1: { id: "p1", type: "plate", material: "S355", thickness: 10, width: 1000, height: 1000, center: [0, 0, 0] }
+      }
+    }
+  };
+  const libraries = { profiles: profilesLibrary.profiles, materials: materialsLibrary.materials };
+  const memberEstimate = sectioning.estimateObject(project, libraries, "m1");
+  const plateEstimate = sectioning.estimateObject(project, libraries, "p1");
+  if (Math.abs(memberEstimate.weightKg - 29.89) > 1e-6) {
+    fail(errors, `sectioning api: member weight should use profile massPerLength, got ${memberEstimate.weightKg}`);
+  }
+  if (Math.abs(plateEstimate.weightKg - 78.5) > 1e-6) {
+    fail(errors, `sectioning api: plate weight should use material density, got ${plateEstimate.weightKg}`);
+  }
+  const sections = sectioning.splitByMaxWeight(project, libraries, ["m1", "p1"], { maxWeightKg: 50, idPrefix: "demo_section" });
+  const schedule = sectioning.sectionSchedule(sections);
+  if (sections.length !== 2 || schedule[0]?.id !== "demo_section_1" || schedule[1]?.objectCount !== 1) {
+    fail(errors, `sectioning api: split/schedule failed, got ${JSON.stringify(schedule)}`);
+  }
+}
+
 async function main() {
   const errors = [];
 
@@ -919,15 +979,18 @@ async function main() {
   checkFolderRegister(errors, "bobercad/data/libraries/profiles/profile-register.json", "libraries");
   checkFolderRegister(errors, "bobercad/data/libraries/fasteners/fastener-register.json", "libraries");
   checkFolderRegister(errors, "bobercad/data/libraries/model-library/model-register.json", "libraries");
-  checkFolderRegister(errors, "bobercad/data/libraries/connections/connection-register.json", "connections");
-  checkFolderRegister(errors, "bobercad/data/libraries/connection-components/component-register.json", "components");
-  checkConnectionFolders(errors);
-  checkConnectionComponentFolders(errors);
+  checkFolderRegister(errors, "bobercad/data/libraries/smart-components/smart-component-register.json", "components");
+  checkSmartComponentFolders(errors);
   checkViewerHasNoDomainFiles(errors);
   checkProjectFiles(errors);
   await checkApiRegister(errors);
-  await checkAutoConnectionLifecycle(errors);
+  await checkAutoSmartComponentLifecycle(errors);
+  await checkStairSystemGenerator(errors);
   await checkMemberAuthoringApi(errors);
+  await checkGenericPathApi(errors);
+  await checkGenericSolverApi(errors);
+  await checkGenericComplianceApi(errors);
+  await checkGenericSectioningApi(errors);
 
   if (errors.length) {
     console.error("FAILED: repository structure check failed");

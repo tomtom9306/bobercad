@@ -25,7 +25,7 @@ import {
   vectorComponentsInAxes,
   vectorFromAxisComponents
 } from "../scene/authoring/member-axis-space.mjs";
-import { memberAuthoringOverlay } from "../scene/build-authoring-overlays.mjs?v=active-reference-guides-1";
+import { memberAuthoringOverlay } from "../scene/build-authoring-overlays.mjs?v=endpoint-axis-origins-1";
 import {
   axisScreenDistance,
   quantizeDegrees,
@@ -98,6 +98,15 @@ function handlePoint(member, handle) {
   if (target === "start") return handle?.kind?.startsWith("layout-") ? points.layoutStart : points.physicalStart;
   if (target === "end") return handle?.kind?.startsWith("layout-") ? points.layoutEnd : points.physicalEnd;
   return points.center;
+}
+
+function oppositeHandlePoint(member, handle) {
+  const points = memberAuthoringPoints(member);
+  const target = handleTarget(handle);
+  const layout = handle?.kind?.startsWith("layout-");
+  if (target === "start") return layout ? points.layoutEnd : points.physicalEnd;
+  if (target === "end") return layout ? points.layoutStart : points.physicalStart;
+  return null;
 }
 
 function memberGeometryPatch(member) {
@@ -184,23 +193,36 @@ function moveDeltaBetweenMembers(fromMember, toMember, operation) {
 }
 
 const WORLD_ORIGIN = [0, 0, 0];
+
 const WORLD_AXIS_DIRECTIONS = {
   x: [1, 0, 0],
   y: [0, 1, 0],
   z: [0, 0, 1]
 };
 
-function globalAxisOriginForHandle(member, handle) {
-  const target = handleTarget(handle);
-  if (target === "start") return member.end;
-  if (target === "end") return member.start;
-  return handlePoint(member, handle);
+function samePoint(a, b) {
+  return Array.isArray(a) && Array.isArray(b) && v.len(v.sub(a, b)) <= 1e-9;
 }
 
-function globalAxisGuideForDrag(dragState) {
-  if (!dragState?.handle || handleTarget(dragState.handle) === "center") return null;
-  if (dragState.handle.kind === "rotate-axis") return null;
-  return WORLD_ORIGIN;
+function uniquePoints(points) {
+  const result = [];
+  for (const point of points) {
+    if (!Array.isArray(point) || point.length !== 3) continue;
+    if (!result.some((existing) => samePoint(existing, point))) result.push(point);
+  }
+  return result;
+}
+
+function globalAxisOriginsForHandle(member, handle) {
+  const target = handleTarget(handle);
+  if (target === "center") return [handlePoint(member, handle)];
+  return uniquePoints([handlePoint(member, handle), oppositeHandlePoint(member, handle)]);
+}
+
+function globalAxisGuidesForDrag(dragState) {
+  if (!dragState?.handle || handleTarget(dragState.handle) === "center") return [];
+  if (dragState.handle.kind === "rotate-axis") return [];
+  return globalAxisOriginsForHandle(dragState.baseMember, dragState.handle);
 }
 
 function dragGuideAxisCandidates(origin, span, tolerancePx) {
@@ -252,7 +274,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
         },
         axes: settings.render?.axes || {}
       },
-      globalAxesOrigin: globalAxisGuideForDrag(drag),
+      globalAxesOrigins: globalAxisGuidesForDrag(drag),
       globalAxesSpan: authoringSettings.globalAxisGuideSpan || 12000
     }));
   }
@@ -518,6 +540,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     if (pendingTransform) clearPendingTransform({ restoreOverlay: false, clearPreview: !pendingTransform.committed });
     perfMark("member-select-start", { memberId });
     activeMemberId = memberId;
+    selection.cancelPick?.({ clear: false });
     selection.select([memberId]);
     renderOverlay();
     if (options.notify !== false) onMemberSelected?.(memberId);
@@ -833,6 +856,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     const member = memberById(project, handle?.memberId);
     if (!handle?.memberId || !member) return false;
     activeMemberId = handle.memberId;
+    selection.cancelPick?.({ clear: false });
     selection.select([activeMemberId]);
     perfMark("member-drag-begin", { memberId: activeMemberId, handle: handle.kind });
     const snapStart = performance.now();
@@ -843,11 +867,13 @@ export function createMemberEditController({ viewer, api, selection, settings = 
       globalAxisSpan: authoringSettings.globalAxisSnapSpan || 100000,
       globalAxisSnapTolerancePx: authoringSettings.globalAxisSnapTolerancePx || 34
     });
-    candidates.push(...dragGuideAxisCandidates(
-      globalAxisOriginForHandle(member, handle),
-      authoringSettings.globalAxisSnapSpan || 100000,
-      authoringSettings.globalAxisSnapTolerancePx || 34
-    ));
+    for (const origin of globalAxisOriginsForHandle(member, handle)) {
+      candidates.push(...dragGuideAxisCandidates(
+        origin,
+        authoringSettings.globalAxisSnapSpan || 100000,
+        authoringSettings.globalAxisSnapTolerancePx || 34
+      ));
+    }
     perfMark("member-drag-snap-candidates-built", {
       memberId: activeMemberId,
       candidateCount: candidates.length,
@@ -942,7 +968,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   function commitDraft(memberId, draft, options = {}) {
     clearSmartRebuild();
     const beforeProject = api.project();
-    const commitOptions = { regenerateConnections: false };
+    const commitOptions = { regenerateSmartComponents: false };
     const currentMember = clone(memberById(api.project(), memberId));
     const moveDelta = draft.operation.kind === "move-member"
       ? moveDeltaBetweenMembers(currentMember, draft.member, draft.operation)
@@ -965,10 +991,10 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     }
     perfMark("member-drag-store-updated", { memberId });
 
-    if (typeof api.regenerateMemberConnections !== "function") {
-      throw new Error("member edit requires member connection regeneration API");
+    if (typeof api.regenerateMemberSmartComponents !== "function") {
+      throw new Error("member edit requires member Smart Component regeneration API");
     }
-    nextProject = api.regenerateMemberConnections(memberId);
+    nextProject = api.regenerateMemberSmartComponents(memberId);
     const affectedObjectIds = affectedObjectIdsForMemberChange(beforeProject, nextProject, memberId, { renderableOnly: true });
     viewer.clearObjectPreview?.();
     applyLocalProjectChange(nextProject, memberId, affectedObjectIds);

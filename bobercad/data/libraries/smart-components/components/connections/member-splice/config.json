@@ -1,0 +1,99 @@
+{
+  "$schema": "../../../../../../app/schemas/smart-component.schema.json",
+  "type": "member-splice",
+  "kind": "connection",
+  "title": "Member Splice",
+  "version": 1,
+  "interfaces": [
+    {
+      "role": "main"
+    },
+    {
+      "role": "secondary"
+    }
+  ],
+  "roles": {
+    "connectionPattern": "_connection_pattern",
+    "connectionAssembly": "_connection_assembly"
+  },
+  "parameters": {
+    "connections.splicePlateThickness": {
+      "kind": "positiveNumber",
+      "label": "Splice plate thickness",
+      "unit": "mm",
+      "default": 10
+    },
+    "connections.splicePlateWidth": {
+      "kind": "positiveNumber",
+      "label": "Splice plate width",
+      "unit": "mm",
+      "default": 260
+    },
+    "connections.splicePlateHeight": {
+      "kind": "positiveNumber",
+      "label": "Splice plate height",
+      "unit": "mm",
+      "default": 180
+    },
+    "connections.spliceCutGap": {
+      "kind": "positiveNumber",
+      "label": "Splice cut gap",
+      "unit": "mm",
+      "default": 20
+    },
+    "connections.spliceFastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Splice bolt",
+      "default": "M16_8_8"
+    },
+    "connections.spliceHoleDiameter": {
+      "kind": "positiveNumber",
+      "label": "Splice hole diameter",
+      "unit": "mm",
+      "default": 18
+    },
+    "connections.spliceBoltLength": {
+      "kind": "positiveNumber",
+      "label": "Splice bolt length",
+      "unit": "mm",
+      "default": 70
+    },
+    "connections.spliceGripLength": {
+      "kind": "positiveNumber",
+      "label": "Splice grip length",
+      "unit": "mm",
+      "default": 55
+    }
+  },
+  "presets": {
+    "member-splice": {
+      "id": "member-splice",
+      "version": "0.1.0",
+      "name": "Member splice",
+      "parameters": {
+        "meta": {
+          "family": "member-splice"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "connections",
+        "label": "Splice",
+        "items": [
+          "connections.splicePlateThickness",
+          "connections.splicePlateWidth",
+          "connections.splicePlateHeight",
+          "connections.spliceCutGap",
+          "connections.spliceFastenerRef",
+          "connections.spliceHoleDiameter",
+          "connections.spliceBoltLength",
+          "connections.spliceGripLength"
+        ]
+      }
+    ]
+  }
+}

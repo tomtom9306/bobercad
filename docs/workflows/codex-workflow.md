@@ -45,8 +45,8 @@ That is the Harness Engineering loop for this repo.
 
 ## Agent Routing
 
-- New connection behavior: start in `bobercad/data/libraries/connections/README.md`.
-- Reusable connection parts such as stiffeners: start in `bobercad/data/libraries/connection-components/README.md`.
-- Connection runtime or API behavior: start in `bobercad/app/engine/modules/connections/README.md`.
+- New reusable objects, including connections, stairs, frames, and warehouses: start in `bobercad/data/libraries/smart-components`.
+- Shared authoring behavior: start in `bobercad/app/engine/api/model` and expose a generic API or primitive before a library component uses it.
+- Smart Component runtime behavior: start in `bobercad/app/engine/modules/smart-components`.
 - 3D dimensions and labels: start in `bobercad/app/rendering/annotations/README.md`.
 - Viewer panels, layout, and controls: start in `bobercad/app/ui/viewer/README.md`.

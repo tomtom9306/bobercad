@@ -116,6 +116,144 @@
       ],
       "items": false
     },
+    "memberCenterline": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "start",
+            "end"
+          ],
+          "properties": {
+            "type": {
+              "const": "line"
+            },
+            "start": {
+              "$ref": "#/$defs/vec3"
+            },
+            "end": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "representation",
+            "math",
+            "center",
+            "radius",
+            "startAngle",
+            "endAngle"
+          ],
+          "properties": {
+            "type": {
+              "const": "arc"
+            },
+            "representation": {
+              "const": "analytic-centerline"
+            },
+            "math": {
+              "type": "object",
+              "required": [
+                "family"
+              ],
+              "properties": {
+                "family": {
+                  "const": "circular-arc"
+                }
+              },
+              "additionalProperties": true
+            },
+            "center": {
+              "$ref": "#/$defs/vec3"
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "startAngle": {
+              "type": "number"
+            },
+            "endAngle": {
+              "type": "number"
+            },
+            "axisX": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axisY": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "representation",
+            "math",
+            "center",
+            "radius",
+            "startAngle",
+            "endAngle",
+            "height"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "helix",
+                "spiral"
+              ]
+            },
+            "representation": {
+              "const": "analytic-centerline"
+            },
+            "math": {
+              "type": "object",
+              "required": [
+                "family"
+              ],
+              "properties": {
+                "family": {
+                  "const": "circular-helix"
+                }
+              },
+              "additionalProperties": true
+            },
+            "center": {
+              "$ref": "#/$defs/vec3"
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "startAngle": {
+              "type": "number"
+            },
+            "endAngle": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "axisX": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axisY": {
+              "$ref": "#/$defs/vec3"
+            },
+            "axisZ": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
     "bim": {
       "type": "object",
       "properties": {
@@ -323,7 +461,7 @@
         "profiles",
         "materials",
         "fasteners",
-        "connections",
+        "smartComponents",
         "frames"
       ],
       "properties": {
@@ -336,7 +474,7 @@
         "fasteners": {
           "$ref": "#/$defs/libraryRef"
         },
-        "connections": {
+        "smartComponents": {
           "$ref": "#/$defs/libraryRef"
         },
         "frames": {
@@ -564,7 +702,7 @@
         "features",
         "fastenerGroups",
         "welds",
-        "connections",
+        "smartComponentInstances",
         "assemblies"
       ],
       "properties": {
@@ -652,10 +790,10 @@
             "$ref": "#/$defs/weld"
           }
         },
-        "connections": {
+        "smartComponentInstances": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/connection"
+            "$ref": "#/$defs/smartComponentInstance"
           }
         },
         "relations": {
@@ -848,6 +986,12 @@
             "$ref": "#/$defs/id"
           }
         },
+        "smartComponentInstanceIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
         "sourceTemplate": {
           "$ref": "#/$defs/librarySource"
         },
@@ -966,7 +1110,7 @@
             "$ref": "#/$defs/id"
           }
         },
-        "connectionIds": {
+        "smartComponentInstanceIds": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/id"
@@ -1013,6 +1157,9 @@
         },
         "end": {
           "$ref": "#/$defs/vec3"
+        },
+        "centerline": {
+          "$ref": "#/$defs/memberCenterline"
         },
         "layoutAxis": {
           "type": "object",
@@ -1624,6 +1771,12 @@
           "type": "number",
           "minimum": 0
         },
+        "miterMode": {
+          "enum": [
+            "equal-angle",
+            "profile-balanced"
+          ]
+        },
         "enabled": {
           "type": "boolean"
         }
@@ -1826,13 +1979,13 @@
       },
       "additionalProperties": true
     },
-    "connection": {
+    "smartComponentInstance": {
       "type": "object",
       "required": [
         "id",
         "type",
-        "mainMemberId",
-        "secondaryMemberId"
+        "kind",
+        "sourceComponent"
       ],
       "properties": {
         "id": {
@@ -1841,101 +1994,127 @@
         "type": {
           "type": "string"
         },
-        "mainMemberId": {
-          "$ref": "#/$defs/id"
+        "kind": {
+          "type": "string"
         },
-        "secondaryMemberId": {
-          "$ref": "#/$defs/id"
-        },
-        "connectionZoneId": {
-          "$ref": "#/$defs/id"
-        },
-        "assemblyId": {
-          "$ref": "#/$defs/id"
-        },
-        "sourcePreset": {
+        "sourceComponent": {
           "$ref": "#/$defs/librarySource"
         },
-        "manualParts": {
+        "inputs": {
           "type": "object",
-          "properties": {
-            "plateIds": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/id"
-              }
-            },
-            "featureIds": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/id"
-              }
-            },
-            "fastenerGroupIds": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/id"
-              }
-            },
-            "weldIds": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/id"
-              }
-            }
-          },
           "additionalProperties": true
         },
-        "componentOverrides": {
-          "type": "object",
-          "properties": {
-            "suppressedObjectRoles": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+        "parentInstanceId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
             },
-            "suppressedPatternPositions": {
-              "type": "object",
-              "additionalProperties": {
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parentRole": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "childComponentRoles": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "objectRoles": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/id"
+              },
+              {
                 "type": "array",
                 "items": {
-                  "type": "integer",
-                  "minimum": 0
+                  "$ref": "#/$defs/id"
                 }
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
               }
-            }
-          },
+            ]
+          }
+        },
+        "outputs": {
+          "type": "object",
           "additionalProperties": true
         },
-        "generator": {
+        "ownedObjectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "managedFields": {
           "type": "object",
-          "properties": {
-            "status": {
-              "type": "string"
-            },
-            "definition": {
-              "type": "string"
-            },
-            "version": {
-              "type": "number"
-            },
-            "health": {
-              "enum": [
-                "ok",
-                "error"
-              ]
-            },
-            "diagnostics": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/diagnostic"
-              }
-            }
-          },
           "additionalProperties": true
+        },
+        "fieldOverrides": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "detachedObjectIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "suppressedRoles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "suppressedPatternPositions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "status": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "string"
+        },
+        "version": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "health": {
+          "enum": [
+            "ok",
+            "error"
+          ]
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic"
+          }
         },
         "referenceParameters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "parameters": {
           "type": "object",
           "additionalProperties": true
         },
@@ -2134,11 +2313,20 @@
             "deleted-from-pattern"
           ]
         },
-        "sourcePreset": {
+        "sourceComponent": {
           "$ref": "#/$defs/librarySource"
         },
         "sourceTemplate": {
           "$ref": "#/$defs/librarySource"
+        },
+        "componentInstanceId": {
+          "$ref": "#/$defs/id"
+        },
+        "componentRole": {
+          "type": "string"
+        },
+        "componentStatus": {
+          "type": "string"
         },
         "notes": {
           "type": "string"

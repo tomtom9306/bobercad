@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "wall-handrail",
+  "kind": "stair-railing",
+  "title": "Wall Handrail",
+  "version": 1,
+  "roles": {
+    "railingPattern": "_railing_pattern",
+    "railingAssembly": "_railing_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "wall-handrail": {
+      "id": "wall-handrail",
+      "version": "0.1.0",
+      "name": "Wall handrail",
+      "parameters": {
+        "meta": {
+          "family": "wall-handrail"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "railing",
+        "label": "Railing",
+        "items": []
+      }
+    ]
+  }
+}

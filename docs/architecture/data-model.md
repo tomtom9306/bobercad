@@ -14,17 +14,15 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json` - point-based profile library.
 - `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json` - material library.
 - `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json` - bolt, blind bolt, hook bolt, anchor, stud, nut, and washer catalog library.
-- `bobercad/data/libraries/connections/connection-register.json` - connection preset authoring library.
-- `bobercad/data/libraries/connection-components/component-register.json` - reusable connection component library.
+- `bobercad/data/libraries/smart-components/smart-component-register.json` - Smart Component authoring library for connections, stairs, frames, warehouses, and nested components.
 - `bobercad/data/libraries/model-library/model-register.json` - frame template authoring library.
 - `bobercad/app/ui/viewer/viewer-settings.json` - viewer-only camera, UI, control, and render settings.
 - `bobercad/app/schemas/project.schema.json` - schema for project files.
 - `bobercad/app/schemas/profile-library.schema.json` - schema for profile libraries.
 - `bobercad/app/schemas/material-library.schema.json` - schema for material libraries.
 - `bobercad/app/schemas/fastener-library.schema.json` - schema for fastener libraries.
-- `bobercad/app/schemas/connection.schema.json` - schema for connection preset libraries.
-- `bobercad/app/schemas/connection-component.schema.json` - schema for reusable connection components.
-- `bobercad/app/schemas/connection-component-register.schema.json` - schema for the reusable connection component register.
+- `bobercad/app/schemas/smart-component.schema.json` - schema for reusable Smart Component definitions.
+- `bobercad/app/schemas/smart-component-register.schema.json` - schema for the Smart Component register.
 - `bobercad/app/schemas/model-library.schema.json` - schema for frame template libraries.
 - `bobercad/app/schemas/viewer-settings.schema.json` - schema for viewer settings.
 
@@ -37,8 +35,8 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - Materials live in `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json`; project objects reference them with `"material": "S355"`.
 - Profiles live in `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json`; members reference them with `"profile": "PROFILE_ID"`.
 - Fasteners live in `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json`; fastener groups reference catalog entries with `"fastenerRef": "M16_8_8"` directly or through `modelDefaults`.
-- Connection presets live in `bobercad/data/libraries/connections/connection-register.json`; project connections may keep `sourcePreset` provenance, but stored `manualParts` remain the source of truth.
-- Reusable connection components live in `bobercad/data/libraries/connection-components/component-register.json`; connection definitions compose them with `componentRefs`.
+- Smart Component presets live in `bobercad/data/libraries/smart-components/smart-component-register.json`; project instances store `sourceComponent`, `referenceParameters`, `objectRoles`, and owned object ids.
+- Connections are Smart Components with `kind: "connection"`. They use the same instance model and API as stairs, frames, warehouses, and nested components.
 - Frame templates live in `bobercad/data/libraries/model-library/model-register.json`; project groups/assemblies may keep `sourceTemplate` provenance, but stored project objects remain the source of truth.
 - Hole and slot positions live in `model.holePatterns`; repeated object authoring lives in `model.objectPatterns`.
 - Notches and other generated trims should be stored as semantic `clearance-cut` / cut-feature intent. The viewer/exporter derives temporary cutter geometry from the referenced member region and per-surface offsets.
@@ -71,7 +69,7 @@ Defined in `bobercad/data/projects/sample_structure.json/settings/modelingConven
 
 Viewer and editor work must follow these conventions.
 
-`member.start` and `member.end` are the physical member axis used for geometry. A member may also store `layoutAxis.start` and `layoutAxis.end` as its virtual/layout axis for authoring; when omitted, the physical axis is also the layout axis. Automatic connection creation uses layout axes to find the intended joint, then creates stored interfaces, a connection zone, and a connection assembly against the physical member geometry.
+`member.start` and `member.end` are the physical member axis used for geometry. A member may also store `layoutAxis.start` and `layoutAxis.end` as its virtual/layout axis for authoring; when omitted, the physical axis is also the layout axis. Automatic connection Smart Component creation uses layout axes to find the intended joint, then creates stored interfaces, a connection zone, and an assembly against the physical member geometry.
 
 Edit constraints are stored as first-class objects in `model.relations`, indexed through `objectIndex`. Members do not store relation arrays. Current relation types include `point-on-axis` and `member-align-axis`: `member.start` and `member.end` remain the authoritative geometry, and deleting a relation must leave the current member coordinates unchanged. When automatic relations are enabled in the viewer, snapping a member endpoint to another member axis, layout axis, fixed grid axis, or contextual global X/Y/Z creates a `point-on-axis` relation for that endpoint only. Whole-member axis alignment is a separate explicit `member-align-axis` relation created by member UI commands such as Align X/Y/Z or Pick Custom Axis.
 
@@ -238,25 +236,25 @@ Features that reference a member-owned interface with `stationReference: "connec
 
 Use `connectionZones` to group the logical place where objects connect. A zone names the main object, secondary objects, the relevant interface ids, and the manually stored objects that belong to that connection area. It does not generate plates, holes, fasteners, or welds.
 
-Connection commands may create helper interfaces, a helper connection zone, and a helper connection assembly when selected member layout axes intersect and no stored zone already exists. Those helper objects must carry `authoring.lifecycle: "delete-with-connection"` and `authoring.generatedBy`, so deleting the connection removes only those generated helpers and leaves manually authored zones alone.
+Smart Component commands may create helper interfaces, a helper connection zone, and a helper assembly when selected member layout axes intersect and no stored zone already exists. Those helper objects must carry `authoring.lifecycle: "delete-with-smart-component"` and `authoring.componentInstanceId`, so deleting the Smart Component removes only those generated helpers and leaves manually authored zones alone.
 
-## Generated And Manual Connections
+## Generated Smart Components
 
-Connection generators are authoring commands. They may create plates, holes, fasteners, welds, cuts, interfaces, connection zones, assemblies, and connection records, but once generated those objects must be stored explicitly in the project.
+Smart Component generators are authoring commands. They may create members, plates, holes, fasteners, welds, cuts, work points, interfaces, connection zones, assemblies, object patterns, and nested Smart Component instances, but once generated those objects must be stored explicitly in the project.
 
-Reusable connection components are generator building blocks, not stored model objects. A component folder declares shared roles, component toggles, optional parameters, optional dimensions, and UI fragments in `config.json`; its `build.mjs` creates explicit objects through the same connection API context. A connection config lists components in `componentRefs`, then uses `recipe` to place those components. Connection folders should not carry custom build or UI files; if a connection cannot be described by reusable components and JSON settings, model it manually instead of adding a one-off generator. This keeps common parts such as support stiffeners reusable across hundreds of connection types without hardcoded app branches.
+Smart Component definitions are library entries under `bobercad/data/libraries/smart-components/components`. A definition may use a declarative `recipe` of public operations or a `build.mjs` that calls the same public model API available to UI authoring. App core must not hardcode stairs, warehouses, frames, or specific connection types. If shared behavior is needed, expose it as a generic model API or registered primitive, then let library components call that API.
 
-`connections` group stored parts through `manualParts`. The generated or manual plates, holes, fasteners, and welds are normal model objects and remain the source of truth.
+`model.smartComponentInstances` groups generated parts through `objectRoles`, `ownedObjectIds`, and `detachedObjectIds`. The generated or manually fine-tuned members, plates, holes, fasteners, welds, cuts, and patterns are normal model objects and remain the source of truth.
 
-Connection `componentOverrides` store user suppression decisions against stable generator roles, not transient mesh ids. For example, skipped bolts are stored as hole-pattern position indexes under `suppressedPatternPositions`; generators copy those indexes to the generated `holePattern.suppressedPositionIndices`, so renderers and exporters can skip the real holes/fasteners while the viewer may still show transparent ghost components for easy restore. Suppression also follows direct generated dependencies: suppressing a plate suppresses welds that list that plate as a participant, and suppressing a fastener group suppresses the hole positions in its referenced hole pattern.
+Smart Component suppression decisions are stored against stable roles, not transient mesh ids. For example, skipped bolts are stored as hole-pattern position indexes under `suppressedPatternPositions`; generators copy those indexes to the generated `holePattern.suppressedPositionIndices`, so renderers and exporters can skip the real holes/fasteners while the viewer may still show transparent ghost components for easy restore. Suppression also follows direct generated dependencies: suppressing a plate suppresses welds that list that plate as a participant, and suppressing a fastener group suppresses the hole positions in its referenced hole pattern.
 
-Weld objects may split a physical weld into explicit `reference.runs`. For a fin plate `plate-support-edge` weld, each run stores an `edge` (`support`, `top`, or `bottom`), optional `side` (`front` or `back`), and `size`. A zero-size parameter means the generator should omit that run, so connection UIs can support one-sided welds and top/bottom return welds without adding special viewer code.
+Weld objects may split a physical weld into explicit `reference.runs`. For a fin plate `plate-support-edge` weld, each run stores an `edge` (`support`, `top`, or `bottom`), optional `side` (`front` or `back`), and `size`. A zero-size parameter means the Smart Component should omit that run, so component UIs can support one-sided welds and top/bottom return welds without adding special viewer code.
 
-Fin plate connections should store the secondary member assembly clearance as `fit.beamGap`. The generator enforces it with a stored `member-trim` joint containing a `plane-trim` operation, so the gap is explicit model data and the physical member end remains correct for rendering/export.
+Fin plate connection Smart Components should store the secondary member assembly clearance as `fit.beamGap`. The generator enforces it with a stored `member-trim` joint containing a `plane-trim` operation, so the gap is explicit model data and the physical member end remains correct for rendering/export.
 
-`generator.status: "generated"` means the connection can be regenerated from `sourcePreset` and `referenceParameters`. `generator.status: "not-parametric-yet"` means the connection is manual/provenance-only.
+`status: "generated"` means the Smart Component can be regenerated from `sourceComponent` and `referenceParameters`. `status: "not-parametric-yet"` means the instance is manual/provenance-only.
 
-Connection `sourcePreset` is provenance only. Viewers and NC1 exporters must not load `bobercad/data/libraries/connections/connection-register.json` to fill missing plates, holes, fasteners, welds, cuts, or dimensions.
+Smart Component `sourceComponent` is provenance only. Viewers and NC1 exporters must not load `bobercad/data/libraries/smart-components/smart-component-register.json` to fill missing plates, holes, fasteners, welds, cuts, members, or dimensions.
 
 ## NC1-Ready Data
 
@@ -273,7 +271,7 @@ An NC1-exportable member must be readable after default resolution and should ha
 - `fabrication.partMark`
 - explicit `featureIds` for holes, slots, cuts, copes, notches, and mitres
 
-NC1 exporters should read stored project objects and resolved defaults. They must not rebuild missing fabrication data from object patterns, frame templates, connection presets, placement intent, or viewer geometry.
+NC1 exporters should read stored project objects and resolved defaults. They must not rebuild missing fabrication data from object patterns, frame templates, Smart Component presets, placement intent, or viewer geometry.
 
 ## Object Shape
 

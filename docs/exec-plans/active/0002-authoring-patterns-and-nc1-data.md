@@ -13,10 +13,10 @@ Implemented in schema/model baseline `0.5.0`:
 - object-level `authoring`
 - `holePatternRef` on features and fastener groups
 - `flatPattern` and `bendLines` for bent plates
-- `sourcePreset` for connection provenance
+- `sourceComponent` for Smart Component provenance
 - `sourceTemplate` for frame/template provenance
 - `settings.tolerances`
-- starter `bobercad/data/libraries/connections/connection-register.json`
+- starter `bobercad/data/libraries/smart-components/smart-component-register.json`
 - starter `bobercad/data/libraries/model-library/model-register.json`
 - sample beam-to-beam end plate connection with stored hole patterns, web bolts, weld, and top flange notch feature
 
@@ -26,7 +26,7 @@ Implemented in schema/model baseline `0.5.0`:
 - No STEP exporter work in this step.
 - No OpenCascade or general CAD kernel.
 - No stored meshes, B-reps, scene graph data, or generated solids.
-- No hidden runtime generation from patterns, frame templates, or connection presets.
+- No hidden runtime generation from patterns, frame templates, or Smart Component presets.
 
 ## Core Rule
 
@@ -231,16 +231,16 @@ Add or formalize:
 
 Members still keep explicit `start` and `end`. Work point refs are review and authoring metadata only.
 
-## 7. Add A Connection Library
+## 7. Add A Smart Component Library
 
 Add:
 
 ```text
-bobercad/data/libraries/connections/connection-register.json
-bobercad/app/schemas/connection.schema.json
+bobercad/data/libraries/smart-components/smart-component-register.json
+bobercad/app/schemas/smart-component.schema.json
 ```
 
-Connection library entries are presets for authoring standard connections.
+Smart Component library entries are presets for authoring standard objects such as connections, stairs, frames, and warehouses.
 
 Example:
 
@@ -257,17 +257,17 @@ Example:
 }
 ```
 
-When a preset is used, the project connection can store provenance:
+When a preset is used, the project Smart Component instance can store provenance:
 
 ```json
-"sourcePreset": {
-  "library": "connections",
+"sourceComponent": {
+  "library": "smart-components",
   "id": "beam_to_column_end_plate_m16_2x3",
   "version": "0.1.0"
 }
 ```
 
-But the actual plates, holes, fasteners, and welds must be stored in the project.
+But the actual members, plates, holes, fasteners, welds, cuts, and patterns must be stored in the project.
 
 ## 8. Add A Frame Library
 

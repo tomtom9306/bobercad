@@ -27,6 +27,27 @@
       "materialType": "steel",
       "density": 7850,
       "nominalYieldStrength": 355
+    },
+    "OAK_TIMBER": {
+      "id": "OAK_TIMBER",
+      "name": "Oak timber tread board",
+      "materialType": "timber",
+      "density": 720,
+      "description": "Demo timber material for stair tread boards."
+    },
+    "LAMINATED_GLASS": {
+      "id": "LAMINATED_GLASS",
+      "name": "Laminated safety glass",
+      "materialType": "glass",
+      "density": 2500,
+      "description": "Demo glass material for stair balustrade infill panels."
+    },
+    "CONCRETE": {
+      "id": "CONCRETE",
+      "name": "Concrete mounting surface",
+      "materialType": "concrete",
+      "density": 2400,
+      "description": "Demo concrete material for stair floor and slab mounting reference surfaces."
     }
   }
 }

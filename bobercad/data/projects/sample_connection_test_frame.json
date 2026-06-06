@@ -5,7 +5,7 @@
   "project": {
     "id": "project_connection_test_frame_1",
     "name": "Connection Test Frame",
-    "description": "Clean four-column top-frame sample for testing adding, removing, and changing beam-to-column connections. Stores semantic members, interfaces, and connection zones only.",
+    "description": "Clean four-column top-frame sample for testing adding, removing, and changing beam-to-column Smart Components. Stores semantic members, interfaces, and connection zones only.",
     "createdWith": "manual-seed-0.5.0",
     "bim": {
       "name": "Connection Test Frame",
@@ -77,15 +77,15 @@
       "version": "0.1.0",
       "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
     },
-    "connections": {
-      "libraryId": "starter-connection-library",
-      "version": "0.1.0",
-      "path": "../libraries/connections/connection-register.json"
-    },
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
       "path": "../libraries/model-library/model-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
     }
   },
   "projectTree": {
@@ -405,17 +405,15 @@
           }
         }
       },
-      "connections": {
+      "smartComponentInstances": {
         "*": {
-          "generator": {
-            "status": "not-created"
-          },
           "tracking": {
             "projectTreeNodeId": "zone_connection_tests",
             "phase": "phase_1",
             "lot": "lot_1",
             "status": "candidate"
-          }
+          },
+          "status": "not-created"
         }
       }
     }
@@ -716,8 +714,8 @@
           "if_c1_east",
           "if_b1_start"
         ],
-        "connectionIds": [],
-        "objectIds": []
+        "objectIds": [],
+        "smartComponentInstanceIds": []
       },
       "cz_c2_b1": {
         "id": "cz_c2_b1",
@@ -731,8 +729,8 @@
           "if_c2_west",
           "if_b1_end"
         ],
-        "connectionIds": [],
-        "objectIds": []
+        "objectIds": [],
+        "smartComponentInstanceIds": []
       },
       "cz_c2_b2": {
         "id": "cz_c2_b2",
@@ -746,8 +744,8 @@
           "if_c2_north",
           "if_b2_start"
         ],
-        "connectionIds": [],
-        "objectIds": []
+        "objectIds": [],
+        "smartComponentInstanceIds": []
       },
       "cz_c3_b2": {
         "id": "cz_c3_b2",
@@ -761,8 +759,8 @@
           "if_c3_south",
           "if_b2_end"
         ],
-        "connectionIds": [],
-        "objectIds": []
+        "objectIds": [],
+        "smartComponentInstanceIds": []
       },
       "cz_c3_b3": {
         "id": "cz_c3_b3",
@@ -776,8 +774,8 @@
           "if_c3_west",
           "if_b3_start"
         ],
-        "connectionIds": [],
-        "objectIds": []
+        "objectIds": [],
+        "smartComponentInstanceIds": []
       },
       "cz_c4_b3": {
         "id": "cz_c4_b3",
@@ -791,8 +789,8 @@
           "if_c4_east",
           "if_b3_end"
         ],
-        "connectionIds": [],
-        "objectIds": []
+        "objectIds": [],
+        "smartComponentInstanceIds": []
       },
       "cz_c4_b4": {
         "id": "cz_c4_b4",
@@ -806,8 +804,8 @@
           "if_c4_south",
           "if_b4_start"
         ],
-        "connectionIds": [],
-        "objectIds": []
+        "objectIds": [],
+        "smartComponentInstanceIds": []
       },
       "cz_c1_b4": {
         "id": "cz_c1_b4",
@@ -821,8 +819,8 @@
           "if_c1_north",
           "if_b4_end"
         ],
-        "connectionIds": [],
-        "objectIds": []
+        "objectIds": [],
+        "smartComponentInstanceIds": []
       }
     },
     "assemblies": {
@@ -858,7 +856,8 @@
           "phase": "phase_1",
           "lot": "lot_1",
           "status": "modeled"
-        }
+        },
+        "smartComponentInstanceIds": []
       }
     },
     "members": {
@@ -1037,8 +1036,10 @@
     "features": {},
     "fastenerGroups": {},
     "welds": {},
-    "connections": {},
-    "addonData": {}
+    "addonData": {},
+    "referencePlanes": {},
+    "trimJoints": {},
+    "smartComponentInstances": {}
   },
   "migrationHistory": [
     {

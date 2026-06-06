@@ -8,6 +8,60 @@
       "boolean-beam-1": {
         "path": "../../../data/projects/sample_boolean_beam.json"
       },
+      "stair-system-straight-basic": {
+        "path": "../../../data/projects/sample_stair_straight_basic.json"
+      },
+      "stair-system-straight-landing": {
+        "path": "../../../data/projects/sample_stair_straight_with_landing.json"
+      },
+      "stair-system-l-shape": {
+        "path": "../../../data/projects/sample_stair_l_shape.json"
+      },
+      "stair-system-u-switchback": {
+        "path": "../../../data/projects/sample_stair_u_switchback.json"
+      },
+      "stair-system-winder": {
+        "path": "../../../data/projects/sample_stair_winder.json"
+      },
+      "stair-system-curved": {
+        "path": "../../../data/projects/sample_stair_curved.json"
+      },
+      "stair-system-spiral": {
+        "path": "../../../data/projects/sample_stair_spiral.json"
+      },
+      "stair-system-helical": {
+        "path": "../../../data/projects/sample_stair_helical.json"
+      },
+      "stair-system-mono-stringer": {
+        "path": "../../../data/projects/sample_stair_mono_stringer.json"
+      },
+      "stair-system-grating-treads": {
+        "path": "../../../data/projects/sample_stair_grating_treads.json"
+      },
+      "stair-system-glass-rail": {
+        "path": "../../../data/projects/sample_stair_glass_rail.json"
+      },
+      "stair-system-split-weight": {
+        "path": "../../../data/projects/sample_stair_transport_split_weight.json"
+      },
+      "stair-system-manual-split": {
+        "path": "../../../data/projects/sample_stair_manual_split.json"
+      },
+      "stair-system-compliance-failures": {
+        "path": "../../../data/projects/sample_stair_compliance_failures.json"
+      },
+      "stair-system-all-variants": {
+        "path": "../../../data/projects/sample_stair_all_variants.json"
+      },
+      "stair-tread-variants": {
+        "path": "../../../data/projects/sample_stair_tread_variants.json"
+      },
+      "stair-system-treads-only-all-variants": {
+        "path": "../../../data/projects/sample_stair_treads_only_all_variants.json"
+      },
+      "stair-system-treads-landings-only-all-variants": {
+        "path": "../../../data/projects/sample_stair_treads_only_all_variants.json"
+      },
       "moment-end-plate-1": {
         "path": "../../../data/projects/sample_structure.json"
       },
@@ -61,8 +115,29 @@
     "zoomInFactor": 1.1,
     "zoomOutFactor": 0.9
   },
+  "shortcuts": {
+    "commands": {
+      "createBeam": "B",
+      "createColumn": "C",
+      "createTrim": "T",
+      "cancel": "Escape"
+    },
+    "memberCreate": {
+      "cancel": "Escape",
+      "confirm": "Enter",
+      "deleteInput": "Backspace",
+      "elevationInput": "Z",
+      "toggleAxisGuideMode": "Tab",
+      "cycleSnap": ""
+    },
+    "memberEdit": {
+      "confirmTransform": "Enter",
+      "cancelTransform": "Escape"
+    }
+  },
   "authoring": {
     "autoAxisRelations": true,
+    "axisGuideMode": "global",
     "snapTolerancePx": 16,
     "pointSnapBiasPx": 12,
     "intersectionSnapBiasPx": 10,

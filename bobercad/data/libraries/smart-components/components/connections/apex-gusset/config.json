@@ -1,0 +1,265 @@
+{
+  "type": "apex-gusset",
+  "title": "Apex Gusset",
+  "version": 1,
+  "recipe": [
+    {
+      "operation": "design-status"
+    },
+    {
+      "operation": "dual-member-gusset"
+    }
+  ],
+  "interfaces": [
+    {
+      "role": "main",
+      "auto": {
+        "type": "member-end-face"
+      }
+    },
+    {
+      "role": "secondary",
+      "auto": {
+        "type": "member-end-face"
+      }
+    }
+  ],
+  "presets": {
+    "apex_gusset_m16_2x2": {
+      "id": "apex_gusset_m16_2x2",
+      "version": "0.1.0",
+      "name": "Apex gusset, M16 2+2",
+      "parameters": {
+        "plate": {
+          "thickness": 10,
+          "width": 420,
+          "height": 250,
+          "verticalOffset": 0
+        },
+        "bolts": {
+          "fastenerRef": "M16_8_8",
+          "rows": 2,
+          "pitch": 80,
+          "groupSpacing": 220,
+          "length": 80
+        },
+        "holes": {
+          "diameter": 18,
+          "memberDepth": 35,
+          "type": "round"
+        },
+        "designAssumptions": {
+          "standard": "EN 1993-1-8",
+          "status": "not-calculated"
+        },
+        "loads": {
+          "status": "not-defined"
+        }
+      }
+    }
+  },
+  "$schema": "../../../../../../app/schemas/smart-component.schema.json",
+  "kind": "connection",
+  "roles": {
+    "gussetPlate": "_gusset_plate",
+    "mainHolePattern": "_main_bolt_grid",
+    "secondaryHolePattern": "_secondary_bolt_grid",
+    "mainTrimPlane": "_main_trim_plane",
+    "mainTrim": "_main_trim",
+    "secondaryTrimPlane": "_secondary_trim_plane",
+    "secondaryTrim": "_secondary_trim",
+    "mainPlateHoles": "_main_holes_plate",
+    "secondaryPlateHoles": "_secondary_holes_plate",
+    "mainMemberHoles": "_main_holes_member",
+    "secondaryMemberHoles": "_secondary_holes_member",
+    "mainFasteners": "_main_bolts",
+    "secondaryFasteners": "_secondary_bolts"
+  },
+  "parameters": {
+    "designAssumptions.standard": {
+      "kind": "text",
+      "label": "Standard",
+      "readOnly": true
+    },
+    "designAssumptions.status": {
+      "kind": "text",
+      "label": "Calculation",
+      "readOnly": true
+    },
+    "loads.status": {
+      "kind": "text",
+      "label": "Loads",
+      "readOnly": true
+    },
+    "plate.thickness": {
+      "kind": "positiveNumber",
+      "label": "Plate thickness",
+      "unit": "mm"
+    },
+    "plate.width": {
+      "kind": "positiveNumber",
+      "label": "Plate width",
+      "unit": "mm"
+    },
+    "plate.height": {
+      "kind": "positiveNumber",
+      "label": "Plate height",
+      "unit": "mm"
+    },
+    "plate.verticalOffset": {
+      "kind": "number",
+      "label": "Vertical offset",
+      "unit": "mm",
+      "required": false,
+      "default": 0
+    },
+    "bolts.fastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Fastener"
+    },
+    "bolts.rows": {
+      "kind": "positiveInteger",
+      "label": "Rows per member",
+      "unit": "pcs"
+    },
+    "bolts.pitch": {
+      "kind": "nonNegativeNumber",
+      "label": "Pitch",
+      "unit": "mm"
+    },
+    "bolts.groupSpacing": {
+      "kind": "nonNegativeNumber",
+      "label": "Member line spacing",
+      "unit": "mm"
+    },
+    "bolts.length": {
+      "kind": "positiveNumber",
+      "label": "Bolt length",
+      "unit": "mm",
+      "required": false,
+      "default": 80,
+      "standardOptions": {
+        "kind": "fastenerLengths",
+        "fastenerRef": "bolts.fastenerRef"
+      }
+    },
+    "holes.diameter": {
+      "kind": "positiveNumber",
+      "label": "Hole diameter",
+      "unit": "mm"
+    },
+    "holes.memberDepth": {
+      "kind": "positiveNumber",
+      "label": "Member depth",
+      "unit": "mm"
+    },
+    "holes.type": {
+      "kind": "enum",
+      "values": [
+        "round",
+        "slotted",
+        "countersunk"
+      ],
+      "label": "Hole type",
+      "readOnly": true
+    }
+  },
+  "requiredPlateRoles": [
+    "gussetPlate"
+  ],
+  "components": [],
+  "dimensions": [
+    {
+      "id": "gusset-thickness",
+      "parameter": "plate.thickness",
+      "label": "t",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "gussetPlate",
+        "axis": "normal",
+        "at": {
+          "localAxisY": "max",
+          "localAxisZ": "max"
+        },
+        "offset": {
+          "localAxisY": 24,
+          "localAxisZ": 18
+        }
+      }
+    },
+    {
+      "id": "gusset-width",
+      "parameter": "plate.width",
+      "label": "W",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "gussetPlate",
+        "axis": "localAxisY",
+        "at": {
+          "localAxisZ": "max"
+        },
+        "offset": {
+          "localAxisZ": 28,
+          "normal": 18
+        }
+      }
+    },
+    {
+      "id": "gusset-height",
+      "parameter": "plate.height",
+      "label": "H",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "gussetPlate",
+        "axis": "localAxisZ",
+        "at": {
+          "localAxisY": "max"
+        },
+        "offset": {
+          "localAxisY": 30,
+          "normal": 18
+        }
+      }
+    }
+  ],
+  "ui": {
+    "tabs": [
+      {
+        "id": "design",
+        "label": "Design",
+        "items": [
+          "designAssumptions.standard",
+          "designAssumptions.status",
+          "loads.status"
+        ]
+      },
+      {
+        "id": "parts",
+        "label": "Parts",
+        "items": [
+          "plate.thickness",
+          "plate.width",
+          "plate.height",
+          "plate.verticalOffset",
+          {
+            "kind": "smartComponentPlates"
+          }
+        ]
+      },
+      {
+        "id": "bolts",
+        "label": "Bolts",
+        "items": [
+          "bolts.fastenerRef",
+          "bolts.rows",
+          "bolts.pitch",
+          "bolts.groupSpacing",
+          "bolts.length",
+          "holes.diameter",
+          "holes.memberDepth"
+        ]
+      }
+    ]
+  }
+}

@@ -151,15 +151,15 @@ export function createWebglViewer(canvas, reset, settings) {
     return [rgb[0], rgb[1], rgb[2], Math.round(255 * opacity)];
   }
 
-  function isActiveConnectionObject(objectId) {
-    return Boolean(objectId && scene?.activeConnectionObjectIds?.has?.(objectId));
+  function isActiveSmartComponentObject(objectId) {
+    return Boolean(objectId && scene?.activeSmartComponentObjectIds?.has?.(objectId));
   }
 
   function lodDetailVisible(objectId) {
     if (!objectId) return true;
     const detail = scene?.lodDetails?.[objectId];
     if (!detail) return false;
-    if (isActiveConnectionObject(objectId) || highlightedObjectIds.has(objectId)) return true;
+    if (isActiveSmartComponentObject(objectId) || highlightedObjectIds.has(objectId)) return true;
     return detail.radius * camera.screenScale() >= detailPixelThreshold;
   }
 
@@ -216,6 +216,8 @@ export function createWebglViewer(canvas, reset, settings) {
       pickObjectByColorId.set(id, {
         collection: item.collection,
         objectId: item.objectId,
+        ...(item.memberId ? { memberId: item.memberId } : {}),
+        ...(item.ownerMemberId ? { ownerMemberId: item.ownerMemberId } : {}),
         ...(item.operationId ? { operationId: item.operationId } : {}),
         ...(item.regionKey ? { regionKey: item.regionKey } : {}),
         ...(item.referencePlaneId ? { referencePlaneId: item.referencePlaneId } : {}),
@@ -931,11 +933,11 @@ export function createWebglViewer(canvas, reset, settings) {
     }
 
     scene.project = patchScene.project || scene.project;
-    scene.activeConnectionId = patchScene.activeConnectionId ?? scene.activeConnectionId;
+    scene.activeSmartComponentId = patchScene.activeSmartComponentId ?? scene.activeSmartComponentId;
     scene.activeTrimJointId = patchScene.activeTrimJointId ?? scene.activeTrimJointId;
     scene.activeTrimOperationId = patchScene.activeTrimOperationId ?? scene.activeTrimOperationId;
-    scene.activeConnectionObjectIds = patchScene.activeConnectionObjectIds || scene.activeConnectionObjectIds;
-    scene.generatedConnectionObjectIds = patchScene.generatedConnectionObjectIds || scene.generatedConnectionObjectIds;
+    scene.activeSmartComponentObjectIds = patchScene.activeSmartComponentObjectIds || scene.activeSmartComponentObjectIds;
+    scene.generatedSmartComponentObjectIds = patchScene.generatedSmartComponentObjectIds || scene.generatedSmartComponentObjectIds;
     projectedSceneTriangles = null;
     invalidateStaticSceneCache();
     invalidateMemberInstanceCache();
@@ -2130,16 +2132,6 @@ export function createWebglViewer(canvas, reset, settings) {
         commandHandler.pointerDown?.({ event, screen: { x, y }, hit: hitResult });
         return;
       }
-      if (pickHandler && event.button === 0 && !event.shiftKey) {
-        const hitResult = pickScene(x, y);
-        pickHandler(hitResult?.face || null);
-        return;
-      }
-      const dimension = event.button === 0 && !event.shiftKey ? pickDimension(x, y) : null;
-      if (dimension) {
-        dimensionUi.clickDimension(dimension);
-        return;
-      }
       const handle = event.button === 0 && !event.shiftKey ? pickAuthoringHandle(x, y) : null;
       if (handle?.kind === "coordinate-space-toggle") {
         if (authoringHandler?.click?.({ handle, screen: { x, y } }) !== false) {
@@ -2161,6 +2153,16 @@ export function createWebglViewer(canvas, reset, settings) {
           pointerId: event.pointerId
         };
         capturePointer(event);
+        return;
+      }
+      if (pickHandler && event.button === 0 && !event.shiftKey) {
+        const hitResult = pickScene(x, y);
+        pickHandler(hitResult?.face || null);
+        return;
+      }
+      const dimension = event.button === 0 && !event.shiftKey ? pickDimension(x, y) : null;
+      if (dimension) {
+        dimensionUi.clickDimension(dimension);
         return;
       }
       if (mode === "pending-orbit") {

@@ -95,6 +95,11 @@ const MEMBER_END_OPTIONS = [
   { id: "end", label: "End" }
 ];
 
+const MITER_MODE_OPTIONS = [
+  { id: "equal-angle", label: "Equal angle" },
+  { id: "profile-balanced", label: "Balanced profile" }
+];
+
 function profileLabel(profiles, member) {
   const profile = profiles?.[member.profile];
   return profile?.designation || member.profile || "-";
@@ -521,6 +526,27 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     return group;
   };
 
+  const miterModePicker = (operation) => {
+    const group = document.createElement("div");
+    group.className = "trim-member-end-toggle";
+    group.setAttribute("role", "radiogroup");
+    group.setAttribute("aria-label", `${operation.id} miter mode`);
+    for (const option of operation.miterModeOptions) {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "trim-end-option";
+      item.dataset.selected = option.id === operation.miterMode ? "true" : "false";
+      item.setAttribute("role", "radio");
+      item.setAttribute("aria-checked", option.id === operation.miterMode ? "true" : "false");
+      item.textContent = option.label;
+      item.addEventListener("click", () => {
+        if (option.id !== operation.miterMode) operation.onMiterModeChange(option.id);
+      });
+      group.append(item);
+    }
+    return group;
+  };
+
   const planeLabel = (referencePlaneId) => api.project().model.referencePlanes?.[referencePlaneId]?.name || referencePlaneId;
 
   const planeTrimPlanesRow = (operation) => {
@@ -590,6 +616,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     if (operation.showGap) {
       rows.push(field("Gap", compactNumericInput(Number.isFinite(operation.gap) ? operation.gap : 0, `${operation.id} gap`, operation.onGapChange)));
     }
+    if (operation.miterModeOptions) rows.push(field("Miter", miterModePicker(operation)));
     rows.push(...(operation.extraRows || []));
     card.append(header, ...rows);
     return card;
@@ -626,6 +653,9 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       regionKeys: type === "plane-trim" ? regionKeysForPlaneIds(planeIds(operation)) : [],
       showGap: operationSupportsGap(type),
       gap: operation.gap,
+      miterModeOptions: type === "end-miter" ? MITER_MODE_OPTIONS : null,
+      miterMode: operation.miterMode || "equal-angle",
+      onMiterModeChange: (miterMode) => updateOperation(operation.id, { miterMode }, `${miterMode === "profile-balanced" ? "Balanced profile" : "Equal angle"} miter selected.`),
       onEnabledChange: (enabled) => updateOperation(operation.id, { enabled }),
       onTypeChange: (nextType) => updateOperationType(operation, nextType),
       onGapChange: (gap) => updateOperation(operation.id, { gap }),

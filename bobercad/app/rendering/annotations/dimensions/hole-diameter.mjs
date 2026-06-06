@@ -1,8 +1,8 @@
 import { basisAxis, closestHole, dimensionOffset, featureBasis, finite, makeDimension, positionPoint, roleObject, v } from "../dimension-context.mjs";
 
 export function holeDiameterDimension(ctx, spec) {
-  const pattern = roleObject(ctx.project, ctx.connection, spec.reference.holePatternRole);
-  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
+  const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);
+  const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);
   const basis = featureBasis(ctx.project, feature);
   const position = pattern && basis ? closestHole(pattern) : null;
   const diameter = pattern?.holeDiameter;

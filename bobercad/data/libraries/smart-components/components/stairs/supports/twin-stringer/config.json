@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "twin-stringer",
+  "kind": "stair-support",
+  "title": "Twin Stringer Support",
+  "version": 1,
+  "roles": {
+    "supportPattern": "_support_pattern",
+    "supportAssembly": "_support_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "twin-stringer": {
+      "id": "twin-stringer",
+      "version": "0.1.0",
+      "name": "Twin stringer",
+      "parameters": {
+        "meta": {
+          "family": "twin-stringer"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "support",
+        "label": "Support",
+        "items": []
+      }
+    ]
+  }
+}

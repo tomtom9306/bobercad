@@ -11,18 +11,21 @@ import {
   relationUpsertKey
 } from "../api/project/axis-relations.mjs?v=relation-types-1";
 import {
-  affectedConnectionsForMember,
-  affectedConnectionIdsForMember,
-  connectionObjectIds,
-  connectionOwnedObjectIds,
-  connectionReferencesObject,
+  affectedSmartComponentsForMember,
+  affectedSmartComponentIdsForMember,
+  smartComponentForObject as projectSmartComponentForObject,
+  smartComponentObjectIds,
+  smartComponentOwnedObjectIds,
+  smartComponentReferencesObject,
+  smartComponentRoot,
+  smartComponentRootForObject as projectSmartComponentRootForObject,
   featureDependencyObjectIds as projectFeatureDependencyObjectIds,
   flattenIds,
   memberDependencyObjectIds as projectMemberDependencyObjectIds,
   objectCollection,
   referencePlaneDependencyObjectIds as projectReferencePlaneDependencyObjectIds,
   trimJointDependencyObjectIds as projectTrimJointDependencyObjectIds
-} from "../api/project/dependencies.mjs";
+} from "../api/project/dependencies.mjs?v=stair-root-select-2";
 import {
   memberLayoutAxis,
   moveMemberWithLayout as moveMemberWithLayoutData,
@@ -32,18 +35,18 @@ import {
 import {
   optionalPath,
   setPath
-} from "../modules/connections/connection-schema.mjs";
+} from "../modules/smart-components/parameters.mjs?v=stair-route-ui-fit-2";
 import {
   clone,
-  connectionById,
-  connectionComponentOptions as projectConnectionComponentOptions,
-  connectionPlateOptions as projectConnectionPlateOptions,
-  createProjectConnectionFromPreset,
-  setConnectionPlateIncluded as setProjectConnectionPlateIncluded,
-  updateConnection,
-  updateConnections
-} from "../modules/connections/connection-generator.mjs";
-import { connectionDefinition, supportedConnectionPresets, supportedConnections } from "../modules/connections/connection-registry.mjs";
+  smartComponentById,
+  smartComponentRoleOptions as projectSmartComponentRoleOptions,
+  smartComponentPlateOptions as projectSmartComponentPlateOptions,
+  createProjectSmartComponentFromPreset,
+  setSmartComponentPlateIncluded as setProjectSmartComponentPlateIncluded,
+  updateSmartComponent,
+  updateSmartComponents
+} from "../modules/smart-components/smart-component-generator.mjs?v=stair-route-ui-fit-2";
+import { smartComponentDefinition, supportedSmartComponentPresets, supportedSmartComponents } from "../modules/smart-components/smart-component-registry.mjs?v=stair-route-ui-fit-2";
 
 const REF_ARRAY_KEYS = new Set([
   "objectIds",
@@ -58,7 +61,7 @@ const REF_ARRAY_KEYS = new Set([
   "interfaceIds",
   "connectionZoneIds",
   "childAssemblyIds",
-  "connectionIds"
+  "smartComponentInstanceIds"
 ]);
 const FIT_EPSILON = 1e-6;
 const DIAGNOSTIC_DISPLAY = {
@@ -126,6 +129,29 @@ function trimJointById(project, trimJointId) {
   return project.model.trimJoints[trimJointId];
 }
 
+function fastenerGroupById(project, fastenerGroupId) {
+  if (!project.model.fastenerGroups?.[fastenerGroupId]) fail(`fastener group not found: ${fastenerGroupId}`);
+  return project.model.fastenerGroups[fastenerGroupId];
+}
+
+function assertOptionalPositiveNumber(value, label) {
+  if (value === undefined || value === null) return;
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) fail(`${label} must be a positive number`);
+}
+
+function assertOptionalNonNegativeNumber(value, label) {
+  if (value === undefined || value === null) return;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) fail(`${label} must be a non-negative number`);
+}
+
+function validateFastenerGroup(fasteners, fastenerGroup) {
+  if (fastenerGroup.fastenerRef && !fasteners.fasteners?.[fastenerGroup.fastenerRef]) fail(`fastener not found: ${fastenerGroup.fastenerRef}`);
+  if (!Array.isArray(fastenerGroup.participants) || !fastenerGroup.participants.length) fail("fastener group participants cannot be empty");
+  assertOptionalPositiveNumber(fastenerGroup.assembly?.length, "fastener length");
+  assertOptionalPositiveNumber(fastenerGroup.assembly?.gripLength, "fastener grip length");
+  assertOptionalNonNegativeNumber(fastenerGroup.assembly?.nutOffset, "fastener nut offset");
+}
+
 function trimJointReferencePoint(project, trimJoint) {
   const points = (trimJoint.participants || [])
     .map((participant) => project.model.members?.[participant.memberId] ? memberPointAtEnd(project.model.members[participant.memberId], participant.memberEnd) : null)
@@ -149,6 +175,8 @@ function trimOperationUsesMemberEnd(type, role) {
   if (type === "end-butt-both" || type === "end-miter") return true;
   return false;
 }
+
+const MITER_MODES = new Set(["equal-angle", "profile-balanced"]);
 
 function trimRegionParts(regionKey) {
   if (typeof regionKey !== "string" || !regionKey) fail("plane trim region key must be a non-empty string");
@@ -196,6 +224,7 @@ function normalizedTrimJointOperation(trimJoint, operation) {
     delete next.referencePlaneIds;
     delete next.removedRegionKeys;
   }
+  if (type !== "end-miter") delete next.miterMode;
   return next;
 }
 
@@ -252,6 +281,12 @@ function validateTrimJointOperation(project, trimJointId, trimJoint, operation) 
   if (!operation.memberBId) fail(`${trimJointId}: operation requires member B`);
   if (!participantIds.has(operation.memberBId)) fail(`${trimJointId}: operation member B must be a participant`);
   if (operation.memberAId === operation.memberBId) fail(`${trimJointId}: operation members must be different`);
+  if (operation.miterMode !== undefined && !MITER_MODES.has(operation.miterMode)) {
+    fail(`${trimJointId}: unsupported miterMode ${operation.miterMode}`);
+  }
+  if (operation.miterMode !== undefined && operation.type !== "end-miter") {
+    fail(`${trimJointId}: miterMode is only valid for end-miter operations`);
+  }
 }
 
 function plainObject(value) {
@@ -337,26 +372,73 @@ function cloneProjectForTrimJointUpdate(project, trimJointId) {
   };
 }
 
-function isConnectionGeneratedHelper(object, connectionId) {
-  return object?.authoring?.generatedBy === connectionId && object.authoring?.lifecycle === "delete-with-connection";
+function cloneProjectForFastenerGroupUpdate(project) {
+  return {
+    ...project,
+    objectIndex: { ...(project.objectIndex || {}) },
+    model: {
+      ...(project.model || {}),
+      fastenerGroups: { ...(project.model?.fastenerGroups || {}) },
+      smartComponentInstances: Object.fromEntries(Object.entries(project.model?.smartComponentInstances || {}).map(([id, instance]) => [id, clone(instance)]))
+    }
+  };
 }
 
-function connectionGeneratedHelperIds(project, connection) {
+function isSmartComponentGeneratedHelper(object, smartComponentId) {
+  return object?.authoring?.componentInstanceId === smartComponentId && object.authoring?.lifecycle === "delete-with-smart-component";
+}
+
+function smartComponentGeneratedHelperIds(project, smartComponent) {
   const ids = [];
-  const zone = project.model.connectionZones?.[connection.connectionZoneId];
-  if (isConnectionGeneratedHelper(zone, connection.id)) ids.push(zone.id);
+  const zoneId = smartComponentConnectionZoneId(smartComponent);
+  const assemblyId = smartComponentAssemblyId(smartComponent);
+  const zone = zoneId ? project.model.connectionZones?.[zoneId] : null;
+  if (isSmartComponentGeneratedHelper(zone, smartComponent.id)) ids.push(zone.id);
   for (const interfaceId of zone?.interfaceIds || []) {
-    if (isConnectionGeneratedHelper(project.model.interfaces?.[interfaceId], connection.id)) ids.push(interfaceId);
+    if (isSmartComponentGeneratedHelper(project.model.interfaces?.[interfaceId], smartComponent.id)) ids.push(interfaceId);
   }
-  if (isConnectionGeneratedHelper(project.model.assemblies?.[connection.assemblyId], connection.id)) ids.push(connection.assemblyId);
+  if (assemblyId && isSmartComponentGeneratedHelper(project.model.assemblies?.[assemblyId], smartComponent.id)) ids.push(assemblyId);
   return unique(ids);
 }
 
-function connectionRoleForObject(connection, objectId) {
-  for (const [role, value] of Object.entries(connection.generator?.objectRoles || {})) {
+function smartComponentRoleForObject(smartComponent, objectId) {
+  for (const [role, value] of Object.entries(smartComponent.objectRoles || {})) {
     if (flattenIds(value).includes(objectId)) return role;
   }
   return null;
+}
+
+function smartComponentManagingObject(project, objectId) {
+  const collection = objectCollection(project, objectId);
+  const object = collection ? project.model[collection]?.[objectId] : null;
+  const instanceId = object?.authoring?.componentInstanceId;
+  if (!instanceId || !["managed", "managed-with-overrides"].includes(object.authoring?.componentStatus)) return null;
+  const instance = project.model.smartComponentInstances?.[instanceId];
+  if (!instance || !smartComponentOwnedObjectIds(instance).includes(objectId)) return null;
+  return instance;
+}
+
+function changedObjectPatch(before, after) {
+  const patch = {};
+  for (const [key, value] of Object.entries(after || {})) {
+    if (["id", "type", "authoring"].includes(key)) continue;
+    if (JSON.stringify(before?.[key]) !== JSON.stringify(value)) patch[key] = clone(value);
+  }
+  return patch;
+}
+
+function recordSmartComponentFieldOverride(project, beforeObject, afterObject) {
+  const instance = smartComponentManagingObject(project, afterObject?.id);
+  if (!instance) return;
+  const patch = changedObjectPatch(beforeObject, afterObject);
+  if (!Object.keys(patch).length) return;
+  instance.fieldOverrides ||= {};
+  instance.fieldOverrides[afterObject.id] = mergePatch(instance.fieldOverrides[afterObject.id] || {}, patch);
+  instance.managedFields ||= {};
+  instance.managedFields[afterObject.id] = unique([
+    ...(Array.isArray(instance.managedFields[afterObject.id]) ? instance.managedFields[afterObject.id] : []),
+    ...Object.keys(instance.fieldOverrides[afterObject.id] || {})
+  ]);
 }
 
 function appendMemberToDefaultGroup(project, memberId) {
@@ -415,21 +497,41 @@ function setRoleInList(list = [], role, active) {
   return [...current].sort();
 }
 
+function smartComponentInput(instance, key) {
+  return instance.inputs?.[key] || {};
+}
+
+function smartComponentMainMemberId(instance) {
+  return smartComponentInput(instance, "main").memberId;
+}
+
+function smartComponentSecondaryMemberId(instance) {
+  return smartComponentInput(instance, "secondary").memberId;
+}
+
+function smartComponentConnectionZoneId(instance) {
+  return instance.inputs?.connectionZoneId;
+}
+
+function smartComponentAssemblyId(instance) {
+  return instance.inputs?.assemblyId;
+}
+
 function componentFromFace(project, face) {
   if (!face?.objectId) return null;
-  const connection = Object.values(project.model.connections || {}).find((item) => connectionReferencesObject(item, face.objectId));
-  if (!connection) return null;
+  const smartComponent = Object.values(project.model.smartComponentInstances || {}).find((item) => smartComponentReferencesObject(item, face.objectId));
+  if (!smartComponent) return null;
   const collection = objectCollection(project, face.objectId);
   if (!collection) return null;
 
-  const objectRole = connectionRoleForObject(connection, face.objectId);
+  const objectRole = smartComponentRoleForObject(smartComponent, face.objectId);
   if (collection === "fastenerGroups" && Number.isInteger(face.positionIndex)) {
     const fastenerGroup = project.model.fastenerGroups?.[face.objectId];
-    const patternRole = fastenerGroup?.holePatternRef ? connectionRoleForObject(connection, fastenerGroup.holePatternRef) : null;
+    const patternRole = fastenerGroup?.holePatternRef ? smartComponentRoleForObject(smartComponent, fastenerGroup.holePatternRef) : null;
     if (patternRole) {
       return {
         kind: "pattern-position",
-        connectionId: connection.id,
+        smartComponentId: smartComponent.id,
         objectId: face.objectId,
         objectRole,
         patternRole,
@@ -441,7 +543,7 @@ function componentFromFace(project, face) {
   if (!objectRole) return null;
   return {
     kind: "object-role",
-    connectionId: connection.id,
+    smartComponentId: smartComponent.id,
     objectId: face.objectId,
     objectRole
   };
@@ -473,11 +575,13 @@ function interfaceReferencePoint(project, profiles, zone, interfaceId) {
   return Array.isArray(zone.origin) ? zone.origin : null;
 }
 
-function lockConnectionZoneFaces(project, profiles, connectionId, options = {}) {
+function lockSmartComponentZoneFaces(project, profiles, smartComponentId, options = {}) {
   const next = options.inPlace ? project : clone(project);
-  const connection = connectionById(next, connectionId);
-  const zone = next.model.connectionZones?.[connection.connectionZoneId];
-  if (!zone) fail(`${connectionId}: connection zone not found: ${connection.connectionZoneId}`);
+  const smartComponent = smartComponentById(next, smartComponentId);
+  const zoneId = smartComponentConnectionZoneId(smartComponent);
+  if (!zoneId) return next;
+  const zone = next.model.connectionZones?.[zoneId];
+  if (!zone) fail(`${smartComponentId}: connection zone not found: ${zoneId}`);
 
   for (const interfaceId of zone.interfaceIds || []) {
     const iface = next.model.interfaces?.[interfaceId];
@@ -497,10 +601,10 @@ function lockConnectionZoneFaces(project, profiles, connectionId, options = {}) 
   return next;
 }
 
-function lockGeneratedConnectionFaces(project, profiles) {
+function lockGeneratedSmartComponentFaces(project, profiles) {
   let next = project;
-  for (const connection of Object.values(project.model.connections || {})) {
-    if (connection.generator?.status === "generated") next = lockConnectionZoneFaces(next, profiles, connection.id, { inPlace: true });
+  for (const smartComponent of Object.values(project.model.smartComponentInstances || {})) {
+    if (smartComponent.status === "generated") next = lockSmartComponentZoneFaces(next, profiles, smartComponent.id, { inPlace: true });
   }
   return next;
 }
@@ -513,7 +617,7 @@ function roundedDimension(value) {
   return Math.round(value * 1000) / 1000;
 }
 
-function connectionTolerance(project) {
+function smartComponentTolerance(project) {
   const tolerances = project.settings?.tolerances || {};
   return Math.max(
     tolerances.connectionGap || 0,
@@ -549,7 +653,7 @@ function memberSectionSpan(project, profiles, member) {
 
 function layoutRepairTolerance(project, profiles, main, secondary) {
   return Math.max(
-    connectionTolerance(project),
+    smartComponentTolerance(project),
     memberSectionSpan(project, profiles, main),
     memberSectionSpan(project, profiles, secondary)
   ) * 1.25;
@@ -600,7 +704,7 @@ function applyLayoutAxisRepair(project, repair) {
   member.authoring = {
     ...(member.authoring || {}),
     layoutAxisRepair: {
-      source: "connection-create",
+      source: "smart-component-create",
       mainMemberId: repair.mainMemberId,
       endpoint: repair.endpoint,
       offset: repair.offset.map(roundedDimension)
@@ -609,7 +713,7 @@ function applyLayoutAxisRepair(project, repair) {
   return next;
 }
 
-function connectionSeedProjects(project, profiles, memberIds) {
+function smartComponentSeedProjects(project, profiles, memberIds) {
   const [firstId, secondId] = memberIds || [];
   const first = project.model.members?.[firstId];
   const second = project.model.members?.[secondId];
@@ -625,12 +729,12 @@ function connectionSeedProjects(project, profiles, memberIds) {
   return [project, ...repairs.map((repair) => applyLayoutAxisRepair(project, repair))];
 }
 
-export function createProjectStore({ project, profiles, connectionCatalog, fasteners, reconcileOnLoad = false, cloneOnLoad = true }) {
+export function createProjectStore({ project, profiles, smartComponentCatalog, fasteners, reconcileOnLoad = false, cloneOnLoad = true }) {
   const initialProject = cloneOnLoad ? clone(project) : project;
-  let currentProject = lockGeneratedConnectionFaces(initialProject, profiles);
+  let currentProject = lockGeneratedSmartComponentFaces(initialProject, profiles);
   const subscribers = new Set();
 
-  const definitionFor = (projectState, connectionId) => connectionDefinition(connectionCatalog, connectionById(projectState, connectionId));
+  const definitionFor = (projectState, smartComponentId) => smartComponentDefinition(smartComponentCatalog, smartComponentById(projectState, smartComponentId));
   const emit = () => {
     for (const subscriber of subscribers) subscriber(currentProject);
   };
@@ -639,111 +743,113 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     emit();
     return currentProject;
   };
-  const regenerateConnection = (projectState, connectionId) => updateConnection({
+  const regenerateSmartComponent = (projectState, smartComponentId) => updateSmartComponent({
     project: projectState,
     profiles,
-    definition: definitionFor(projectState, connectionId),
-    connectionCatalog,
+    definition: definitionFor(projectState, smartComponentId),
+    catalog: smartComponentCatalog,
     fasteners,
-    connectionId,
-    parameters: connectionById(projectState, connectionId).referenceParameters
+    instanceId: smartComponentId,
+    parameters: smartComponentById(projectState, smartComponentId).referenceParameters
   });
-  const updateConnectionParameters = (projectState, connectionId, parameters) => updateConnection({
+  const updateSmartComponentParameters = (projectState, smartComponentId, parameters) => updateSmartComponent({
     project: projectState,
     profiles,
-    definition: definitionFor(projectState, connectionId),
-    connectionCatalog,
+    definition: definitionFor(projectState, smartComponentId),
+    catalog: smartComponentCatalog,
     fasteners,
-    connectionId,
+    instanceId: smartComponentId,
     parameters
   });
-  const regenerateMemberConnections = (projectState, memberId) => {
-    const connectionIds = affectedConnectionsForMember(projectState, memberId)
-      .filter((connection) => connection.generator?.status === "generated")
-      .map((connection) => connection.id);
-    if (!connectionIds.length) return projectState;
-    return updateConnections({
+  const regenerateMemberSmartComponents = (projectState, memberId) => {
+    const smartComponentIds = affectedSmartComponentsForMember(projectState, memberId)
+      .filter((smartComponent) => smartComponent.status === "generated")
+      .map((smartComponent) => smartComponent.id);
+    if (!smartComponentIds.length) return projectState;
+    return updateSmartComponents({
       project: projectState,
       profiles,
       definitionFor,
-      connectionCatalog,
+      catalog: smartComponentCatalog,
       fasteners,
-      connectionIds,
-      parametersFor: (state, connectionId) => connectionById(state, connectionId).referenceParameters
+      instanceIds: smartComponentIds,
+      parametersFor: (state, smartComponentId) => smartComponentById(state, smartComponentId).referenceParameters
     });
   };
-  const regenerateConnectionsBatch = (projectState, connectionIds) => {
-    const ids = connectionIds.filter((connectionId) => projectState.model.connections?.[connectionId]);
+  const regenerateSmartComponentsBatch = (projectState, smartComponentIds) => {
+    const ids = smartComponentIds.filter((smartComponentId) => projectState.model.smartComponentInstances?.[smartComponentId]);
     if (!ids.length) return projectState;
-    return updateConnections({
+    return updateSmartComponents({
       project: projectState,
       profiles,
       definitionFor,
-      connectionCatalog,
+      catalog: smartComponentCatalog,
       fasteners,
-      connectionIds: ids
+      instanceIds: ids
     });
   };
-  const generatedConnectionIds = (projectState) => Object.values(projectState.model.connections || {})
-    .filter((connection) => connection.generator?.status === "generated")
-    .map((connection) => connection.id);
-  const secondaryInterface = (projectState, connectionId) => {
-    const connection = connectionById(projectState, connectionId);
-    const definition = definitionFor(projectState, connectionId);
+  const generatedSmartComponentIds = (projectState) => Object.values(projectState.model.smartComponentInstances || {})
+    .filter((smartComponent) => smartComponent.status === "generated")
+    .map((smartComponent) => smartComponent.id);
+  const secondaryInterface = (projectState, smartComponentId) => {
+    const smartComponent = smartComponentById(projectState, smartComponentId);
+    const definition = definitionFor(projectState, smartComponentId);
     const secondaryIndex = definition.interfaces.findIndex((entry) => entry.role === "secondary");
-    if (secondaryIndex < 0) fail(`${connectionId}: definition has no secondary interface`);
-    const interfaceId = projectState.model.connectionZones?.[connection.connectionZoneId]?.interfaceIds?.[secondaryIndex];
-    if (!interfaceId) fail(`${connectionId}: connection zone missing secondary interface`);
-    return projectState.model.interfaces?.[interfaceId] || fail(`${connectionId}: secondary interface not found: ${interfaceId}`);
+    if (secondaryIndex < 0) fail(`${smartComponentId}: definition has no secondary interface`);
+    const zoneId = smartComponentConnectionZoneId(smartComponent);
+    const interfaceId = projectState.model.connectionZones?.[zoneId]?.interfaceIds?.[secondaryIndex];
+    if (!interfaceId) fail(`${smartComponentId}: connection zone missing secondary interface`);
+    return projectState.model.interfaces?.[interfaceId] || fail(`${smartComponentId}: secondary interface not found: ${interfaceId}`);
   };
-  const memberTrimJoint = (projectState, connection) => {
-    const roleId = connection.generator?.objectRoles?.beamTrim;
+  const memberTrimJoint = (projectState, smartComponent) => {
+    const roleId = smartComponent.objectRoles?.beamTrim;
+    const secondaryMemberId = smartComponentSecondaryMemberId(smartComponent);
     if (roleId && projectState.model.trimJoints?.[roleId]?.type === "member-trim") return projectState.model.trimJoints[roleId];
-    return connectionOwnedObjectIds(connection)
+    return smartComponentOwnedObjectIds(smartComponent)
       .map((id) => projectState.model.trimJoints?.[id])
-      .find((trimJoint) => trimJoint?.type === "member-trim" && (trimJoint.participants || []).some((participant) => participant.memberId === connection.secondaryMemberId)) || null;
+      .find((trimJoint) => trimJoint?.type === "member-trim" && (trimJoint.participants || []).some((participant) => participant.memberId === secondaryMemberId)) || null;
   };
-  const markConnectionError = (projectState, connectionId, code, message, objectRoles = []) => {
-    const connection = projectState.model.connections?.[connectionId];
-    if (!connection) return;
-    const diagnostics = connection.generator?.diagnostics || [];
-    connection.generator = {
-      ...(connection.generator || {}),
+  const markSmartComponentError = (projectState, smartComponentId, code, message, objectRoles = []) => {
+    const smartComponent = projectState.model.smartComponentInstances?.[smartComponentId];
+    if (!smartComponent) return;
+    const diagnostics = smartComponent.diagnostics || [];
+    Object.assign(smartComponent, {
       health: "error",
       diagnostics: diagnostics.some((entry) => entry.code === code)
         ? diagnostics
         : [...diagnostics, { severity: "error", code, message, objectRoles }]
-    };
-    for (const id of connectionOwnedObjectIds(connection)) {
+    });
+    for (const id of smartComponentOwnedObjectIds(smartComponent)) {
       for (const collection of ["plates", "fastenerGroups", "welds", "features", "trimJoints"]) {
         const object = projectState.model[collection]?.[id];
         if (object) object.display = { ...(object.display || {}), ...DIAGNOSTIC_DISPLAY };
       }
     }
   };
-  const fitMemberEndToTrimPlane = (projectState, connectionId) => {
-    const connection = connectionById(projectState, connectionId);
-    const trimJoint = memberTrimJoint(projectState, connection);
+  const fitMemberEndToTrimPlane = (projectState, smartComponentId) => {
+    const smartComponent = smartComponentById(projectState, smartComponentId);
+    const trimJoint = memberTrimJoint(projectState, smartComponent);
+    const secondaryMemberId = smartComponentSecondaryMemberId(smartComponent);
     if (!trimJoint) return false;
-    const operation = (trimJoint.operations || []).find((item) => item.enabled !== false && item.type === "plane-trim" && item.memberAId === connection.secondaryMemberId);
+    const operation = (trimJoint.operations || []).find((item) => item.enabled !== false && item.type === "plane-trim" && item.memberAId === secondaryMemberId);
     if (!operation) return false;
     if (!Array.isArray(operation.referencePlaneIds) || operation.referencePlaneIds.length !== 1) {
-      markConnectionError(projectState, connectionId, "beam-trim-plane-count", "Generated member trim requires exactly one trim plane.", ["beamTrim"]);
+      markSmartComponentError(projectState, smartComponentId, "beam-trim-plane-count", "Generated member trim requires exactly one trim plane.", ["beamTrim"]);
       return false;
     }
-    const iface = secondaryInterface(projectState, connectionId);
+    const iface = secondaryInterface(projectState, smartComponentId);
     const memberEnd = iface.memberEnd;
     if (memberEnd !== "start" && memberEnd !== "end") return false;
 
-    const member = projectState.model.members?.[connection.secondaryMemberId];
-    if (!member) fail(`${connectionId}: secondary member not found: ${connection.secondaryMemberId}`);
+    const member = projectState.model.members?.[secondaryMemberId];
+    if (!member) fail(`${smartComponentId}: secondary member not found: ${secondaryMemberId}`);
     const plane = requiredReferencePlane(projectState, operation.referencePlaneIds[0], `${trimJoint.id}:${operation.id}`, fail);
     const normal = v.norm(vec3(plane.normal, `${trimJoint.id}.${operation.id}.referencePlane.normal`));
     const origin = vec3(plane.origin, `${trimJoint.id}.${operation.id}.referencePlane.origin`);
     const axis = v.sub(member.end, member.start);
     const denominator = v.dot(normal, axis);
     if (Math.abs(denominator) <= FIT_EPSILON) {
-      markConnectionError(projectState, connectionId, "member-axis-parallel-to-trim-plane", "Secondary member axis does not intersect the trim plane.", ["beamTrim"]);
+      markSmartComponentError(projectState, smartComponentId, "member-axis-parallel-to-trim-plane", "Secondary member axis does not intersect the trim plane.", ["beamTrim"]);
       return false;
     }
 
@@ -758,18 +864,18 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     member.end = fittedPoint;
     return true;
   };
-  const reconcileGeneratedConnections = (projectState, iterations = 4) => {
+  const reconcileGeneratedSmartComponents = (projectState, iterations = 4) => {
     let next = projectState;
-    const ids = generatedConnectionIds(next);
+    const ids = generatedSmartComponentIds(next);
     for (let index = 0; index < iterations; index += 1) {
-      next = regenerateConnectionsBatch(next, ids);
+      next = regenerateSmartComponentsBatch(next, ids);
       let changed = false;
-      for (const connectionId of ids) {
-        if (next.model.connections?.[connectionId]) changed = fitMemberEndToTrimPlane(next, connectionId) || changed;
+      for (const smartComponentId of ids) {
+        if (next.model.smartComponentInstances?.[smartComponentId]) changed = fitMemberEndToTrimPlane(next, smartComponentId) || changed;
       }
       if (!changed) return next;
     }
-    return regenerateConnectionsBatch(next, ids);
+    return regenerateSmartComponentsBatch(next, ids);
   };
   const applyResolveHint = (parameters, hint) => {
     if (!hint?.path || typeof hint.value !== "number" || !Number.isFinite(hint.value)) return false;
@@ -791,13 +897,13 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     }
     return false;
   };
-  const resolveConnectionDiagnostics = (connectionId) => {
+  const resolveSmartComponentDiagnostics = (smartComponentId) => {
     let next = currentProject;
     let changed = false;
     for (let index = 0; index < 4; index += 1) {
-      const connection = connectionById(next, connectionId);
-      const diagnostics = connection.generator?.diagnostics || [];
-      const parameters = clone(connection.referenceParameters);
+      const smartComponent = smartComponentById(next, smartComponentId);
+      const diagnostics = smartComponent.diagnostics || [];
+      const parameters = clone(smartComponent.referenceParameters);
       let iterationChanged = false;
       for (const diagnostic of diagnostics) {
         for (const hint of diagnostic.resolve || []) {
@@ -805,19 +911,23 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
         }
       }
       if (!iterationChanged) break;
-      next = reconcileGeneratedConnections(updateConnectionParameters(next, connectionId, parameters));
+      next = reconcileGeneratedSmartComponents(updateSmartComponentParameters(next, smartComponentId, parameters));
       changed = true;
-      if (!(connectionById(next, connectionId).generator?.diagnostics || []).length) break;
+      if (!(smartComponentById(next, smartComponentId).diagnostics || []).length) break;
     }
-    if (!changed) fail(`${connectionId}: no automatic resolver is available for current diagnostics`);
+    if (!changed) fail(`${smartComponentId}: no automatic resolver is available for current diagnostics`);
     return setProject(next);
   };
   const replaceMember = (memberId, update, options = {}) => {
     const next = cloneProjectForMemberUpdate(currentProject, memberId);
     const member = memberById(next, memberId);
-    next.model.members[memberId] = update(member);
-    if (options.regenerateConnections === false) return setProject(next);
-    return setProject(regenerateMemberConnections(next, memberId));
+    const updated = update(member);
+    next.model.members[memberId] = updated;
+    if (options.recordSmartComponentOverride !== false) {
+      recordSmartComponentFieldOverride(next, member, updated);
+    }
+    if (options.regenerateSmartComponents === false) return setProject(next);
+    return setProject(regenerateMemberSmartComponents(next, memberId));
   };
   const replaceFeature = (featureId, update) => {
     const next = cloneProjectForFeatureUpdate(currentProject, featureId);
@@ -864,8 +974,25 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
     };
     return setProject(next);
   };
+  const replaceFastenerGroup = (fastenerGroupId, update) => {
+    const next = cloneProjectForFastenerGroupUpdate(currentProject);
+    const fastenerGroup = clone(fastenerGroupById(next, fastenerGroupId));
+    const updated = update(clone(fastenerGroup));
+    if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail("fastener group update must return an object");
+    if (updated.id !== fastenerGroupId) fail("fastener group id cannot be changed");
+    if (updated.type !== fastenerGroup.type) fail("fastener group type cannot be changed");
+    validateFastenerGroup(fasteners, updated);
+    next.model.fastenerGroups[fastenerGroupId] = updated;
+    next.objectIndex[fastenerGroupId] = {
+      ...(next.objectIndex[fastenerGroupId] || {}),
+      collection: "fastenerGroups",
+      type: updated.type
+    };
+    recordSmartComponentFieldOverride(next, fastenerGroup, updated);
+    return setProject(next);
+  };
 
-  if (reconcileOnLoad) currentProject = reconcileGeneratedConnections(currentProject);
+  if (reconcileOnLoad) currentProject = reconcileGeneratedSmartComponents(currentProject);
 
   return {
     subscribe(listener) {
@@ -887,65 +1014,109 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       return objectById(currentProject, memberId);
     },
 
-    connection(connectionId) {
-      return connectionById(currentProject, connectionId);
+    smartComponent(smartComponentId) {
+      return smartComponentById(currentProject, smartComponentId);
     },
 
     trimJoint(trimJointId) {
       return trimJointById(currentProject, trimJointId);
     },
 
-    connectionForObject(objectId) {
-      return Object.values(currentProject.model.connections || {}).find((connection) => connectionReferencesObject(connection, objectId)) || null;
+    smartComponentForObject(objectId) {
+      return projectSmartComponentForObject(currentProject, objectId);
+    },
+
+    smartComponentRoot(smartComponentId) {
+      return smartComponentRoot(currentProject, smartComponentById(currentProject, smartComponentId));
+    },
+
+    smartComponentRootForObject(objectId) {
+      return projectSmartComponentRootForObject(currentProject, objectId);
     },
 
     componentFromFace(face) {
       return componentFromFace(currentProject, face);
     },
 
-    toggleConnectionComponentFromFace(face) {
+    toggleSmartComponentRoleFromFace(face) {
       const component = componentFromFace(currentProject, face);
       if (!component) return null;
       const next = clone(currentProject);
-      const connection = connectionById(next, component.connectionId);
-      connection.componentOverrides ||= {};
+      const smartComponent = smartComponentById(next, component.smartComponentId);
 
       let included = true;
       if (component.kind === "pattern-position") {
-        connection.componentOverrides.suppressedPatternPositions ||= {};
-        const current = connection.componentOverrides.suppressedPatternPositions[component.patternRole] || [];
+        smartComponent.suppressedPatternPositions ||= {};
+        const current = smartComponent.suppressedPatternPositions[component.patternRole] || [];
         included = current.includes(component.positionIndex);
         const nextList = setIndexIncluded(current, component.positionIndex, included);
-        if (nextList.length) connection.componentOverrides.suppressedPatternPositions[component.patternRole] = nextList;
-        else delete connection.componentOverrides.suppressedPatternPositions[component.patternRole];
+        if (nextList.length) smartComponent.suppressedPatternPositions[component.patternRole] = nextList;
+        else delete smartComponent.suppressedPatternPositions[component.patternRole];
       } else if (component.kind === "object-role") {
-        const definition = definitionFor(next, component.connectionId);
-        if (optionalComponentRole(definition, component.objectRole)) {
-          const current = new Set(connection.componentOverrides.activeObjectRoles || []);
-          included = !current.has(component.objectRole);
-          if (included) current.add(component.objectRole);
-          else current.delete(component.objectRole);
-          connection.componentOverrides.activeObjectRoles = [...current].sort();
-        } else {
-          const current = new Set(connection.componentOverrides.suppressedObjectRoles || []);
-          included = current.has(component.objectRole);
-          if (included) current.delete(component.objectRole);
-          else current.add(component.objectRole);
-          connection.componentOverrides.suppressedObjectRoles = [...current].sort();
-        }
+        const definition = definitionFor(next, component.smartComponentId);
+        if (!(definition.components || []).some((entry) => entry?.role === component.objectRole)) fail(`${component.smartComponentId}: unknown component role ${component.objectRole}`);
+        const current = new Set(smartComponent.suppressedRoles || []);
+        included = current.has(component.objectRole);
+        if (included) current.delete(component.objectRole);
+        else current.add(component.objectRole);
+        smartComponent.suppressedRoles = [...current].sort();
       }
 
-      const updated = setProject(reconcileGeneratedConnections(regenerateConnection(next, component.connectionId)));
+      const updated = setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, component.smartComponentId)));
       return { project: updated, component, included };
     },
 
-    connectionObjectIds(connectionId) {
-      return connectionObjectIds(currentProject, connectionById(currentProject, connectionId));
+    smartComponentObjectIds(smartComponentId) {
+      return smartComponentObjectIds(currentProject, smartComponentById(currentProject, smartComponentId));
     },
 
-    affectedConnectionIds(memberId) {
+    resetSmartComponentFieldOverride(smartComponentId, objectId, field) {
+      const next = clone(currentProject);
+      const smartComponent = smartComponentById(next, smartComponentId);
+      if (smartComponent.fieldOverrides?.[objectId]) {
+        delete smartComponent.fieldOverrides[objectId][field];
+        if (!Object.keys(smartComponent.fieldOverrides[objectId]).length) delete smartComponent.fieldOverrides[objectId];
+      }
+      if (smartComponent.managedFields?.[objectId]) {
+        smartComponent.managedFields[objectId] = smartComponent.managedFields[objectId].filter((value) => value !== field);
+        if (!smartComponent.managedFields[objectId].length) delete smartComponent.managedFields[objectId];
+      }
+      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, smartComponentId)));
+    },
+
+    resetSmartComponentObjectOverrides(smartComponentId, objectId) {
+      const next = clone(currentProject);
+      const smartComponent = smartComponentById(next, smartComponentId);
+      if (smartComponent.fieldOverrides) delete smartComponent.fieldOverrides[objectId];
+      if (smartComponent.managedFields) delete smartComponent.managedFields[objectId];
+      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, smartComponentId)));
+    },
+
+    detachSmartComponentObject(smartComponentId, objectId) {
+      const next = clone(currentProject);
+      const smartComponent = smartComponentById(next, smartComponentId);
+      if (!smartComponentOwnedObjectIds(smartComponent).includes(objectId)) fail(`${objectId}: object is not owned by ${smartComponentId}`);
+      const collection = objectCollection(next, objectId);
+      const object = collection ? next.model[collection]?.[objectId] : null;
+      if (!object) fail(`object not found: ${objectId}`);
+      smartComponent.detachedObjectIds = unique([...(smartComponent.detachedObjectIds || []), objectId]);
+      object.authoring = { ...(object.authoring || {}), componentStatus: "detached" };
+      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, smartComponentId)));
+    },
+
+    reattachSmartComponentObject(smartComponentId, objectId) {
+      const next = clone(currentProject);
+      const smartComponent = smartComponentById(next, smartComponentId);
+      smartComponent.detachedObjectIds = (smartComponent.detachedObjectIds || []).filter((id) => id !== objectId);
+      if (smartComponent.fieldOverrides) delete smartComponent.fieldOverrides[objectId];
+      if (smartComponent.managedFields) delete smartComponent.managedFields[objectId];
+      const cleaned = removeObjects(next, [objectId]);
+      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(cleaned, smartComponentId)));
+    },
+
+    affectedSmartComponentIds(memberId) {
       memberById(currentProject, memberId);
-      return affectedConnectionIdsForMember(currentProject, memberId);
+      return affectedSmartComponentIdsForMember(currentProject, memberId);
     },
 
     memberDependencyObjectIds(memberId, options = {}) {
@@ -968,16 +1139,16 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       return projectTrimJointDependencyObjectIds(currentProject, trimJointId, options);
     },
 
-    definition(connectionId) {
-      return definitionFor(currentProject, connectionId);
+    definition(smartComponentId) {
+      return definitionFor(currentProject, smartComponentId);
     },
 
-    supportedConnections() {
-      return supportedConnections(currentProject, connectionCatalog);
+    supportedSmartComponents() {
+      return supportedSmartComponents(currentProject, smartComponentCatalog);
     },
 
-    connectionPresets() {
-      return supportedConnectionPresets(connectionCatalog);
+    smartComponentPresets() {
+      return supportedSmartComponentPresets(smartComponentCatalog);
     },
 
     catalogEntries(catalog) {
@@ -985,15 +1156,21 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       return {};
     },
 
-    createConnectionFromPreset(presetId, memberIds) {
-      const preset = connectionCatalog.connections[presetId];
-      if (!preset) fail(`connection preset not found: ${presetId}`);
-      const definition = connectionDefinition(connectionCatalog, { type: preset.type, sourcePreset: { id: presetId } });
+    createSmartComponentFromPreset(presetId, memberIds) {
+      const preset = smartComponentCatalog.smartComponents[presetId];
+      if (!preset) fail(`smart component preset not found: ${presetId}`);
+      const definition = smartComponentDefinition(smartComponentCatalog, { type: preset.type, sourceComponent: { id: presetId } });
+      if (preset.kind !== "connection") {
+        const created = createProjectSmartComponentFromPreset(currentProject, smartComponentCatalog, presetId, [], { definition });
+        const next = regenerateSmartComponent(created.project, created.smartComponentId);
+        setProject(next);
+        return { project: currentProject, smartComponentId: created.smartComponentId };
+      }
       let created = null;
       let firstError = null;
-      for (const seedProject of connectionSeedProjects(currentProject, profiles, memberIds)) {
+      for (const seedProject of smartComponentSeedProjects(currentProject, profiles, memberIds)) {
         try {
-          created = createProjectConnectionFromPreset(seedProject, connectionCatalog, presetId, memberIds, { definition });
+          created = createProjectSmartComponentFromPreset(seedProject, smartComponentCatalog, presetId, memberIds, { definition });
           break;
         } catch (error) {
           firstError ||= error;
@@ -1001,55 +1178,50 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
         }
       }
       if (!created) throw firstError;
-      const locked = lockConnectionZoneFaces(created.project, profiles, created.connectionId);
-      const next = reconcileGeneratedConnections(regenerateConnection(locked, created.connectionId));
+      const locked = lockSmartComponentZoneFaces(created.project, profiles, created.smartComponentId);
+      const next = reconcileGeneratedSmartComponents(regenerateSmartComponent(locked, created.smartComponentId));
       setProject(next);
-      return { project: currentProject, connectionId: created.connectionId };
+      return { project: currentProject, smartComponentId: created.smartComponentId };
     },
 
-    deleteConnection(connectionId) {
-      const connection = connectionById(currentProject, connectionId);
-      const ownedIds = connectionOwnedObjectIds(connection);
-      const helperIds = connectionGeneratedHelperIds(currentProject, connection);
-      return setProject(removeObjects(currentProject, [...ownedIds, ...helperIds, connectionId]));
+    deleteSmartComponent(smartComponentId) {
+      const smartComponent = smartComponentById(currentProject, smartComponentId);
+      const ownedIds = smartComponentOwnedObjectIds(smartComponent);
+      const helperIds = smartComponentGeneratedHelperIds(currentProject, smartComponent);
+      return setProject(removeObjects(currentProject, [...ownedIds, ...helperIds, smartComponentId]));
     },
 
-    connectionPlateOptions(connectionId) {
-      return projectConnectionPlateOptions(currentProject, definitionFor(currentProject, connectionId), connectionId);
+    smartComponentPlateOptions(smartComponentId) {
+      return projectSmartComponentPlateOptions(currentProject, definitionFor(currentProject, smartComponentId), smartComponentId);
     },
 
-    connectionComponentOptions(connectionId) {
-      return projectConnectionComponentOptions(currentProject, definitionFor(currentProject, connectionId), connectionId);
+    smartComponentRoleOptions(smartComponentId) {
+      return projectSmartComponentRoleOptions(currentProject, definitionFor(currentProject, smartComponentId), smartComponentId);
     },
 
-    setConnectionComponentActive(connectionId, role, active) {
+    setSmartComponentRoleActive(smartComponentId, role, active) {
       const next = clone(currentProject);
-      const connection = connectionById(next, connectionId);
-      const definition = definitionFor(next, connectionId);
-      if (!(definition.components || []).some((component) => component?.role === role)) fail(`${connectionId}: unknown component role ${role}`);
-      connection.componentOverrides ||= {};
-      if (optionalComponentRole(definition, role)) {
-        connection.componentOverrides.activeObjectRoles = setRoleInList(connection.componentOverrides.activeObjectRoles, role, active);
-      } else {
-        connection.componentOverrides.suppressedObjectRoles = setRoleInList(connection.componentOverrides.suppressedObjectRoles, role, !active);
-      }
-      return setProject(reconcileGeneratedConnections(regenerateConnection(next, connectionId)));
+      const smartComponent = smartComponentById(next, smartComponentId);
+      const definition = definitionFor(next, smartComponentId);
+      if (!(definition.components || []).some((component) => component?.role === role)) fail(`${smartComponentId}: unknown component role ${role}`);
+      smartComponent.suppressedRoles = setRoleInList(smartComponent.suppressedRoles, role, !active);
+      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, smartComponentId)));
     },
 
-    setConnectionPlateIncluded(connectionId, plateId, included) {
-      return setProject(setProjectConnectionPlateIncluded(currentProject, definitionFor(currentProject, connectionId), connectionId, plateId, included));
+    setSmartComponentPlateIncluded(smartComponentId, plateId, included) {
+      return setProject(setProjectSmartComponentPlateIncluded(currentProject, definitionFor(currentProject, smartComponentId), smartComponentId, plateId, included));
     },
 
-    resolveConnectionDiagnostics,
+    resolveSmartComponentDiagnostics,
 
-    updateConnection(connectionId, parameters) {
-      return setProject(reconcileGeneratedConnections(updateConnection({
+    updateSmartComponent(smartComponentId, parameters) {
+      return setProject(reconcileGeneratedSmartComponents(updateSmartComponent({
         project: currentProject,
         profiles,
-        definition: definitionFor(currentProject, connectionId),
-        connectionCatalog,
+        definition: definitionFor(currentProject, smartComponentId),
+        catalog: smartComponentCatalog,
         fasteners,
-        connectionId,
+        instanceId: smartComponentId,
         parameters
       })));
     },
@@ -1060,7 +1232,7 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       addIndexedObject(next, "members", member);
       addMemberSnapRelations(next, member.id, options);
       appendMemberToDefaultGroup(next, member.id);
-      const updated = setProject(reconcileGeneratedConnections(next));
+      const updated = setProject(reconcileGeneratedSmartComponents(next));
       return { project: updated, memberId: member.id, member: updated.model.members[member.id] };
     },
 
@@ -1110,7 +1282,7 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       for (const relationId of relationIds) removeIndexedObject(next, relationId);
       removeIndexedObject(next, memberId);
       removeReferences(next.model, new Set([memberId, ...relationIds]));
-      return setProject(reconcileGeneratedConnections(next));
+      return setProject(reconcileGeneratedSmartComponents(next));
     },
 
     updateMember(memberId, patch, options = {}) {
@@ -1162,6 +1334,13 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       if ("type" in patch) fail("trim joint type cannot be changed");
       if ("jointPoint" in patch) fail("trim joint point is derived from participant member axes");
       return replaceTrimJoint(trimJointId, (trimJoint) => mergePatch(trimJoint, patch));
+    },
+
+    updateFastenerGroup(fastenerGroupId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("fastener group patch must be an object");
+      if ("id" in patch && patch.id !== fastenerGroupId) fail("fastener group id cannot be changed");
+      if ("type" in patch) fail("fastener group type cannot be changed");
+      return replaceFastenerGroup(fastenerGroupId, (fastenerGroup) => mergePatch(fastenerGroup, patch));
     },
 
     updateTrimJointParticipant(trimJointId, memberId, patch) {
@@ -1325,17 +1504,17 @@ export function createProjectStore({ project, profiles, connectionCatalog, faste
       return replaceMember(memberId, (member) => setMemberLayoutEndpointData(member, endpoint, point), options);
     },
 
-    regenerateMemberConnections(memberId) {
+    regenerateMemberSmartComponents(memberId) {
       memberById(currentProject, memberId);
-      return setProject(regenerateMemberConnections(currentProject, memberId));
+      return setProject(regenerateMemberSmartComponents(currentProject, memberId));
     },
 
     draftMemberProject(memberId, member, options = {}) {
       memberById(currentProject, memberId);
       const next = cloneProjectForMemberUpdate(currentProject, memberId);
       next.model.members[memberId] = clone(member);
-      if (options.regenerateConnections === false) return next;
-      return regenerateMemberConnections(next, memberId);
+      if (options.regenerateSmartComponents === false) return next;
+      return regenerateMemberSmartComponents(next, memberId);
     },
 
     setMemberCenter(memberId, center) {

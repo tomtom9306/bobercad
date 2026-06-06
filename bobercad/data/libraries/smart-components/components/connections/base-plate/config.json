@@ -1,0 +1,314 @@
+{
+  "type": "base-plate",
+  "title": "Base Plate",
+  "version": 1,
+  "recipe": [
+    {
+      "operation": "design-status"
+    },
+    {
+      "operation": "base-plate"
+    }
+  ],
+  "interfaces": [
+    {
+      "role": "main",
+      "auto": {
+        "type": "member-end-face"
+      }
+    },
+    {
+      "role": "secondary",
+      "auto": {
+        "type": "member-end-face"
+      }
+    }
+  ],
+  "presets": {
+    "column_base_plate_m16_2x2": {
+      "id": "column_base_plate_m16_2x2",
+      "version": "0.1.0",
+      "name": "Base plate, M16 2x2",
+      "parameters": {
+        "plate": {
+          "thickness": 16,
+          "width": 360,
+          "depth": 360,
+          "offset": 0
+        },
+        "anchors": {
+          "fastenerRef": "M16_8_8",
+          "rows": 2,
+          "columns": 2,
+          "pitch": 240,
+          "gauge": 240,
+          "length": 100
+        },
+        "holes": {
+          "diameter": 18,
+          "supportDepth": 80,
+          "type": "round"
+        },
+        "washers": {
+          "head": true,
+          "nut": true
+        },
+        "welds": {
+          "column": 6
+        },
+        "designAssumptions": {
+          "standard": "EN 1993-1-8",
+          "status": "not-calculated"
+        },
+        "loads": {
+          "status": "not-defined"
+        }
+      }
+    }
+  },
+  "$schema": "../../../../../../app/schemas/smart-component.schema.json",
+  "kind": "connection",
+  "roles": {
+    "basePlate": "_base_plate",
+    "anchorPattern": "_anchor_grid",
+    "plateHoles": "_holes_plate",
+    "supportHoles": "_holes_support",
+    "anchors": "_anchors",
+    "weld": "_column_weld"
+  },
+  "parameters": {
+    "designAssumptions.standard": {
+      "kind": "text",
+      "label": "Standard",
+      "readOnly": true
+    },
+    "designAssumptions.status": {
+      "kind": "text",
+      "label": "Calculation",
+      "readOnly": true
+    },
+    "loads.status": {
+      "kind": "text",
+      "label": "Loads",
+      "readOnly": true
+    },
+    "plate.thickness": {
+      "kind": "positiveNumber",
+      "label": "Plate thickness",
+      "unit": "mm"
+    },
+    "plate.width": {
+      "kind": "positiveNumber",
+      "label": "Plate width",
+      "unit": "mm"
+    },
+    "plate.depth": {
+      "kind": "positiveNumber",
+      "label": "Plate depth",
+      "unit": "mm"
+    },
+    "plate.offset": {
+      "kind": "number",
+      "label": "Plate offset",
+      "unit": "mm",
+      "required": false,
+      "default": 0
+    },
+    "anchors.fastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Anchor"
+    },
+    "anchors.rows": {
+      "kind": "positiveInteger",
+      "label": "Rows",
+      "unit": "pcs"
+    },
+    "anchors.columns": {
+      "kind": "positiveInteger",
+      "label": "Columns",
+      "unit": "pcs"
+    },
+    "anchors.pitch": {
+      "kind": "nonNegativeNumber",
+      "label": "Pitch",
+      "unit": "mm"
+    },
+    "anchors.gauge": {
+      "kind": "nonNegativeNumber",
+      "label": "Gauge",
+      "unit": "mm"
+    },
+    "anchors.length": {
+      "kind": "positiveNumber",
+      "label": "Anchor length",
+      "unit": "mm",
+      "required": false,
+      "default": 100,
+      "standardOptions": {
+        "kind": "fastenerLengths",
+        "fastenerRef": "anchors.fastenerRef"
+      }
+    },
+    "holes.diameter": {
+      "kind": "positiveNumber",
+      "label": "Hole diameter",
+      "unit": "mm"
+    },
+    "holes.supportDepth": {
+      "kind": "positiveNumber",
+      "label": "Support depth",
+      "unit": "mm"
+    },
+    "holes.type": {
+      "kind": "enum",
+      "values": [
+        "round",
+        "slotted",
+        "countersunk"
+      ],
+      "label": "Hole type",
+      "readOnly": true
+    },
+    "washers.head": {
+      "kind": "boolean",
+      "label": "Washer under head",
+      "required": false,
+      "default": true
+    },
+    "washers.nut": {
+      "kind": "boolean",
+      "label": "Washer under nut",
+      "required": false,
+      "default": true
+    },
+    "welds.column": {
+      "kind": "nonNegativeNumber",
+      "label": "Column weld",
+      "unit": "mm"
+    }
+  },
+  "requiredPlateRoles": [
+    "basePlate"
+  ],
+  "components": [],
+  "dimensions": [
+    {
+      "id": "base-plate-thickness",
+      "parameter": "plate.thickness",
+      "label": "t",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "basePlate",
+        "axis": "normal",
+        "at": {
+          "localAxisY": "max",
+          "localAxisZ": "max"
+        },
+        "offset": {
+          "localAxisY": 24,
+          "localAxisZ": 18
+        }
+      }
+    },
+    {
+      "id": "base-plate-width",
+      "parameter": "plate.width",
+      "label": "W",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "basePlate",
+        "axis": "localAxisY",
+        "at": {
+          "localAxisZ": "max"
+        },
+        "offset": {
+          "localAxisZ": 28,
+          "normal": 18
+        }
+      }
+    },
+    {
+      "id": "base-plate-depth",
+      "parameter": "plate.depth",
+      "label": "D",
+      "reference": {
+        "kind": "plate-axis",
+        "objectRole": "basePlate",
+        "axis": "localAxisZ",
+        "at": {
+          "localAxisY": "max"
+        },
+        "offset": {
+          "localAxisY": 30,
+          "normal": 18
+        }
+      }
+    },
+    {
+      "id": "anchor-pattern",
+      "parameter": "anchors.rows",
+      "label": "anchors",
+      "reference": {
+        "kind": "bolt-pattern",
+        "holePatternRole": "anchorPattern",
+        "featureRole": "plateHoles",
+        "rowsParameter": "anchors.rows",
+        "columnsParameter": "anchors.columns",
+        "offset": {
+          "localAxisY": 38,
+          "normal": 28
+        }
+      }
+    }
+  ],
+  "ui": {
+    "tabs": [
+      {
+        "id": "design",
+        "label": "Design",
+        "items": [
+          "designAssumptions.standard",
+          "designAssumptions.status",
+          "loads.status"
+        ]
+      },
+      {
+        "id": "parts",
+        "label": "Parts",
+        "items": [
+          "plate.thickness",
+          "plate.width",
+          "plate.depth",
+          "plate.offset",
+          {
+            "kind": "smartComponentPlates"
+          }
+        ]
+      },
+      {
+        "id": "bolts",
+        "label": "Anchors",
+        "items": [
+          "anchors.fastenerRef",
+          "anchors.rows",
+          "anchors.columns",
+          "anchors.pitch",
+          "anchors.gauge",
+          "anchors.length",
+          "holes.diameter",
+          "holes.supportDepth",
+          "washers.head",
+          "washers.nut"
+        ]
+      },
+      {
+        "id": "welds",
+        "label": "Welds",
+        "items": [
+          "welds.column"
+        ]
+      }
+    ]
+  }
+}

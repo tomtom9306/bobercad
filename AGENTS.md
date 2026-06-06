@@ -16,8 +16,7 @@ Start here, then open the specific docs needed for the task.
 - Profile library pack: `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json`
 - Material library pack: `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json`
 - Fastener library pack: `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json`
-- Connection library register: `bobercad/data/libraries/connections/connection-register.json`
-- Connection component register: `bobercad/data/libraries/connection-components/component-register.json`
+- Smart Component library register: `bobercad/data/libraries/smart-components/smart-component-register.json`
 - Model library register: `bobercad/data/libraries/model-library/model-register.json`
 - Viewer settings: `bobercad/app/ui/viewer/viewer-settings.json`
 - Schemas: `bobercad/app/schemas/`
@@ -31,8 +30,8 @@ Start here, then open the specific docs needed for the task.
 - Architecture decisions: `docs/decisions/0001-json-source-of-truth.md`
 - Project schema: `bobercad/app/schemas/project.schema.json`
 - Fastener library schema: `bobercad/app/schemas/fastener-library.schema.json`
-- Connection schema: `bobercad/app/schemas/connection.schema.json`
-- Connection component schema: `bobercad/app/schemas/connection-component.schema.json`
+- Smart Component schema: `bobercad/app/schemas/smart-component.schema.json`
+- Smart Component register schema: `bobercad/app/schemas/smart-component-register.schema.json`
 - Model library schema: `bobercad/app/schemas/model-library.schema.json`
 
 ## Hard Rules
@@ -46,8 +45,8 @@ Start here, then open the specific docs needed for the task.
 - Fasteners live in library packs under `bobercad/data/libraries/fasteners`; fastener groups reference catalog entries with `fastenerRef` directly or through `modelDefaults`.
 - Use `model.workPoints` and `model.referencePlanes` for large-frame authoring points, roof slopes, grid nodes, and truss nodes; member `start`/`end` stay authoritative and point refs are review metadata only.
 - Use `model.holePatterns` for hole/slot/fastener positions and `model.objectPatterns` for linear/circular/rectangular/path/mirror repetition of stored objects.
-- Connection presets and frame templates are authoring provenance only; project objects must still store all geometry needed by the viewer and NC1 exporter.
-- Reusable connection components live in `bobercad/data/libraries/connection-components`; connections reference them with `componentRefs` and generate them through `recipe` instead of carrying custom build/UI code or duplicating common parts such as stiffeners.
+- Smart Components are authoring provenance only; project objects must still store all geometry needed by the viewer and NC1 exporter.
+- Smart Components live in `bobercad/data/libraries/smart-components`; `kind: "connection"` is one component kind, not a separate core architecture. Components may use only the public model API and registered connection primitives, not hardcoded app branches or `componentRefs`.
 - Use stored `interfaces` and `connectionZones` to describe connection locations; do not infer connection faces from vague object proximity.
 - BIM metadata lives inside the object as `bim`, not in a separate wrapper.
 - If model structure changes, update the matching schema in the same change.

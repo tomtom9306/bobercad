@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../../../app/schemas/smart-component.schema.json",
+  "type": "mono-stringer",
+  "kind": "stair-support",
+  "title": "Mono Stringer Support",
+  "version": 1,
+  "roles": {
+    "supportPattern": "_support_pattern",
+    "supportAssembly": "_support_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "mono-stringer": {
+      "id": "mono-stringer",
+      "version": "0.1.0",
+      "name": "Mono stringer",
+      "parameters": {
+        "meta": {
+          "family": "mono-stringer"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "support",
+        "label": "Support",
+        "items": []
+      }
+    ]
+  }
+}

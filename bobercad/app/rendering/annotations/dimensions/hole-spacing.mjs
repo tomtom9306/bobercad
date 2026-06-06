@@ -1,17 +1,17 @@
 import { combine, dimensionOffset, distance, featureBasis, finite, holePair, optionalPath, patternLayoutBasis, patternPositionsInBasis, positionPoint, roleObject, spacingDimension, spacingPairs } from "../dimension-context.mjs";
 
 export function holeSpacingDimension(ctx, spec) {
-  const pattern = roleObject(ctx.project, ctx.connection, spec.reference.holePatternRole);
-  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
+  const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);
+  const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);
   const sourceBasis = featureBasis(ctx.project, feature);
   const basis = patternLayoutBasis(pattern, sourceBasis);
   const layoutPattern = pattern && sourceBasis && basis ? { ...pattern, positions: patternPositionsInBasis(pattern, sourceBasis, basis) } : null;
   const pairs = layoutPattern && basis ? spacingPairs(layoutPattern, spec.reference.axis) : [];
   const useCustomGaps = spec.reference.spacingModePath
-    ? optionalPath(ctx.connection.referenceParameters, spec.reference.spacingModePath, "equal") === "custom"
+    ? optionalPath(ctx.smartComponent.referenceParameters, spec.reference.spacingModePath, "equal") === "custom"
     : false;
   const existingValues = spec.reference.customParameter
-    ? optionalPath(ctx.connection.referenceParameters, spec.reference.customParameter, [])
+    ? optionalPath(ctx.smartComponent.referenceParameters, spec.reference.customParameter, [])
     : [];
   const pairValues = pairs.map((pair) => distance(positionPoint(basis, pair[0]), positionPoint(basis, pair[1])));
   const editValues = pairValues.map((fallback, index) => {

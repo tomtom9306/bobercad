@@ -183,65 +183,40 @@ bobercad
         |   |       `-- starter-frames
         |   |           `-- config.json
         |   |
-        |   |-- connections
-        |   |   |-- connection-register.json
-        |   |   |-- README.md
-        |   |   |-- connection-library-ui.mjs
-        |   |   |-- connection-ui.mjs
-        |   |   |
-        |   |   `-- connections
-        |   |       |-- fin-plate
-        |   |       |   `-- config.json
-        |   |       |
-        |   |       `-- moment-end-plate
-        |   |           `-- config.json
-        |   |
-        |   `-- connection-components
-        |       |-- component-register.json
-        |       |-- README.md
+        |   `-- smart-components
+        |       |-- smart-component-register.json
+        |       |-- smart-component-library-ui.mjs
+        |       |-- smart-component-ui.mjs
+        |       |-- parameter-values.mjs
         |       |
         |       `-- components
-        |           |-- metadata
-        |           |   `-- design-status
-        |           |       |-- config.json
-        |           |       `-- build.mjs
-        |           |
-        |           |-- plates
-        |           |   |-- secondary-web-plate
-        |           |   |   |-- config.json
-        |           |   |   `-- build.mjs
+        |           |-- connections
+        |           |   |-- fin-plate
+        |           |   |   `-- config.json
         |           |   |
-        |           |   `-- member-end-plate
+        |           |   |-- moment-end-plate
+        |           |   |   `-- config.json
+        |           |   |
+        |           |   |-- base-plate
+        |           |   |   `-- config.json
+        |           |   |
+        |           |   `-- apex-gusset
+        |           |       `-- config.json
+        |           |
+        |           |-- stairs
+        |           |   `-- stair-system
         |           |       |-- config.json
         |           |       `-- build.mjs
         |           |
-        |           |-- features
-        |           |   `-- secondary-member-gap-trim
+        |           |-- frames
+        |           |   `-- portal-frame
         |           |       |-- config.json
         |           |       `-- build.mjs
         |           |
-        |           |-- fasteners
-        |           |   `-- web-bolt-pattern
-        |           |       |-- config.json
-        |           |       `-- build.mjs
-        |           |
-        |           |-- cuts
-        |           |   `-- support-flange-clearance
-        |           |       |-- config.json
-        |           |       `-- build.mjs
-        |           |
-        |           |-- welds
-        |           |   `-- support-edge-fillet
-        |           |       |-- config.json
-        |           |       `-- build.mjs
-        |           |
-        |           |-- stiffeners
-        |           |   `-- support-web-stiffeners
-        |           |       |-- config.json
-        |           |       `-- build.mjs
-        |           |
-        |           `-- shared
-        |               `-- secondary-web-context.mjs
+        |           `-- buildings
+        |               `-- warehouse
+        |                   |-- config.json
+        |                   `-- build.mjs
         |
         `-- projects
             `-- sample_*.json
@@ -288,7 +263,7 @@ ui/controls    reusable inputs, buttons, menus, form controls
 ui/themes      visual styling tokens and theme switching
 ```
 
-Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Connection files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The connection register points to `data/libraries/connections/connection-library-ui.mjs` for library-level tools. Connection-specific fields come from JSON config merged from reusable components, not custom viewer files.
+Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The Smart Component register points to `data/libraries/smart-components/smart-component-library-ui.mjs` for library-level tools. Component-specific fields come from Smart Component config, not custom viewer files.
 
 API rule:
 
@@ -300,18 +275,23 @@ engine/modules/<name>          feature implementation used by API and store
 
 `bobercad/bobercad/data/libraries` is for editable industry knowledge. Material, profile, fastener, and model libraries should be grouped as packs, not one folder per individual item.
 
-Connection libraries are intentionally thin because standard connections should be composed from reusable components:
+Smart Component libraries keep parametric authoring definitions out of app core. Connections, stairs, frames, warehouses, and nested building blocks live in the same library:
 
 ```text
-bobercad/bobercad/data/libraries/connections
-|-- connection-register.json
-|-- connection-library-ui.mjs
-|-- connection-ui.mjs
-`-- connections
-    `-- one-folder-per-connection
-        `-- config.json
+bobercad/bobercad/data/libraries/smart-components
+|-- smart-component-register.json
+|-- smart-component-library-ui.mjs
+|-- smart-component-ui.mjs
+`-- components
+    |-- connections
+    |   `-- one-folder-per-connection-kind
+    |       `-- config.json
+    |-- stairs
+    |   `-- one-folder-per-stair-kind
+    |       |-- config.json
+    |       `-- build.mjs
+    |-- frames
+    `-- buildings
 ```
 
-Adding a new connection should usually mean adding one folder under `bobercad/bobercad/data/libraries/connections/connections` and adding that folder path to `bobercad/bobercad/data/libraries/connections/connection-register.json`. The register is also the only link to connection library UI through `libraryUi`. The app reads each connection `config.json`, composes `componentRefs`, and runs its declarative `recipe`; connection folders must not contain `build.mjs` or `ui.mjs`.
-
-Reusable connection parts live in `bobercad/bobercad/data/libraries/connection-components`. Add one folder under `components`, register it in `component-register.json`, then reference it from a connection config with `componentRefs` and `recipe`. Component configs own shared roles, UI fragments, dimensions, and optional parameters; component build files create explicit model objects through the connection API. Compact config groups are allowed when they prevent repeated boilerplate across many components.
+Adding a new Smart Component means adding one folder under the matching `components/<kind>` subfolder and registering that folder path in `bobercad/bobercad/data/libraries/smart-components/smart-component-register.json`. The register is also the only link to library UI through `libraryUi`. A config may run a declarative `recipe` of public operations or a local `build.mjs` that calls the public model API. Do not add specific component types to app core.

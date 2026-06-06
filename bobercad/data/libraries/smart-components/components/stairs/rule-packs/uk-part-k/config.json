@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../../../../../app/schemas/rule-pack.schema.json",
+  "id": "uk-part-k",
+  "title": "UK Part K stair checks",
+  "jurisdiction": "England",
+  "edition": "2013-with-current-approved-document-references",
+  "applicableComponentKinds": [
+    "stair-system"
+  ],
+  "sourceReferences": [
+    {
+      "title": "Approved Document K: Protection from falling, collision and impact",
+      "url": "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/996860/Approved_Document_K.pdf"
+    },
+    {
+      "title": "GOV.UK Approved Documents collection",
+      "url": "https://www.gov.uk/government/collections/approved-documents"
+    }
+  ]
+}

@@ -57,6 +57,73 @@
         "thickness": 3
       }
     },
+    "M12_8_8": {
+      "id": "M12_8_8",
+      "kind": "through-bolt",
+      "standard": "EN 14399",
+      "grade": "8.8",
+      "lengths": [
+        35,
+        40,
+        45,
+        50,
+        55,
+        60,
+        70,
+        80
+      ],
+      "shank": {
+        "diameter": 12
+      },
+      "hole": {
+        "defaultDiameter": 14,
+        "shape": "round",
+        "tolerances": {
+          "tight": 13,
+          "normal": 14,
+          "loose": 16
+        }
+      },
+      "head": {
+        "kind": "hex",
+        "acrossFlats": 19,
+        "height": 8
+      },
+      "nut": {
+        "kind": "hex",
+        "acrossFlats": 19,
+        "height": 10
+      },
+      "washer": {
+        "outerDiameter": 24,
+        "thickness": 2.5
+      }
+    },
+    "WOOD_SCREW_6X50": {
+      "id": "WOOD_SCREW_6X50",
+      "kind": "wood-screw",
+      "standard": "demo",
+      "lengths": [
+        40,
+        50,
+        60
+      ],
+      "shank": {
+        "diameter": 6
+      },
+      "hole": {
+        "defaultDiameter": 7,
+        "shape": "round",
+        "tolerances": {
+          "normal": 7
+        }
+      },
+      "head": {
+        "kind": "countersunk",
+        "acrossFlats": 12,
+        "height": 4
+      }
+    },
     "BLIND_M16_TOGGLE": {
       "id": "BLIND_M16_TOGGLE",
       "kind": "blind-bolt",

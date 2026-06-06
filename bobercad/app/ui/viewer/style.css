@@ -1172,7 +1172,9 @@ body {
   gap: 0;
   width: min(360px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
   padding: 0;
   border: 1px solid #aeb8c7;
   background: rgba(248, 250, 252, 0.98);

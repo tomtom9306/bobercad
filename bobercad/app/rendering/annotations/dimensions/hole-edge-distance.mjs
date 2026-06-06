@@ -1,9 +1,9 @@
 import { EPSILON, basisAxis, basisBoundsCoordinate, dimensionOffset, distance, edgeDistanceEditTransform, featureBasis, finite, interfaceAxis, interfaceByRole, interfaceEdgeOnBasis, linePlane, makeDimension, patternLayoutBasis, patternPositionsInBasis, plateBasis, plateBoundsInBasis, plateSupportEdge, positionInBasis, positionPoint, rawInterfaceByRole, roleObject, signedEdgeDistance, sortedCoordinateValues, v } from "../dimension-context.mjs";
 
 export function holeEdgeDistanceDimension(ctx, spec) {
-  const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
-  const pattern = roleObject(ctx.project, ctx.connection, spec.reference.holePatternRole);
-  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
+  const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
+  const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);
+  const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);
   const sourceBasis = featureBasis(ctx.project, feature);
   const basis = patternLayoutBasis(pattern, sourceBasis);
   const measureBasis = spec.reference.measureBasis === "feature" ? sourceBasis : basis;
@@ -16,7 +16,7 @@ export function holeEdgeDistanceDimension(ctx, spec) {
   const values = sortedCoordinateValues(positions, axis);
   if (!values.length) return null;
   const iface = spec.reference.interfaceRole
-    ? interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.connection, spec.reference.interfaceRole)
+    ? interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole)
     : null;
   if (iface && axis === "localAxisY") {
     const planeNormal = interfaceAxis(iface, plate);
@@ -137,14 +137,14 @@ export function holeEdgeDistanceDimension(ctx, spec) {
 
 
 export function holeInterfaceEdgeDistanceDimension(ctx, spec) {
-  const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
-  const pattern = roleObject(ctx.project, ctx.connection, spec.reference.holePatternRole);
-  const feature = roleObject(ctx.project, ctx.connection, spec.reference.featureRole);
+  const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
+  const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);
+  const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);
   const sourceBasis = featureBasis(ctx.project, feature);
   const basis = patternLayoutBasis(pattern, sourceBasis);
   const measureBasis = spec.reference.measureBasis === "feature" ? sourceBasis : basis;
-  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.connection, spec.reference.interfaceRole);
-  const rawInterface = rawInterfaceByRole(ctx.project, ctx.definition, ctx.connection, spec.reference.interfaceRole);
+  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
+  const rawInterface = rawInterfaceByRole(ctx.project, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
   if (!pattern?.positions?.length || !sourceBasis || !basis || !measureBasis || !iface) return null;
 
   const axis = spec.reference.axis;

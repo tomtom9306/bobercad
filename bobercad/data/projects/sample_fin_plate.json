@@ -78,15 +78,15 @@
       "version": "0.1.0",
       "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
     },
-    "connections": {
-      "libraryId": "starter-connection-library",
-      "version": "0.1.0",
-      "path": "../libraries/connections/connection-register.json"
-    },
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
       "path": "../libraries/model-library/model-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
     }
   },
   "projectTree": {
@@ -245,7 +245,7 @@
       "type": "fillet-weld"
     },
     "connection_fin_plate_1": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "fin-plate"
     },
     "connection_fin_plate_1_beam_gap_trim_plane": {
@@ -391,7 +391,7 @@
           }
         }
       },
-      "connections": {
+      "smartComponentInstances": {
         "*": {
           "tracking": {
             "projectTreeNodeId": "zone_a",
@@ -519,9 +519,6 @@
           "if_column_1_x_plus_fin_plate",
           "if_beam_1_start_web"
         ],
-        "connectionIds": [
-          "connection_fin_plate_1"
-        ],
         "objectIds": [
           "connection_fin_plate_1_fin_plate",
           "connection_fin_plate_1_bolt_grid",
@@ -531,6 +528,9 @@
           "connection_fin_plate_1_bolts",
           "connection_fin_plate_1_support_weld",
           "connection_fin_plate_1_beam_gap_trim_plane"
+        ],
+        "smartComponentInstanceIds": [
+          "connection_fin_plate_1"
         ]
       }
     },
@@ -561,15 +561,15 @@
         "connectionZoneIds": [
           "cz_fin_plate_1"
         ],
-        "connectionIds": [
-          "connection_fin_plate_1"
-        ],
         "tracking": {
           "projectTreeNodeId": "zone_a",
           "phase": "phase_1",
           "lot": "lot_1",
           "status": "modeled"
-        }
+        },
+        "smartComponentInstanceIds": [
+          "connection_fin_plate_1"
+        ]
       },
       "assembly_column_1": {
         "id": "assembly_column_1",
@@ -590,7 +590,8 @@
           "lot": "lot_1",
           "shopOrSite": "shop",
           "status": "modeled"
-        }
+        },
+        "smartComponentInstanceIds": []
       },
       "assembly_beam_1": {
         "id": "assembly_beam_1",
@@ -617,7 +618,8 @@
           "lot": "lot_1",
           "shopOrSite": "shop",
           "status": "modeled"
-        }
+        },
+        "smartComponentInstanceIds": []
       }
     },
     "members": {
@@ -726,6 +728,11 @@
         },
         "fabrication": {
           "partMark": "FP1"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "finPlate"
         }
       }
     },
@@ -748,7 +755,12 @@
             0,
             80
           ]
-        ]
+        ],
+        "authoring": {
+          "componentInstanceId": "connection_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "holePattern"
+        }
       }
     },
     "objectPatterns": {},
@@ -775,6 +787,11 @@
         },
         "fabrication": {
           "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "plateHoles"
         }
       },
       "connection_fin_plate_1_holes_secondary": {
@@ -809,6 +826,11 @@
         },
         "fabrication": {
           "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "connection_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "memberHoles"
         }
       }
     },
@@ -841,6 +863,11 @@
             "head": true,
             "nut": true
           }
+        },
+        "authoring": {
+          "componentInstanceId": "connection_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "fasteners"
         }
       }
     },
@@ -869,110 +896,11 @@
               "size": 6
             }
           ]
-        }
-      }
-    },
-    "connections": {
-      "connection_fin_plate_1": {
-        "id": "connection_fin_plate_1",
-        "type": "fin-plate",
-        "mainMemberId": "column_1",
-        "secondaryMemberId": "beam_1",
-        "connectionZoneId": "cz_fin_plate_1",
-        "assemblyId": "assembly_fin_plate_1",
-        "manualParts": {
-          "plateIds": [
-            "connection_fin_plate_1_fin_plate"
-          ],
-          "featureIds": [
-            "connection_fin_plate_1_holes_plate",
-            "connection_fin_plate_1_holes_secondary"
-          ],
-          "fastenerGroupIds": [
-            "connection_fin_plate_1_bolts"
-          ],
-          "weldIds": [
-            "connection_fin_plate_1_support_weld"
-          ]
-        },
-        "generator": {
-          "status": "generated",
-          "ownedObjectIds": [
-            "connection_fin_plate_1_fin_plate",
-            "connection_fin_plate_1_bolt_grid",
-            "connection_fin_plate_1_beam_gap_trim",
-            "connection_fin_plate_1_holes_plate",
-            "connection_fin_plate_1_holes_secondary",
-            "connection_fin_plate_1_bolts",
-            "connection_fin_plate_1_support_weld",
-            "connection_fin_plate_1_beam_gap_trim_plane"
-          ],
-          "manualObjectIds": [],
-          "objectRoles": {
-            "finPlate": "connection_fin_plate_1_fin_plate",
-            "holePattern": "connection_fin_plate_1_bolt_grid",
-            "plateHoles": "connection_fin_plate_1_holes_plate",
-            "memberHoles": "connection_fin_plate_1_holes_secondary",
-            "beamTrim": "connection_fin_plate_1_beam_gap_trim",
-            "fasteners": "connection_fin_plate_1_bolts",
-            "weld": "connection_fin_plate_1_support_weld"
-          },
-          "definition": "fin-plate",
-          "version": 1
-        },
-        "referenceParameters": {
-          "plate": {
-            "thickness": 10,
-            "length": 180,
-            "height": 280,
-            "edgeOffset": 0
-          },
-          "fit": {
-            "beamGap": 20
-          },
-          "bolts": {
-            "fastenerRef": "M16_8_8",
-            "rows": 3,
-            "columns": 1,
-            "pitch": 80,
-            "gauge": 0,
-            "length": 60
-          },
-          "holes": {
-            "diameter": 18,
-            "type": "round"
-          },
-          "welds": {
-            "front": 6,
-            "back": 6,
-            "top": 0,
-            "bottom": 0
-          },
-          "designAssumptions": {
-            "standard": "EN 1993-1-8",
-            "status": "not-calculated"
-          },
-          "loads": {
-            "status": "not-defined"
-          }
-        },
-        "sourcePreset": {
-          "library": "connections",
-          "id": "beam_to_column_fin_plate_m16_1x3",
-          "version": "0.1.0"
         },
         "authoring": {
-          "source": "connection-preset",
-          "sourcePreset": {
-            "library": "connections",
-            "id": "beam_to_column_fin_plate_m16_1x3",
-            "version": "0.1.0"
-          },
-          "notes": "Generated by the minimal connection framework from semantic parameters."
-        },
-        "bim": {
-          "name": "Fin Plate Connection 1",
-          "description": "Beam-to-column fin plate connection."
+          "componentInstanceId": "connection_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "weld"
         }
       }
     },
@@ -1001,7 +929,11 @@
           0,
           0,
           1
-        ]
+        ],
+        "authoring": {
+          "componentInstanceId": "connection_fin_plate_1",
+          "componentStatus": "managed"
+        }
       }
     },
     "trimJoints": {
@@ -1051,6 +983,151 @@
         },
         "display": {
           "visible": false
+        },
+        "authoring": {
+          "componentInstanceId": "connection_fin_plate_1",
+          "componentStatus": "managed",
+          "componentRole": "beamTrim"
+        }
+      }
+    },
+    "workPoints": {},
+    "smartComponentInstances": {
+      "connection_fin_plate_1": {
+        "id": "connection_fin_plate_1",
+        "type": "fin-plate",
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "beam_to_column_fin_plate_m16_1x3",
+          "version": "0.1.0"
+        },
+        "inputs": {
+          "main": {
+            "memberId": "column_1"
+          },
+          "secondary": {
+            "memberId": "beam_1"
+          },
+          "connectionZoneId": "cz_fin_plate_1",
+          "assemblyId": "assembly_fin_plate_1"
+        },
+        "referenceParameters": {
+          "plate": {
+            "thickness": 10,
+            "length": 180,
+            "height": 280,
+            "edgeOffset": 0
+          },
+          "fit": {
+            "beamGap": 20
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 3,
+            "columns": 1,
+            "pitch": 80,
+            "gauge": 0,
+            "length": 60
+          },
+          "holes": {
+            "diameter": 18,
+            "type": "round"
+          },
+          "welds": {
+            "front": 6,
+            "back": 6,
+            "top": 0,
+            "bottom": 0
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
+        "parameters": {
+          "plate": {
+            "thickness": 10,
+            "length": 180,
+            "height": 280,
+            "edgeOffset": 0
+          },
+          "fit": {
+            "beamGap": 20
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 3,
+            "columns": 1,
+            "pitch": 80,
+            "gauge": 0,
+            "length": 60
+          },
+          "holes": {
+            "diameter": 18,
+            "type": "round"
+          },
+          "welds": {
+            "front": 6,
+            "back": 6,
+            "top": 0,
+            "bottom": 0
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {
+          "finPlate": "connection_fin_plate_1_fin_plate",
+          "holePattern": "connection_fin_plate_1_bolt_grid",
+          "plateHoles": "connection_fin_plate_1_holes_plate",
+          "memberHoles": "connection_fin_plate_1_holes_secondary",
+          "beamTrim": "connection_fin_plate_1_beam_gap_trim",
+          "fasteners": "connection_fin_plate_1_bolts",
+          "weld": "connection_fin_plate_1_support_weld"
+        },
+        "ownedObjectIds": [
+          "connection_fin_plate_1_fin_plate",
+          "connection_fin_plate_1_bolt_grid",
+          "connection_fin_plate_1_beam_gap_trim",
+          "connection_fin_plate_1_holes_plate",
+          "connection_fin_plate_1_holes_secondary",
+          "connection_fin_plate_1_bolts",
+          "connection_fin_plate_1_support_weld",
+          "connection_fin_plate_1_beam_gap_trim_plane"
+        ],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "generated",
+        "definition": "fin-plate",
+        "version": 1,
+        "health": "ok",
+        "diagnostics": [],
+        "authoring": {
+          "source": "smart-component-library",
+          "notes": "Generated by the minimal smart component framework from semantic parameters.",
+          "sourceComponent": {
+            "library": "smart-components",
+            "id": "beam_to_column_fin_plate_m16_1x3",
+            "version": "0.1.0"
+          }
+        },
+        "bim": {
+          "name": "Fin Plate Connection 1",
+          "description": "Beam-to-column fin plate connection."
         }
       }
     }

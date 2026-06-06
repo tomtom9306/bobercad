@@ -1,0 +1,1014 @@
+{
+  "$schema": "../../../../../../app/schemas/smart-component.schema.json",
+  "type": "stair-system",
+  "kind": "stair-system",
+  "title": "Stair System",
+  "version": 1,
+  "roles": {
+    "stairAssembly": "_stair_assembly",
+    "systemPattern": "_system_pattern",
+    "support": "_support",
+    "treads": "_treads",
+    "landings": "_landings",
+    "railing": "_railing",
+    "connections": "_connections",
+    "sectionSplices": "_section_splices",
+    "sections": "_sections"
+  },
+  "components": [
+    {
+      "role": "support",
+      "label": "Support",
+      "kind": "stair-support"
+    },
+    {
+      "role": "treads",
+      "label": "Treads",
+      "kind": "stair-tread"
+    },
+    {
+      "role": "landings",
+      "label": "Landings",
+      "kind": "stair-landing"
+    },
+    {
+      "role": "railing",
+      "label": "Railing",
+      "kind": "stair-railing"
+    },
+    {
+      "role": "connections",
+      "label": "Connections",
+      "kind": "connection"
+    },
+    {
+      "role": "sectionSplices",
+      "label": "Section splices",
+      "kind": "connection"
+    },
+    {
+      "role": "sections",
+      "label": "Transport sections",
+      "kind": "sectioning"
+    }
+  ],
+  "parameters": {
+    "route.modules": {
+      "kind": "object",
+      "label": "Route modules",
+      "default": [
+        {
+          "id": "flight_1",
+          "type": "flight.straight"
+        }
+      ]
+    },
+    "levels.ffl1": {
+      "kind": "number",
+      "label": "FFL 1",
+      "unit": "mm"
+    },
+    "levels.ffl2": {
+      "kind": "number",
+      "label": "FFL 2",
+      "unit": "mm"
+    },
+    "levels.slab1ToFfl1": {
+      "kind": "nonNegativeNumber",
+      "label": "Slab 1 to FFL 1",
+      "unit": "mm",
+      "default": 120
+    },
+    "levels.slab2ToFfl2": {
+      "kind": "nonNegativeNumber",
+      "label": "Slab 2 to FFL 2",
+      "unit": "mm",
+      "default": 160
+    },
+    "geometry.maxStepHeight": {
+      "kind": "positiveNumber",
+      "label": "Max step height",
+      "unit": "mm"
+    },
+    "geometry.going": {
+      "kind": "positiveNumber",
+      "label": "Going",
+      "unit": "mm"
+    },
+    "geometry.width": {
+      "kind": "positiveNumber",
+      "label": "Width",
+      "unit": "mm"
+    },
+    "landings.family": {
+      "kind": "enum",
+      "label": "Landing family",
+      "values": [
+        "none",
+        "same-as-treads",
+        "plate-landing",
+        "framed-landing"
+      ]
+    },
+    "landings.length": {
+      "kind": "positiveNumber",
+      "label": "Landing length",
+      "unit": "mm"
+    },
+    "landings.entryExtensionLength": {
+      "kind": "nonNegativeNumber",
+      "label": "Landing entry extension",
+      "unit": "mm",
+      "default": 0
+    },
+    "landings.exitExtensionLength": {
+      "kind": "nonNegativeNumber",
+      "label": "Landing exit extension",
+      "unit": "mm",
+      "default": 0
+    },
+    "landings.thickness": {
+      "kind": "positiveNumber",
+      "label": "Landing thickness",
+      "unit": "mm"
+    },
+    "landings.material": {
+      "kind": "text",
+      "label": "Landing material",
+      "default": "S355"
+    },
+    "landings.frameProfile": {
+      "kind": "text",
+      "label": "Landing frame profile"
+    },
+    "treads.family": {
+      "kind": "enum",
+      "label": "Tread family",
+      "values": [
+        "plate-tread",
+        "grating-tread",
+        "folded-tray-tread",
+        "pan-tread"
+      ]
+    },
+    "treads.thickness": {
+      "kind": "positiveNumber",
+      "label": "Tread thickness",
+      "unit": "mm",
+      "default": 10
+    },
+    "treads.depth": {
+      "kind": "positiveNumber",
+      "label": "Tread depth",
+      "unit": "mm",
+      "default": 280
+    },
+    "treads.material": {
+      "kind": "text",
+      "label": "Tread material",
+      "default": "S355"
+    },
+    "treads.frontLip": {
+      "kind": "positiveNumber",
+      "label": "Front lip",
+      "unit": "mm",
+      "default": 55
+    },
+    "treads.woodThickness": {
+      "kind": "positiveNumber",
+      "label": "Timber thickness",
+      "unit": "mm",
+      "default": 32
+    },
+    "treads.woodInset": {
+      "kind": "nonNegativeNumber",
+      "label": "Tray side inset",
+      "unit": "mm",
+      "default": 35
+    },
+    "treads.woodNosing": {
+      "kind": "nonNegativeNumber",
+      "label": "Timber nosing",
+      "unit": "mm",
+      "default": 25
+    },
+    "treads.woodMaterial": {
+      "kind": "text",
+      "label": "Timber material",
+      "default": "OAK_TIMBER"
+    },
+    "treads.woodFinish": {
+      "kind": "text",
+      "label": "Timber finish",
+      "default": "clear-sealed-oak"
+    },
+    "treads.closedRisers": {
+      "kind": "boolean",
+      "label": "Closed risers"
+    },
+    "treads.finish": {
+      "kind": "text",
+      "label": "Tread finish"
+    },
+    "supports.family": {
+      "kind": "enum",
+      "label": "Support family",
+      "values": [
+        "none",
+        "twin-stringer",
+        "mono-stringer",
+        "spiral-column"
+      ]
+    },
+    "supports.profile": {
+      "kind": "text",
+      "label": "Support profile",
+      "default": "DEMO_RHS_100X50X5"
+    },
+    "supports.columnProfile": {
+      "kind": "text",
+      "label": "Column profile"
+    },
+    "supports.sideOffset": {
+      "kind": "nonNegativeNumber",
+      "label": "Stringer offset",
+      "unit": "mm"
+    },
+    "supports.maxSegmentLength": {
+      "kind": "positiveNumber",
+      "label": "Max support segment",
+      "unit": "mm",
+      "default": 6000
+    },
+    "railings.family": {
+      "kind": "enum",
+      "label": "Railing family",
+      "values": [
+        "none",
+        "post-and-rail",
+        "glass-panel",
+        "wall-handrail"
+      ]
+    },
+    "railings.sides": {
+      "kind": "enum",
+      "label": "Railing sides",
+      "values": [
+        "both",
+        "left",
+        "right"
+      ]
+    },
+    "railings.height": {
+      "kind": "positiveNumber",
+      "label": "Rail height",
+      "unit": "mm"
+    },
+    "railings.postSpacing": {
+      "kind": "positiveNumber",
+      "label": "Post spacing",
+      "unit": "mm"
+    },
+    "railings.curvePostSpacing": {
+      "kind": "positiveNumber",
+      "label": "Curved post spacing",
+      "unit": "mm",
+      "default": 450
+    },
+    "railings.sideInset": {
+      "kind": "nonNegativeNumber",
+      "label": "Rail side inset",
+      "unit": "mm",
+      "default": 70
+    },
+    "railings.infill": {
+      "kind": "enum",
+      "label": "Railing infill",
+      "values": [
+        "none",
+        "mid-rails",
+        "glass-panel",
+        "perforated-panel"
+      ],
+      "default": "mid-rails"
+    },
+    "railings.panelThickness": {
+      "kind": "positiveNumber",
+      "label": "Panel thickness",
+      "unit": "mm",
+      "default": 12
+    },
+    "railings.panelMaterial": {
+      "kind": "text",
+      "label": "Panel material",
+      "default": "LAMINATED_GLASS"
+    },
+    "railings.panelFastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Panel fastener",
+      "default": "M12_8_8"
+    },
+    "railings.panelFixingHoleDiameter": {
+      "kind": "positiveNumber",
+      "label": "Panel fixing hole diameter",
+      "unit": "mm",
+      "default": 14
+    },
+    "railings.panelFastenerLength": {
+      "kind": "positiveNumber",
+      "label": "Panel fastener length",
+      "unit": "mm",
+      "default": 45
+    },
+    "railings.wallBracketHoleDiameter": {
+      "kind": "positiveNumber",
+      "label": "Wall bracket hole diameter",
+      "unit": "mm",
+      "default": 12
+    },
+    "railings.wallBracketFastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Wall bracket fastener",
+      "default": "M12_8_8"
+    },
+    "railings.wallBracketFastenerLength": {
+      "kind": "positiveNumber",
+      "label": "Wall bracket fastener length",
+      "unit": "mm",
+      "default": 45
+    },
+    "railings.wallBracketProjection": {
+      "kind": "positiveNumber",
+      "label": "Wall bracket projection",
+      "unit": "mm",
+      "default": 190
+    },
+    "railings.wallBracketDrop": {
+      "kind": "positiveNumber",
+      "label": "Wall bracket drop",
+      "unit": "mm",
+      "default": 130
+    },
+    "railings.wallBracketPlateThickness": {
+      "kind": "positiveNumber",
+      "label": "Wall bracket plate thickness",
+      "unit": "mm",
+      "default": 8
+    },
+    "railings.wallBracketPlateWidth": {
+      "kind": "positiveNumber",
+      "label": "Wall bracket plate width",
+      "unit": "mm",
+      "default": 130
+    },
+    "railings.wallBracketPlateHeight": {
+      "kind": "positiveNumber",
+      "label": "Wall bracket plate height",
+      "unit": "mm",
+      "default": 170
+    },
+    "railings.wallBracketPlateMaterial": {
+      "kind": "text",
+      "label": "Wall bracket plate material",
+      "default": "S275"
+    },
+    "railings.wallSurfaceThickness": {
+      "kind": "positiveNumber",
+      "label": "Wall surface thickness",
+      "unit": "mm",
+      "default": 90
+    },
+    "railings.wallSurfaceMaterial": {
+      "kind": "text",
+      "label": "Wall surface material",
+      "default": "CONCRETE"
+    },
+    "railings.postProfile": {
+      "kind": "text",
+      "label": "Post profile",
+      "default": "DEMO_SHS_50X50X4"
+    },
+    "railings.railProfile": {
+      "kind": "text",
+      "label": "Rail profile",
+      "default": "DEMO_RHS_60X40X4"
+    },
+    "connections.family": {
+      "kind": "enum",
+      "label": "Connection family",
+      "values": [
+        "none",
+        "standard-hardware"
+      ]
+    },
+    "connections.weldSize": {
+      "kind": "positiveNumber",
+      "label": "Weld size",
+      "unit": "mm"
+    },
+    "connections.treadFastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Tread bolt",
+      "default": "M12_8_8"
+    },
+    "connections.anchorFastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Floor/slab anchor",
+      "default": "M16_8_8"
+    },
+    "connections.postAnchorFastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Post anchor",
+      "default": "M12_8_8"
+    },
+    "connections.treadCleatThickness": {
+      "kind": "positiveNumber",
+      "label": "Tread cleat thickness",
+      "unit": "mm",
+      "default": 8
+    },
+    "connections.treadCleatLength": {
+      "kind": "positiveNumber",
+      "label": "Tread cleat length",
+      "unit": "mm",
+      "default": 170
+    },
+    "connections.treadCleatHeight": {
+      "kind": "positiveNumber",
+      "label": "Tread cleat height",
+      "unit": "mm",
+      "default": 95
+    },
+    "connections.treadBoltHoleDiameter": {
+      "kind": "positiveNumber",
+      "label": "Tread bolt hole diameter",
+      "unit": "mm",
+      "default": 14
+    },
+    "connections.treadBoltLength": {
+      "kind": "positiveNumber",
+      "label": "Tread bolt length",
+      "unit": "mm",
+      "default": 45
+    },
+    "connections.floorBasePlateThickness": {
+      "kind": "positiveNumber",
+      "label": "Floor plate thickness",
+      "unit": "mm",
+      "default": 14
+    },
+    "connections.floorBasePlateLength": {
+      "kind": "positiveNumber",
+      "label": "Floor plate length",
+      "unit": "mm",
+      "default": 300
+    },
+    "connections.floorBasePlateWidth": {
+      "kind": "positiveNumber",
+      "label": "Floor plate width",
+      "unit": "mm",
+      "default": 240
+    },
+    "connections.slabBracketThickness": {
+      "kind": "positiveNumber",
+      "label": "Slab bracket thickness",
+      "unit": "mm",
+      "default": 14
+    },
+    "connections.slabBracketWidth": {
+      "kind": "positiveNumber",
+      "label": "Slab bracket width",
+      "unit": "mm",
+      "default": 260
+    },
+    "connections.slabBracketHeight": {
+      "kind": "positiveNumber",
+      "label": "Slab bracket height",
+      "unit": "mm",
+      "default": 280
+    },
+    "connections.anchorHoleDiameter": {
+      "kind": "positiveNumber",
+      "label": "Anchor hole diameter",
+      "unit": "mm",
+      "default": 18
+    },
+    "connections.anchorLength": {
+      "kind": "positiveNumber",
+      "label": "Anchor length",
+      "unit": "mm",
+      "default": 100
+    },
+    "connections.floorAnchorGripLength": {
+      "kind": "positiveNumber",
+      "label": "Floor anchor grip length",
+      "unit": "mm",
+      "default": 120
+    },
+    "connections.slabAnchorGripLength": {
+      "kind": "positiveNumber",
+      "label": "Slab anchor grip length",
+      "unit": "mm",
+      "default": 140
+    },
+    "connections.levelTolerance": {
+      "kind": "positiveNumber",
+      "label": "Level detection tolerance",
+      "unit": "mm",
+      "default": 50
+    },
+    "connections.spiralMountingSurfaceSize": {
+      "kind": "positiveNumber",
+      "label": "Spiral mounting surface size",
+      "unit": "mm",
+      "default": 620
+    },
+    "connections.spiralBasePlateSize": {
+      "kind": "positiveNumber",
+      "label": "Spiral base plate size",
+      "unit": "mm",
+      "default": 340
+    },
+    "connections.spiralBasePlateThickness": {
+      "kind": "positiveNumber",
+      "label": "Spiral base plate thickness",
+      "unit": "mm",
+      "default": 16
+    },
+    "connections.spiralTopPlateThickness": {
+      "kind": "positiveNumber",
+      "label": "Spiral top plate thickness",
+      "unit": "mm",
+      "default": 14
+    },
+    "connections.spiralTreadBracketLength": {
+      "kind": "positiveNumber",
+      "label": "Spiral tread bracket length",
+      "unit": "mm",
+      "default": 140
+    },
+    "connections.spiralTreadBracketHeight": {
+      "kind": "positiveNumber",
+      "label": "Spiral tread bracket height",
+      "unit": "mm",
+      "default": 80
+    },
+    "connections.postBasePlateThickness": {
+      "kind": "positiveNumber",
+      "label": "Post base thickness",
+      "unit": "mm",
+      "default": 10
+    },
+    "connections.postBasePlateWidth": {
+      "kind": "positiveNumber",
+      "label": "Post base width",
+      "unit": "mm",
+      "default": 170
+    },
+    "connections.postBasePlateDepth": {
+      "kind": "positiveNumber",
+      "label": "Post base depth",
+      "unit": "mm",
+      "default": 150
+    },
+    "connections.postAnchorHoleDiameter": {
+      "kind": "positiveNumber",
+      "label": "Post anchor hole diameter",
+      "unit": "mm",
+      "default": 14
+    },
+    "connections.postAnchorLength": {
+      "kind": "positiveNumber",
+      "label": "Post anchor length",
+      "unit": "mm",
+      "default": 60
+    },
+    "connections.postAnchorGripLength": {
+      "kind": "positiveNumber",
+      "label": "Post anchor grip length",
+      "unit": "mm",
+      "default": 90
+    },
+    "connections.splicePlateThickness": {
+      "kind": "positiveNumber",
+      "label": "Splice plate thickness",
+      "unit": "mm",
+      "default": 10
+    },
+    "connections.splicePlateWidth": {
+      "kind": "positiveNumber",
+      "label": "Splice plate width",
+      "unit": "mm",
+      "default": 260
+    },
+    "connections.splicePlateHeight": {
+      "kind": "positiveNumber",
+      "label": "Splice plate height",
+      "unit": "mm",
+      "default": 180
+    },
+    "connections.spliceCutGap": {
+      "kind": "positiveNumber",
+      "label": "Splice cut gap",
+      "unit": "mm",
+      "default": 20
+    },
+    "connections.spliceFastenerRef": {
+      "kind": "catalogRef",
+      "catalog": "fasteners",
+      "label": "Splice bolt",
+      "default": "M16_8_8"
+    },
+    "connections.spliceHoleDiameter": {
+      "kind": "positiveNumber",
+      "label": "Splice hole diameter",
+      "unit": "mm",
+      "default": 18
+    },
+    "connections.spliceBoltLength": {
+      "kind": "positiveNumber",
+      "label": "Splice bolt length",
+      "unit": "mm",
+      "default": 70
+    },
+    "connections.spliceGripLength": {
+      "kind": "positiveNumber",
+      "label": "Splice grip length",
+      "unit": "mm",
+      "default": 55
+    },
+    "connections.showMountingSurfaces": {
+      "kind": "boolean",
+      "label": "Show floor/slab surfaces",
+      "default": true
+    },
+    "connections.mountingSurfaceMaterial": {
+      "kind": "text",
+      "label": "Mounting surface material",
+      "default": "CONCRETE"
+    },
+    "connections.floorSurfaceLength": {
+      "kind": "positiveNumber",
+      "label": "Floor surface length",
+      "unit": "mm",
+      "default": 720
+    },
+    "connections.floorSurfaceWidth": {
+      "kind": "positiveNumber",
+      "label": "Floor surface width",
+      "unit": "mm",
+      "default": 1500
+    },
+    "connections.floorSurfaceThickness": {
+      "kind": "positiveNumber",
+      "label": "Floor surface thickness",
+      "unit": "mm",
+      "default": 120
+    },
+    "connections.topSlabSurfaceWidth": {
+      "kind": "positiveNumber",
+      "label": "Top slab surface width",
+      "unit": "mm",
+      "default": 1500
+    },
+    "connections.topSlabSurfaceHeight": {
+      "kind": "positiveNumber",
+      "label": "Top slab surface height",
+      "unit": "mm",
+      "default": 620
+    },
+    "connections.topSlabSurfaceThickness": {
+      "kind": "positiveNumber",
+      "label": "Top slab surface thickness",
+      "unit": "mm",
+      "default": 160
+    },
+    "sections.strategy": {
+      "kind": "enum",
+      "label": "Split strategy",
+      "values": [
+        "none",
+        "max-weight",
+        "manual-stations",
+        "landings"
+      ]
+    },
+    "sections.maxWeightKg": {
+      "kind": "positiveNumber",
+      "label": "Max section weight",
+      "unit": "kg"
+    },
+    "sections.targetLength": {
+      "kind": "positiveNumber",
+      "label": "Target section length",
+      "unit": "mm",
+      "default": 4200
+    },
+    "sections.manualStations": {
+      "kind": "numberList",
+      "label": "Manual split stations",
+      "unit": "mm",
+      "required": false,
+      "default": []
+    },
+    "compliance.rulePack": {
+      "kind": "enum",
+      "label": "Rule pack",
+      "values": [
+        "none",
+        "uk-part-k"
+      ]
+    },
+    "compliance.category": {
+      "kind": "enum",
+      "label": "Use category",
+      "values": [
+        "private",
+        "utility",
+        "general-access",
+        "assembly-gangway"
+      ]
+    },
+    "compliance.headroom": {
+      "kind": "positiveNumber",
+      "label": "Headroom",
+      "unit": "mm"
+    }
+  },
+  "presets": {
+    "stair_system_straight_basic": {
+      "id": "stair_system_straight_basic",
+      "version": "0.1.0",
+      "name": "Straight stair system",
+      "inputs": {
+        "placement": {
+          "origin": [0, 0, 0]
+        }
+      },
+      "parameters": {
+        "route": {
+          "modules": [
+            {
+              "id": "flight_1",
+              "type": "flight.straight"
+            }
+          ]
+        },
+        "levels": {
+          "ffl1": 0,
+          "ffl2": 1440,
+          "slab1ToFfl1": 120,
+          "slab2ToFfl2": 160
+        },
+        "geometry": {
+          "maxStepHeight": 180,
+          "going": 260,
+          "width": 900
+        },
+        "landings": {
+          "family": "plate-landing",
+          "length": 1200,
+          "entryExtensionLength": 0,
+          "exitExtensionLength": 0,
+          "thickness": 10,
+          "frameProfile": "DEMO_I_200X100X8X12"
+        },
+        "treads": {
+          "family": "folded-tray-tread",
+          "thickness": 10,
+          "depth": 280,
+          "woodThickness": 32,
+          "woodInset": 35,
+          "woodNosing": 25,
+          "woodMaterial": "OAK_TIMBER",
+          "woodFinish": "clear-sealed-oak",
+          "closedRisers": false,
+          "finish": "shop-primer"
+        },
+        "supports": {
+          "family": "twin-stringer",
+          "profile": "DEMO_RHS_100X50X5",
+          "columnProfile": "DEMO_I_200X100X8X12",
+          "sideOffset": 0,
+          "maxSegmentLength": 6000
+        },
+        "railings": {
+          "family": "post-and-rail",
+          "sides": "both",
+          "height": 1000,
+          "postSpacing": 1200,
+          "curvePostSpacing": 450,
+          "sideInset": 70,
+          "infill": "mid-rails",
+          "panelThickness": 12,
+          "panelMaterial": "LAMINATED_GLASS",
+          "panelFastenerRef": "M12_8_8",
+          "wallBracketFastenerRef": "M12_8_8",
+          "postProfile": "DEMO_SHS_50X50X4",
+          "railProfile": "DEMO_RHS_60X40X4"
+        },
+        "connections": {
+          "family": "standard-hardware",
+          "weldSize": 6,
+          "treadFastenerRef": "M12_8_8",
+          "anchorFastenerRef": "M16_8_8",
+          "postAnchorFastenerRef": "M12_8_8",
+          "treadCleatThickness": 8,
+          "floorBasePlateThickness": 14,
+          "slabBracketThickness": 14,
+          "postBasePlateThickness": 10,
+          "showMountingSurfaces": true,
+          "mountingSurfaceMaterial": "CONCRETE",
+          "floorSurfaceLength": 720,
+          "floorSurfaceWidth": 1500,
+          "floorSurfaceThickness": 120,
+          "topSlabSurfaceWidth": 1500,
+          "topSlabSurfaceHeight": 620,
+          "topSlabSurfaceThickness": 160
+        },
+        "sections": {
+          "strategy": "none",
+          "maxWeightKg": 1000,
+          "manualStations": []
+        },
+        "compliance": {
+          "rulePack": "uk-part-k",
+          "category": "utility",
+          "headroom": 2000
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "route",
+        "label": "Route",
+        "items": [
+          {
+            "kind": "stairRouteModules",
+            "path": "route.modules"
+          }
+        ]
+      },
+      {
+        "id": "geometry",
+        "label": "Geometry",
+        "items": [
+          "levels.ffl1",
+          "levels.ffl2",
+          "levels.slab1ToFfl1",
+          "levels.slab2ToFfl2",
+          "geometry.maxStepHeight",
+          {
+            "kind": "stairComputedGeometry"
+          },
+          "geometry.going",
+          "geometry.width"
+        ]
+      },
+      {
+        "id": "families",
+        "label": "Families",
+        "items": [
+          "landings.family",
+          "treads.family",
+          "supports.family",
+          "railings.family",
+          "connections.family"
+        ]
+      },
+      {
+        "id": "parts",
+        "label": "Parts",
+        "items": [
+          "treads.thickness",
+          "treads.depth",
+          "treads.material",
+          "treads.frontLip",
+          "treads.woodThickness",
+          "treads.woodInset",
+          "treads.woodNosing",
+          "treads.woodMaterial",
+          "treads.woodFinish",
+          "treads.closedRisers",
+          "treads.finish",
+          "supports.profile",
+          "supports.columnProfile",
+          "supports.sideOffset",
+          "supports.maxSegmentLength",
+          "landings.length",
+          "landings.thickness",
+          "landings.frameProfile",
+          "railings.sides",
+          "railings.height",
+          "railings.postSpacing",
+          "railings.curvePostSpacing",
+          "railings.sideInset",
+          "railings.infill",
+          "railings.panelThickness",
+          "railings.panelMaterial",
+          "railings.panelFastenerRef",
+          "railings.panelFixingHoleDiameter",
+          "railings.panelFastenerLength",
+          "railings.wallBracketHoleDiameter",
+          "railings.wallBracketFastenerRef",
+          "railings.wallBracketFastenerLength",
+          "railings.wallBracketProjection",
+          "railings.wallBracketDrop",
+          "railings.wallBracketPlateThickness",
+          "railings.wallBracketPlateWidth",
+          "railings.wallBracketPlateHeight",
+          "railings.wallBracketPlateMaterial",
+          "railings.wallSurfaceThickness",
+          "railings.wallSurfaceMaterial",
+          "railings.postProfile",
+          "railings.railProfile",
+          "connections.weldSize",
+          "connections.treadFastenerRef",
+          "connections.anchorFastenerRef",
+          "connections.postAnchorFastenerRef",
+          "connections.treadCleatThickness",
+          "connections.treadCleatLength",
+          "connections.treadCleatHeight",
+          "connections.treadBoltHoleDiameter",
+          "connections.treadBoltLength",
+          "connections.floorBasePlateThickness",
+          "connections.floorBasePlateLength",
+          "connections.floorBasePlateWidth",
+          "connections.slabBracketThickness",
+          "connections.slabBracketWidth",
+          "connections.slabBracketHeight",
+          "connections.anchorHoleDiameter",
+          "connections.anchorLength",
+          "connections.floorAnchorGripLength",
+          "connections.slabAnchorGripLength",
+          "connections.levelTolerance",
+          "connections.spiralMountingSurfaceSize",
+          "connections.spiralBasePlateSize",
+          "connections.spiralBasePlateThickness",
+          "connections.spiralTopPlateThickness",
+          "connections.spiralTreadBracketLength",
+          "connections.spiralTreadBracketHeight",
+          "connections.postBasePlateThickness",
+          "connections.postBasePlateWidth",
+          "connections.postBasePlateDepth",
+          "connections.postAnchorHoleDiameter",
+          "connections.postAnchorLength",
+          "connections.postAnchorGripLength",
+          "connections.splicePlateThickness",
+          "connections.splicePlateWidth",
+          "connections.splicePlateHeight",
+          "connections.spliceCutGap",
+          "connections.spliceFastenerRef",
+          "connections.spliceHoleDiameter",
+          "connections.spliceBoltLength",
+          "connections.spliceGripLength",
+          "connections.showMountingSurfaces",
+          "connections.mountingSurfaceMaterial",
+          "connections.floorSurfaceLength",
+          "connections.floorSurfaceWidth",
+          "connections.floorSurfaceThickness",
+          "connections.topSlabSurfaceWidth",
+          "connections.topSlabSurfaceHeight",
+          "connections.topSlabSurfaceThickness"
+        ]
+      },
+      {
+        "id": "sections",
+        "label": "Sections",
+        "items": [
+          "sections.strategy",
+          "sections.maxWeightKg",
+          "sections.manualStations"
+        ]
+      },
+      {
+        "id": "compliance",
+        "label": "Compliance",
+        "items": [
+          "compliance.rulePack",
+          "compliance.category",
+          "compliance.headroom",
+          {
+            "kind": "diagnostics"
+          }
+        ]
+      },
+      {
+        "id": "overrides",
+        "label": "Overrides",
+        "items": [
+          {
+            "kind": "smartComponentOverrides"
+          }
+        ]
+      }
+    ]
+  }
+}

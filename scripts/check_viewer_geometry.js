@@ -11,8 +11,8 @@ function readJson(filePath) {
 async function main() {
   const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "scene", "build-scene.mjs")).href);
   const { createCamera } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "webgl", "camera.mjs")).href);
-  const { buildConnectionDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "annotations", "build-dimensions.mjs")).href);
-  const { loadConnectionDefinitions, connectionDefinition } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "modules", "connections", "connection-registry.mjs")).href);
+  const { buildSmartComponentDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "annotations", "build-dimensions.mjs")).href);
+  const { loadSmartComponentDefinitions, smartComponentDefinition } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "modules", "smart-components", "smart-component-registry.mjs")).href);
   const settingsPath = path.join(ROOT, "bobercad", "app", "ui", "viewer", "viewer-settings.json");
   const settings = readJson(settingsPath);
   const projectPath = path.resolve(path.dirname(settingsPath), settings.project.path);
@@ -39,7 +39,7 @@ async function main() {
   largeProject.model.trimJoints = {};
   largeProject.model.fastenerGroups = {};
   largeProject.model.welds = {};
-  largeProject.model.connections = {};
+  largeProject.model.smartComponentInstances = {};
   largeProject.model.assemblies = {};
   for (let index = 0; index < largeCount; index += 1) {
     const id = `stress_member_${index}`;
@@ -98,14 +98,14 @@ async function main() {
   const finPlatePath = path.resolve(path.dirname(settingsPath), settings.project.demos["fin-plate-1"].path);
   const finPlateProject = readJson(finPlatePath);
   const finPlateProfiles = readJson(path.resolve(path.dirname(finPlatePath), finPlateProject.libraries.profiles.path));
-  const connectionCatalog = await loadConnectionDefinitions();
-  const [finPlateConnectionId] = Object.keys(finPlateProject.model.connections || {});
-  const finPlateDefinition = connectionDefinition(connectionCatalog, finPlateProject.model.connections[finPlateConnectionId]);
-  const dimensionOverlay = buildConnectionDimensions({
+  const smartComponentCatalog = await loadSmartComponentDefinitions();
+  const [finPlateSmartComponentId] = Object.keys(finPlateProject.model.smartComponentInstances || {});
+  const finPlateDefinition = smartComponentDefinition(smartComponentCatalog, finPlateProject.model.smartComponentInstances[finPlateSmartComponentId]);
+  const dimensionOverlay = buildSmartComponentDimensions({
     project: finPlateProject,
     profiles: finPlateProfiles.profiles,
     definition: finPlateDefinition,
-    connectionId: finPlateConnectionId
+    smartComponentId: finPlateSmartComponentId
   });
   const invalidDimensionPoints = [
     ...dimensionOverlay.labels.map((label) => label.point),
@@ -128,12 +128,12 @@ async function main() {
     return 1;
   }
   const twoColumnProject = JSON.parse(JSON.stringify(finPlateProject));
-  twoColumnProject.model.connections[finPlateConnectionId].referenceParameters.bolts.columns = 2;
-  const twoColumnOverlay = buildConnectionDimensions({
+  twoColumnProject.model.smartComponentInstances[finPlateSmartComponentId].referenceParameters.bolts.columns = 2;
+  const twoColumnOverlay = buildSmartComponentDimensions({
     project: twoColumnProject,
     profiles: finPlateProfiles.profiles,
     definition: finPlateDefinition,
-    connectionId: finPlateConnectionId
+    smartComponentId: finPlateSmartComponentId
   });
   if (!twoColumnOverlay.labels.some((label) => label.text === "bolts 3x2")) {
     console.error("FAILED: fin plate bolt pattern dimension should display requested row/column parameters even when generated columns overlap");

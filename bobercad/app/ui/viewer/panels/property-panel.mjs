@@ -34,6 +34,54 @@ function numericInput(label, value, onChange) {
   return row;
 }
 
+function positiveNumericInput(label, value, onChange) {
+  const row = document.createElement("label");
+  const input = document.createElement("input");
+  row.className = "editor-field";
+  input.type = "text";
+  input.inputMode = "decimal";
+  input.value = Number.isFinite(value) ? String(Number(value.toFixed(6))) : "";
+  input.setAttribute("aria-label", label);
+  input.addEventListener("change", () => {
+    const next = Number(input.value);
+    const valid = Number.isFinite(next) && next > 0;
+    input.classList.toggle("invalid", !valid);
+    if (valid) onChange(next);
+  });
+  row.append(text("span", "editor-label", label), input);
+  return row;
+}
+
+function nonNegativeNumericInput(label, value, onChange) {
+  const row = document.createElement("label");
+  const input = document.createElement("input");
+  row.className = "editor-field";
+  input.type = "text";
+  input.inputMode = "decimal";
+  input.value = Number.isFinite(value) ? String(Number(value.toFixed(6))) : "";
+  input.setAttribute("aria-label", label);
+  input.addEventListener("change", () => {
+    const next = Number(input.value);
+    const valid = Number.isFinite(next) && next >= 0;
+    input.classList.toggle("invalid", !valid);
+    if (valid) onChange(next);
+  });
+  row.append(text("span", "editor-label", label), input);
+  return row;
+}
+
+function checkboxInput(label, checked, onChange) {
+  const row = document.createElement("label");
+  const input = document.createElement("input");
+  row.className = "editor-field";
+  input.type = "checkbox";
+  input.checked = Boolean(checked);
+  input.setAttribute("aria-label", label);
+  input.addEventListener("change", () => onChange(input.checked));
+  row.append(text("span", "editor-label", label), input);
+  return row;
+}
+
 function selectInput(label, options, value, onChange) {
   const row = document.createElement("label");
   const select = document.createElement("select");
@@ -49,6 +97,33 @@ function selectInput(label, options, value, onChange) {
   select.addEventListener("change", () => onChange(select.value));
   row.append(text("span", "editor-label", label), select);
   return row;
+}
+
+function catalogOptionLabel(item) {
+  return item.designation || item.name || item.id;
+}
+
+function catalogOptions(api, catalog, currentId = "") {
+  const entries = api.catalogEntries?.(catalog) || {};
+  const options = Object.values(entries)
+    .filter((item) => item?.id)
+    .map((item) => ({ id: item.id, label: catalogOptionLabel(item) }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  if (currentId && !options.some((option) => option.id === currentId)) {
+    options.unshift({ id: currentId, label: currentId });
+  }
+  return options;
+}
+
+function fastenerLengthOptions(api, fastenerRef, currentLength) {
+  const fastener = api.catalogEntries?.("fasteners")?.[fastenerRef];
+  const lengths = (fastener?.lengths || [])
+    .filter((value) => typeof value === "number" && Number.isFinite(value) && value > 0)
+    .sort((a, b) => a - b);
+  const values = Number.isFinite(currentLength) && currentLength > 0 && !lengths.includes(currentLength)
+    ? [currentLength, ...lengths]
+    : lengths;
+  return values.map((value) => ({ id: String(value), label: String(value) }));
 }
 
 function readout(label, value) {
@@ -89,19 +164,19 @@ export function mountEditorUi({
   profiles,
   selection,
   memberEdit,
-  connectionHighlightObjectIds,
+  smartComponentHighlightObjectIds,
   onProjectChange,
   onLocalMemberProjectChange,
-  onConnectionSelected,
-  onConnectionDeleted,
+  onSmartComponentSelected,
+  onSmartComponentDeleted,
   onObjectSelected,
   onObjectCleared
 }) {
   let selectedMemberId = null;
-  let selectedConnectionId = null;
+  let selectedSmartComponentId = null;
   let selectedObjectId = null;
   let selectedObjectDetail = null;
-  let messageText = "Pick a member, connection, trim, or cut object.";
+  let messageText = "Pick a member, Smart Component, trim, or cut object.";
   let messageState = "";
 
   const setMessage = (message, state = "") => {
@@ -128,7 +203,7 @@ export function mountEditorUi({
 
   const selectMember = (memberId, options = {}) => {
     selectedMemberId = memberId;
-    selectedConnectionId = null;
+    selectedSmartComponentId = null;
     selectedObjectId = null;
     selectedObjectDetail = null;
     if (options.fromMemberEdit) selection.select([memberId]);
@@ -138,18 +213,18 @@ export function mountEditorUi({
     setMessage(`Selected ${memberId}.`, "ok");
   };
 
-  const selectConnection = (connectionId, options = {}) => {
+  const selectSmartComponent = (smartComponentId, options = {}) => {
     selectedMemberId = null;
-    selectedConnectionId = connectionId;
+    selectedSmartComponentId = smartComponentId;
     selectedObjectId = null;
     selectedObjectDetail = null;
     memberEdit?.clear({ notify: false });
-    selection.select(typeof connectionHighlightObjectIds === "function"
-      ? connectionHighlightObjectIds(connectionId)
-      : api.connectionObjectIds(connectionId));
+    selection.select(typeof smartComponentHighlightObjectIds === "function"
+      ? smartComponentHighlightObjectIds(smartComponentId)
+      : api.smartComponentObjectIds(smartComponentId));
     clearObjectWindow();
-    onConnectionSelected(connectionId, options);
-    setMessage(`Selected ${connectionId}.`, "ok");
+    onSmartComponentSelected(smartComponentId, options);
+    setMessage(`Selected ${smartComponentId}.`, "ok");
   };
 
   const selectObject = (objectId, detail = {}) => {
@@ -163,13 +238,12 @@ export function mountEditorUi({
       return;
     }
     selectedMemberId = null;
-    selectedConnectionId = null;
+    selectedSmartComponentId = null;
     selectedObjectId = objectId;
     selectedObjectDetail = detail || null;
     memberEdit?.clear({ notify: false });
     selection.select([objectId]);
-    if (entry.collection === "features" || entry.collection === "trimJoints") onObjectSelected?.(objectId, selectedObjectDetail);
-    else clearObjectWindow();
+    onObjectSelected?.(objectId, selectedObjectDetail);
     setMessage(`Selected ${objectId}.`, "ok");
   };
 
@@ -182,22 +256,22 @@ export function mountEditorUi({
     setMessage("Pick a member.", "ok");
   };
 
-  const beginConnectionPick = () => {
+  const beginSmartComponentPick = () => {
     selection.beginObjectPick({
       count: 1,
       objectIdFromFace,
       onComplete: ([objectId]) => {
-        const connection = api.connectionForObject(objectId);
-        if (!connection) {
+        const smartComponent = api.smartComponentRootForObject(objectId);
+        if (!smartComponent) {
           selection.clear();
-          setMessage("Picked object is not part of a generated connection.", "error");
+          setMessage("Picked object is not part of a generated Smart Component.", "error");
           return;
         }
-        selectConnection(connection.id);
+        selectSmartComponent(smartComponent.id);
       },
-      onError: () => setMessage("Pick a connection plate or fastener.", "error")
+      onError: () => setMessage("Pick any generated Smart Component object.", "error")
     });
-    setMessage("Pick a connection plate or fastener.", "ok");
+    setMessage("Pick any generated Smart Component object.", "ok");
   };
 
   const beginObjectPick = () => {
@@ -218,6 +292,17 @@ export function mountEditorUi({
       if (memberEdit) memberEdit.selectMember(selectedMemberId, { notify: false });
       else selection.select([selectedMemberId]);
       setMessage("Member updated.", "ok");
+    } catch (error) {
+      setMessage(error.message, "error");
+    }
+  };
+
+  const updateFastenerGroup = (patch) => {
+    if (!selectedObjectId) return;
+    try {
+      applyProjectChange(api.updateFastenerGroup(selectedObjectId, patch));
+      selection.select([selectedObjectId]);
+      setMessage("Fastener group updated.", "ok");
     } catch (error) {
       setMessage(error.message, "error");
     }
@@ -289,17 +374,17 @@ export function mountEditorUi({
     ];
   };
 
-  const deleteSelectedConnection = () => {
-    if (!selectedConnectionId) return;
+  const deleteSelectedSmartComponent = () => {
+    if (!selectedSmartComponentId) return;
     try {
-      const deletedId = selectedConnectionId;
-      const nextProject = api.deleteConnection(deletedId);
-      selectedConnectionId = null;
+      const deletedId = selectedSmartComponentId;
+      const nextProject = api.deleteSmartComponent(deletedId);
+      selectedSmartComponentId = null;
       memberEdit?.clear({ notify: false });
       selection.clear();
       clearObjectWindow();
       applyProjectChange(nextProject);
-      onConnectionDeleted?.(deletedId);
+      onSmartComponentDeleted?.(deletedId);
       setMessage(`Deleted ${deletedId}.`, "ok");
     } catch (error) {
       setMessage(error.message, "error");
@@ -326,19 +411,40 @@ export function mountEditorUi({
     ];
   };
 
-  const connectionEditor = () => {
-    if (!selectedConnectionId) return [text("div", "editor-empty", "No connection selected.")];
-    const connection = api.connection(selectedConnectionId);
-    const health = connection.generator?.health || "ok";
-    const firstError = (connection.generator?.diagnostics || []).find((item) => item.severity === "error");
+  const smartComponentEditor = () => {
+    if (!selectedSmartComponentId) return [text("div", "editor-empty", "No Smart Component selected.")];
+    const smartComponent = api.smartComponent(selectedSmartComponentId);
+    const health = smartComponent.health || "ok";
+    const firstError = (smartComponent.diagnostics || []).find((item) => item.severity === "error");
     return [
-      readout("Connection", selectedConnectionId),
-      readout("Type", connection.type),
+      readout("Smart Component", selectedSmartComponentId),
+      readout("Type", smartComponent.type),
+      readout("Kind", smartComponent.kind || "-"),
       readout("Health", health),
-      firstError ? text("div", "editor-error", firstError.message) : text("div", "editor-empty", "Connection is valid."),
-      button("Open Parameters", "editor-button", () => onConnectionSelected(selectedConnectionId)),
-      button("Remove Connection", "editor-button danger", deleteSelectedConnection)
+      firstError ? text("div", "editor-error", firstError.message) : text("div", "editor-empty", "Smart Component is valid."),
+      button("Open Parameters", "editor-button", () => onSmartComponentSelected(selectedSmartComponentId)),
+      button("Remove Smart Component", "editor-button danger", deleteSelectedSmartComponent)
     ];
+  };
+
+  const fastenerGroupEditor = (fastenerGroup) => {
+    const assembly = fastenerGroup.assembly || {};
+    const washers = assembly.washers || {};
+    const lengthOptions = fastenerLengthOptions(api, fastenerGroup.fastenerRef, assembly.length);
+    const rows = [
+      text("div", "editor-subtitle", "Fasteners"),
+      selectInput("Fastener", catalogOptions(api, "fasteners", fastenerGroup.fastenerRef), fastenerGroup.fastenerRef || "", (fastenerRef) => updateFastenerGroup({ fastenerRef })),
+      lengthOptions.length
+        ? selectInput("Length", lengthOptions, Number.isFinite(assembly.length) ? String(assembly.length) : lengthOptions[0].id, (length) => updateFastenerGroup({ assembly: { length: Number(length) } }))
+        : positiveNumericInput("Length", assembly.length, (length) => updateFastenerGroup({ assembly: { length } })),
+      positiveNumericInput("Grip length", assembly.gripLength, (gripLength) => updateFastenerGroup({ assembly: { gripLength } })),
+      checkboxInput("Head washer", washers.head, (head) => updateFastenerGroup({ assembly: { washers: { head } } })),
+      checkboxInput("Nut washer", washers.nut, (nut) => updateFastenerGroup({ assembly: { washers: { nut } } }))
+    ];
+    if (Number.isFinite(assembly.nutOffset)) {
+      rows.push(nonNegativeNumericInput("Nut offset", assembly.nutOffset, (nutOffset) => updateFastenerGroup({ assembly: { nutOffset } })));
+    }
+    return rows;
   };
 
   const objectEditor = () => {
@@ -347,7 +453,8 @@ export function mountEditorUi({
     const entry = project.objectIndex?.[selectedObjectId];
     if (!entry?.collection) return [text("div", "editor-error", "Selected object is no longer in the project.")];
     const object = api.object(selectedObjectId);
-    const connection = api.connectionForObject(selectedObjectId);
+    const smartComponent = api.smartComponentForObject(selectedObjectId);
+    const rootSmartComponent = api.smartComponentRootForObject(selectedObjectId);
     const rows = [
       readout("Object", selectedObjectId),
       readout("Collection", entry.collection),
@@ -359,38 +466,46 @@ export function mountEditorUi({
     if (object.booleanType) rows.push(readout("Boolean", object.booleanType));
     if (entry.collection === "trimJoints") rows.push(readout("Participants", String((object.participants || []).length)));
     if (entry.collection === "trimJoints" && selectedObjectDetail?.operationId) rows.push(readout("Selected cut", selectedObjectDetail.operationId));
+    if (entry.collection === "fastenerGroups") {
+      if (object.holePatternRef) rows.push(readout("Hole pattern", object.holePatternRef));
+      rows.push(readout("Participants", String((object.participants || []).length)));
+      rows.push(...fastenerGroupEditor(object));
+    }
     if (object.fabrication?.operation) rows.push(readout("Operation", object.fabrication.operation));
     if (object.operationEnabled === false) rows.push(text("div", "editor-error", "Operation is disabled."));
-    if (connection) rows.push(button("Open Connection", "editor-button", () => selectConnection(connection.id)));
+    if (rootSmartComponent) rows.push(button("Open Smart Component", "editor-button", () => selectSmartComponent(rootSmartComponent.id)));
+    if (smartComponent && rootSmartComponent && smartComponent.id !== rootSmartComponent.id) {
+      rows.push(button("Open Direct Component", "editor-button", () => selectSmartComponent(smartComponent.id)));
+    }
     if (entry.collection === "features") rows.push(button("Open Feature Editor", "editor-button primary", () => onObjectSelected?.(selectedObjectId)));
     return rows;
   };
 
   function render() {
     if (selectedMemberId && !api.project().model.members?.[selectedMemberId]) selectedMemberId = null;
-    if (selectedConnectionId && !api.project().model.connections?.[selectedConnectionId]) selectedConnectionId = null;
+    if (selectedSmartComponentId && !api.project().model.smartComponentInstances?.[selectedSmartComponentId]) selectedSmartComponentId = null;
     if (selectedObjectId && !api.project().objectIndex?.[selectedObjectId]) selectedObjectId = null;
 
     const title = text("div", "editor-title", "Editor");
     const actions = document.createElement("div");
     const memberSection = document.createElement("section");
-    const connectionSection = document.createElement("section");
+    const smartComponentSection = document.createElement("section");
     const objectSection = document.createElement("section");
     const message = text("div", "editor-message", messageText);
 
     actions.className = "editor-actions";
     memberSection.className = "editor-section";
-    connectionSection.className = "editor-section";
+    smartComponentSection.className = "editor-section";
     objectSection.className = "editor-section";
     message.dataset.state = messageState;
 
     actions.append(
       button("Pick Member", "editor-button", beginMemberPick),
-      button("Pick Connection", "editor-button", beginConnectionPick),
+      button("Pick Smart Component", "editor-button", beginSmartComponentPick),
       button("Pick Object", "editor-button", beginObjectPick),
       button("Clear", "editor-button", () => {
         selectedMemberId = null;
-        selectedConnectionId = null;
+        selectedSmartComponentId = null;
         selectedObjectId = null;
         selectedObjectDetail = null;
         memberEdit?.clear({ notify: false });
@@ -400,11 +515,11 @@ export function mountEditorUi({
       })
     );
     memberSection.append(text("div", "editor-section-title", "Member"), ...memberEditor());
-    connectionSection.append(text("div", "editor-section-title", "Connection"), ...connectionEditor());
+    smartComponentSection.append(text("div", "editor-section-title", "Smart Component"), ...smartComponentEditor());
     objectSection.append(text("div", "editor-section-title", "Object"), ...objectEditor());
 
     panel.hidden = false;
-    panel.replaceChildren(title, actions, memberSection, connectionSection, objectSection, message);
+    panel.replaceChildren(title, actions, memberSection, smartComponentSection, objectSection, message);
   }
 
   api.subscribe(render);
@@ -412,7 +527,7 @@ export function mountEditorUi({
   return {
     clearSelection(options = {}) {
       selectedMemberId = null;
-      selectedConnectionId = null;
+      selectedSmartComponentId = null;
       selectedObjectId = null;
       selectedObjectDetail = null;
       if (!options.fromMemberEdit) memberEdit?.clear({ notify: false });
@@ -421,7 +536,14 @@ export function mountEditorUi({
       setMessage("Selection cleared.");
     },
     selectMember,
-    selectConnection,
-    selectObject
+    selectSmartComponent,
+    selectObject,
+    selectedState() {
+      return {
+        memberId: selectedMemberId,
+        smartComponentId: selectedSmartComponentId,
+        objectId: selectedObjectId
+      };
+    }
   };
 }

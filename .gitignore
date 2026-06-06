@@ -6,4 +6,5 @@ server-8000.err.log
 server-8000.log
 stress-output/
 qa-output/
+artifacts/
 bobercad-ai-review.txt

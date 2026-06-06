@@ -77,15 +77,15 @@
       "version": "0.1.0",
       "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
     },
-    "connections": {
-      "libraryId": "starter-connection-library",
-      "version": "0.1.0",
-      "path": "../libraries/connections/connection-register.json"
-    },
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
       "path": "../libraries/model-library/model-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
     }
   },
   "projectTree": {
@@ -371,27 +371,27 @@
       "type": "fastener-group"
     },
     "conn_side_a_start": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "manual-steel-to-steel"
     },
     "conn_side_a_end": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "manual-steel-to-steel"
     },
     "conn_side_b_start": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "manual-steel-to-steel"
     },
     "conn_side_b_end": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "manual-steel-to-steel"
     },
     "conn_cross_a": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "manual-steel-to-steel"
     },
     "conn_cross_b": {
-      "collection": "connections",
+      "collection": "smartComponentInstances",
       "type": "manual-steel-to-steel"
     },
     "hole_pattern_steel_2x2": {
@@ -549,17 +549,15 @@
           }
         }
       },
-      "connections": {
+      "smartComponentInstances": {
         "*": {
-          "generator": {
-            "status": "not-parametric-yet"
-          },
           "tracking": {
             "projectTreeNodeId": "zone_frame_a",
             "phase": "phase_1",
             "lot": "lot_1",
             "status": "modeled"
-          }
+          },
+          "status": "not-parametric-yet"
         }
       }
     }
@@ -1005,13 +1003,13 @@
           "if_column_1a_x_plus",
           "if_side_beam_a_start"
         ],
-        "connectionIds": [
-          "conn_side_a_start"
-        ],
         "objectIds": [
           "end_plate_side_a_start",
           "holes_side_a_start",
           "fasteners_side_a_start"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_side_a_start"
         ]
       },
       "cz_side_a_end": {
@@ -1026,13 +1024,13 @@
           "if_column_2a_x_minus",
           "if_side_beam_a_end"
         ],
-        "connectionIds": [
-          "conn_side_a_end"
-        ],
         "objectIds": [
           "end_plate_side_a_end",
           "holes_side_a_end",
           "fasteners_side_a_end"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_side_a_end"
         ]
       },
       "cz_side_b_start": {
@@ -1047,13 +1045,13 @@
           "if_column_1b_x_plus",
           "if_side_beam_b_start"
         ],
-        "connectionIds": [
-          "conn_side_b_start"
-        ],
         "objectIds": [
           "end_plate_side_b_start",
           "holes_side_b_start",
           "fasteners_side_b_start"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_side_b_start"
         ]
       },
       "cz_side_b_end": {
@@ -1068,13 +1066,13 @@
           "if_column_2b_x_minus",
           "if_side_beam_b_end"
         ],
-        "connectionIds": [
-          "conn_side_b_end"
-        ],
         "objectIds": [
           "end_plate_side_b_end",
           "holes_side_b_end",
           "fasteners_side_b_end"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_side_b_end"
         ]
       },
       "cz_cross_a": {
@@ -1089,13 +1087,13 @@
           "if_side_beam_a_inner_y_plus",
           "if_cross_beam_1_start"
         ],
-        "connectionIds": [
-          "conn_cross_a"
-        ],
         "objectIds": [
           "end_plate_cross_a",
           "holes_cross_a",
           "fasteners_cross_a"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_cross_a"
         ]
       },
       "cz_cross_b": {
@@ -1110,13 +1108,13 @@
           "if_side_beam_b_inner_y_minus",
           "if_cross_beam_1_end"
         ],
-        "connectionIds": [
-          "conn_cross_b"
-        ],
         "objectIds": [
           "end_plate_cross_b",
           "holes_cross_b",
           "fasteners_cross_b"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_cross_b"
         ]
       }
     },
@@ -2167,248 +2165,6 @@
       }
     },
     "welds": {},
-    "connections": {
-      "conn_side_a_start": {
-        "id": "conn_side_a_start",
-        "type": "manual-steel-to-steel",
-        "mainMemberId": "column_1a",
-        "secondaryMemberId": "side_beam_a",
-        "connectionZoneId": "cz_side_a_start",
-        "manualParts": {
-          "plateIds": [
-            "end_plate_side_a_start"
-          ],
-          "featureIds": [
-            "holes_side_a_start"
-          ],
-          "fastenerGroupIds": [
-            "fasteners_side_a_start"
-          ],
-          "weldIds": []
-        },
-        "placementIntent": {
-          "role": "beam-to-column-manual-connection",
-          "host": {
-            "groupId": "group_portal_frame_1"
-          },
-          "fit": "manual-steel-to-steel"
-        },
-        "sourcePreset": {
-          "library": "connections",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
-          "version": "0.1.0"
-        },
-        "authoring": {
-          "source": "connection-preset",
-          "sourcePreset": {
-            "library": "connections",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
-            "version": "0.1.0"
-          },
-          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
-        }
-      },
-      "conn_side_a_end": {
-        "id": "conn_side_a_end",
-        "type": "manual-steel-to-steel",
-        "mainMemberId": "column_2a",
-        "secondaryMemberId": "side_beam_a",
-        "connectionZoneId": "cz_side_a_end",
-        "manualParts": {
-          "plateIds": [
-            "end_plate_side_a_end"
-          ],
-          "featureIds": [
-            "holes_side_a_end"
-          ],
-          "fastenerGroupIds": [
-            "fasteners_side_a_end"
-          ],
-          "weldIds": []
-        },
-        "placementIntent": {
-          "role": "beam-to-column-manual-connection",
-          "host": {
-            "groupId": "group_portal_frame_1"
-          },
-          "fit": "manual-steel-to-steel"
-        },
-        "sourcePreset": {
-          "library": "connections",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
-          "version": "0.1.0"
-        },
-        "authoring": {
-          "source": "connection-preset",
-          "sourcePreset": {
-            "library": "connections",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
-            "version": "0.1.0"
-          },
-          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
-        }
-      },
-      "conn_side_b_start": {
-        "id": "conn_side_b_start",
-        "type": "manual-steel-to-steel",
-        "mainMemberId": "column_1b",
-        "secondaryMemberId": "side_beam_b",
-        "connectionZoneId": "cz_side_b_start",
-        "manualParts": {
-          "plateIds": [
-            "end_plate_side_b_start"
-          ],
-          "featureIds": [
-            "holes_side_b_start"
-          ],
-          "fastenerGroupIds": [
-            "fasteners_side_b_start"
-          ],
-          "weldIds": []
-        },
-        "placementIntent": {
-          "role": "beam-to-column-manual-connection",
-          "host": {
-            "groupId": "group_portal_frame_1"
-          },
-          "fit": "manual-steel-to-steel"
-        },
-        "sourcePreset": {
-          "library": "connections",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
-          "version": "0.1.0"
-        },
-        "authoring": {
-          "source": "connection-preset",
-          "sourcePreset": {
-            "library": "connections",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
-            "version": "0.1.0"
-          },
-          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
-        }
-      },
-      "conn_side_b_end": {
-        "id": "conn_side_b_end",
-        "type": "manual-steel-to-steel",
-        "mainMemberId": "column_2b",
-        "secondaryMemberId": "side_beam_b",
-        "connectionZoneId": "cz_side_b_end",
-        "manualParts": {
-          "plateIds": [
-            "end_plate_side_b_end"
-          ],
-          "featureIds": [
-            "holes_side_b_end"
-          ],
-          "fastenerGroupIds": [
-            "fasteners_side_b_end"
-          ],
-          "weldIds": []
-        },
-        "placementIntent": {
-          "role": "beam-to-column-manual-connection",
-          "host": {
-            "groupId": "group_portal_frame_1"
-          },
-          "fit": "manual-steel-to-steel"
-        },
-        "sourcePreset": {
-          "library": "connections",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
-          "version": "0.1.0"
-        },
-        "authoring": {
-          "source": "connection-preset",
-          "sourcePreset": {
-            "library": "connections",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
-            "version": "0.1.0"
-          },
-          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
-        }
-      },
-      "conn_cross_a": {
-        "id": "conn_cross_a",
-        "type": "manual-steel-to-steel",
-        "mainMemberId": "side_beam_a",
-        "secondaryMemberId": "cross_beam_1",
-        "connectionZoneId": "cz_cross_a",
-        "manualParts": {
-          "plateIds": [
-            "end_plate_cross_a"
-          ],
-          "featureIds": [
-            "holes_cross_a"
-          ],
-          "fastenerGroupIds": [
-            "fasteners_cross_a"
-          ],
-          "weldIds": []
-        },
-        "placementIntent": {
-          "role": "cross-beam-to-side-beam-manual-connection",
-          "host": {
-            "groupId": "group_portal_frame_1"
-          },
-          "fit": "manual-steel-to-steel"
-        },
-        "sourcePreset": {
-          "library": "connections",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
-          "version": "0.1.0"
-        },
-        "authoring": {
-          "source": "connection-preset",
-          "sourcePreset": {
-            "library": "connections",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
-            "version": "0.1.0"
-          },
-          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
-        }
-      },
-      "conn_cross_b": {
-        "id": "conn_cross_b",
-        "type": "manual-steel-to-steel",
-        "mainMemberId": "side_beam_b",
-        "secondaryMemberId": "cross_beam_1",
-        "connectionZoneId": "cz_cross_b",
-        "manualParts": {
-          "plateIds": [
-            "end_plate_cross_b"
-          ],
-          "featureIds": [
-            "holes_cross_b"
-          ],
-          "fastenerGroupIds": [
-            "fasteners_cross_b"
-          ],
-          "weldIds": []
-        },
-        "placementIntent": {
-          "role": "cross-beam-to-side-beam-manual-connection",
-          "host": {
-            "groupId": "group_portal_frame_1"
-          },
-          "fit": "manual-steel-to-steel"
-        },
-        "sourcePreset": {
-          "library": "connections",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
-          "version": "0.1.0"
-        },
-        "authoring": {
-          "source": "connection-preset",
-          "sourcePreset": {
-            "library": "connections",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
-            "version": "0.1.0"
-          },
-          "notes": "Preset provenance only; manualParts contain source-of-truth geometry."
-        }
-      }
-    },
     "addonData": {},
     "holePatterns": {
       "hole_pattern_steel_2x2": {
@@ -2435,7 +2191,276 @@
         ]
       }
     },
-    "objectPatterns": {}
+    "objectPatterns": {},
+    "workPoints": {},
+    "referencePlanes": {},
+    "trimJoints": {},
+    "smartComponentInstances": {
+      "conn_side_a_start": {
+        "id": "conn_side_a_start",
+        "type": "manual-steel-to-steel",
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "inputs": {
+          "main": {
+            "memberId": "column_1a"
+          },
+          "secondary": {
+            "memberId": "side_beam_a"
+          },
+          "connectionZoneId": "cz_side_a_start"
+        },
+        "referenceParameters": {},
+        "parameters": {},
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {},
+        "ownedObjectIds": [],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "generated",
+        "definition": "manual-steel-to-steel",
+        "health": "ok",
+        "diagnostics": [],
+        "authoring": {
+          "source": "smart-component-library",
+          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
+          "sourceComponent": {
+            "library": "smart-components",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          }
+        }
+      },
+      "conn_side_a_end": {
+        "id": "conn_side_a_end",
+        "type": "manual-steel-to-steel",
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "inputs": {
+          "main": {
+            "memberId": "column_2a"
+          },
+          "secondary": {
+            "memberId": "side_beam_a"
+          },
+          "connectionZoneId": "cz_side_a_end"
+        },
+        "referenceParameters": {},
+        "parameters": {},
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {},
+        "ownedObjectIds": [],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "generated",
+        "definition": "manual-steel-to-steel",
+        "health": "ok",
+        "diagnostics": [],
+        "authoring": {
+          "source": "smart-component-library",
+          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
+          "sourceComponent": {
+            "library": "smart-components",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          }
+        }
+      },
+      "conn_side_b_start": {
+        "id": "conn_side_b_start",
+        "type": "manual-steel-to-steel",
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "inputs": {
+          "main": {
+            "memberId": "column_1b"
+          },
+          "secondary": {
+            "memberId": "side_beam_b"
+          },
+          "connectionZoneId": "cz_side_b_start"
+        },
+        "referenceParameters": {},
+        "parameters": {},
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {},
+        "ownedObjectIds": [],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "generated",
+        "definition": "manual-steel-to-steel",
+        "health": "ok",
+        "diagnostics": [],
+        "authoring": {
+          "source": "smart-component-library",
+          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
+          "sourceComponent": {
+            "library": "smart-components",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          }
+        }
+      },
+      "conn_side_b_end": {
+        "id": "conn_side_b_end",
+        "type": "manual-steel-to-steel",
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "inputs": {
+          "main": {
+            "memberId": "column_2b"
+          },
+          "secondary": {
+            "memberId": "side_beam_b"
+          },
+          "connectionZoneId": "cz_side_b_end"
+        },
+        "referenceParameters": {},
+        "parameters": {},
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {},
+        "ownedObjectIds": [],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "generated",
+        "definition": "manual-steel-to-steel",
+        "health": "ok",
+        "diagnostics": [],
+        "authoring": {
+          "source": "smart-component-library",
+          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
+          "sourceComponent": {
+            "library": "smart-components",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          }
+        }
+      },
+      "conn_cross_a": {
+        "id": "conn_cross_a",
+        "type": "manual-steel-to-steel",
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "inputs": {
+          "main": {
+            "memberId": "side_beam_a"
+          },
+          "secondary": {
+            "memberId": "cross_beam_1"
+          },
+          "connectionZoneId": "cz_cross_a"
+        },
+        "referenceParameters": {},
+        "parameters": {},
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {},
+        "ownedObjectIds": [],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "generated",
+        "definition": "manual-steel-to-steel",
+        "health": "ok",
+        "diagnostics": [],
+        "authoring": {
+          "source": "smart-component-library",
+          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
+          "sourceComponent": {
+            "library": "smart-components",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          }
+        }
+      },
+      "conn_cross_b": {
+        "id": "conn_cross_b",
+        "type": "manual-steel-to-steel",
+        "kind": "connection",
+        "sourceComponent": {
+          "library": "smart-components",
+          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "version": "0.1.0"
+        },
+        "inputs": {
+          "main": {
+            "memberId": "side_beam_b"
+          },
+          "secondary": {
+            "memberId": "cross_beam_1"
+          },
+          "connectionZoneId": "cz_cross_b"
+        },
+        "referenceParameters": {},
+        "parameters": {},
+        "parentInstanceId": null,
+        "parentRole": null,
+        "childComponentRoles": {},
+        "objectRoles": {},
+        "ownedObjectIds": [],
+        "managedFields": {},
+        "fieldOverrides": {},
+        "detachedObjectIds": [],
+        "suppressedRoles": [],
+        "suppressedPatternPositions": {},
+        "status": "generated",
+        "definition": "manual-steel-to-steel",
+        "health": "ok",
+        "diagnostics": [],
+        "authoring": {
+          "source": "smart-component-library",
+          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
+          "sourceComponent": {
+            "library": "smart-components",
+            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "version": "0.1.0"
+          }
+        }
+      }
+    }
   },
   "migrationHistory": [
     {

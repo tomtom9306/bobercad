@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../../../app/schemas/smart-component.schema.json",
+  "type": "standard-hardware",
+  "kind": "connection",
+  "title": "Standard Hardware",
+  "version": 1,
+  "interfaces": [
+    {
+      "role": "main"
+    },
+    {
+      "role": "secondary"
+    }
+  ],
+  "roles": {
+    "connectionPattern": "_connection_pattern",
+    "connectionAssembly": "_connection_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "standard-hardware": {
+      "id": "standard-hardware",
+      "version": "0.1.0",
+      "name": "Standard hardware",
+      "parameters": {
+        "meta": {
+          "family": "standard-hardware"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "connections",
+        "label": "Hardware",
+        "items": []
+      }
+    ]
+  }
+}

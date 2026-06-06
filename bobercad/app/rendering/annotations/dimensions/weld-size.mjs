@@ -1,9 +1,9 @@
 import { EPSILON, dimensionText, finite, fmt, fullDimensionText, interfaceAxis, interfaceByRole, makeNote, paramValue, parameterLabel, plateBasis, plateSupportEdge, roleObject, v } from "../dimension-context.mjs";
 
 export function weldSizeDimension(ctx, spec) {
-  const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
-  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.connection, spec.reference.interfaceRole);
-  const value = paramValue(ctx.definition, ctx.connection, spec.parameter);
+  const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
+  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
+  const value = paramValue(ctx.definition, ctx.smartComponent, spec.parameter);
   if (!plate || !iface || !finite(value)) return null;
   const basis = plateBasis(plate);
   const supportEdge = plateSupportEdge(plate, iface, basis);
@@ -47,9 +47,9 @@ export function weldSizeDimension(ctx, spec) {
     spec,
     point,
     anchor,
-    textValue: dimensionText(ctx.definition, spec, value, ctx.connection),
+    textValue: dimensionText(ctx.definition, spec, value, ctx.smartComponent),
     displayTextValue: `${spec.label || "W"} ${fmt(value)}`,
-    titleValue: fullDimensionText(ctx.definition, spec, value, ctx.connection),
+    titleValue: fullDimensionText(ctx.definition, spec, value, ctx.smartComponent),
     dimensionValue: value,
     labelAxis: [0, 0, 0]
   });

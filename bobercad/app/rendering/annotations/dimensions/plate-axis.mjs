@@ -1,7 +1,7 @@
 import { atValue, dimensionOffset, longestPlateEdge, makeDimension, pickedEdgeOffset, plateBasis, plateBounds, platePoint, roleObject } from "../dimension-context.mjs";
 
 export function plateAxisDimension(ctx, spec) {
-  const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
+  const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
   if (!plate) return null;
   const basis = plateBasis(plate);
   const bounds = plateBounds(plate);

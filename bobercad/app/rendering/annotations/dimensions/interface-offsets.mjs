@@ -2,9 +2,9 @@ import { requiredReferencePlane } from "../../../engine/geometry/feature-plane.m
 import { dimensionOffset, distance, finite, interfaceAnnotationBasis, interfaceAxis, interfaceByRole, linePlane, makeDimension, paramValue, plateBasis, pointToPlane, roleObject, v } from "../dimension-context.mjs";
 
 export function interfaceOffsetDimension(ctx, spec) {
-  const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
-  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.connection, spec.reference.interfaceRole);
-  const value = paramValue(ctx.definition, ctx.connection, spec.parameter);
+  const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
+  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
+  const value = paramValue(ctx.definition, ctx.smartComponent, spec.parameter);
   if (!plate || !iface || !finite(value) || value <= 0) return null;
   const basis = plateBasis(plate);
   const axis = interfaceAxis(iface, plate);
@@ -26,9 +26,9 @@ function trimPlane(trimJoint) {
 }
 
 export function trimPlaneOffsetDimension(ctx, spec) {
-  const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
-  const trimJoint = roleObject(ctx.project, ctx.connection, spec.reference.trimRole);
-  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.connection, spec.reference.interfaceRole);
+  const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
+  const trimJoint = roleObject(ctx.project, ctx.smartComponent, spec.reference.trimRole);
+  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
   const operation = trimPlane(trimJoint);
   if (!plate || !operation || !iface) return null;
   const plane = requiredReferencePlane(ctx.project, operation.referencePlaneIds[0], trimJoint.id, () => null);

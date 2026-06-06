@@ -1,8 +1,8 @@
 import { basisAxis, dimensionOffset, interfaceByRole, makeDimension, plateBasis, pointToPlane, roleObject, v } from "../dimension-context.mjs";
 
 export function plateReferencePlaneOffsetDimension(ctx, spec) {
-  const plate = roleObject(ctx.project, ctx.connection, spec.reference.objectRole);
-  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.connection, spec.reference.interfaceRole);
+  const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
+  const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
   if (!plate || !iface) return null;
 
   const basis = plateBasis(plate);

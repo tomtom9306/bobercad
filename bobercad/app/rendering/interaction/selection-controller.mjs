@@ -3,7 +3,8 @@ function unique(values) {
 }
 
 function memberIdFromFace(face) {
-  return face?.collection === "members" ? face.objectId : null;
+  if (face?.collection === "members") return face.objectId;
+  return face?.memberId || face?.ownerMemberId || null;
 }
 
 export function createSelectionController({ viewer }) {

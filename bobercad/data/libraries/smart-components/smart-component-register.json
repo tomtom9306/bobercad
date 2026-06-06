@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../app/schemas/smart-component-register.schema.json",
+  "libraryUi": "./smart-component-library-ui.mjs",
+  "components": [
+    "./components/connections/fin-plate/",
+    "./components/connections/moment-end-plate/",
+    "./components/connections/base-plate/",
+    "./components/connections/standard-hardware/",
+    "./components/connections/member-splice/",
+    "./components/connections/apex-gusset/",
+    "./components/stairs/stair-system/",
+    "./components/stairs/flights/path-flight/",
+    "./components/stairs/landings/plate-landing/",
+    "./components/stairs/landings/framed-landing/",
+    "./components/stairs/treads/plate-tread/",
+    "./components/stairs/treads/grating-tread/",
+    "./components/stairs/treads/folded-tray-tread/",
+    "./components/stairs/treads/pan-tread/",
+    "./components/stairs/supports/twin-stringer/",
+    "./components/stairs/supports/mono-stringer/",
+    "./components/stairs/supports/spiral-column/",
+    "./components/stairs/railings/post-and-rail/",
+    "./components/stairs/railings/glass-panel/",
+    "./components/stairs/railings/wall-handrail/",
+    "./components/stairs/sections/transport-sections/",
+    "./components/frames/portal-frame/",
+    "./components/buildings/warehouse/"
+  ]
+}
