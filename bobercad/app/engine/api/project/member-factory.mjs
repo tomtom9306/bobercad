@@ -1,8 +1,9 @@
 import { v } from "../../core/math.mjs";
 import { nextObjectId } from "./objects.mjs";
-import { vec3 } from "./members.mjs";
+import { vec3 } from "./members.mjs?v=vec3-dry-1";
 
 const EPSILON = 1e-9;
+const definedObject = (fields) => Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
 
 function fail(message) {
   throw new Error(`member factory: ${message}`);
@@ -59,15 +60,15 @@ function snapRef(snap) {
     endpoint: snap.endpoint || undefined,
     label: snap.label || undefined,
     sources: Array.isArray(snap.sources)
-      ? snap.sources.map((source) => Object.fromEntries(Object.entries({
+      ? snap.sources.map((source) => definedObject({
           type: source.type,
           objectId: source.objectId,
           axis: source.axis,
           label: source.label
-        }).filter(([, value]) => value !== undefined)))
+        }))
       : undefined
   };
-  return Object.fromEntries(Object.entries(ref).filter(([, value]) => value !== undefined));
+  return definedObject(ref);
 }
 
 function authoringSnapRefs(startSnap, endSnap) {

@@ -372,8 +372,6 @@
         },
         "beam-end-plate": {
           "thickness": 12,
-          "width": 220,
-          "height": 260,
           "normal": [
             0,
             1,
@@ -903,7 +901,62 @@
         "display": {
           "color": "#6b8f71"
         },
-        "assemblyId": "asm_beam_to_beam_connection"
+        "assemblyId": "asm_beam_to_beam_connection",
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "end_plate_1_v1",
+              "point": [
+                -110,
+                -130
+              ]
+            },
+            {
+              "id": "end_plate_1_v2",
+              "point": [
+                110,
+                -130
+              ]
+            },
+            {
+              "id": "end_plate_1_v3",
+              "point": [
+                110,
+                130
+              ]
+            },
+            {
+              "id": "end_plate_1_v4",
+              "point": [
+                -110,
+                130
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "end_plate_1_e1",
+              "from": "end_plate_1_v1",
+              "to": "end_plate_1_v2"
+            },
+            {
+              "id": "end_plate_1_e2",
+              "from": "end_plate_1_v2",
+              "to": "end_plate_1_v3"
+            },
+            {
+              "id": "end_plate_1_e3",
+              "from": "end_plate_1_v3",
+              "to": "end_plate_1_v4"
+            },
+            {
+              "id": "end_plate_1_e4",
+              "from": "end_plate_1_v4",
+              "to": "end_plate_1_v1"
+            }
+          ]
+        }
       }
     },
     "holePatterns": {

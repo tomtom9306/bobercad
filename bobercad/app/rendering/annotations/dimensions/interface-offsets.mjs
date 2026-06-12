@@ -1,5 +1,6 @@
 import { requiredReferencePlane } from "../../../engine/geometry/feature-plane.mjs";
-import { dimensionOffset, distance, finite, interfaceAnnotationBasis, interfaceAxis, interfaceByRole, linePlane, makeDimension, paramValue, plateBasis, pointToPlane, roleObject, v } from "../dimension-context.mjs";
+import { trimOperationFirstReferencePlaneId, trimPlaneOperation } from "../../../engine/api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
+import { dimensionOffset, distance, finite, interfaceAnnotationBasis, interfaceAxis, interfaceByRole, linePlane, makeDimension, paramValue, plateBasis, pointToPlane, roleObject, v } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
 export function interfaceOffsetDimension(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
@@ -19,19 +20,13 @@ export function interfaceOffsetDimension(ctx, spec) {
   });
 }
 
-
-
-function trimPlane(trimJoint) {
-  return (trimJoint?.operations || []).find((operation) => operation.type === "plane-trim" && operation.referencePlaneIds?.length) || null;
-}
-
 export function trimPlaneOffsetDimension(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
   const trimJoint = roleObject(ctx.project, ctx.smartComponent, spec.reference.trimRole);
   const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
-  const operation = trimPlane(trimJoint);
+  const operation = trimPlaneOperation(trimJoint);
   if (!plate || !operation || !iface) return null;
-  const plane = requiredReferencePlane(ctx.project, operation.referencePlaneIds[0], trimJoint.id, () => null);
+  const plane = requiredReferencePlane(ctx.project, trimOperationFirstReferencePlaneId(operation), trimJoint.id, () => null);
   if (!plane) return null;
   const offsetBasis = interfaceAnnotationBasis(plate, iface);
   const axis = interfaceAxis(iface, plate);

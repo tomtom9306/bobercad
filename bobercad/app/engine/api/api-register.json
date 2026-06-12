@@ -509,27 +509,6 @@
       "returns": "authoring point map"
     },
     {
-      "id": "project.snapCandidates",
-      "module": "./project/snapping.mjs",
-      "description": "List headless snapping targets from project members, layout axes, work points, and grids.",
-      "parameters": {
-        "project": "project JSON",
-        "options": "optional includeLayoutAxis flag"
-      },
-      "returns": "array of snap candidates"
-    },
-    {
-      "id": "project.nearestSnapPoint",
-      "module": "./project/snapping.mjs",
-      "description": "Find the nearest world-space snap candidate inside a tolerance.",
-      "parameters": {
-        "project": "project JSON",
-        "point": "[x,y,z]",
-        "options": "optional tolerance and excludeObjectId"
-      },
-      "returns": "snap candidate or null"
-    },
-    {
       "id": "ctx.param",
       "module": "../modules/smart-components/smart-component-generator.mjs",
       "description": "Read a Smart Component parameter by dotted path.",

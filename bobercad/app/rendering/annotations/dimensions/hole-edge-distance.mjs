@@ -1,20 +1,87 @@
-import { EPSILON, basisAxis, basisBoundsCoordinate, dimensionOffset, distance, edgeDistanceEditTransform, featureBasis, finite, interfaceAxis, interfaceByRole, interfaceEdgeOnBasis, linePlane, makeDimension, patternLayoutBasis, patternPositionsInBasis, plateBasis, plateBoundsInBasis, plateSupportEdge, positionInBasis, positionPoint, rawInterfaceByRole, roleObject, signedEdgeDistance, sortedCoordinateValues, v } from "../dimension-context.mjs";
+import { basisAxis, basisBoundsCoordinate, dimensionOffset, distance, edgeDistanceEditTransform, featureBasis, finite, interfaceAxis, interfaceByRole, interfaceEdgeOnBasis, linePlane, makeDimension, patternLayoutBasis, patternPositionsInBasis, plateBasis, plateBoundsInBasis, plateSupportEdge, positionInBasis, positionPoint, rawInterfaceByRole, roleObject, signedEdgeDistance, sortedCoordinateValues, truthyValues } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
-export function holeEdgeDistanceDimension(ctx, spec) {
+function nearestPatternHole(positions, values, axisIndex, otherIndex, edge) {
+  const holeValue = edge === "max" ? values[values.length - 1] : values[0];
+  const candidates = positions.filter((position) => Math.abs(position[axisIndex] - holeValue) <= 0.001);
+  return candidates.length
+    ? candidates.reduce((best, item) => Math.abs(item[otherIndex]) < Math.abs(best[otherIndex]) ? item : best, candidates[0])
+    : null;
+}
+
+function holePatternEdgeContext(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
   const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);
   const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);
   const sourceBasis = featureBasis(ctx.project, feature);
   const basis = patternLayoutBasis(pattern, sourceBasis);
   const measureBasis = spec.reference.measureBasis === "feature" ? sourceBasis : basis;
-  if (!plate || !pattern?.positions?.length || !sourceBasis || !basis || !measureBasis) return null;
+  if (!pattern?.positions?.length || !sourceBasis || !basis || !measureBasis) return null;
   const positions = patternPositionsInBasis(pattern, sourceBasis, basis);
-  const bounds = plateBoundsInBasis(plate, basis);
   const axis = spec.reference.axis;
   const axisIndex = axis === "localAxisY" ? 0 : 1;
   const otherIndex = axisIndex === 0 ? 1 : 0;
   const values = sortedCoordinateValues(positions, axis);
   if (!values.length) return null;
+  return {
+    plate,
+    basis,
+    measureBasis,
+    positions,
+    axis,
+    axisIndex,
+    otherIndex,
+    values
+  };
+}
+
+function editableEdgeDistanceDimension(ctx, spec, {
+  basis,
+  measureBasis,
+  axis,
+  edgeCoordinate,
+  parameterCoordinate,
+  parameterEdge,
+  values,
+  holePoint,
+  signedMeasured,
+  a
+}) {
+  let editKind = null;
+  let editValueOffset = null;
+  let editValueScale = null;
+  if (finite(parameterCoordinate)) {
+    const edit = edgeDistanceEditTransform({
+      basis,
+      measureBasis,
+      axis,
+      edge: spec.reference.edge,
+      edgeCoordinate,
+      parameterEdge,
+      parameterCoordinate,
+      values,
+      holePoint,
+      signedMeasured
+    });
+    if (edit) ({ editKind, editValueOffset, editValueScale } = edit);
+  }
+  return makeDimension({
+    ...ctx,
+    spec,
+    a,
+    b: holePoint,
+    offset: dimensionOffset(ctx, measureBasis, spec.reference.offset),
+    measured: Math.abs(signedMeasured),
+    editKind,
+    editValueOffset,
+    editValueScale
+  });
+}
+
+export function holeEdgeDistanceDimension(ctx, spec) {
+  const edgeContext = holePatternEdgeContext(ctx, spec);
+  if (!edgeContext?.plate) return null;
+  const { plate, basis, measureBasis, positions, axis, axisIndex, otherIndex, values } = edgeContext;
+  const bounds = plateBoundsInBasis(plate, basis);
   const iface = spec.reference.interfaceRole
     ? interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole)
     : null;
@@ -61,7 +128,7 @@ export function holeEdgeDistanceDimension(ctx, spec) {
         });
       }
     }
-    const candidates = positions
+    const candidates = truthyValues(positions
       .map((position) => {
         const holePoint = positionPoint(basis, position);
         const edgePoint = linePlane(holePoint, axisVector, iface.origin, planeNormal);
@@ -71,8 +138,7 @@ export function holeEdgeDistanceDimension(ctx, spec) {
           edgePoint,
           measured: distance(holePoint, edgePoint)
         } : null;
-      })
-      .filter(Boolean)
+      }))
       .sort((a, b) => a.measured - b.measured || Math.abs(a.position[otherIndex]) - Math.abs(b.position[otherIndex]));
     const best = candidates[0];
     if (best) {
@@ -88,11 +154,7 @@ export function holeEdgeDistanceDimension(ctx, spec) {
   }
   const measureBounds = measureBasis === basis ? bounds : plateBoundsInBasis(plate, measureBasis);
   const edgeValue = basisBoundsCoordinate(measureBounds, axis, spec.reference.edge);
-  const holeValue = spec.reference.edge === "max" ? values[values.length - 1] : values[0];
-  const candidates = positions.filter((position) => Math.abs(position[axisIndex] - holeValue) <= 0.001);
-  const hole = candidates.length
-    ? candidates.reduce((best, item) => Math.abs(item[otherIndex]) < Math.abs(best[otherIndex]) ? item : best, candidates[0])
-    : null;
+  const hole = nearestPatternHole(positions, values, axisIndex, otherIndex, spec.reference.edge);
   if (!hole) return null;
   const holePoint = positionPoint(basis, hole);
   const holeInMeasureBasis = positionInBasis(holePoint, measureBasis.origin, measureBasis);
@@ -101,63 +163,31 @@ export function holeEdgeDistanceDimension(ctx, spec) {
     ? positionPoint(measureBasis, [edgeValue, other])
     : positionPoint(measureBasis, [other, edgeValue]);
   const signedMeasured = signedEdgeDistance(edgeValue, holeInMeasureBasis[axisIndex], spec.reference.edge);
-  let editKind = null;
-  let editValueOffset = null;
-  let editValueScale = null;
   const parameterEdge = spec.reference.parameterEdge || spec.reference.edge;
   const parameterCoordinate = basisBoundsCoordinate(bounds, axis, parameterEdge);
-  if (finite(parameterCoordinate)) {
-    const edit = edgeDistanceEditTransform({
-      basis,
-      measureBasis,
-      axis,
-      edge: spec.reference.edge,
-      edgeCoordinate: edgeValue,
-      parameterEdge,
-      parameterCoordinate,
-      values,
-      holePoint,
-      signedMeasured
-    });
-    if (edit) ({ editKind, editValueOffset, editValueScale } = edit);
-  }
-  return makeDimension({
-    ...ctx,
-    spec,
+  return editableEdgeDistanceDimension(ctx, spec, {
+    basis,
+    measureBasis,
+    axis,
+    edgeCoordinate: edgeValue,
+    parameterEdge,
+    parameterCoordinate,
+    values,
+    holePoint,
+    signedMeasured,
     a,
-    b: holePoint,
-    offset: dimensionOffset(ctx, measureBasis, spec.reference.offset),
-    measured: Math.abs(signedMeasured),
-    editKind,
-    editValueOffset,
-    editValueScale
   });
 }
 
 
 
 export function holeInterfaceEdgeDistanceDimension(ctx, spec) {
-  const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
-  const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);
-  const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);
-  const sourceBasis = featureBasis(ctx.project, feature);
-  const basis = patternLayoutBasis(pattern, sourceBasis);
-  const measureBasis = spec.reference.measureBasis === "feature" ? sourceBasis : basis;
+  const edgeContext = holePatternEdgeContext(ctx, spec);
   const iface = interfaceByRole(ctx.project, ctx.profiles, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
   const rawInterface = rawInterfaceByRole(ctx.project, ctx.definition, ctx.smartComponent, spec.reference.interfaceRole);
-  if (!pattern?.positions?.length || !sourceBasis || !basis || !measureBasis || !iface) return null;
-
-  const axis = spec.reference.axis;
-  const axisIndex = axis === "localAxisY" ? 0 : 1;
-  const otherIndex = axisIndex === 0 ? 1 : 0;
-  const positions = patternPositionsInBasis(pattern, sourceBasis, basis);
-  const values = sortedCoordinateValues(positions, axis);
-  if (!values.length) return null;
-  const holeValue = spec.reference.edge === "max" ? values[values.length - 1] : values[0];
-  const candidates = positions.filter((position) => Math.abs(position[axisIndex] - holeValue) <= 0.001);
-  const hole = candidates.length
-    ? candidates.reduce((best, item) => Math.abs(item[otherIndex]) < Math.abs(best[otherIndex]) ? item : best, candidates[0])
-    : null;
+  if (!edgeContext || !iface) return null;
+  const { plate, basis, measureBasis, positions, axis, axisIndex, otherIndex, values } = edgeContext;
+  const hole = nearestPatternHole(positions, values, axisIndex, otherIndex, spec.reference.edge);
   if (!hole) return null;
 
   const edge = interfaceEdgeOnBasis(ctx.project, ctx.profiles, rawInterface, iface, measureBasis, axis, spec.reference.edge);
@@ -171,9 +201,6 @@ export function holeInterfaceEdgeDistanceDimension(ctx, spec) {
     ? edge.coordinate - holeInMeasureBasis[axisIndex]
     : holeInMeasureBasis[axisIndex] - edge.coordinate;
 
-  let editKind = null;
-  let editValueOffset = null;
-  let editValueScale = null;
   const parameterEdge = spec.reference.parameterEdge || spec.reference.edge;
   const parameterCoordinate = (() => {
     if (plate) {
@@ -184,31 +211,16 @@ export function holeInterfaceEdgeDistanceDimension(ctx, spec) {
     const parameter = interfaceEdgeOnBasis(ctx.project, ctx.profiles, rawInterface, iface, basis, axis, parameterEdge);
     return parameter?.coordinate;
   })();
-  if (finite(parameterCoordinate)) {
-    const edit = edgeDistanceEditTransform({
-      basis,
-      measureBasis,
-      axis,
-      edge: spec.reference.edge,
-      edgeCoordinate: edge.coordinate,
-      parameterEdge,
-      parameterCoordinate,
-      values,
-      holePoint,
-      signedMeasured
-    });
-    if (edit) ({ editKind, editValueOffset, editValueScale } = edit);
-  }
-
-  return makeDimension({
-    ...ctx,
-    spec,
+  return editableEdgeDistanceDimension(ctx, spec, {
+    basis,
+    measureBasis,
+    axis,
+    edgeCoordinate: edge.coordinate,
+    parameterEdge,
+    parameterCoordinate,
+    values,
+    holePoint,
+    signedMeasured,
     a: edgePoint,
-    b: holePoint,
-    offset: dimensionOffset(ctx, measureBasis, spec.reference.offset),
-    measured: Math.abs(signedMeasured),
-    editKind,
-    editValueOffset,
-    editValueScale
   });
 }

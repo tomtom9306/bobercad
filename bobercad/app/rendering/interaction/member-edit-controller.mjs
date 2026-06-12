@@ -1,14 +1,16 @@
-import { v } from "../../engine/core/math.mjs";
+import { clamp, closestAxisPoints, finiteNumber, finitePositiveNumber, screenDistance, uniqueVec3Points, v } from "../../engine/core/math.mjs?v=world-axis-dry-1";
+import { arrayValues, jsonClone } from "../../engine/core/model.mjs?v=interaction-array-values-dry-1";
 import {
-  clone,
+  memberById,
+  memberAxisData,
   memberAuthoringPoints,
   moveMemberWithLayout,
   setMemberLayoutEndpoint,
   setMemberPhysicalEndpoint
-} from "../../engine/api/project/members.mjs";
+} from "../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
 import {
   affectedObjectIdsForMemberChange
-} from "../../engine/api/project/dependencies.mjs";
+} from "../../engine/api/project/dependencies.mjs?v=array-values-dry-1";
 import {
   axisForRelation,
   axisRelationForEndpoint,
@@ -16,16 +18,14 @@ import {
   axisRelationLabel,
   memberAlignmentRelation,
   projectPointToAxis
-} from "../../engine/api/project/axis-relations.mjs?v=relation-types-1";
-import { snapCandidates } from "../../engine/api/project/snap-candidates.mjs?v=snap-architecture-1";
-import { solveSnap } from "../../engine/api/project/snap-solver.mjs?v=snap-architecture-1";
+} from "../../engine/api/project/axis-relations.mjs?v=array-values-dry-1";
 import {
   memberAxesForTarget,
   normalizeCoordinateSpace,
   vectorComponentsInAxes,
   vectorFromAxisComponents
-} from "../scene/authoring/member-axis-space.mjs";
-import { memberAuthoringOverlay } from "../scene/build-authoring-overlays.mjs?v=endpoint-axis-origins-1";
+} from "../scene/authoring/member-axis-space.mjs?v=final-array-values-dry-1";
+import { memberAuthoringOverlay } from "../scene/authoring/member-overlays.mjs?v=unified-snap-manager-8";
 import {
   axisScreenDistance,
   quantizeDegrees,
@@ -33,11 +33,8 @@ import {
   rotateMemberAroundAxis,
   signedScreenAngleDegrees,
   translationStepForScale
-} from "./manipulator-math.mjs";
-
-function memberById(project, memberId) {
-  return project.model?.members?.[memberId] || null;
-}
+} from "./manipulator-math.mjs?v=final-array-values-dry-1";
+import { pointOnViewRay } from "./pointer-plane-point.mjs?v=view-ray-dry-1";
 
 function handleEndpoint(kind) {
   if (typeof kind !== "string") return null;
@@ -50,24 +47,21 @@ function projectMemberCount(project) {
   return Object.keys(project.model?.members || {}).length;
 }
 
-function memberLength(member) {
-  return v.len(v.sub(member.end, member.start));
-}
-
 function localSnapOptions(project, member) {
   const count = projectMemberCount(project);
   if (count <= 1500) return {};
   const points = memberAuthoringPoints(member);
+  const length = memberAxisData(member)?.length || 0;
   if (count > 25000) {
     return {
       center: points.center,
-      radius: Math.max(8000, Math.min(24000, memberLength(member) * 4)),
+      radius: clamp(length * 4, 8000, 24000),
       maxMemberCandidates: 800
     };
   }
   return {
     center: points.center,
-    radius: Math.max(20000, memberLength(member) * 2.5),
+    radius: Math.max(20000, length * 2.5),
     maxMemberCandidates: 2000
   };
 }
@@ -192,31 +186,10 @@ function moveDeltaBetweenMembers(fromMember, toMember, operation) {
   return v.sub(operationTargetPoint(toMember, operation), operationTargetPoint(fromMember, operation));
 }
 
-const WORLD_ORIGIN = [0, 0, 0];
-
-const WORLD_AXIS_DIRECTIONS = {
-  x: [1, 0, 0],
-  y: [0, 1, 0],
-  z: [0, 0, 1]
-};
-
-function samePoint(a, b) {
-  return Array.isArray(a) && Array.isArray(b) && v.len(v.sub(a, b)) <= 1e-9;
-}
-
-function uniquePoints(points) {
-  const result = [];
-  for (const point of points) {
-    if (!Array.isArray(point) || point.length !== 3) continue;
-    if (!result.some((existing) => samePoint(existing, point))) result.push(point);
-  }
-  return result;
-}
-
 function globalAxisOriginsForHandle(member, handle) {
   const target = handleTarget(handle);
   if (target === "center") return [handlePoint(member, handle)];
-  return uniquePoints([handlePoint(member, handle), oppositeHandlePoint(member, handle)]);
+  return uniqueVec3Points([handlePoint(member, handle), oppositeHandlePoint(member, handle)]);
 }
 
 function globalAxisGuidesForDrag(dragState) {
@@ -225,34 +198,19 @@ function globalAxisGuidesForDrag(dragState) {
   return globalAxisOriginsForHandle(dragState.baseMember, dragState.handle);
 }
 
-function dragGuideAxisCandidates(origin, span, tolerancePx) {
-  if (!origin) return [];
-  return Object.entries(WORLD_AXIS_DIRECTIONS).map(([axis, direction]) => ({
-    kind: "line",
-    type: "drag-guide-axis",
-    axis,
-    a: v.sub(origin, v.mul(direction, span)),
-    b: v.add(origin, v.mul(direction, span)),
-    point: [...origin],
-    label: `Drag ${axis.toUpperCase()} guide`,
-    priority: 225,
-    screenTolerance: tolerancePx,
-    screenIntersectionMode: "self"
-  }));
-}
-
-export function createMemberEditController({ viewer, api, selection, settings = {}, onLocalProjectChange, onMemberSelected, onCleared, onMessage, onTransformChange, autoRelationsEnabled = () => false }) {
+export function createMemberEditController({ viewer, api, selection, snapManager, settings = {}, onLocalProjectChange, onMemberSelected, onCleared, onMessage, onTransformChange, autoRelationsEnabled = () => false }) {
   let activeMemberId = null;
   let drag = null;
   let pendingTransform = null;
   let pendingDrag = null;
+  let lastDragInput = null;
   let dragFramePending = false;
   let smartRebuildTimer = null;
   let smartRebuildRevision = 0;
   let semanticPreview = null;
   const authoringSettings = settings.authoring || {};
   const manipulatorSettings = authoringSettings.manipulator || {};
-  const smartRebuildDelayMs = Number.isFinite(authoringSettings.smartRebuildDelayMs)
+  const smartRebuildDelayMs = finiteNumber(authoringSettings.smartRebuildDelayMs)
     ? Math.max(0, authoringSettings.smartRebuildDelayMs)
     : 500;
   let coordinateSpace = normalizeCoordinateSpace(manipulatorSettings.coordinateSpace);
@@ -326,11 +284,16 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     if (!pendingTransform.committed) restoreSemanticPreview();
     pendingTransform = null;
     pendingDrag = null;
+    lastDragInput = null;
     if (clearPreview) viewer.clearObjectPreview?.();
     if (restoreOverlay) renderOverlay();
     emitTransformChange();
     if (message) onMessage?.(message, "ok");
     return true;
+  }
+
+  function discardPendingTransformForNewAction() {
+    if (pendingTransform) clearPendingTransform({ restoreOverlay: false, clearPreview: !pendingTransform.committed });
   }
 
   function draftFromOperation(baseMember, operation) {
@@ -415,7 +378,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   }
 
   function setPendingTransformDelta(axisId, value) {
-    if (!pendingTransform || typeof value !== "number" || !Number.isFinite(value)) return false;
+    if (!pendingTransform || !finiteNumber(value)) return false;
     const index = axisIndex(axisId);
     if (index < 0) return false;
     const components = pendingDeltaComponents();
@@ -425,7 +388,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   }
 
   function setPendingTransformResult(axisId, value) {
-    if (!pendingTransform || typeof value !== "number" || !Number.isFinite(value)) return false;
+    if (!pendingTransform || !finiteNumber(value)) return false;
     const index = axisIndex(axisId);
     if (index < 0) return false;
     const basePoint = operationTargetPoint(pendingTransform.baseMember, pendingTransform.operation);
@@ -440,7 +403,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     if (!pendingTransform) return false;
     const index = axisIndex(axisId);
     if (index < 0) return false;
-    const step = Number.isFinite(pendingTransform.increment) && pendingTransform.increment > 0
+    const step = finitePositiveNumber(pendingTransform.increment)
       ? pendingTransform.increment
       : 1;
     const components = pendingDeltaComponents();
@@ -450,7 +413,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   }
 
   function setPendingTransformIncrement(value) {
-    if (!pendingTransform || typeof value !== "number" || !Number.isFinite(value) || value <= 0) return false;
+    if (!pendingTransform || !finitePositiveNumber(value)) return false;
     pendingTransform = { ...pendingTransform, increment: value, error: "" };
     emitTransformChange();
     return true;
@@ -537,7 +500,13 @@ export function createMemberEditController({ viewer, api, selection, settings = 
 
   function selectMember(memberId, options = {}) {
     if (!memberById(api.project(), memberId)) return;
-    if (pendingTransform) clearPendingTransform({ restoreOverlay: false, clearPreview: !pendingTransform.committed });
+    if (options.ignoreScope !== true && selection.objectAllowed?.(api.project(), memberId, "members", { ignoreSelectedObjectsOnly: true }) === false) {
+      clear();
+      selection.clear();
+      onMessage?.("Member is filtered by snap/selection scope.", "error");
+      return;
+    }
+    discardPendingTransformForNewAction();
     perfMark("member-select-start", { memberId });
     activeMemberId = memberId;
     selection.cancelPick?.({ clear: false });
@@ -552,7 +521,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     const normalized = normalizeCoordinateSpace(nextSpace);
     if (coordinateSpace === normalized) return false;
     if (drag) return false;
-    if (pendingTransform) clearPendingTransform({ restoreOverlay: false, clearPreview: !pendingTransform.committed });
+    discardPendingTransformForNewAction();
     coordinateSpace = normalized;
     if (activeMemberId) renderOverlay();
     emitTransformChange();
@@ -577,31 +546,30 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     if (options.notify !== false) onCleared?.();
   }
 
-  function snapAtCursor(screen, candidates) {
-    if (!screen) return null;
-    return solveSnap({
-      candidates,
-      viewer,
+  function memberSnapContext(context = {}) {
+    return {
+      tool: "member-edit",
+      phase: "drag",
+      activeObjectId: activeMemberId,
+      excludeObjectId: activeMemberId,
+      includeLines: true,
+      projectToPlane: false,
+      ...context
+    };
+  }
+
+  function snapAtCursor(screen, context = {}, event = null) {
+    if (!screen || !snapManager) return null;
+    return snapManager.resolve({
       screen,
       rawPoint: null,
-      excludeObjectId: activeMemberId,
-      screenTolerance: authoringSettings.snapTolerancePx || 14,
-      pointPriorityBiasPx: authoringSettings.pointSnapBiasPx,
-      intersectionPriorityBiasPx: authoringSettings.intersectionSnapBiasPx
+      event,
+      context: memberSnapContext({ ...context, event })
     }).snap;
   }
 
   function standardDragPoint(basePoint, input) {
     return v.add(basePoint, viewer.screenDeltaToWorld(input.totalDx, input.totalDy));
-  }
-
-  function pointOnViewPlaneAtCursor(basePoint, input) {
-    if (!input?.screen) return standardDragPoint(basePoint, input);
-    const ray = viewer.screenRay(input.screen.x, input.screen.y);
-    const denominator = v.dot(ray.direction, ray.direction);
-    if (denominator <= 1e-12) return standardDragPoint(basePoint, input);
-    const distance = v.dot(v.sub(basePoint, ray.origin), ray.direction) / denominator;
-    return v.add(ray.origin, v.mul(ray.direction, distance));
   }
 
   function visibleHitPoint(input) {
@@ -610,30 +578,13 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     return input.hit.point;
   }
 
-  function cursorDepthPoint(basePoint, input, candidates) {
-    const snap = snapAtCursor(input.screen, candidates);
+  function cursorDepthPoint(basePoint, input, context) {
+    const snap = snapAtCursor(input.screen, context, input.event);
     if (snap?.point) return { point: snap.point, snap, dragPoint: snap.point };
     const hitPoint = visibleHitPoint(input);
     if (hitPoint) return { point: hitPoint, snap: null, dragPoint: hitPoint };
-    const point = pointOnViewPlaneAtCursor(basePoint, input);
+    const point = pointOnViewRay(viewer, basePoint, input?.screen) || standardDragPoint(basePoint, input);
     return { point, snap: null, dragPoint: point };
-  }
-
-  function closestAxisPoints(axisA, axisB) {
-    const a0 = axisA.a;
-    const b0 = axisB.a;
-    const ad = v.norm(v.sub(axisA.b, axisA.a));
-    const bd = v.norm(v.sub(axisB.b, axisB.a));
-    const r = v.sub(a0, b0);
-    const dot = v.dot(ad, bd);
-    const c = v.dot(ad, r);
-    const f = v.dot(bd, r);
-    const denominator = 1 - dot * dot;
-    const s = Math.abs(denominator) <= 1e-9 ? 0 : (dot * f - c) / denominator;
-    const t = Math.abs(denominator) <= 1e-9 ? f : (f - dot * c) / denominator;
-    const pointA = v.add(a0, v.mul(ad, s));
-    const pointB = v.add(b0, v.mul(bd, t));
-    return { pointA, pointB, distance: v.len(v.sub(pointA, pointB)) };
   }
 
   function pointOnAxisNearestScreen(axis, screen, fallbackPoint) {
@@ -699,7 +650,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     const probe = Math.max(10, 36 / Math.max(viewer.screenScale(), 1e-9));
     const end = viewer.projectPoint(v.add(point, v.mul(axis, probe)));
     if (!end) return viewer.screenScale();
-    const screenLength = Math.hypot(end.x - origin.x, end.y - origin.y);
+    const screenLength = screenDistance(end, origin);
     return screenLength > 1e-6 ? screenLength / probe : viewer.screenScale();
   }
 
@@ -710,7 +661,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
         pointerCurrent: input.screen,
         axisScreen: drag.handle.axisScreen
       });
-      const scale = Number.isFinite(drag.handle.screenScalePxPerWorld)
+      const scale = finiteNumber(drag.handle.screenScalePxPerWorld)
         ? drag.handle.screenScalePxPerWorld
         : projectedAxisScale(basePoint, axis);
       return scale > 1e-9 ? screenDistance / scale : 0;
@@ -718,8 +669,8 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     return v.dot(viewer.screenDeltaToWorld(input.totalDx, input.totalDy), axis);
   }
 
-  function axisSnap(basePoint, axis, rawPoint, candidates, screen) {
-    const snap = snapAtCursor(screen, candidates);
+  function axisSnap(basePoint, axis, rawPoint, context, screen, event = null) {
+    const snap = snapAtCursor(screen, context, event);
     if (!snap?.point) return { snap: null, point: rawPoint };
     const distance = v.dot(v.sub(snap.point, basePoint), axis);
     const lockedPoint = v.add(basePoint, v.mul(axis, distance));
@@ -731,14 +682,13 @@ export function createMemberEditController({ viewer, api, selection, settings = 
 
   function draftFromAxisDrag(input) {
     const base = drag.baseMember;
-    const candidates = drag.candidates;
     const target = handleTarget(drag.handle);
     const axis = v.norm(drag.handle.axis || [1, 0, 0]);
     const basePoint = handlePoint(base, drag.handle);
     const step = translationStepForScale(manipulatorSettings.translation || {}, viewer.screenScale());
     const distance = quantizeDistance(axisDistanceFromDrag(input, basePoint, axis), step);
     const rawPoint = v.add(basePoint, v.mul(axis, distance));
-    const snapResult = axisSnap(basePoint, axis, rawPoint, candidates, input.screen);
+    const snapResult = axisSnap(basePoint, axis, rawPoint, drag.snapContext, input.screen, input.event);
     const point = snapResult.point;
 
     if (target === "center") {
@@ -803,13 +753,12 @@ export function createMemberEditController({ viewer, api, selection, settings = 
 
     const delta = viewer.screenDeltaToWorld(input.totalDx, input.totalDy);
     const base = drag.baseMember;
-    const candidates = drag.candidates;
     const kind = drag.handle.kind;
     const points = memberAuthoringPoints(base);
 
     if (kind === "move-member") {
       const rawCenter = v.add(points.center, delta);
-      const snap = snapAtCursor(input.screen, candidates);
+      const snap = snapAtCursor(input.screen, drag.snapContext, input.event);
       const moveDelta = snap ? v.sub(snap.point, points.center) : delta;
       return { member: moveMemberWithLayout(base, moveDelta), operation: { kind, delta: moveDelta, coordinateSpace }, snap, dragPoint: rawCenter };
     }
@@ -818,7 +767,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     if (!endpoint) return null;
     const isLayout = kind.startsWith("layout-");
     const basePoint = isLayout ? points[`layout${endpoint === "start" ? "Start" : "End"}`] : base[endpoint];
-    const resolved = cursorDepthPoint(basePoint, input, candidates);
+    const resolved = cursorDepthPoint(basePoint, input, drag.snapContext);
     if (isLayout) {
       const point = resolved.point;
       const member = setMemberLayoutEndpoint(base, endpoint, point);
@@ -849,7 +798,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
 
   function beginDrag({ handle, screen }) {
     if (handle?.kind === "coordinate-space-toggle") return false;
-    if (pendingTransform) clearPendingTransform({ restoreOverlay: false, clearPreview: !pendingTransform.committed });
+    discardPendingTransformForNewAction();
     clearSmartRebuild();
     restoreSemanticPreview();
     const project = api.project();
@@ -859,31 +808,28 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     selection.cancelPick?.({ clear: false });
     selection.select([activeMemberId]);
     perfMark("member-drag-begin", { memberId: activeMemberId, handle: handle.kind });
-    const snapStart = performance.now();
-    const candidates = snapCandidates(project, {
+    const snapContext = {
+      tool: "member-edit",
+      phase: "drag",
+      activeObjectId: activeMemberId,
+      excludeObjectId: activeMemberId,
       ...localSnapOptions(project, member),
       includeGlobalAxes: true,
-      globalAxisOrigin: WORLD_ORIGIN,
+      globalAxisOrigin: [0, 0, 0],
       globalAxisSpan: authoringSettings.globalAxisSnapSpan || 100000,
-      globalAxisSnapTolerancePx: authoringSettings.globalAxisSnapTolerancePx || 34
-    });
-    for (const origin of globalAxisOriginsForHandle(member, handle)) {
-      candidates.push(...dragGuideAxisCandidates(
-        origin,
-        authoringSettings.globalAxisSnapSpan || 100000,
-        authoringSettings.globalAxisSnapTolerancePx || 34
-      ));
-    }
-    perfMark("member-drag-snap-candidates-built", {
+      includeLines: true,
+      projectToPlane: false,
+      dragGuideOrigins: globalAxisOriginsForHandle(member, handle)
+    };
+    perfMark("member-drag-snap-context-built", {
       memberId: activeMemberId,
-      candidateCount: candidates.length,
-      durationMs: performance.now() - snapStart
+      guideOriginCount: snapContext.dragGuideOrigins.length
     });
     drag = {
       handle,
       startScreen: screen || handle.screen || null,
-      baseMember: clone(member),
-      candidates,
+      baseMember: jsonClone(member),
+      snapContext,
       previewObjectIds: []
     };
     if (drag.previewObjectIds.length) viewer.beginObjectPreview?.(drag.previewObjectIds);
@@ -894,11 +840,11 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     if (!drag || !activeMemberId || !isPendingTransformOperation(draft.operation)) return;
     pendingTransform = {
       memberId: activeMemberId,
-      baseMember: clone(drag.baseMember),
+      baseMember: jsonClone(drag.baseMember),
       draft,
       operation: draft.operation,
       coordinateSpace,
-      previewObjectIds: [...(drag.previewObjectIds || [])],
+      previewObjectIds: [...arrayValues(drag.previewObjectIds)],
       increment: pendingTransform?.increment || translationStepForScale(manipulatorSettings.translation || {}, viewer.screenScale()),
       committed: false,
       error: ""
@@ -908,7 +854,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
 
   function updateLivePreview(draft) {
     const move = isMoveOperation(draft.operation);
-    const previewObjectIds = drag?.previewObjectIds || pendingTransform?.previewObjectIds || [];
+    const previewObjectIds = drag ? arrayValues(drag.previewObjectIds) : arrayValues(pendingTransform?.previewObjectIds);
     const previewDelta = move && semanticPreview
       ? semanticPreviewBaseDelta(draft)
       : move ? draft.operation.delta : [0, 0, 0];
@@ -933,43 +879,51 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     });
   }
 
-  function updateDrag({ totalDx, totalDy, screen, hit }) {
-    if (!drag || !activeMemberId) return;
-    pendingDrag = { totalDx, totalDy, screen, hit };
-    if (dragFramePending) return;
-    dragFramePending = true;
-    requestAnimationFrame(() => {
-      dragFramePending = false;
-      if (!drag || !activeMemberId || !pendingDrag) return;
-      const current = pendingDrag;
-      pendingDrag = null;
-      const draft = draftFromDrag(current);
-      if (!draft) return;
-      drag.draft = draft;
-      renderOverlay(draft.member, draft.snap, draft.dragPoint);
-      updateLivePreview(draft);
-      showTransformDraft(draft);
-      queueSmartRebuild(draft);
-    });
-  }
-
-  function flushPendingDrag() {
-    if (!drag || !activeMemberId || !pendingDrag) return;
+  function applyPendingDrag({ queueSmart = false } = {}) {
+    if (!drag || !activeMemberId || !pendingDrag) return false;
     const current = pendingDrag;
     pendingDrag = null;
+    lastDragInput = null;
     const draft = draftFromDrag(current);
-    if (!draft) return;
+    if (!draft) return false;
     drag.draft = draft;
     renderOverlay(draft.member, draft.snap, draft.dragPoint);
     updateLivePreview(draft);
     showTransformDraft(draft);
+    if (queueSmart) queueSmartRebuild(draft);
+    return true;
+  }
+
+  function updateDrag({ totalDx, totalDy, screen, hit, event }) {
+    if (!drag || !activeMemberId) return;
+    snapManager?.resetCycle?.();
+    pendingDrag = { totalDx, totalDy, screen, hit, event };
+    lastDragInput = pendingDrag;
+    if (dragFramePending) return;
+    dragFramePending = true;
+    requestAnimationFrame(() => {
+      dragFramePending = false;
+      applyPendingDrag({ queueSmart: true });
+    });
+  }
+
+  function flushPendingDrag() {
+    applyPendingDrag();
+  }
+
+  function cycleSnap() {
+    if (!drag || !activeMemberId || !lastDragInput) return false;
+    snapManager?.cycle?.();
+    pendingDrag = lastDragInput;
+    applyPendingDrag();
+    return true;
   }
 
   function commitDraft(memberId, draft, options = {}) {
     clearSmartRebuild();
     const beforeProject = api.project();
     const commitOptions = { regenerateSmartComponents: false };
-    const currentMember = clone(memberById(api.project(), memberId));
+    const currentMember = jsonClone(memberById(api.project(), memberId));
     const moveDelta = draft.operation.kind === "move-member"
       ? moveDeltaBetweenMembers(currentMember, draft.member, draft.operation)
       : [0, 0, 0];
@@ -1010,12 +964,13 @@ export function createMemberEditController({ viewer, api, selection, settings = 
       const memberId = activeMemberId;
       drag = null;
       pendingDrag = null;
+      lastDragInput = null;
       if (memberId) commitDraft(memberId, draft);
       return;
     }
     const memberId = activeMemberId;
-    const baseMember = clone(drag.baseMember);
-    const previewObjectIds = [...(drag.previewObjectIds || [])];
+    const baseMember = jsonClone(drag.baseMember);
+    const previewObjectIds = [...arrayValues(drag.previewObjectIds)];
     pendingTransform = {
       memberId,
       baseMember,
@@ -1029,6 +984,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     };
     drag = null;
     pendingDrag = null;
+    lastDragInput = null;
     selection.select([memberId]);
     emitTransformChange();
     commitDraft(memberId, draft);
@@ -1057,7 +1013,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
           coordinateSpace: transform.coordinateSpace
         };
     const restoreDraft = {
-      member: clone(transform.baseMember),
+      member: jsonClone(transform.baseMember),
       operation: baseOperation,
       snap: null,
       dragPoint: operationTargetPoint(transform.baseMember, transform.operation)
@@ -1088,13 +1044,14 @@ export function createMemberEditController({ viewer, api, selection, settings = 
     clearSmartRebuild();
     drag = null;
     pendingDrag = null;
+    lastDragInput = null;
     viewer.clearObjectPreview?.();
     restoreSemanticPreview();
     renderOverlay();
   }
 
   function handleSceneClick(face) {
-    if (pendingTransform) clearPendingTransform({ restoreOverlay: false, clearPreview: !pendingTransform.committed });
+    discardPendingTransformForNewAction();
     if (face?.collection === "members" && face.objectId) {
       selectMember(face.objectId);
       return;
@@ -1106,7 +1063,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   function handleAuthoringClick({ handle }) {
     if (handle?.kind !== "coordinate-space-toggle") return false;
     if (drag) return false;
-    if (pendingTransform) clearPendingTransform({ restoreOverlay: false, clearPreview: !pendingTransform.committed });
+    discardPendingTransformForNewAction();
     return toggleCoordinateSpace();
   }
 
@@ -1132,6 +1089,7 @@ export function createMemberEditController({ viewer, api, selection, settings = 
   return {
     authoringHandler,
     cancelPendingTransform,
+    cycleSnap,
     clear,
     confirmPendingTransform,
     coordinateSpace: () => coordinateSpace,

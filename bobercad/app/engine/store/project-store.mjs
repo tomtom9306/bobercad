@@ -1,15 +1,45 @@
-import { objectById } from "../core/model.mjs";
-import { v } from "../core/math.mjs";
+import { arrayValues, flattenIds, isPlainObject as plainObject, jsonClone as clone, mergeObjectPatch as mergePatch, normalizedIndexList, objectById, truthyValues, uniqueTruthy as unique } from "../core/model.mjs?v=array-values-dry-1";
+import { averageVec3, clamp, finiteInteger, finiteNonNegativeNumber, finiteNumber, finitePositiveNumber, finiteVec3, v } from "../core/math.mjs?v=integer-number-dry-1";
 import { requiredReferencePlane } from "../geometry/feature-plane.mjs";
-import { resolveInterface, sectionBounds } from "../geometry/member-geometry.mjs";
-import { addIndexedObject, nextObjectId, removeIndexedObject } from "../api/project/objects.mjs";
-import { createMemberObject } from "../api/project/member-factory.mjs?v=axis-snap-1";
+import { resolveInterface, sectionBounds } from "../geometry/member-geometry.mjs?v=geometry-api-array-values-dry-1";
+import { addIndexedObject, appendUniqueId, nextObjectId, objectCollection, removeIndexedObject, removeProjectObjects } from "../api/project/objects.mjs?v=array-values-dry-1";
+import { projectProfileCatalog, requiredProfileById } from "../api/project/profiles.mjs?v=profile-api-dry-1";
+import { createMemberObject } from "../api/project/member-factory.mjs?v=member-snap-ref-defined-object-dry-1";
+import {
+  addPlateSketchConstructionLine as addPlateSketchConstructionLineData,
+  addPlate as addPlateObject,
+  addSketch as addSketchObject,
+  fixPlateSketchUnderDefinedEntities as fixPlateSketchUnderDefinedEntitiesData,
+  inferPlateSketchRelations as inferPlateSketchRelationsData,
+  plateFromSketchObject,
+  profileFromSectionSketch,
+  insertPlateSketchVertex as insertPlateSketchVertexData,
+  notchPlateSketchCorner as notchPlateSketchCornerData,
+  normalizePlate as normalizePlateData,
+  removePlateSketchFixedRelations as removePlateSketchFixedRelationsData,
+  removePlateSketchRelation as removePlateSketchRelationData,
+  removePlateBend as removePlateBendData,
+  removePlateSketchVertex as removePlateSketchVertexData,
+  setPlateSketchEdgeAngleMode as setPlateSketchEdgeAngleModeData,
+  setPlateSketchEdgeAngle as setPlateSketchEdgeAngleData,
+  setPlateSketchEdgeLengthMode as setPlateSketchEdgeLengthModeData,
+  setPlateSketchPointDistanceMode as setPlateSketchPointDistanceModeData,
+  setPlateSketchPointDistance as setPlateSketchPointDistanceData,
+  setSketchVertex as setSketchVertexData,
+  setPlateSketchEdgeLength as setPlateSketchEdgeLengthData,
+  setPlateSketchVertex as setPlateSketchVertexData,
+  setPlateSketchVertices as setPlateSketchVerticesData,
+  solvePlateSketchRelation as solvePlateSketchRelationData,
+  upsertPlateBend as upsertPlateBendData,
+  upsertPlateSketchRelation as upsertPlateSketchRelationData
+} from "../api/project/plates.mjs?v=plate-relax-equal-length-drag-1";
+import { activeTrimJointOperations, trimJointOperations, trimJointParticipants, trimOperationReferencePlaneIds, trimOperationUsesMemberEnd } from "../api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
 import {
   axisRelationFromSnap,
   memberAlignRelation,
   memberAxisRelations,
   relationUpsertKey
-} from "../api/project/axis-relations.mjs?v=relation-types-1";
+} from "../api/project/axis-relations.mjs?v=array-values-dry-1";
 import {
   affectedSmartComponentsForMember,
   affectedSmartComponentIdsForMember,
@@ -20,24 +50,27 @@ import {
   smartComponentRoot,
   smartComponentRootForObject as projectSmartComponentRootForObject,
   featureDependencyObjectIds as projectFeatureDependencyObjectIds,
-  flattenIds,
   memberDependencyObjectIds as projectMemberDependencyObjectIds,
-  objectCollection,
   referencePlaneDependencyObjectIds as projectReferencePlaneDependencyObjectIds,
+  smartComponentConnectionZoneId,
+  smartComponentSecondaryMemberId,
   trimJointDependencyObjectIds as projectTrimJointDependencyObjectIds
-} from "../api/project/dependencies.mjs?v=stair-root-select-2";
+} from "../api/project/dependencies.mjs?v=array-values-dry-1";
 import {
+  almostSamePoint as almostSamePointData,
+  memberAxisData,
+  memberCenter,
   memberLayoutAxis,
+  memberPointAtEnd,
   moveMemberWithLayout as moveMemberWithLayoutData,
   setMemberLayoutEndpoint as setMemberLayoutEndpointData,
   setMemberPhysicalEndpoint as setMemberPhysicalEndpointData
-} from "../api/project/members.mjs";
+} from "../api/project/members.mjs?v=member-api-distance-dry-1";
 import {
   optionalPath,
   setPath
-} from "../modules/smart-components/parameters.mjs?v=stair-route-ui-fit-2";
+} from "../modules/smart-components/parameters.mjs?v=smart-config-array-values-dry-1";
 import {
-  clone,
   smartComponentById,
   smartComponentRoleOptions as projectSmartComponentRoleOptions,
   smartComponentPlateOptions as projectSmartComponentPlateOptions,
@@ -45,8 +78,9 @@ import {
   setSmartComponentPlateIncluded as setProjectSmartComponentPlateIncluded,
   updateSmartComponent,
   updateSmartComponents
-} from "../modules/smart-components/smart-component-generator.mjs?v=stair-route-ui-fit-2";
-import { smartComponentDefinition, supportedSmartComponentPresets, supportedSmartComponents } from "../modules/smart-components/smart-component-registry.mjs?v=stair-route-ui-fit-2";
+} from "../modules/smart-components/smart-component-generator.mjs?v=smart-collection-lookup-dry-1";
+import { smartComponentDefinition, supportedSmartComponentPresets, supportedSmartComponents } from "../modules/smart-components/smart-component-registry.mjs?v=smart-config-array-values-dry-1";
+import { trimRegionSelectorMap } from "../api/model/trim-region-keys.mjs?v=geometry-api-array-values-dry-1";
 
 const REF_ARRAY_KEYS = new Set([
   "objectIds",
@@ -74,40 +108,11 @@ function fail(message) {
   throw new Error(`project store: ${message}`);
 }
 
-function unique(values) {
-  return [...new Set(values.filter(Boolean))];
-}
-
-function appendUnique(values, id) {
-  return unique([...(Array.isArray(values) ? values : []), id]);
-}
-
-function almostSamePoint(a, b, tolerance = FIT_EPSILON) {
-  return Array.isArray(a) && Array.isArray(b) && v.len(v.sub(a, b)) <= tolerance;
-}
-
-function memberPointAtEnd(member, memberEnd) {
-  if (memberEnd === "start") return member.start;
-  if (memberEnd === "end") return member.end;
-  return v.mul(v.add(member.start, member.end), 0.5);
-}
-
 function nearestMemberEnd(member, point) {
   return v.len(v.sub(member.start, point)) <= v.len(v.sub(member.end, point)) ? "start" : "end";
 }
 
-function vec3(value, label) {
-  if (!Array.isArray(value) || value.length !== 3 || value.some((item) => typeof item !== "number" || !Number.isFinite(item))) {
-    fail(`${label} must be a finite [x, y, z] point`);
-  }
-  return [...value];
-}
-
-function profileById(profiles, profileId) {
-  const profile = profiles?.[profileId] || profiles?.profiles?.[profileId];
-  if (!profile) fail(`profile not found: ${profileId}`);
-  return profile;
-}
+const vec3 = (value, label) => finiteVec3(value, label, fail);
 
 function memberById(project, memberId) {
   if (!project.model.members?.[memberId]) fail(`member not found: ${memberId}`);
@@ -117,6 +122,16 @@ function memberById(project, memberId) {
 function featureById(project, featureId) {
   if (!project.model.features?.[featureId]) fail(`feature not found: ${featureId}`);
   return project.model.features[featureId];
+}
+
+function plateById(project, plateId) {
+  if (!project.model.plates?.[plateId]) fail(`plate not found: ${plateId}`);
+  return project.model.plates[plateId];
+}
+
+function sketchById(project, sketchId) {
+  if (!project.model.sketches?.[sketchId]) fail(`sketch not found: ${sketchId}`);
+  return project.model.sketches[sketchId];
 }
 
 function referencePlaneById(project, referencePlaneId) {
@@ -134,30 +149,26 @@ function fastenerGroupById(project, fastenerGroupId) {
   return project.model.fastenerGroups[fastenerGroupId];
 }
 
-function assertOptionalPositiveNumber(value, label) {
-  if (value === undefined || value === null) return;
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) fail(`${label} must be a positive number`);
-}
-
-function assertOptionalNonNegativeNumber(value, label) {
-  if (value === undefined || value === null) return;
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) fail(`${label} must be a non-negative number`);
+function assertOptionalNumber(value, label, valid, description) {
+  if (value !== undefined && value !== null && !valid(value)) fail(`${label} must be ${description}`);
 }
 
 function validateFastenerGroup(fasteners, fastenerGroup) {
   if (fastenerGroup.fastenerRef && !fasteners.fasteners?.[fastenerGroup.fastenerRef]) fail(`fastener not found: ${fastenerGroup.fastenerRef}`);
   if (!Array.isArray(fastenerGroup.participants) || !fastenerGroup.participants.length) fail("fastener group participants cannot be empty");
-  assertOptionalPositiveNumber(fastenerGroup.assembly?.length, "fastener length");
-  assertOptionalPositiveNumber(fastenerGroup.assembly?.gripLength, "fastener grip length");
-  assertOptionalNonNegativeNumber(fastenerGroup.assembly?.nutOffset, "fastener nut offset");
+  assertOptionalNumber(fastenerGroup.assembly?.length, "fastener length", finitePositiveNumber, "a positive number");
+  assertOptionalNumber(fastenerGroup.assembly?.gripLength, "fastener grip length", finitePositiveNumber, "a positive number");
+  assertOptionalNumber(fastenerGroup.assembly?.nutOffset, "fastener nut offset", finiteNonNegativeNumber, "a non-negative number");
 }
 
 function trimJointReferencePoint(project, trimJoint) {
-  const points = (trimJoint.participants || [])
-    .map((participant) => project.model.members?.[participant.memberId] ? memberPointAtEnd(project.model.members[participant.memberId], participant.memberEnd) : null)
-    .filter(Boolean);
+  const points = truthyValues(trimJointParticipants(trimJoint)
+    .map((participant) => {
+      const member = project.model.members?.[participant.memberId];
+      return member ? memberPointAtEnd(member, participant.memberEnd, memberCenter(member)) : null;
+    }));
   if (!points.length) return [0, 0, 0];
-  return v.mul(points.reduce((sum, point) => v.add(sum, point), [0, 0, 0]), 1 / points.length);
+  return averageVec3(points, [0, 0, 0]);
 }
 
 function defaultTrimJointParticipant(project, trimJoint, memberId, patch = {}) {
@@ -169,37 +180,18 @@ function defaultTrimJointParticipant(project, trimJoint, memberId, patch = {}) {
   };
 }
 
-function trimOperationUsesMemberEnd(type, role) {
-  if (type === "end-butt-1") return role === "memberA";
-  if (type === "end-butt-2") return role === "memberB";
-  if (type === "end-butt-both" || type === "end-miter") return true;
-  return false;
-}
-
 const MITER_MODES = new Set(["equal-angle", "profile-balanced"]);
 
-function trimRegionParts(regionKey) {
-  if (typeof regionKey !== "string" || !regionKey) fail("plane trim region key must be a non-empty string");
-  return regionKey.split("|").map((part) => {
-    const index = part.lastIndexOf(":");
-    if (index <= 0) fail(`invalid plane trim region key: ${regionKey}`);
-    const planeId = part.slice(0, index);
-    const side = part.slice(index + 1);
-    if (side !== "+" && side !== "-") fail(`invalid plane trim region side in key: ${regionKey}`);
-    return { planeId, side };
-  });
-}
-
 function validateTrimRegionKeys(trimJointId, operation) {
-  const planeIds = new Set(operation.referencePlaneIds || []);
-  for (const regionKey of operation.removedRegionKeys || []) {
-    const parts = trimRegionParts(regionKey);
-    if (parts.length !== planeIds.size) fail(`${trimJointId}: plane trim region key must include every selected plane`);
-    const seen = new Set();
-    for (const { planeId } of parts) {
+  const planeIds = new Set(trimOperationReferencePlaneIds(operation));
+  for (const regionKey of arrayValues(operation.removedRegionKeys)) {
+    if (typeof regionKey !== "string" || !regionKey) fail("plane trim region key must be a non-empty string");
+    const parts = regionKey.split("|");
+    const selector = trimRegionSelectorMap(regionKey);
+    if (selector.size !== parts.length) fail(`invalid or duplicate plane trim region key: ${regionKey}`);
+    if (selector.size !== planeIds.size) fail(`${trimJointId}: plane trim region key must include every selected plane`);
+    for (const planeId of selector.keys()) {
       if (!planeIds.has(planeId)) fail(`${trimJointId}: plane trim region references an unselected plane: ${planeId}`);
-      if (seen.has(planeId)) fail(`${trimJointId}: plane trim region repeats plane: ${planeId}`);
-      seen.add(planeId);
     }
   }
 }
@@ -207,8 +199,8 @@ function validateTrimRegionKeys(trimJointId, operation) {
 function normalizedTrimJointOperation(trimJoint, operation) {
   const type = operation.type || "end-butt-1";
   const next = { ...operation, type };
-  const memberA = (trimJoint.participants || []).find((participant) => participant.memberId === next.memberAId);
-  const memberB = (trimJoint.participants || []).find((participant) => participant.memberId === next.memberBId);
+  const memberA = trimJointParticipants(trimJoint).find((participant) => participant.memberId === next.memberAId);
+  const memberB = trimJointParticipants(trimJoint).find((participant) => participant.memberId === next.memberBId);
   if (trimOperationUsesMemberEnd(type, "memberA")) next.memberAEnd = next.memberAEnd === "start" || next.memberAEnd === "end" ? next.memberAEnd : memberA?.memberEnd || "end";
   else delete next.memberAEnd;
   if (trimOperationUsesMemberEnd(type, "memberB")) next.memberBEnd = next.memberBEnd === "start" || next.memberBEnd === "end" ? next.memberBEnd : memberB?.memberEnd || "end";
@@ -216,8 +208,8 @@ function normalizedTrimJointOperation(trimJoint, operation) {
   if (type === "plane-trim") {
     delete next.memberBId;
     delete next.memberBEnd;
-    next.referencePlaneIds = Array.isArray(next.referencePlaneIds) ? [...new Set(next.referencePlaneIds)] : [];
-    next.removedRegionKeys = Array.isArray(next.removedRegionKeys) ? [...new Set(next.removedRegionKeys)] : [];
+    next.referencePlaneIds = unique(trimOperationReferencePlaneIds(next));
+    next.removedRegionKeys = unique(next.removedRegionKeys);
     delete next.referencePlaneId;
   } else {
     delete next.referencePlaneId;
@@ -229,11 +221,11 @@ function normalizedTrimJointOperation(trimJoint, operation) {
 }
 
 function defaultTrimJointOperation(trimJoint, patch = {}) {
-  const participants = trimJoint.participants || [];
+  const participants = trimJointParticipants(trimJoint);
   const memberAId = patch.memberAId || participants[1]?.memberId || participants[0]?.memberId;
   const memberBId = patch.memberBId || participants.find((participant) => participant.memberId !== memberAId)?.memberId;
-  const existingIds = new Set((trimJoint.operations || []).map((operation) => operation.id));
-  let index = (trimJoint.operations || []).length + 1;
+  const existingIds = new Set(trimJointOperations(trimJoint).map((operation) => operation.id));
+  let index = trimJointOperations(trimJoint).length + 1;
   let id = patch.id || `end_butt_1_${index}`;
   while (existingIds.has(id)) {
     index += 1;
@@ -251,7 +243,7 @@ function defaultTrimJointOperation(trimJoint, patch = {}) {
 }
 
 function trimJointHasParticipant(trimJoint, memberId) {
-  return (trimJoint.participants || []).some((participant) => participant.memberId === memberId);
+  return trimJointParticipants(trimJoint).some((participant) => participant.memberId === memberId);
 }
 
 function ensureTrimJointParticipant(project, trimJoint, memberId) {
@@ -259,21 +251,22 @@ function ensureTrimJointParticipant(project, trimJoint, memberId) {
   return {
     ...trimJoint,
     participants: [
-      ...(trimJoint.participants || []),
+      ...trimJointParticipants(trimJoint),
       defaultTrimJointParticipant(project, trimJoint, memberId)
     ]
   };
 }
 
 function validateTrimJointOperation(project, trimJointId, trimJoint, operation) {
-  const participantIds = new Set((trimJoint.participants || []).map((participant) => participant.memberId));
+  const participantIds = new Set(trimJointParticipants(trimJoint).map((participant) => participant.memberId));
   if (!operation.memberAId) fail(`${trimJointId}: operation requires member A`);
   if (!participantIds.has(operation.memberAId)) fail(`${trimJointId}: operation member A must be a participant`);
   if (operation.type === "plane-trim") {
-    if (!Array.isArray(operation.referencePlaneIds) || !operation.referencePlaneIds.length) {
+    const referencePlaneIds = trimOperationReferencePlaneIds(operation);
+    if (!referencePlaneIds.length) {
       fail(`${trimJointId}: plane trim operation requires referencePlaneIds`);
     }
-    for (const referencePlaneId of operation.referencePlaneIds) referencePlaneById(project, referencePlaneId);
+    for (const referencePlaneId of referencePlaneIds) referencePlaneById(project, referencePlaneId);
     if (!Array.isArray(operation.removedRegionKeys)) fail(`${trimJointId}: plane trim operation requires removedRegionKeys`);
     validateTrimRegionKeys(trimJointId, operation);
     return;
@@ -289,97 +282,35 @@ function validateTrimJointOperation(project, trimJointId, trimJoint, operation) 
   }
 }
 
-function plainObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function mergePatch(target, patch) {
-  if (!plainObject(patch)) return clone(patch);
-  const next = plainObject(target) ? { ...target } : {};
-  for (const [key, value] of Object.entries(patch)) {
-    next[key] = plainObject(value) && plainObject(next[key]) ? mergePatch(next[key], value) : clone(value);
-  }
-  return next;
-}
-
-function removeReferences(value, deletedIds) {
-  if (Array.isArray(value)) return value.filter((item) => !deletedIds.has(item)).map((item) => removeReferences(item, deletedIds));
-  if (!value || typeof value !== "object") return value;
-  for (const [key, child] of Object.entries(value)) {
-    if (REF_ARRAY_KEYS.has(key) && Array.isArray(child)) {
-      value[key] = child.filter((id) => !deletedIds.has(id));
-    } else {
-      removeReferences(child, deletedIds);
-    }
-  }
-  return value;
-}
-
 function removeObjects(project, objectIds) {
   const next = clone(project);
-  const deletedIds = new Set(unique(objectIds));
-
-  for (const id of deletedIds) {
-    const collection = objectCollection(next, id);
-    if (collection) delete next.model[collection][id];
-    delete next.objectIndex[id];
-  }
-  removeReferences(next.model, deletedIds);
-  return next;
+  return removeProjectObjects(next, objectIds, {
+    shouldPruneArray: (key) => REF_ARRAY_KEYS.has(key)
+  });
 }
 
-function cloneProjectForMemberUpdate(project, memberId) {
-  return {
-    ...project,
-    objectIndex: { ...(project.objectIndex || {}) },
-    model: {
-      ...(project.model || {}),
-      members: { ...(project.model?.members || {}) }
-    }
+function validateUpdatedModelObject(updated, objectId, label) {
+  if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail(`${label} update must return an object`);
+  if (updated.id !== objectId) fail(`${label} id cannot be changed`);
+  return updated;
+}
+
+function setIndexedModelObject(project, collection, objectId, object, type = object.type) {
+  project.model[collection][objectId] = object;
+  project.objectIndex[objectId] = {
+    ...(project.objectIndex[objectId] || {}),
+    collection,
+    type
   };
 }
 
-function cloneProjectForFeatureUpdate(project, featureId) {
+function cloneProjectForModelCollection(project, collection) {
   return {
     ...project,
     objectIndex: { ...(project.objectIndex || {}) },
     model: {
       ...(project.model || {}),
-      features: { ...(project.model?.features || {}) }
-    }
-  };
-}
-
-function cloneProjectForReferencePlaneUpdate(project) {
-  return {
-    ...project,
-    objectIndex: { ...(project.objectIndex || {}) },
-    model: {
-      ...(project.model || {}),
-      referencePlanes: { ...(project.model?.referencePlanes || {}) }
-    }
-  };
-}
-
-function cloneProjectForTrimJointUpdate(project, trimJointId) {
-  return {
-    ...project,
-    objectIndex: { ...(project.objectIndex || {}) },
-    model: {
-      ...(project.model || {}),
-      trimJoints: { ...(project.model?.trimJoints || {}) }
-    }
-  };
-}
-
-function cloneProjectForFastenerGroupUpdate(project) {
-  return {
-    ...project,
-    objectIndex: { ...(project.objectIndex || {}) },
-    model: {
-      ...(project.model || {}),
-      fastenerGroups: { ...(project.model?.fastenerGroups || {}) },
-      smartComponentInstances: Object.fromEntries(Object.entries(project.model?.smartComponentInstances || {}).map(([id, instance]) => [id, clone(instance)]))
+      [collection]: { ...(project.model?.[collection] || {}) }
     }
   };
 }
@@ -394,7 +325,7 @@ function smartComponentGeneratedHelperIds(project, smartComponent) {
   const assemblyId = smartComponentAssemblyId(smartComponent);
   const zone = zoneId ? project.model.connectionZones?.[zoneId] : null;
   if (isSmartComponentGeneratedHelper(zone, smartComponent.id)) ids.push(zone.id);
-  for (const interfaceId of zone?.interfaceIds || []) {
+  for (const interfaceId of arrayValues(zone?.interfaceIds)) {
     if (isSmartComponentGeneratedHelper(project.model.interfaces?.[interfaceId], smartComponent.id)) ids.push(interfaceId);
   }
   if (assemblyId && isSmartComponentGeneratedHelper(project.model.assemblies?.[assemblyId], smartComponent.id)) ids.push(assemblyId);
@@ -436,7 +367,7 @@ function recordSmartComponentFieldOverride(project, beforeObject, afterObject) {
   instance.fieldOverrides[afterObject.id] = mergePatch(instance.fieldOverrides[afterObject.id] || {}, patch);
   instance.managedFields ||= {};
   instance.managedFields[afterObject.id] = unique([
-    ...(Array.isArray(instance.managedFields[afterObject.id]) ? instance.managedFields[afterObject.id] : []),
+    ...arrayValues(instance.managedFields[afterObject.id]),
     ...Object.keys(instance.fieldOverrides[afterObject.id] || {})
   ]);
 }
@@ -444,8 +375,8 @@ function recordSmartComponentFieldOverride(project, beforeObject, afterObject) {
 function appendMemberToDefaultGroup(project, memberId) {
   const group = Object.values(project.model.groups || {}).find((item) => item.type === "member-group" || item.groupType === "members");
   if (!group) return;
-  group.memberIds = appendUnique(group.memberIds, memberId);
-  group.objectIds = appendUnique(group.objectIds, memberId);
+  group.memberIds = appendUniqueId(group.memberIds, memberId);
+  group.objectIds = appendUniqueId(group.objectIds, memberId);
 }
 
 function upsertRelationObject(project, relation) {
@@ -474,11 +405,6 @@ function addMemberSnapRelations(project, memberId, options = {}) {
   }
 }
 
-function normalizedIndexList(values) {
-  if (!Array.isArray(values)) return [];
-  return [...new Set(values.filter((value) => Number.isInteger(value) && value >= 0))].sort((a, b) => a - b);
-}
-
 function setIndexIncluded(values, index, included) {
   const current = new Set(normalizedIndexList(values));
   if (included) current.delete(index);
@@ -486,31 +412,11 @@ function setIndexIncluded(values, index, included) {
   return [...current].sort((a, b) => a - b);
 }
 
-function optionalComponentRole(definition, role) {
-  return (definition.components || []).some((component) => component?.role === role && component.default === "ghost");
-}
-
 function setRoleInList(list = [], role, active) {
-  const current = new Set((Array.isArray(list) ? list : []).filter((value) => typeof value === "string"));
+  const current = new Set(arrayValues(list).filter((value) => typeof value === "string"));
   if (active) current.add(role);
   else current.delete(role);
   return [...current].sort();
-}
-
-function smartComponentInput(instance, key) {
-  return instance.inputs?.[key] || {};
-}
-
-function smartComponentMainMemberId(instance) {
-  return smartComponentInput(instance, "main").memberId;
-}
-
-function smartComponentSecondaryMemberId(instance) {
-  return smartComponentInput(instance, "secondary").memberId;
-}
-
-function smartComponentConnectionZoneId(instance) {
-  return instance.inputs?.connectionZoneId;
 }
 
 function smartComponentAssemblyId(instance) {
@@ -525,7 +431,7 @@ function componentFromFace(project, face) {
   if (!collection) return null;
 
   const objectRole = smartComponentRoleForObject(smartComponent, face.objectId);
-  if (collection === "fastenerGroups" && Number.isInteger(face.positionIndex)) {
+  if (collection === "fastenerGroups" && finiteInteger(face.positionIndex)) {
     const fastenerGroup = project.model.fastenerGroups?.[face.objectId];
     const patternRole = fastenerGroup?.holePatternRef ? smartComponentRoleForObject(smartComponent, fastenerGroup.holePatternRef) : null;
     if (patternRole) {
@@ -554,15 +460,13 @@ function memberDirectionFromInterface(project, iface) {
   const entry = project.objectIndex?.[iface.ownerId];
   if (entry?.collection !== "members") return null;
   const member = objectById(project, iface.ownerId);
-  const axis = v.sub(member.end, member.start);
-  const length = v.len(axis);
-  if (length <= FIT_EPSILON) return null;
-  const direction = v.mul(axis, 1 / length);
-  return iface.memberEnd === "end" ? v.mul(direction, -1) : direction;
+  const axis = memberAxisData(member);
+  if (!axis || axis.length <= FIT_EPSILON) return null;
+  return iface.memberEnd === "end" ? v.mul(axis.direction, -1) : axis.direction;
 }
 
 function interfaceReferencePoint(project, profiles, zone, interfaceId) {
-  const otherId = (zone.interfaceIds || []).find((id) => id !== interfaceId);
+  const otherId = arrayValues(zone.interfaceIds).find((id) => id !== interfaceId);
   try {
     if (otherId) {
       const resolved = resolveInterface(project, profiles, otherId);
@@ -583,7 +487,7 @@ function lockSmartComponentZoneFaces(project, profiles, smartComponentId, option
   const zone = next.model.connectionZones?.[zoneId];
   if (!zone) fail(`${smartComponentId}: connection zone not found: ${zoneId}`);
 
-  for (const interfaceId of zone.interfaceIds || []) {
+  for (const interfaceId of arrayValues(zone.interfaceIds)) {
     const iface = next.model.interfaces?.[interfaceId];
     if (!iface || iface.faceRef !== "connection-secondary-facing-section-face") continue;
     const referencePoint = interfaceReferencePoint(next, profiles, zone, interfaceId);
@@ -609,10 +513,6 @@ function lockGeneratedSmartComponentFaces(project, profiles) {
   return next;
 }
 
-function memberCenter(member) {
-  return v.mul(v.add(member.start, member.end), 0.5);
-}
-
 function roundedDimension(value) {
   return Math.round(value * 1000) / 1000;
 }
@@ -635,7 +535,7 @@ function axisGeometry(axis) {
 
 function projectedOnAxis(axisData, point) {
   const station = v.dot(v.sub(point, axisData.start), axisData.direction);
-  const clampedStation = Math.min(axisData.length, Math.max(0, station));
+  const clampedStation = clamp(station, 0, axisData.length);
   return {
     station,
     clampedStation,
@@ -647,7 +547,7 @@ function memberSectionSpan(project, profiles, member) {
   const resolved = objectById(project, member.id);
   const profileId = resolved.profile || member.profile;
   if (!profileId) return 0;
-  const bounds = sectionBounds(profileById(profiles, profileId));
+  const bounds = sectionBounds(requiredProfileById(profilesFor(project), profileId, fail));
   return Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 0);
 }
 
@@ -719,19 +619,39 @@ function smartComponentSeedProjects(project, profiles, memberIds) {
   const second = project.model.members?.[secondId];
   if (!first || !second) return [project];
 
-  const repairs = [
+  const repairs = truthyValues([
     layoutRepairCandidate(project, profiles, first, second),
     layoutRepairCandidate(project, profiles, second, first)
-  ]
-    .filter(Boolean)
+  ])
     .sort((a, b) => a.score - b.score);
 
   return [project, ...repairs.map((repair) => applyLayoutAxisRepair(project, repair))];
 }
 
+function normalizeLoadedPlateSketchRelations(project) {
+  const plates = project.model?.plates;
+  if (!plates) return project;
+  let changed = false;
+  const next = {
+    ...project,
+    model: {
+      ...project.model,
+      plates: { ...plates }
+    }
+  };
+  for (const [plateId, plate] of Object.entries(plates)) {
+    if (Array.isArray(plate?.sketch?.relations)) continue;
+    const normalized = normalizePlateData(plate);
+    next.model.plates[plateId] = normalized;
+    changed = true;
+  }
+  return changed ? next : project;
+}
+
 export function createProjectStore({ project, profiles, smartComponentCatalog, fasteners, reconcileOnLoad = false, cloneOnLoad = true }) {
   const initialProject = cloneOnLoad ? clone(project) : project;
-  let currentProject = lockGeneratedSmartComponentFaces(initialProject, profiles);
+  const profilesFor = (projectState) => projectProfileCatalog(projectState, profiles);
+  let currentProject = normalizeLoadedPlateSketchRelations(lockGeneratedSmartComponentFaces(initialProject, profilesFor(initialProject)));
   const subscribers = new Set();
 
   const definitionFor = (projectState, smartComponentId) => smartComponentDefinition(smartComponentCatalog, smartComponentById(projectState, smartComponentId));
@@ -743,21 +663,21 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     emit();
     return currentProject;
   };
-  const regenerateSmartComponent = (projectState, smartComponentId) => updateSmartComponent({
+  const smartComponentUpdateContext = (projectState) => ({
     project: projectState,
-    profiles,
-    definition: definitionFor(projectState, smartComponentId),
+    profiles: profilesFor(projectState),
     catalog: smartComponentCatalog,
-    fasteners,
+    fasteners
+  });
+  const regenerateSmartComponent = (projectState, smartComponentId) => updateSmartComponent({
+    ...smartComponentUpdateContext(projectState),
+    definition: definitionFor(projectState, smartComponentId),
     instanceId: smartComponentId,
     parameters: smartComponentById(projectState, smartComponentId).referenceParameters
   });
   const updateSmartComponentParameters = (projectState, smartComponentId, parameters) => updateSmartComponent({
-    project: projectState,
-    profiles,
+    ...smartComponentUpdateContext(projectState),
     definition: definitionFor(projectState, smartComponentId),
-    catalog: smartComponentCatalog,
-    fasteners,
     instanceId: smartComponentId,
     parameters
   });
@@ -767,11 +687,8 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       .map((smartComponent) => smartComponent.id);
     if (!smartComponentIds.length) return projectState;
     return updateSmartComponents({
-      project: projectState,
-      profiles,
+      ...smartComponentUpdateContext(projectState),
       definitionFor,
-      catalog: smartComponentCatalog,
-      fasteners,
       instanceIds: smartComponentIds,
       parametersFor: (state, smartComponentId) => smartComponentById(state, smartComponentId).referenceParameters
     });
@@ -780,11 +697,8 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     const ids = smartComponentIds.filter((smartComponentId) => projectState.model.smartComponentInstances?.[smartComponentId]);
     if (!ids.length) return projectState;
     return updateSmartComponents({
-      project: projectState,
-      profiles,
+      ...smartComponentUpdateContext(projectState),
       definitionFor,
-      catalog: smartComponentCatalog,
-      fasteners,
       instanceIds: ids
     });
   };
@@ -807,12 +721,12 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     if (roleId && projectState.model.trimJoints?.[roleId]?.type === "member-trim") return projectState.model.trimJoints[roleId];
     return smartComponentOwnedObjectIds(smartComponent)
       .map((id) => projectState.model.trimJoints?.[id])
-      .find((trimJoint) => trimJoint?.type === "member-trim" && (trimJoint.participants || []).some((participant) => participant.memberId === secondaryMemberId)) || null;
+      .find((trimJoint) => trimJoint?.type === "member-trim" && trimJointParticipants(trimJoint).some((participant) => participant.memberId === secondaryMemberId)) || null;
   };
   const markSmartComponentError = (projectState, smartComponentId, code, message, objectRoles = []) => {
     const smartComponent = projectState.model.smartComponentInstances?.[smartComponentId];
     if (!smartComponent) return;
-    const diagnostics = smartComponent.diagnostics || [];
+    const diagnostics = arrayValues(smartComponent.diagnostics);
     Object.assign(smartComponent, {
       health: "error",
       diagnostics: diagnostics.some((entry) => entry.code === code)
@@ -831,9 +745,10 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     const trimJoint = memberTrimJoint(projectState, smartComponent);
     const secondaryMemberId = smartComponentSecondaryMemberId(smartComponent);
     if (!trimJoint) return false;
-    const operation = (trimJoint.operations || []).find((item) => item.enabled !== false && item.type === "plane-trim" && item.memberAId === secondaryMemberId);
+    const operation = activeTrimJointOperations(trimJoint).find((item) => item.type === "plane-trim" && item.memberAId === secondaryMemberId);
     if (!operation) return false;
-    if (!Array.isArray(operation.referencePlaneIds) || operation.referencePlaneIds.length !== 1) {
+    const referencePlaneIds = trimOperationReferencePlaneIds(operation);
+    if (referencePlaneIds.length !== 1) {
       markSmartComponentError(projectState, smartComponentId, "beam-trim-plane-count", "Generated member trim requires exactly one trim plane.", ["beamTrim"]);
       return false;
     }
@@ -843,24 +758,25 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
 
     const member = projectState.model.members?.[secondaryMemberId];
     if (!member) fail(`${smartComponentId}: secondary member not found: ${secondaryMemberId}`);
-    const plane = requiredReferencePlane(projectState, operation.referencePlaneIds[0], `${trimJoint.id}:${operation.id}`, fail);
+    const plane = requiredReferencePlane(projectState, referencePlaneIds[0], `${trimJoint.id}:${operation.id}`, fail);
     const normal = v.norm(vec3(plane.normal, `${trimJoint.id}.${operation.id}.referencePlane.normal`));
     const origin = vec3(plane.origin, `${trimJoint.id}.${operation.id}.referencePlane.origin`);
-    const axis = v.sub(member.end, member.start);
-    const denominator = v.dot(normal, axis);
+    const axis = memberAxisData(member);
+    const axisVector = axis ? v.mul(axis.direction, axis.length) : [0, 0, 0];
+    const denominator = v.dot(normal, axisVector);
     if (Math.abs(denominator) <= FIT_EPSILON) {
       markSmartComponentError(projectState, smartComponentId, "member-axis-parallel-to-trim-plane", "Secondary member axis does not intersect the trim plane.", ["beamTrim"]);
       return false;
     }
 
-    const t = v.dot(normal, v.sub(origin, member.start)) / denominator;
-    const fittedPoint = v.add(member.start, v.mul(axis, t));
+    const t = v.dot(normal, v.sub(origin, axis.start)) / denominator;
+    const fittedPoint = v.add(axis.start, v.mul(axisVector, t));
     if (memberEnd === "start") {
-      if (almostSamePoint(member.start, fittedPoint)) return false;
+      if (almostSamePointData(member.start, fittedPoint, FIT_EPSILON)) return false;
       member.start = fittedPoint;
       return true;
     }
-    if (almostSamePoint(member.end, fittedPoint)) return false;
+    if (almostSamePointData(member.end, fittedPoint, FIT_EPSILON)) return false;
     member.end = fittedPoint;
     return true;
   };
@@ -877,10 +793,16 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     }
     return regenerateSmartComponentsBatch(next, ids);
   };
+  const setRegeneratedSmartComponent = (projectState, smartComponentId) => setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(projectState, smartComponentId)));
+  const updateRegeneratedSmartComponent = (smartComponentId, update) => {
+    const next = clone(currentProject);
+    const smartComponent = smartComponentById(next, smartComponentId);
+    return setRegeneratedSmartComponent(update(next, smartComponent) || next, smartComponentId);
+  };
   const applyResolveHint = (parameters, hint) => {
-    if (!hint?.path || typeof hint.value !== "number" || !Number.isFinite(hint.value)) return false;
+    if (!hint?.path || !finiteNumber(hint.value)) return false;
     const current = optionalPath(parameters, hint.path);
-    if (typeof current !== "number" || !Number.isFinite(current)) return false;
+    if (!finiteNumber(current)) return false;
     const value = roundedDimension(hint.value);
     if (value <= 0) return false;
     if (hint.mode === "max" && current > value) {
@@ -902,24 +824,24 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     let changed = false;
     for (let index = 0; index < 4; index += 1) {
       const smartComponent = smartComponentById(next, smartComponentId);
-      const diagnostics = smartComponent.diagnostics || [];
+      const diagnostics = arrayValues(smartComponent.diagnostics);
       const parameters = clone(smartComponent.referenceParameters);
       let iterationChanged = false;
       for (const diagnostic of diagnostics) {
-        for (const hint of diagnostic.resolve || []) {
+        for (const hint of arrayValues(diagnostic.resolve)) {
           iterationChanged = applyResolveHint(parameters, hint) || iterationChanged;
         }
       }
       if (!iterationChanged) break;
       next = reconcileGeneratedSmartComponents(updateSmartComponentParameters(next, smartComponentId, parameters));
       changed = true;
-      if (!(smartComponentById(next, smartComponentId).diagnostics || []).length) break;
+      if (!arrayValues(smartComponentById(next, smartComponentId).diagnostics).length) break;
     }
     if (!changed) fail(`${smartComponentId}: no automatic resolver is available for current diagnostics`);
     return setProject(next);
   };
   const replaceMember = (memberId, update, options = {}) => {
-    const next = cloneProjectForMemberUpdate(currentProject, memberId);
+    const next = cloneProjectForModelCollection(currentProject, "members");
     const member = memberById(next, memberId);
     const updated = update(member);
     next.model.members[memberId] = updated;
@@ -930,64 +852,46 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     return setProject(regenerateMemberSmartComponents(next, memberId));
   };
   const replaceFeature = (featureId, update) => {
-    const next = cloneProjectForFeatureUpdate(currentProject, featureId);
+    const next = cloneProjectForModelCollection(currentProject, "features");
     const feature = featureById(next, featureId);
-    const updated = update(feature);
-    if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail("feature update must return an object");
-    if (updated.id !== featureId) fail("feature id cannot be changed");
+    const updated = validateUpdatedModelObject(update(feature), featureId, "feature");
     if (updated.ownerId !== feature.ownerId) fail("feature owner cannot be changed");
     if (updated.type !== feature.type) fail("feature type cannot be changed");
-    next.model.features[featureId] = updated;
-    next.objectIndex[featureId] = {
-      ...(next.objectIndex[featureId] || {}),
-      collection: "features",
-      type: updated.type
-    };
+    setIndexedModelObject(next, "features", featureId, updated);
     return setProject(next);
   };
+  const replaceClonedIndexedObject = (collection, objectId, read, update, label, fallbackType) => {
+    const next = clone(currentProject);
+    const object = read(next, objectId);
+    const updated = validateUpdatedModelObject(update(clone(object)), objectId, label);
+    setIndexedModelObject(next, collection, objectId, updated, updated.type || fallbackType);
+    return setProject(next);
+  };
+  const replacePlate = (plateId, update) => replaceClonedIndexedObject("plates", plateId, plateById, update, "plate", "plate");
+  const replaceSketch = (sketchId, update) => replaceClonedIndexedObject("sketches", sketchId, sketchById, update, "sketch", "plate-sketch");
   const replaceReferencePlane = (referencePlaneId, update) => {
-    const next = cloneProjectForReferencePlaneUpdate(currentProject);
+    const next = cloneProjectForModelCollection(currentProject, "referencePlanes");
     const plane = referencePlaneById(next, referencePlaneId);
-    const updated = update(plane);
-    if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail("reference plane update must return an object");
-    if (updated.id !== referencePlaneId) fail("reference plane id cannot be changed");
-    next.model.referencePlanes[referencePlaneId] = updated;
-    next.objectIndex[referencePlaneId] = {
-      ...(next.objectIndex[referencePlaneId] || {}),
-      collection: "referencePlanes",
-      type: updated.type || "reference-plane"
-    };
+    const updated = validateUpdatedModelObject(update(plane), referencePlaneId, "reference plane");
+    setIndexedModelObject(next, "referencePlanes", referencePlaneId, updated, updated.type || "reference-plane");
     return setProject(next);
   };
   const replaceTrimJoint = (trimJointId, update) => {
-    const next = cloneProjectForTrimJointUpdate(currentProject, trimJointId);
+    const next = cloneProjectForModelCollection(currentProject, "trimJoints");
     const trimJoint = trimJointById(next, trimJointId);
-    const updated = update(trimJoint);
-    if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail("trim joint update must return an object");
-    if (updated.id !== trimJointId) fail("trim joint id cannot be changed");
+    const updated = validateUpdatedModelObject(update(trimJoint), trimJointId, "trim joint");
     if (updated.type !== trimJoint.type) fail("trim joint type cannot be changed");
-    next.model.trimJoints[trimJointId] = updated;
-    next.objectIndex[trimJointId] = {
-      ...(next.objectIndex[trimJointId] || {}),
-      collection: "trimJoints",
-      type: updated.type
-    };
+    setIndexedModelObject(next, "trimJoints", trimJointId, updated);
     return setProject(next);
   };
   const replaceFastenerGroup = (fastenerGroupId, update) => {
-    const next = cloneProjectForFastenerGroupUpdate(currentProject);
+    const next = cloneProjectForModelCollection(currentProject, "fastenerGroups");
+    next.model.smartComponentInstances = Object.fromEntries(Object.entries(currentProject.model?.smartComponentInstances || {}).map(([id, instance]) => [id, clone(instance)]));
     const fastenerGroup = clone(fastenerGroupById(next, fastenerGroupId));
-    const updated = update(clone(fastenerGroup));
-    if (!updated || typeof updated !== "object" || Array.isArray(updated)) fail("fastener group update must return an object");
-    if (updated.id !== fastenerGroupId) fail("fastener group id cannot be changed");
+    const updated = validateUpdatedModelObject(update(clone(fastenerGroup)), fastenerGroupId, "fastener group");
     if (updated.type !== fastenerGroup.type) fail("fastener group type cannot be changed");
     validateFastenerGroup(fasteners, updated);
-    next.model.fastenerGroups[fastenerGroupId] = updated;
-    next.objectIndex[fastenerGroupId] = {
-      ...(next.objectIndex[fastenerGroupId] || {}),
-      collection: "fastenerGroups",
-      type: updated.type
-    };
+    setIndexedModelObject(next, "fastenerGroups", fastenerGroupId, updated);
     recordSmartComponentFieldOverride(next, fastenerGroup, updated);
     return setProject(next);
   };
@@ -1047,22 +951,22 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       let included = true;
       if (component.kind === "pattern-position") {
         smartComponent.suppressedPatternPositions ||= {};
-        const current = smartComponent.suppressedPatternPositions[component.patternRole] || [];
+        const current = arrayValues(smartComponent.suppressedPatternPositions[component.patternRole]);
         included = current.includes(component.positionIndex);
         const nextList = setIndexIncluded(current, component.positionIndex, included);
         if (nextList.length) smartComponent.suppressedPatternPositions[component.patternRole] = nextList;
         else delete smartComponent.suppressedPatternPositions[component.patternRole];
       } else if (component.kind === "object-role") {
         const definition = definitionFor(next, component.smartComponentId);
-        if (!(definition.components || []).some((entry) => entry?.role === component.objectRole)) fail(`${component.smartComponentId}: unknown component role ${component.objectRole}`);
-        const current = new Set(smartComponent.suppressedRoles || []);
+        if (!arrayValues(definition.components).some((entry) => entry?.role === component.objectRole)) fail(`${component.smartComponentId}: unknown component role ${component.objectRole}`);
+        const current = new Set(arrayValues(smartComponent.suppressedRoles));
         included = current.has(component.objectRole);
         if (included) current.delete(component.objectRole);
         else current.add(component.objectRole);
         smartComponent.suppressedRoles = [...current].sort();
       }
 
-      const updated = setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, component.smartComponentId)));
+      const updated = setRegeneratedSmartComponent(next, component.smartComponentId);
       return { project: updated, component, included };
     },
 
@@ -1071,47 +975,43 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     },
 
     resetSmartComponentFieldOverride(smartComponentId, objectId, field) {
-      const next = clone(currentProject);
-      const smartComponent = smartComponentById(next, smartComponentId);
-      if (smartComponent.fieldOverrides?.[objectId]) {
-        delete smartComponent.fieldOverrides[objectId][field];
-        if (!Object.keys(smartComponent.fieldOverrides[objectId]).length) delete smartComponent.fieldOverrides[objectId];
-      }
-      if (smartComponent.managedFields?.[objectId]) {
-        smartComponent.managedFields[objectId] = smartComponent.managedFields[objectId].filter((value) => value !== field);
-        if (!smartComponent.managedFields[objectId].length) delete smartComponent.managedFields[objectId];
-      }
-      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, smartComponentId)));
+      return updateRegeneratedSmartComponent(smartComponentId, (next, smartComponent) => {
+        if (smartComponent.fieldOverrides?.[objectId]) {
+          delete smartComponent.fieldOverrides[objectId][field];
+          if (!Object.keys(smartComponent.fieldOverrides[objectId]).length) delete smartComponent.fieldOverrides[objectId];
+        }
+        if (smartComponent.managedFields?.[objectId]) {
+          smartComponent.managedFields[objectId] = smartComponent.managedFields[objectId].filter((value) => value !== field);
+          if (!smartComponent.managedFields[objectId].length) delete smartComponent.managedFields[objectId];
+        }
+      });
     },
 
     resetSmartComponentObjectOverrides(smartComponentId, objectId) {
-      const next = clone(currentProject);
-      const smartComponent = smartComponentById(next, smartComponentId);
-      if (smartComponent.fieldOverrides) delete smartComponent.fieldOverrides[objectId];
-      if (smartComponent.managedFields) delete smartComponent.managedFields[objectId];
-      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, smartComponentId)));
+      return updateRegeneratedSmartComponent(smartComponentId, (next, smartComponent) => {
+        if (smartComponent.fieldOverrides) delete smartComponent.fieldOverrides[objectId];
+        if (smartComponent.managedFields) delete smartComponent.managedFields[objectId];
+      });
     },
 
     detachSmartComponentObject(smartComponentId, objectId) {
-      const next = clone(currentProject);
-      const smartComponent = smartComponentById(next, smartComponentId);
-      if (!smartComponentOwnedObjectIds(smartComponent).includes(objectId)) fail(`${objectId}: object is not owned by ${smartComponentId}`);
-      const collection = objectCollection(next, objectId);
-      const object = collection ? next.model[collection]?.[objectId] : null;
-      if (!object) fail(`object not found: ${objectId}`);
-      smartComponent.detachedObjectIds = unique([...(smartComponent.detachedObjectIds || []), objectId]);
-      object.authoring = { ...(object.authoring || {}), componentStatus: "detached" };
-      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, smartComponentId)));
+      return updateRegeneratedSmartComponent(smartComponentId, (next, smartComponent) => {
+        if (!smartComponentOwnedObjectIds(smartComponent).includes(objectId)) fail(`${objectId}: object is not owned by ${smartComponentId}`);
+        const collection = objectCollection(next, objectId);
+        const object = collection ? next.model[collection]?.[objectId] : null;
+        if (!object) fail(`object not found: ${objectId}`);
+        smartComponent.detachedObjectIds = unique([...arrayValues(smartComponent.detachedObjectIds), objectId]);
+        object.authoring = { ...(object.authoring || {}), componentStatus: "detached" };
+      });
     },
 
     reattachSmartComponentObject(smartComponentId, objectId) {
-      const next = clone(currentProject);
-      const smartComponent = smartComponentById(next, smartComponentId);
-      smartComponent.detachedObjectIds = (smartComponent.detachedObjectIds || []).filter((id) => id !== objectId);
-      if (smartComponent.fieldOverrides) delete smartComponent.fieldOverrides[objectId];
-      if (smartComponent.managedFields) delete smartComponent.managedFields[objectId];
-      const cleaned = removeObjects(next, [objectId]);
-      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(cleaned, smartComponentId)));
+      return updateRegeneratedSmartComponent(smartComponentId, (next, smartComponent) => {
+        smartComponent.detachedObjectIds = arrayValues(smartComponent.detachedObjectIds).filter((id) => id !== objectId);
+        if (smartComponent.fieldOverrides) delete smartComponent.fieldOverrides[objectId];
+        if (smartComponent.managedFields) delete smartComponent.managedFields[objectId];
+        return removeObjects(next, [objectId]);
+      });
     },
 
     affectedSmartComponentIds(memberId) {
@@ -1153,7 +1053,12 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
 
     catalogEntries(catalog) {
       if (catalog === "fasteners") return fasteners.fasteners || {};
+      if (catalog === "profiles") return profilesFor(currentProject);
       return {};
+    },
+
+    profiles() {
+      return profilesFor(currentProject);
     },
 
     createSmartComponentFromPreset(presetId, memberIds) {
@@ -1168,7 +1073,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       }
       let created = null;
       let firstError = null;
-      for (const seedProject of smartComponentSeedProjects(currentProject, profiles, memberIds)) {
+      for (const seedProject of smartComponentSeedProjects(currentProject, profilesFor(currentProject), memberIds)) {
         try {
           created = createProjectSmartComponentFromPreset(seedProject, smartComponentCatalog, presetId, memberIds, { definition });
           break;
@@ -1178,7 +1083,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
         }
       }
       if (!created) throw firstError;
-      const locked = lockSmartComponentZoneFaces(created.project, profiles, created.smartComponentId);
+      const locked = lockSmartComponentZoneFaces(created.project, profilesFor(created.project), created.smartComponentId);
       const next = reconcileGeneratedSmartComponents(regenerateSmartComponent(locked, created.smartComponentId));
       setProject(next);
       return { project: currentProject, smartComponentId: created.smartComponentId };
@@ -1200,12 +1105,11 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     },
 
     setSmartComponentRoleActive(smartComponentId, role, active) {
-      const next = clone(currentProject);
-      const smartComponent = smartComponentById(next, smartComponentId);
-      const definition = definitionFor(next, smartComponentId);
-      if (!(definition.components || []).some((component) => component?.role === role)) fail(`${smartComponentId}: unknown component role ${role}`);
-      smartComponent.suppressedRoles = setRoleInList(smartComponent.suppressedRoles, role, !active);
-      return setProject(reconcileGeneratedSmartComponents(regenerateSmartComponent(next, smartComponentId)));
+      return updateRegeneratedSmartComponent(smartComponentId, (next, smartComponent) => {
+        const definition = definitionFor(next, smartComponentId);
+        if (!arrayValues(definition.components).some((component) => component?.role === role)) fail(`${smartComponentId}: unknown component role ${role}`);
+        smartComponent.suppressedRoles = setRoleInList(smartComponent.suppressedRoles, role, !active);
+      });
     },
 
     setSmartComponentPlateIncluded(smartComponentId, plateId, included) {
@@ -1217,7 +1121,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     updateSmartComponent(smartComponentId, parameters) {
       return setProject(reconcileGeneratedSmartComponents(updateSmartComponent({
         project: currentProject,
-        profiles,
+        profiles: profilesFor(currentProject),
         definition: definitionFor(currentProject, smartComponentId),
         catalog: smartComponentCatalog,
         fasteners,
@@ -1228,7 +1132,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
 
     createMember(options = {}) {
       const next = clone(currentProject);
-      const member = createMemberObject(next, profiles, options);
+      const member = createMemberObject(next, profilesFor(next), options);
       addIndexedObject(next, "members", member);
       addMemberSnapRelations(next, member.id, options);
       appendMemberToDefaultGroup(next, member.id);
@@ -1236,9 +1140,32 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       return { project: updated, memberId: member.id, member: updated.model.members[member.id] };
     },
 
+    createPlate(options = {}) {
+      const next = clone(currentProject);
+      const plate = addPlateObject(next, options);
+      const updated = setProject(next);
+      return { project: updated, plateId: plate.id, plate: updated.model.plates[plate.id] };
+    },
+
+    createSketch(options = {}) {
+      const next = clone(currentProject);
+      const sketch = addSketchObject(next, options);
+      const updated = setProject(next);
+      return { project: updated, sketchId: sketch.id, sketch: updated.model.sketches[sketch.id] };
+    },
+
+    createPlateFromSketch(sketchId, options = {}) {
+      const next = clone(currentProject);
+      const source = sketchById(next, sketchId);
+      const plate = plateFromSketchObject(next, source, options);
+      addIndexedObject(next, "plates", plate);
+      const updated = setProject(next);
+      return { project: updated, plateId: plate.id, plate: updated.model.plates[plate.id] };
+    },
+
     createTrimJoint(options = {}) {
       if (!options || typeof options !== "object" || Array.isArray(options)) fail("trim joint options must be an object");
-      const memberIds = unique(options.memberIds || []);
+      const memberIds = unique(arrayValues(options.memberIds));
       for (const memberId of memberIds) memberById(currentProject, memberId);
       const operationPatch = clone(options.operationPatch || {});
       const operationType = operationPatch.type || options.operationType || "end-butt-both";
@@ -1347,7 +1274,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("trim joint participant patch must be an object");
       if ("memberId" in patch && patch.memberId !== memberId) fail("participant member cannot be changed");
       return replaceTrimJoint(trimJointId, (trimJoint) => {
-        const participants = (trimJoint.participants || []).map((participant) => (
+        const participants = trimJointParticipants(trimJoint).map((participant) => (
           participant.memberId === memberId ? mergePatch(participant, patch) : participant
         ));
         if (!participants.some((participant) => participant.memberId === memberId)) fail(`${trimJointId}: participant not found: ${memberId}`);
@@ -1360,13 +1287,13 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       if ("memberId" in patch && patch.memberId !== memberId) fail("participant member cannot be changed");
       memberById(currentProject, memberId);
       return replaceTrimJoint(trimJointId, (trimJoint) => {
-        if ((trimJoint.participants || []).some((participant) => participant.memberId === memberId)) {
+        if (trimJointParticipants(trimJoint).some((participant) => participant.memberId === memberId)) {
           fail(`${trimJointId}: participant already exists: ${memberId}`);
         }
         return {
           ...trimJoint,
           participants: [
-            ...(trimJoint.participants || []),
+            ...trimJointParticipants(trimJoint),
             defaultTrimJointParticipant(currentProject, trimJoint, memberId, patch)
           ]
         };
@@ -1375,10 +1302,10 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
 
     removeTrimJointParticipant(trimJointId, memberId) {
       return replaceTrimJoint(trimJointId, (trimJoint) => {
-        const participants = (trimJoint.participants || []).filter((participant) => participant.memberId !== memberId);
-        if (participants.length === (trimJoint.participants || []).length) fail(`${trimJointId}: participant not found: ${memberId}`);
+        const participants = trimJointParticipants(trimJoint).filter((participant) => participant.memberId !== memberId);
+        if (participants.length === trimJointParticipants(trimJoint).length) fail(`${trimJointId}: participant not found: ${memberId}`);
         if (!participants.length) fail(`${trimJointId}: trim requires at least one participant`);
-        const operations = (trimJoint.operations || []).filter((operation) => (
+        const operations = trimJointOperations(trimJoint).filter((operation) => (
           operation.memberAId !== memberId && operation.memberBId !== memberId
         ));
         return { ...trimJoint, participants, operations };
@@ -1390,8 +1317,8 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       return replaceTrimJoint(trimJointId, (trimJoint) => {
         const operation = defaultTrimJointOperation(trimJoint, patch);
         validateTrimJointOperation(currentProject, trimJointId, trimJoint, operation);
-        if ((trimJoint.operations || []).some((item) => item.id === operation.id)) fail(`${trimJointId}: operation already exists: ${operation.id}`);
-        return { ...trimJoint, operations: [...(trimJoint.operations || []), operation] };
+        if (trimJointOperations(trimJoint).some((item) => item.id === operation.id)) fail(`${trimJointId}: operation already exists: ${operation.id}`);
+        return { ...trimJoint, operations: [...trimJointOperations(trimJoint), operation] };
       });
     },
 
@@ -1399,7 +1326,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("trim joint operation patch must be an object");
       if ("id" in patch && patch.id !== operationId) fail("trim joint operation id cannot be changed");
       return replaceTrimJoint(trimJointId, (trimJoint) => {
-        const operations = (trimJoint.operations || []).map((operation) => {
+        const operations = trimJointOperations(trimJoint).map((operation) => {
           if (operation.id !== operationId) return operation;
           const next = normalizedTrimJointOperation(trimJoint, mergePatch(operation, patch));
           validateTrimJointOperation(currentProject, trimJointId, trimJoint, next);
@@ -1416,7 +1343,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       return replaceTrimJoint(trimJointId, (trimJoint) => {
         const nextTrimJoint = ensureTrimJointParticipant(currentProject, trimJoint, memberId);
         let found = false;
-        const operations = (nextTrimJoint.operations || []).map((operation) => {
+        const operations = trimJointOperations(nextTrimJoint).map((operation) => {
           if (operation.id !== operationId) return operation;
           found = true;
           const patch = role === "memberA" ? { memberAId: memberId } : { memberBId: memberId };
@@ -1434,8 +1361,8 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
 
     removeTrimJointOperation(trimJointId, operationId) {
       return replaceTrimJoint(trimJointId, (trimJoint) => {
-        const operations = (trimJoint.operations || []).filter((operation) => operation.id !== operationId);
-        if (operations.length === (trimJoint.operations || []).length) fail(`${trimJointId}: operation not found: ${operationId}`);
+        const operations = trimJointOperations(trimJoint).filter((operation) => operation.id !== operationId);
+        if (operations.length === trimJointOperations(trimJoint).length) fail(`${trimJointId}: operation not found: ${operationId}`);
         return { ...trimJoint, operations };
       });
     },
@@ -1460,18 +1387,133 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       return replaceFeature(featureId, (feature) => ({ ...feature, source: mergePatch(feature.source || {}, patch) }));
     },
 
+    updatePlate(plateId, patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("plate patch must be an object");
+      if ("id" in patch && patch.id !== plateId) fail("plate id cannot be changed");
+      if ("type" in patch) fail("plate type cannot be changed directly");
+      return replacePlate(plateId, (plate) => mergePatch(plate, patch));
+    },
+
+    setPlateSketchVertex(plateId, vertexId, point) {
+      return replacePlate(plateId, (plate) => setPlateSketchVertexData(plate, vertexId, point));
+    },
+
+    setPlateSketchVertices(plateId, vertexPoints) {
+      return replacePlate(plateId, (plate) => setPlateSketchVerticesData(plate, vertexPoints));
+    },
+
+    addPlateSketchConstructionLine(plateId, fromPoint, toPoint, options = {}) {
+      return replacePlate(plateId, (plate) => addPlateSketchConstructionLineData(plate, fromPoint, toPoint, options));
+    },
+
+    setPlateSketchEdgeLength(plateId, edgeId, length, options = {}) {
+      return replacePlate(plateId, (plate) => setPlateSketchEdgeLengthData(plate, edgeId, length, options));
+    },
+
+    setPlateSketchEdgeLengthMode(plateId, edgeId, mode) {
+      return replacePlate(plateId, (plate) => setPlateSketchEdgeLengthModeData(plate, edgeId, mode));
+    },
+
+    setPlateSketchEdgeAngle(plateId, edgeIds, angle, options = {}) {
+      return replacePlate(plateId, (plate) => setPlateSketchEdgeAngleData(plate, edgeIds, angle, options));
+    },
+
+    setPlateSketchEdgeAngleMode(plateId, edgeIds, mode) {
+      return replacePlate(plateId, (plate) => setPlateSketchEdgeAngleModeData(plate, edgeIds, mode));
+    },
+
+    setPlateSketchPointDistance(plateId, vertexIds, distance, options = {}) {
+      return replacePlate(plateId, (plate) => setPlateSketchPointDistanceData(plate, vertexIds, distance, options));
+    },
+
+    setPlateSketchPointDistanceMode(plateId, vertexIds, mode) {
+      return replacePlate(plateId, (plate) => setPlateSketchPointDistanceModeData(plate, vertexIds, mode));
+    },
+
+    insertPlateSketchVertex(plateId, edgeId, point, options = {}) {
+      let insertedVertexId = null;
+      const project = replacePlate(plateId, (plate) => {
+        const result = insertPlateSketchVertexData(plate, edgeId, point, options);
+        insertedVertexId = result.vertexId;
+        return result.plate;
+      });
+      return { project, vertexId: insertedVertexId };
+    },
+
+    removePlateSketchVertex(plateId, vertexId) {
+      return replacePlate(plateId, (plate) => removePlateSketchVertexData(plate, vertexId));
+    },
+
+    notchPlateSketchCorner(plateId, vertexId, options = {}) {
+      let notchVertexIds = [];
+      const project = replacePlate(plateId, (plate) => {
+        const result = notchPlateSketchCornerData(plate, vertexId, options);
+        notchVertexIds = result.vertexIds;
+        return result.plate;
+      });
+      return { project, vertexIds: notchVertexIds };
+    },
+
+    removePlateSketchRelation(plateId, relationId) {
+      return replacePlate(plateId, (plate) => removePlateSketchRelationData(plate, relationId));
+    },
+
+    removePlateSketchFixedRelations(plateId) {
+      return replacePlate(plateId, (plate) => removePlateSketchFixedRelationsData(plate));
+    },
+
+    solvePlateSketchRelation(plateId, relationId) {
+      return replacePlate(plateId, (plate) => solvePlateSketchRelationData(plate, relationId));
+    },
+
+    upsertPlateSketchRelation(plateId, relation) {
+      return replacePlate(plateId, (plate) => upsertPlateSketchRelationData(plate, relation));
+    },
+
+    fixPlateSketchUnderDefinedEntities(plateId, options = {}) {
+      return replacePlate(plateId, (plate) => fixPlateSketchUnderDefinedEntitiesData(plate, options));
+    },
+
+    inferPlateSketchRelations(plateId) {
+      return replacePlate(plateId, (plate) => inferPlateSketchRelationsData(plate));
+    },
+
+    setSketchVertex(sketchId, vertexId, point) {
+      return replaceSketch(sketchId, (sketch) => setSketchVertexData(sketch, vertexId, point));
+    },
+
+    upsertPlateBend(plateId, bend) {
+      return replacePlate(plateId, (plate) => upsertPlateBendData(plate, bend));
+    },
+
+    removePlateBend(plateId, bendId) {
+      return replacePlate(plateId, (plate) => removePlateBendData(plate, bendId));
+    },
+
+    createCustomProfile(profile) {
+      const id = profile?.id || nextObjectId(currentProject, "custom_profile");
+      if (profilesFor(currentProject)[id]) fail(`profile already exists: ${id}`);
+      const next = clone(currentProject);
+      next.model.profiles ||= {};
+      const stored = profile.section
+        ? { ...clone(profile), id }
+        : profileFromSectionSketch({ ...profile, id });
+      next.model.profiles[id] = stored;
+      return setProject(next);
+    },
+
     setMemberProfile(memberId, profileId) {
-      profileById(profiles, profileId);
+      requiredProfileById(profilesFor(currentProject), profileId, fail);
       return replaceMember(memberId, (member) => ({ ...member, profile: profileId }));
     },
 
     setMemberRotation(memberId, rotation) {
-      if (typeof rotation !== "number" || !Number.isFinite(rotation)) fail("member rotation must be a finite number");
+      if (!finiteNumber(rotation)) fail("member rotation must be a finite number");
       return replaceMember(memberId, (member) => ({ ...member, rotation }));
     },
 
     rotateMember(memberId, deltaDegrees) {
-      if (typeof deltaDegrees !== "number" || !Number.isFinite(deltaDegrees)) fail("rotation delta must be a finite number");
+      if (!finiteNumber(deltaDegrees)) fail("rotation delta must be a finite number");
       const rotation = (objectById(currentProject, memberId).rotation || 0) + deltaDegrees;
       return replaceMember(memberId, (member) => ({ ...member, rotation }));
     },
@@ -1511,7 +1553,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
 
     draftMemberProject(memberId, member, options = {}) {
       memberById(currentProject, memberId);
-      const next = cloneProjectForMemberUpdate(currentProject, memberId);
+      const next = cloneProjectForModelCollection(currentProject, "members");
       next.model.members[memberId] = clone(member);
       if (options.regenerateSmartComponents === false) return next;
       return regenerateMemberSmartComponents(next, memberId);

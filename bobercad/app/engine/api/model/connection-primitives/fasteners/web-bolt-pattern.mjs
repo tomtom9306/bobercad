@@ -1,4 +1,6 @@
-import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs";
+import { boundsYz, finiteNonNegativeNumberOr, finiteNumber, finitePositiveNumber } from "../../../../core/math.mjs?v=bounds-yz-dry-1";
+import { arrayValues } from "../../../../core/model.mjs?v=array-values-dry-1";
+import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs?v=member-end-point-dry-1";
 
 function fastenerDefinition(ctx, fastenerRef) {
   const fastener = ctx.fasteners?.fasteners?.[fastenerRef];
@@ -8,7 +10,7 @@ function fastenerDefinition(ctx, fastenerRef) {
 
 function holeDiameter(ctx, fastener, holes) {
   const shankDiameter = fastener.shank?.diameter;
-  if (typeof shankDiameter !== "number" || !Number.isFinite(shankDiameter) || shankDiameter <= 0) ctx.fail(`${fastener.id}: fastener missing shank diameter`);
+  if (!finitePositiveNumber(shankDiameter)) ctx.fail(`${fastener.id}: fastener missing shank diameter`);
   const normal = fastener.hole?.defaultDiameter || shankDiameter + 2;
   const tolerance = holes.tolerance || "normal";
   if (tolerance === "custom") return holes.customDiameter || holes.diameter || normal;
@@ -23,15 +25,11 @@ function automaticMemberHoleDepth(webThickness, holeDiameterValue) {
   return Math.max(webThickness * 2 + 4, holeDiameterValue + 2);
 }
 
-function finiteNumber(value) {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
 function normalizeSpacings(values, count, fallback) {
-  const source = Array.isArray(values) ? values : [];
+  const source = arrayValues(values);
   return Array.from({ length: Math.max(0, count) }, (_, index) => {
     const value = source[index];
-    return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
+    return finiteNonNegativeNumberOr(value, fallback);
   });
 }
 
@@ -90,9 +88,7 @@ function planeCoordinateInReference(ctx, reference, planeOrigin, planeNormal, ax
 }
 
 function plateBoundsInReference(ctx, plate, reference) {
-  const outline = Array.isArray(plate.outline) && plate.outline.length
-    ? plate.outline
-    : ctx.geometry.rectangleOutline(plate.width, plate.height);
+  const outline = ctx.geometry.plateOutline(plate);
   const coordinates = outline.map(([y, z]) => {
     const worldPoint = ctx.geometry.v.add(
       plate.center,
@@ -100,12 +96,7 @@ function plateBoundsInReference(ctx, plate, reference) {
     );
     return pointInReference(ctx, worldPoint, reference);
   });
-  return {
-    minY: Math.min(...coordinates.map(([y]) => y)),
-    maxY: Math.max(...coordinates.map(([y]) => y)),
-    minZ: Math.min(...coordinates.map(([, z]) => z)),
-    maxZ: Math.max(...coordinates.map(([, z]) => z))
-  };
+  return boundsYz(coordinates);
 }
 
 function patternInReference(ctx, pattern, fromReference, toReference) {
@@ -200,7 +191,8 @@ export function build(ctx, input = {}) {
   const supportCoordinate = boltsParallelToSupport
     ? planeCoordinateInReference(ctx, layoutReference, supportInterface.origin, supportNormal, "localAxisY")
     : null;
-  const supportDirection = finiteNumber(supportCoordinate) && layoutCenterY < supportCoordinate ? -1 : 1;
+  const hasSupportCoordinate = finiteNumber(supportCoordinate);
+  const supportDirection = hasSupportCoordinate && layoutCenterY < supportCoordinate ? -1 : 1;
   const topEdgeDistance = ctx.optionalParam("bolts.topEdgeDistance", Math.max(0, (layoutHeight - patternHeight) / 2));
   const supportEdgeDistance = ctx.optionalParam("bolts.supportEdgeDistance", Math.max(0, (layoutWidth - patternWidth) / 2));
   const rowCoordinates = verticalPositionMode === "custom"
@@ -208,9 +200,9 @@ export function build(ctx, input = {}) {
     : centeredCoordinates(rowSpacings, layoutCenterZ);
   const columnCoordinates = horizontalPositionMode === "custom"
     ? customCoordinatesFromEdge(
-      finiteNumber(supportCoordinate) ? supportCoordinate + supportDirection * supportEdgeDistance : layoutBounds.minY + supportEdgeDistance,
+      hasSupportCoordinate ? supportCoordinate + supportDirection * supportEdgeDistance : layoutBounds.minY + supportEdgeDistance,
       columnSpacings,
-      finiteNumber(supportCoordinate) ? supportDirection : 1
+      hasSupportCoordinate ? supportDirection : 1
     )
     : centeredCoordinates(columnSpacings, (layoutBounds.minY + layoutBounds.maxY) / 2);
   const layoutPositions = rowCoordinates.flatMap((z) => columnCoordinates.map((y) => [y, z]));

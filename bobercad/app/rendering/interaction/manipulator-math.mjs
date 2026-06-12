@@ -1,26 +1,18 @@
-import { v } from "../../engine/core/math.mjs";
-import { memberFrame } from "../../engine/geometry/member-evaluator.mjs";
+import { clamp, finiteNumber, finiteNumberOr, finitePositiveNumber, finitePositiveNumberOr, v } from "../../engine/core/math.mjs?v=number-or-dry-1";
+import { memberFrame } from "../../engine/geometry/member-evaluator.mjs?v=geometry-api-array-values-dry-1";
 
 const DEFAULT_NICE_STEPS = [1, 2, 5, 10, 25, 50, 100];
 
-function finiteNumber(value) {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
 function niceStep(value, steps = DEFAULT_NICE_STEPS) {
-  const sorted = [...steps].filter((step) => step > 0).sort((a, b) => a - b);
+  const sorted = [...steps].filter(finitePositiveNumber).sort((a, b) => a - b);
   if (!sorted.length) return value;
   return sorted.find((step) => step >= value) || sorted[sorted.length - 1];
 }
 
 export function translationStepForScale(settings = {}, screenScale = 1) {
-  const minStep = finiteNumber(settings.minStep) ? settings.minStep : 1;
-  const maxStep = finiteNumber(settings.maxStep) ? settings.maxStep : 100;
-  const targetPixelsPerStep = finiteNumber(settings.targetPixelsPerStep) ? settings.targetPixelsPerStep : 8;
+  const minStep = finiteNumberOr(settings.minStep, 1);
+  const maxStep = finiteNumberOr(settings.maxStep, 100);
+  const targetPixelsPerStep = finiteNumberOr(settings.targetPixelsPerStep, 8);
   const allowedSteps = Array.isArray(settings.allowedSteps) ? settings.allowedSteps : DEFAULT_NICE_STEPS;
   if (settings.mode === "fixed" && finiteNumber(settings.fixedStep)) {
     return clamp(settings.fixedStep, minStep, maxStep);
@@ -31,13 +23,13 @@ export function translationStepForScale(settings = {}, screenScale = 1) {
 
 export function quantizeDistance(distance, step) {
   if (!finiteNumber(distance)) return 0;
-  if (!finiteNumber(step) || step <= 0) return distance;
+  if (!finitePositiveNumber(step)) return distance;
   return Math.round(distance / step) * step;
 }
 
 export function quantizeDegrees(degrees, stepDegrees = 1) {
   if (!finiteNumber(degrees)) return 0;
-  const step = finiteNumber(stepDegrees) && stepDegrees > 0 ? stepDegrees : 1;
+  const step = finitePositiveNumberOr(stepDegrees, 1);
   return Math.round(degrees / step) * step;
 }
 
@@ -71,7 +63,7 @@ export function rotatePointAroundAxis(point, pivot, axis, degrees) {
   return v.add(pivot, v.add(parallel, v.add(v.mul(perpendicular, cos), v.mul(cross, sin))));
 }
 
-export function rotateMemberAroundPivot(member, pivot, axis, degrees) {
+function rotateMemberAroundPivot(member, pivot, axis, degrees) {
   const next = {
     ...member,
     start: rotatePointAroundAxis(member.start, pivot, axis, degrees),

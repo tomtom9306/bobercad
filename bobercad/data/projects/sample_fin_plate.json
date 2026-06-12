@@ -683,8 +683,6 @@
         "id": "connection_fin_plate_1_fin_plate",
         "type": "rectangular-plate",
         "thickness": 10,
-        "width": 180,
-        "height": 280,
         "center": [
           240,
           0,
@@ -733,6 +731,61 @@
           "componentInstanceId": "connection_fin_plate_1",
           "componentStatus": "managed",
           "componentRole": "finPlate"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "connection_fin_plate_1_fin_plate_v1",
+              "point": [
+                -90,
+                -140
+              ]
+            },
+            {
+              "id": "connection_fin_plate_1_fin_plate_v2",
+              "point": [
+                90,
+                -140
+              ]
+            },
+            {
+              "id": "connection_fin_plate_1_fin_plate_v3",
+              "point": [
+                90,
+                140
+              ]
+            },
+            {
+              "id": "connection_fin_plate_1_fin_plate_v4",
+              "point": [
+                -90,
+                140
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "connection_fin_plate_1_fin_plate_e1",
+              "from": "connection_fin_plate_1_fin_plate_v1",
+              "to": "connection_fin_plate_1_fin_plate_v2"
+            },
+            {
+              "id": "connection_fin_plate_1_fin_plate_e2",
+              "from": "connection_fin_plate_1_fin_plate_v2",
+              "to": "connection_fin_plate_1_fin_plate_v3"
+            },
+            {
+              "id": "connection_fin_plate_1_fin_plate_e3",
+              "from": "connection_fin_plate_1_fin_plate_v3",
+              "to": "connection_fin_plate_1_fin_plate_v4"
+            },
+            {
+              "id": "connection_fin_plate_1_fin_plate_e4",
+              "from": "connection_fin_plate_1_fin_plate_v4",
+              "to": "connection_fin_plate_1_fin_plate_v1"
+            }
+          ]
         }
       }
     },

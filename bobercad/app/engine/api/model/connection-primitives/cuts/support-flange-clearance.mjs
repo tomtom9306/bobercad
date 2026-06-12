@@ -1,4 +1,4 @@
-import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs";
+import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs?v=member-end-point-dry-1";
 
 function isBeam(member) {
   return String(member.type || "").includes("beam");
@@ -19,11 +19,7 @@ function supportFlangeNotch(ctx, { region, modePath, offsetsPath, supportMember,
   if (!isBeam(supportMember)) return null;
   if (supportProfile.profileType !== "i-section" || supportedBeamProfile.profileType !== "i-section") return null;
 
-  const supportFrame = ctx.geometry.memberFrame(supportMember);
-  const supportStation = Math.max(0, Math.min(
-    ctx.geometry.memberLength(supportMember),
-    ctx.geometry.v.dot(ctx.geometry.v.sub(supportInterface.origin, supportMember.start), supportFrame.x)
-  ));
+  const supportStation = ctx.geometry.memberStationAtPoint(supportMember, supportInterface.origin);
 
   return {
     operationEnabled: ctx.optionalParam(modePath, "auto") !== "off",

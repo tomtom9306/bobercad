@@ -1,4 +1,4 @@
-import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs";
+import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs?v=member-end-point-dry-1";
 
 function requiredInput(ctx, input, key) {
   const value = input[key];
@@ -74,11 +74,7 @@ export function build(ctx, input = {}) {
     ctx.fail("support-web-stiffeners: secondary-web-plate must run before support-web-stiffeners");
   }
   const resolvedInput = { ...context, ...input, referencePlate };
-  const supportFrame = ctx.geometry.memberFrame(supportMember);
-  const supportStation = Math.max(0, Math.min(
-    ctx.geometry.memberLength(supportMember),
-    ctx.geometry.v.dot(ctx.geometry.v.sub(supportInterface.origin, supportMember.start), supportFrame.x)
-  ));
+  const supportStation = ctx.geometry.memberStationAtPoint(supportMember, supportInterface.origin);
   const supportAt = ctx.geometry.memberFrameAt(supportMember, supportStation);
   const supportBounds = ctx.geometry.sectionBounds(supportProfile);
   const supportWebBounds = ctx.geometry.sectionWebBounds(supportProfile);

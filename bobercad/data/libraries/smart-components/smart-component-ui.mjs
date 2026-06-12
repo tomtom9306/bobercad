@@ -1,5 +1,6 @@
-import { clone, optionalPath, setPath } from "../../../app/engine/modules/smart-components/parameters.mjs?v=stair-route-ui-fit-2";
-import { conditionDependsOn, conditionMatches, parameterValue } from "./parameter-values.mjs?v=stair-route-ui-fit-2";
+import { jsonClone as clone } from "../../../app/engine/core/model.mjs?v=json-clone-dry-1";
+import { optionalPath, setPath } from "../../../app/engine/modules/smart-components/parameters.mjs?v=smart-config-array-values-dry-1";
+import { conditionDependsOn, conditionMatches, parameterValue } from "./parameter-values.mjs?v=json-clone-dry-1";
 
 const STYLE_ID = "bobercad-connection-ui";
 const EDITABLE_KINDS = new Set(["number", "positiveNumber", "nonNegativeNumber", "positiveInteger", "numberList", "boolean", "catalogRef", "enum", "text"]);
@@ -247,6 +248,17 @@ const STYLE = `
   background: #f8fafc;
   padding: 8px;
 }
+.connection-ui .stair-route-card.dragging {
+  opacity: 0.55;
+}
+.connection-ui .stair-route-card.drop-before {
+  border-top-color: #2563eb;
+  box-shadow: inset 0 3px 0 #2563eb;
+}
+.connection-ui .stair-route-card.drop-after {
+  border-bottom-color: #2563eb;
+  box-shadow: inset 0 -3px 0 #2563eb;
+}
 .connection-ui .stair-route-card-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -273,6 +285,21 @@ const STYLE = `
 }
 .connection-ui .stair-route-card-controls {
   justify-content: flex-end;
+}
+.connection-ui .stair-route-drag-handle {
+  width: 26px;
+  min-width: 26px;
+  height: 24px;
+  border: 1px solid #9fb0c3;
+  background: #ffffff;
+  color: #334155;
+  padding: 0;
+  cursor: grab;
+  font: inherit;
+  line-height: 1;
+}
+.connection-ui .stair-route-drag-handle:active {
+  cursor: grabbing;
 }
 .connection-ui .stair-route-actions .connection-action {
   flex: 1 1 135px;
@@ -711,14 +738,18 @@ function defaultRouteModule(type = "flight.straight") {
   return {
     type,
     radius: type === "flight.curved" || type === "flight.winder" ? 1800 : 1500,
-    rotationDegrees: type === "flight.spiral" || type === "flight.helical" ? 360 : 180
+    rotationDegrees: type === "flight.spiral" || type === "flight.helical" ? 360 : 180,
+    turnDirection: type === "flight.curved" || type === "flight.winder" ? "left" : undefined
   };
 }
 
 function routeModuleRenderDefaults(type = "flight.straight") {
   if (String(type).startsWith("landing.")) return defaultRouteModule(type);
   const defaults = { type };
-  if (type === "flight.curved" || type === "flight.winder") defaults.radius = 1800;
+  if (type === "flight.curved" || type === "flight.winder") {
+    defaults.radius = 1800;
+    defaults.turnDirection = "left";
+  }
   if (type === "flight.spiral" || type === "flight.helical") {
     defaults.radius = 1500;
     defaults.rotationDegrees = 360;
@@ -753,10 +784,44 @@ function compactRouteAction(label, onClick) {
   return button(label, "connection-action compact", onClick);
 }
 
+function routeDragHandle(index) {
+  const handle = document.createElement("button");
+  handle.type = "button";
+  handle.className = "stair-route-drag-handle";
+  handle.textContent = "⋮⋮";
+  handle.draggable = true;
+  handle.dataset.routeDragIndex = String(index);
+  handle.title = "Drag to reorder";
+  handle.setAttribute("aria-label", "Drag segment to reorder");
+  handle.addEventListener("click", (event) => event.preventDefault());
+  return handle;
+}
+
+function reorderedModules(modules, fromIndex, toIndex) {
+  if (fromIndex === toIndex || fromIndex < 0 || fromIndex >= modules.length || toIndex < 0 || toIndex > modules.length) return modules;
+  const next = [...modules];
+  const [moved] = next.splice(fromIndex, 1);
+  const insertionIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+  next.splice(insertionIndex, 0, moved);
+  return next;
+}
+
 function renderStairRouteModules(parameters, path, update, uiState) {
   const modules = normalizeRouteModules(optionalPath(parameters, path, []));
   const root = document.createElement("div");
   root.className = "stair-route-modules";
+  let draggedIndex = null;
+
+  const clearDropState = () => {
+    root.querySelectorAll(".stair-route-card.drop-before, .stair-route-card.drop-after").forEach((card) => {
+      card.classList.remove("drop-before", "drop-after");
+    });
+  };
+
+  const dropIndexForEvent = (event, index) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return event.clientY < rect.top + rect.height / 2 ? index : index + 1;
+  };
 
   const commit = (nextModules) => {
     update(path, nextModules.map((module, index) => ({
@@ -769,23 +834,41 @@ function renderStairRouteModules(parameters, path, update, uiState) {
   modules.forEach((module, index) => {
     const card = document.createElement("div");
     card.className = "stair-route-card";
+    card.dataset.routeIndex = String(index);
+    card.addEventListener("dragover", (event) => {
+      if (draggedIndex === null || draggedIndex === index) return;
+      event.preventDefault();
+      clearDropState();
+      card.classList.add(dropIndexForEvent(event, index) === index ? "drop-before" : "drop-after");
+    });
+    card.addEventListener("dragleave", () => {
+      card.classList.remove("drop-before", "drop-after");
+    });
+    card.addEventListener("drop", (event) => {
+      if (draggedIndex === null) return;
+      event.preventDefault();
+      const targetIndex = dropIndexForEvent(event, index);
+      clearDropState();
+      commit(reorderedModules(modules, draggedIndex, targetIndex));
+    });
     const header = document.createElement("div");
     header.className = "stair-route-card-header";
     const controls = document.createElement("div");
     controls.className = "stair-route-card-controls";
+    const handle = routeDragHandle(index);
+    handle.addEventListener("dragstart", (event) => {
+      draggedIndex = index;
+      card.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(index));
+    });
+    handle.addEventListener("dragend", () => {
+      draggedIndex = null;
+      card.classList.remove("dragging");
+      clearDropState();
+    });
     controls.append(
-      compactRouteAction("Up", () => {
-        if (index <= 0) return;
-        const next = [...modules];
-        [next[index - 1], next[index]] = [next[index], next[index - 1]];
-        commit(next);
-      }),
-      compactRouteAction("Down", () => {
-        if (index >= modules.length - 1) return;
-        const next = [...modules];
-        [next[index + 1], next[index]] = [next[index], next[index + 1]];
-        commit(next);
-      }),
+      handle,
       compactRouteAction("Remove", () => commit(modules.filter((_, moduleIndex) => moduleIndex !== index)))
     );
     header.append(text("div", "stair-route-title", routeModuleLabel(module, index)), controls);
@@ -842,6 +925,18 @@ function renderStairRouteModules(parameters, path, update, uiState) {
           onChange: (radius) => {
             const next = [...modules];
             next[index] = { ...module, radius };
+            commit(next);
+          }
+        }));
+      }
+      if (["flight.winder", "flight.curved"].includes(module.type)) {
+        card.append(selectField({
+          spec: { label: "Turn", unit: "" },
+          value: module.turnDirection || "left",
+          options: [{ value: "left", label: "left" }, { value: "right", label: "right" }],
+          onChange: (turnDirection) => {
+            const next = [...modules];
+            next[index] = { ...module, turnDirection };
             commit(next);
           }
         }));
@@ -918,6 +1013,7 @@ function renderStairRouteModules(parameters, path, update, uiState) {
   actions.className = "stair-route-actions";
   actions.append(
     button("Add straight flight", "connection-action", () => commit([...modules, defaultRouteModule("flight.straight")])),
+    button("Add curved flight", "connection-action", () => commit([...modules, defaultRouteModule("flight.curved")])),
     button("Add straight landing", "connection-action", () => commit([...modules, defaultRouteModule("landing.straight")])),
     button("Add L landing", "connection-action", () => commit([...modules, defaultRouteModule("landing.l")])),
     button("Add U landing", "connection-action", () => commit([...modules, defaultRouteModule("landing.u")]))

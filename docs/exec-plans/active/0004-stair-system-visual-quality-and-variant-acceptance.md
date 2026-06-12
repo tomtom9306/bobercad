@@ -33,7 +33,7 @@ Wariant schodow przechodzi tylko wtedy, gdy wszystkie ponizsze obszary sa popraw
 - Stopnie
   - stopnie sa poziome
   - stopnie maja prawidlowy ksztalt dla trasy: prostokat, klin, trapez, luk, grating, folded tray, pan
-  - folded tray ma zagiecia jako flatPattern, a drewno/powierzchnia uzytkowa lezy na gorze
+  - folded tray ma zagiecia jako `fabrication.bends`, a drewno/powierzchnia uzytkowa lezy na gorze
   - sruby stopni trafiaja w realne plyty/cleaty, nie wisza w powietrzu
   - stopnie nie koliduja ze stringerami, landingami ani balustrada
 
@@ -402,7 +402,7 @@ Jezeli jeden wariant nie przejdzie, goal nadal trwa.
   - zdefiniowac top walking surface
   - zdefiniowac nosing/front edge
   - zdefiniowac left/right/back edges
-  - zdefiniowac thickness i bend/flatPattern jezeli dotyczy
+  - zdefiniowac thickness i `fabrication.bends` jezeli dotyczy
   - zdefiniowac mocowania do supportu
   - zdefiniowac material/finish
 - Stopnie nie moga byc tylko plaska blacha, jezeli wariant ma pokazywac finished stair.

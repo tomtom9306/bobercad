@@ -15,6 +15,11 @@ function positive(value, fallback) {
   return number > 0 ? number : fallback;
 }
 
+function nonNegative(value, fallback = 0) {
+  const number = finite(value, fallback);
+  return number >= 0 ? number : fallback;
+}
+
 function treadValue(ctx, path) {
   const inputValue = ctx.input(path);
   if (inputValue !== undefined) return inputValue;
@@ -42,6 +47,16 @@ function requiredNonNegativeInput(ctx, path, label) {
   }
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     ctx.error("stair-tread-input-invalid", `${label} must be zero or positive.`, { parameterPaths: [path] });
+    return undefined;
+  }
+  return value;
+}
+
+function optionalNonNegativeInput(ctx, path) {
+  const value = treadValue(ctx, path);
+  if (value === undefined) return undefined;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    ctx.error("stair-tread-input-invalid", `${path} must be zero or positive.`, { parameterPaths: [path] });
     return undefined;
   }
   return value;
@@ -78,7 +93,7 @@ function registerRole(ctx, role, suffix) {
 
 function treadCapabilities(family) {
   return {
-    trayLips: family === "folded-tray-tread" || family === "pan-tread",
+    trayLips: family === "pan-tread",
     timberBoard: family === "folded-tray-tread",
     risers: family !== "grating-tread"
   };
@@ -141,11 +156,11 @@ export function buildTreadSet(ctx, options = {}) {
   const defaultWidth = requiredPositiveInput(ctx, "geometry.width", "Stair width");
   const thickness = requiredPositiveInput(ctx, "treads.thickness", "Tread thickness");
   const defaultDepth = requiredPositiveInput(ctx, "treads.depth", "Tread depth");
+  const defaultOverlap = optionalNonNegativeInput(ctx, "treads.overlap");
   const closedRisers = requiredInput(ctx, "treads.closedRisers", "Closed riser setting");
   const material = requiredInput(ctx, "treads.material", "Tread material");
   const color = options.color || "#6b7280";
   const woodThickness = capabilities.timberBoard ? requiredPositiveInput(ctx, "treads.woodThickness", "Timber thickness") : undefined;
-  const traySideInset = capabilities.timberBoard ? requiredNonNegativeInput(ctx, "treads.woodInset", "Tray side inset") : undefined;
   const woodOverhang = capabilities.timberBoard ? requiredNonNegativeInput(ctx, "treads.woodNosing", "Timber nosing") : undefined;
   const frontLip = capabilities.trayLips ? requiredPositiveInput(ctx, "treads.frontLip", "Front lip") : 0;
   const finish = requiredInput(ctx, "treads.finish", "Tread finish");
@@ -153,7 +168,7 @@ export function buildTreadSet(ctx, options = {}) {
   const woodFinish = capabilities.timberBoard ? requiredInput(ctx, "treads.woodFinish", "Timber finish") : undefined;
   const rise = requiredPositiveInput(ctx, "geometry.rise", "Stair rise");
   if (!Array.isArray(frames) || !defaultWidth || !thickness || !defaultDepth || closedRisers === undefined || !material || !finish || !rise) return;
-  if (capabilities.timberBoard && (!woodThickness || traySideInset === undefined || woodOverhang === undefined || !woodMaterial || !woodFinish)) return;
+  if (capabilities.timberBoard && (!woodThickness || woodOverhang === undefined || !woodMaterial || !woodFinish)) return;
   if (capabilities.trayLips && !frontLip) return;
   const noTreadZones = Array.isArray(ctx.input("layout.noTreadZones")) ? ctx.input("layout.noTreadZones") : [];
   const noTreadZoneAllowance = {
@@ -169,34 +184,43 @@ export function buildTreadSet(ctx, options = {}) {
     const index = frame.index ?? treadIds.length;
     const width = positive(frame.width, defaultWidth);
     const requestedDepth = positive(frame.depth ?? frame.length, defaultDepth);
+    const overlap = nonNegative(frame.overlap, defaultOverlap ?? Math.max(0, requestedDepth - positive(frame.going, requestedDepth)));
     const surfaceKind = frame.surfaceKind || "tread";
-    const footprint = surfaceKind === "landing" ? cleanFootprint(frame.footprint) : null;
+    const footprint = cleanFootprint(frame.footprint);
     const footprintBounds = footprint ? outlineBounds(footprint) : null;
+    const centerMeasuredFootprint = footprint && frame.footprintKind === "curved-strip";
     const depth = footprint
-      ? Math.max(1, footprintBounds.depth)
+      ? centerMeasuredFootprint
+        ? positive(frame.centerDepth ?? frame.going, requestedDepth)
+        : Math.max(1, footprintBounds.depth)
       : clippedDepthForNoTreadZones(frame, requestedDepth, noTreadZones, noTreadZoneAllowance);
     if (depth <= 1) continue;
     const frameClosedRisers = frame.closedRisers ?? closedRisers;
-    const surfaceRole = frame.surfaceRole || "stair-steel-tray-tread";
+    const surfaceRole = frame.surfaceRole || (capabilities.timberBoard ? "stair-timber-backing-plate" : "stair-steel-tray-tread");
     const namePrefix = frame.namePrefix || family;
     const role = registerRole(ctx, treadRole(index), `_tread_${index + 1}`);
     const normal = [0, 0, 1];
     const tangent = frame.tangent || [1, 0, 0];
     const lateral = frame.lateral || [0, 1, 0];
-    const footprintWidth = footprint ? Math.max(1, footprintBounds.width) : width;
-    const steelWidth = footprint
-      ? footprintWidth
-      : capabilities.timberBoard
-        ? Math.max(1, width - traySideInset * 2)
-        : width;
+    const footprintWidth = footprint
+      ? centerMeasuredFootprint
+        ? positive(frame.centerWidth, width)
+        : Math.max(1, footprintBounds.width)
+      : width;
+    const woodWidth = footprint ? footprintWidth : width;
+    const woodDepth = footprint ? depth : Math.max(1, depth + (capabilities.timberBoard ? woodOverhang : 0));
+    const woodPlanOffset = capabilities.timberBoard && !footprint ? woodOverhang / 2 : 0;
+    const steelWidth = capabilities.timberBoard ? woodWidth : footprintWidth;
+    const steelDepth = capabilities.timberBoard ? woodDepth : depth;
+    const steelCenter = add(frame.origin, mul(tangent, woodPlanOffset));
     const tread = ctx.plate.create(role, {
-      type: options.plateType || family,
+      type: capabilities.timberBoard ? "timber-backing-plate" : options.plateType || family,
       thickness,
       width: steelWidth,
-      height: depth,
+      height: steelDepth,
       outline: footprint || undefined,
       material,
-      center: add(frame.origin, mul(normal, -thickness / 2)),
+      center: add(steelCenter, mul(normal, -thickness / 2)),
       normal,
       localAxisY: lateral,
       localAxisZ: tangent,
@@ -212,12 +236,18 @@ export function buildTreadSet(ctx, options = {}) {
         afterStep: frame.afterStep,
         landingId: frame.landingId,
         flightId: frame.flightId,
+        footprintKind: frame.footprintKind,
+        centerWidth: centerMeasuredFootprint ? footprintWidth : undefined,
+        centerDepth: centerMeasuredFootprint ? depth : undefined,
+        overlap,
         walkingSurface: frame.origin
       },
       fabrication: {
-        family,
+        family: capabilities.timberBoard ? "timber-backing-plate" : family,
+        hostFamily: capabilities.timberBoard ? family : undefined,
+        overlap,
+        ...(centerMeasuredFootprint ? { centerMeasuredWidth: footprintWidth, centerMeasuredDepth: depth } : {}),
         ...(capabilities.trayLips && !footprint ? { frontLip } : {}),
-        ...(capabilities.timberBoard && !footprint ? { traySideInset } : {}),
         finish
       },
       bim: { name: `${namePrefix} ${index + 1}` }
@@ -247,13 +277,17 @@ export function buildTreadSet(ctx, options = {}) {
           afterStep: frame.afterStep,
           landingId: frame.landingId,
           flightId: frame.flightId,
+          footprintKind: frame.footprintKind,
+          centerWidth: centerMeasuredFootprint ? footprintWidth : undefined,
+          centerDepth: centerMeasuredFootprint ? depth : undefined,
+          overlap,
           host: { treadId: tread.id }
         },
         fabrication: {
           family: "tread-front-plate",
           hostFamily: family,
           frontLip,
-          ...(capabilities.timberBoard ? { traySideInset } : {}),
+          overlap,
           finish
         },
         bim: { name: `${namePrefix} front plate ${index + 1}` }
@@ -262,16 +296,17 @@ export function buildTreadSet(ctx, options = {}) {
     }
 
     if (capabilities.timberBoard) {
+      const woodCenter = footprint
+        ? add(frame.origin, mul(normal, woodThickness / 2 + 2))
+        : add(add(frame.origin, mul(normal, woodThickness / 2 + 2)), mul(tangent, woodPlanOffset));
       const wood = ctx.plate.create(registerRole(ctx, woodRole(index), `_wood_tread_${index + 1}`), {
         type: "timber-tread-board",
         thickness: woodThickness,
-        width: footprint ? footprintWidth : width,
-        height: footprint ? depth : Math.max(1, depth + woodOverhang),
+        width: woodWidth,
+        height: woodDepth,
         outline: footprint || undefined,
         material: woodMaterial,
-        center: footprint
-          ? add(frame.origin, mul(normal, woodThickness / 2 + 2))
-          : add(add(frame.origin, mul(normal, woodThickness / 2 + 2)), mul(tangent, woodOverhang / 2)),
+        center: woodCenter,
         normal,
         localAxisY: lateral,
         localAxisZ: tangent,
@@ -286,10 +321,17 @@ export function buildTreadSet(ctx, options = {}) {
           stationEnd: frame.stationEnd,
           afterStep: frame.afterStep,
           landingId: frame.landingId,
-          host: { steelTrayId: tread.id }
+          flightId: frame.flightId,
+          footprintKind: frame.footprintKind,
+          centerWidth: centerMeasuredFootprint ? footprintWidth : undefined,
+          centerDepth: centerMeasuredFootprint ? depth : undefined,
+          overlap,
+          host: { backingPlateId: tread.id }
         },
         fabrication: {
           family: "timber-cover-board",
+          overlap,
+          ...(centerMeasuredFootprint ? { centerMeasuredWidth: footprintWidth, centerMeasuredDepth: depth } : {}),
           finish: woodFinish
         },
         bim: { name: `Timber ${surfaceKind} board ${index + 1}` }

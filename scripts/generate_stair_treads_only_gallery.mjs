@@ -260,7 +260,6 @@ const variants = [
         thickness: 8,
         depth: 300,
         woodThickness: 32,
-        woodInset: 35,
         woodNosing: 25
       }
     }

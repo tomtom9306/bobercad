@@ -1,4 +1,7 @@
+import { arrayValues } from "../../core/model.mjs?v=array-values-dry-1";
 import { planeExtentsFromSize } from "../../geometry/feature-plane.mjs";
+import { normalizePlate, sketchFromOutline, sketchFromRectangle } from "../project/plates.mjs?v=plate-outline-relation-safety-1";
+import { defaultPlaneTrimRemovedRegionKeys } from "./trim-region-keys.mjs?v=geometry-api-array-values-dry-1";
 
 function gridPositions({ rows, columns, pitch, gauge }) {
   const positions = [];
@@ -9,29 +12,6 @@ function gridPositions({ rows, columns, pitch, gauge }) {
     }
   }
   return positions;
-}
-
-function trimRegionKey(parts) {
-  return parts.map(({ planeId, side }) => `${planeId}:${side}`).join("|");
-}
-
-function planeTrimRegionKeys(referencePlaneIds) {
-  const keys = [];
-  const walk = (index, parts) => {
-    if (index >= referencePlaneIds.length) {
-      keys.push(trimRegionKey(parts));
-      return;
-    }
-    const planeId = referencePlaneIds[index];
-    walk(index + 1, [...parts, { planeId, side: "-" }]);
-    walk(index + 1, [...parts, { planeId, side: "+" }]);
-  };
-  walk(0, []);
-  return keys;
-}
-
-function defaultPlaneTrimRemovedRegionKeys(referencePlaneIds) {
-  return planeTrimRegionKeys(referencePlaneIds).filter((key) => key.split("|").some((part) => part.endsWith(":-")));
 }
 
 function fastenerValueControls(data = {}) {
@@ -56,7 +36,50 @@ function fastenerValueControls(data = {}) {
   return controls;
 }
 
+function placementMetadata(data) {
+  return {
+    placementIntent: data.placementIntent,
+    fabrication: data.fabrication,
+    display: data.display,
+    bim: data.bim
+  };
+}
+
+function trimJointMetadata(data) {
+  return {
+    gap: data.gap || 0,
+    ...placementMetadata(data)
+  };
+}
+
+function featureOperationFields(data) {
+  return {
+    ownerId: data.ownerId,
+    operationEnabled: data.operationEnabled,
+    source: data.source,
+    target: data.target,
+    offsets: data.offsets,
+    ...placementMetadata(data)
+  };
+}
+
 export function createSemanticBuilders(ctx) {
+  function createFeature(role, fields) {
+    const feature = { id: ctx.id(role), ...fields };
+    ctx.add("features", feature.id, feature);
+    ctx.attachFeature(feature.ownerId, feature.id);
+    ctx.role(role, feature.id);
+    return feature;
+  }
+
+  function createTrimJoint(role, id, data, fields) {
+    const { type, ...rest } = fields;
+    const trimJoint = { id, type, ...trimJointMetadata(data), ...rest };
+    ctx.add("trimJoints", id, trimJoint);
+    ctx.role(role, id);
+    return trimJoint;
+  }
+
   const builders = {
     member: {
       beam(role, data) {
@@ -98,10 +121,8 @@ export function createSemanticBuilders(ctx) {
         if (!Array.isArray(referencePlaneIds) || !referencePlaneIds.length) ctx.fail(`${role}: plane trim missing referencePlaneIds`);
         const id = ctx.id(role);
         const operationId = `${id}_plane_trim`;
-        const trimJoint = {
-          id,
+        return createTrimJoint(role, id, data, {
           type: "member-trim",
-          gap: data.gap || 0,
           participants: [{
             memberId: data.memberId,
             ...(data.memberEnd ? { memberEnd: data.memberEnd } : {}),
@@ -116,15 +137,8 @@ export function createSemanticBuilders(ctx) {
             removedRegionKeys: data.removedRegionKeys || defaultPlaneTrimRemovedRegionKeys(referencePlaneIds),
             gap: data.gap || 0,
             enabled: data.operationEnabled !== false
-          }],
-          placementIntent: data.placementIntent,
-          fabrication: data.fabrication,
-          display: data.display,
-          bim: data.bim
-        };
-        ctx.add("trimJoints", id, trimJoint);
-        ctx.role(role, id);
-        return trimJoint;
+          }]
+        });
       },
 
       cornerTrim(role, data) {
@@ -138,10 +152,8 @@ export function createSemanticBuilders(ctx) {
         if (data.miterMode && !["equal-angle", "profile-balanced"].includes(data.miterMode)) ctx.fail(`${role}: unsupported miterMode ${data.miterMode}`);
         const id = ctx.id(role);
         const operationId = data.operationId || `${id}_${operationType.replace(/-/g, "_")}`;
-        const trimJoint = {
-          id,
+        return createTrimJoint(role, id, data, {
           type: "corner-trim",
-          gap: data.gap || 0,
           participants: data.memberIds.map((memberId) => ({
             memberId,
             ...(data.memberEnds?.[memberId] ? { memberEnd: data.memberEnds[memberId] } : {}),
@@ -157,40 +169,30 @@ export function createSemanticBuilders(ctx) {
             ...(data.miterMode ? { miterMode: data.miterMode } : {}),
             gap: data.gap || 0,
             enabled: data.operationEnabled !== false
-          }],
-          placementIntent: data.placementIntent,
-          fabrication: data.fabrication,
-          display: data.display,
-          bim: data.bim
-        };
-        ctx.add("trimJoints", id, trimJoint);
-        ctx.role(role, id);
-        return trimJoint;
+          }]
+        });
       }
     },
 
     part: {
       plate(role, data) {
         const id = ctx.id(role);
-        const plate = {
+        const sketch = data.sketch || (data.outline
+          ? sketchFromOutline(data.outline, id)
+          : sketchFromRectangle(data.width, data.height, id));
+        const plate = normalizePlate({
           id,
-          type: data.type || "rectangular-plate",
+          type: data.type || "plate",
           thickness: data.thickness,
-          width: data.width,
-          height: data.height,
-          outline: data.outline,
+          sketch,
           center: data.center,
           normal: data.normal,
           localAxisY: data.localAxisY,
           localAxisZ: data.localAxisZ,
-          flatPattern: data.flatPattern,
-          featureIds: data.featureIds || [],
+          featureIds: arrayValues(data.featureIds),
           assemblyId: data.assemblyId,
-          placementIntent: data.placementIntent,
-          display: data.display,
-          fabrication: data.fabrication,
-          bim: data.bim
-        };
+          ...placementMetadata(data)
+        });
         ctx.add("plates", id, plate);
         ctx.role(role, id);
         return plate;
@@ -216,72 +218,36 @@ export function createSemanticBuilders(ctx) {
 
     feature: {
       holePattern(role, data) {
-        const id = ctx.id(role);
-        const feature = {
-          id,
+        return createFeature(role, {
           type: "hole-pattern",
           ownerId: data.ownerId,
           holePatternRef: data.holePatternRef,
           depth: data.depth,
           reference: data.reference,
-          placementIntent: data.placementIntent,
-          fabrication: data.fabrication,
-          display: data.display,
-          bim: data.bim
-        };
-        ctx.add("features", id, feature);
-        ctx.attachFeature(data.ownerId, id);
-        ctx.role(role, id);
-        return feature;
+          ...placementMetadata(data)
+        });
       },
 
       booleanPart(role, data) {
-        const id = ctx.id(role);
-        const feature = {
-          id,
+        const fields = {
           type: "boolean-part",
           teklaClass: data.teklaClass || "BooleanPart",
           booleanType: data.booleanType,
           cutKind: data.cutKind,
-          ownerId: data.ownerId,
-          operationEnabled: data.operationEnabled,
-          source: data.source,
-          target: data.target,
-          offsets: data.offsets,
-          placementIntent: data.placementIntent,
-          fabrication: data.fabrication,
-          display: data.display,
-          bim: data.bim
+          ...featureOperationFields(data)
         };
-        if (data.cut !== undefined) feature.cut = data.cut;
-        if (data.body !== undefined) feature.body = data.body;
-        ctx.add("features", id, feature);
-        ctx.attachFeature(data.ownerId, id);
-        ctx.role(role, id);
-        return feature;
+        if (data.cut !== undefined) fields.cut = data.cut;
+        if (data.body !== undefined) fields.body = data.body;
+        return createFeature(role, fields);
       },
 
       clearanceCut(role, data) {
-        const id = ctx.id(role);
-        const feature = {
-          id,
+        return createFeature(role, {
           type: "clearance-cut",
           kind: data.kind,
           cutKind: data.cutKind || "part-cut",
-          ownerId: data.ownerId,
-          operationEnabled: data.operationEnabled,
-          source: data.source,
-          target: data.target,
-          offsets: data.offsets,
-          placementIntent: data.placementIntent,
-          fabrication: data.fabrication,
-          display: data.display,
-          bim: data.bim
-        };
-        ctx.add("features", id, feature);
-        ctx.attachFeature(data.ownerId, id);
-        ctx.role(role, id);
-        return feature;
+          ...featureOperationFields(data)
+        });
       }
     },
 
@@ -340,7 +306,7 @@ export function createSemanticBuilders(ctx) {
         const fasteners = builders.fastener.group(role, {
           fastenerRef: data.fastenerRef,
           holePatternRef: pattern.id,
-          participants: data.participants || [],
+          participants: arrayValues(data.participants),
           through: data.through || (primaryFeature ? { fromFeatureId: primaryFeature.id } : undefined),
           orientation: data.orientation,
           assembly: data.assembly,
@@ -388,7 +354,7 @@ export function createSemanticBuilders(ctx) {
           id,
           type: data.type || "object-group",
           name: data.name || role,
-          objectIds: data.objectIds || [],
+          objectIds: arrayValues(data.objectIds),
           projectTreeNodeId: data.projectTreeNodeId,
           sourceTemplate: data.sourceTemplate,
           authoring: data.authoring,
@@ -410,11 +376,11 @@ export function createSemanticBuilders(ctx) {
           name: data.name || role,
           mark: data.mark,
           parentAssemblyId: data.parentAssemblyId,
-          childAssemblyIds: data.childAssemblyIds || [],
-          partIds: data.partIds || [],
-          memberIds: data.memberIds || [],
-          plateIds: data.plateIds || [],
-          connectionZoneIds: data.connectionZoneIds || [],
+          childAssemblyIds: arrayValues(data.childAssemblyIds),
+          partIds: arrayValues(data.partIds),
+          memberIds: arrayValues(data.memberIds),
+          plateIds: arrayValues(data.plateIds),
+          connectionZoneIds: arrayValues(data.connectionZoneIds),
           authoring: data.authoring,
           display: data.display,
           bim: data.bim
@@ -450,8 +416,8 @@ export function createSemanticBuilders(ctx) {
           id,
           type: data.type || "linear-pattern",
           status: data.status || "linked",
-          generatedObjectIds: data.generatedObjectIds || [],
-          detachedObjectIds: data.detachedObjectIds || [],
+          generatedObjectIds: arrayValues(data.generatedObjectIds),
+          detachedObjectIds: arrayValues(data.detachedObjectIds),
           transform: data.transform,
           authoring: data.authoring,
           notes: data.notes

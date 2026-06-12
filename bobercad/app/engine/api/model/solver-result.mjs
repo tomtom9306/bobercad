@@ -1,13 +1,7 @@
-export function clone(value) {
-  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
-}
+import { arrayValues, isPlainObject as plainObject, optionalJsonClone, uniqueValues } from "../../core/model.mjs?v=array-values-dry-1";
 
 function fail(message) {
   throw new Error(`solver result: ${message}`);
-}
-
-function plainObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function normalizedSeverity(value) {
@@ -18,7 +12,7 @@ function normalizedSeverity(value) {
 function stringList(values = [], label) {
   if (values === undefined) return [];
   if (!Array.isArray(values) || values.some((value) => typeof value !== "string")) fail(`${label} must be an array of strings`);
-  return [...new Set(values)];
+  return uniqueValues(values);
 }
 
 export function solverDiagnostic(input = {}) {
@@ -28,25 +22,23 @@ export function solverDiagnostic(input = {}) {
     severity: normalizedSeverity(input.severity || "error"),
     code: input.code,
     message: input.message,
-    ...(input.source ? { source: clone(input.source) } : {}),
+    ...(input.source ? { source: optionalJsonClone(input.source) } : {}),
     ...(input.ruleId ? { ruleId: input.ruleId } : {}),
     ...(input.clause ? { clause: input.clause } : {}),
     parameterPaths: stringList(input.parameterPaths, `${input.code}.parameterPaths`),
     objectRoles: stringList(input.objectRoles, `${input.code}.objectRoles`),
-    ...(input.measured !== undefined ? { measured: clone(input.measured) } : {}),
-    ...(input.allowed !== undefined ? { allowed: clone(input.allowed) } : {}),
-    resolve: Array.isArray(input.resolve) ? clone(input.resolve) : []
+    ...(input.measured !== undefined ? { measured: optionalJsonClone(input.measured) } : {}),
+    ...(input.allowed !== undefined ? { allowed: optionalJsonClone(input.allowed) } : {}),
+    resolve: optionalJsonClone(arrayValues(input.resolve))
   };
 }
 
 export function createSolverResult(input = {}) {
-  const inputParameters = plainObject(input.inputParameters) ? clone(input.inputParameters) : {};
-  const resolvedParameters = plainObject(input.resolvedParameters) ? clone(input.resolvedParameters) : clone(inputParameters);
-  const computedValues = plainObject(input.computedValues) ? clone(input.computedValues) : {};
-  const objectRoleHints = plainObject(input.objectRoleHints) ? clone(input.objectRoleHints) : {};
-  const diagnostics = Array.isArray(input.diagnostics)
-    ? input.diagnostics.map((diagnostic) => solverDiagnostic(diagnostic))
-    : [];
+  const inputParameters = plainObject(input.inputParameters) ? optionalJsonClone(input.inputParameters) : {};
+  const resolvedParameters = plainObject(input.resolvedParameters) ? optionalJsonClone(input.resolvedParameters) : optionalJsonClone(inputParameters);
+  const computedValues = plainObject(input.computedValues) ? optionalJsonClone(input.computedValues) : {};
+  const objectRoleHints = plainObject(input.objectRoleHints) ? optionalJsonClone(input.objectRoleHints) : {};
+  const diagnostics = arrayValues(input.diagnostics).map((diagnostic) => solverDiagnostic(diagnostic));
   return {
     inputParameters,
     resolvedParameters,
@@ -64,7 +56,7 @@ export function addSolverDiagnostic(result, diagnostic) {
 }
 
 export function hasSolverErrors(result) {
-  return (result?.diagnostics || []).some((diagnostic) => diagnostic.severity === "error");
+  return arrayValues(result?.diagnostics).some((diagnostic) => diagnostic.severity === "error");
 }
 
 export function mergeSolverResults(base, extension) {

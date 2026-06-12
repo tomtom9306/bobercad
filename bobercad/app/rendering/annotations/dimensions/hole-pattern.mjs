@@ -1,4 +1,7 @@
-import { dimensionOffset, featureBasis, makeNote, paramValue, parameterLabel, positionPoint, roleObject, uniqueCount, v } from "../dimension-context.mjs";
+import { uniqueValues } from "../../../engine/core/model.mjs?v=array-values-dry-1";
+import { averageVec3, dimensionOffset, featureBasis, makeNote, paramValue, parameterLabel, positionPoint, roleObject, v } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
+
+const roundedUniqueCount = (values) => uniqueValues(values.map((value) => Math.round(value / 0.001))).length;
 
 export function holePatternDimension(ctx, spec) {
   const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);
@@ -7,12 +10,11 @@ export function holePatternDimension(ctx, spec) {
   if (!pattern?.positions?.length || !basis) return null;
   const rowPath = spec.reference.rowsParameter || "bolts.rows";
   const columnPath = spec.reference.columnsParameter || "bolts.columns";
-  const generatedRows = uniqueCount(pattern.positions.map((position) => position[1]));
-  const generatedColumns = uniqueCount(pattern.positions.map((position) => position[0]));
+  const generatedRows = roundedUniqueCount(pattern.positions.map((position) => position[1]));
+  const generatedColumns = roundedUniqueCount(pattern.positions.map((position) => position[0]));
   const rows = paramValue(ctx.definition, ctx.smartComponent, rowPath) || generatedRows;
   const columns = paramValue(ctx.definition, ctx.smartComponent, columnPath) || generatedColumns;
-  const center = pattern.positions.reduce((sum, position) => v.add(sum, positionPoint(basis, position)), [0, 0, 0]);
-  const anchor = v.mul(center, 1 / pattern.positions.length);
+  const anchor = averageVec3(pattern.positions.map((position) => positionPoint(basis, position)));
   const point = v.add(anchor, dimensionOffset(ctx, basis, spec.reference.offset, { clampNormal: false }));
   return makeNote({
     ...ctx,

@@ -1,3 +1,5 @@
+import { libraryProfileById } from "../../../project/profiles.mjs?v=profile-lookup-dry-1";
+
 function memberDirectionFromJoint(ctx, member, iface) {
   const frame = ctx.geometry.memberFrame(member);
   return iface.memberEnd === "end" ? ctx.geometry.v.mul(frame.x, -1) : frame.x;
@@ -21,7 +23,7 @@ function trimPlaneAtJoint(ctx, member, ownDirection, mateDirection, joint) {
     || ctx.geometry.projectedAxis([0, 1, 0], normal);
   if (!axisX) ctx.fail(`${member.id}: cannot resolve gusset trim plane axis`);
   const axisY = v.norm(v.cross(normal, axisX));
-  const bounds = ctx.geometry.sectionBounds(ctx.profiles?.[member.profile] || ctx.profiles?.profiles?.[member.profile]);
+  const bounds = ctx.geometry.sectionBounds(libraryProfileById(ctx.profiles, member.profile));
   const span = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1) * 1.35;
   return { origin: joint, normal, axisX, axisY, size: [span, span] };
 }
@@ -167,7 +169,7 @@ export function build(ctx) {
     holeDiameter: bolts.holeDiameter,
     holeType: bolts.holeType
   });
-  ctx.check.plateOutlineValid(gussetPlate.outline, {
+  ctx.check.plateOutlineValid(ctx.geometry.plateOutline(gussetPlate), {
     code: "apex-gusset-outline-invalid-after-trimming",
     message: "Apex gusset trimming left no valid plate outline.",
     objectRoles: ["gussetPlate"],

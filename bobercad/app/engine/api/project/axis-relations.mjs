@@ -1,18 +1,12 @@
 import { v } from "../../core/math.mjs";
-import { memberLayoutAxis, vec3 } from "./members.mjs";
+import { memberLayoutAxis, vec3 } from "./members.mjs?v=vec3-dry-1";
+import { cleanId } from "./objects.mjs?v=array-values-dry-1";
 
 const AXIS_SNAP_TYPES = new Set(["member-axis", "layout-axis", "grid-line", "global-axis"]);
 const RELATION_TYPES = new Set(["point-on-axis", "member-align-axis"]);
 
 function fail(message) {
   throw new Error(`axis relation: ${message}`);
-}
-
-function cleanId(value) {
-  return String(value || "")
-    .trim()
-    .replace(/[^A-Za-z0-9_:-]+/g, "_")
-    .replace(/^_+|_+$/g, "");
 }
 
 function globalDirection(axis) {
@@ -39,7 +33,7 @@ function alignRelationId(memberId, source) {
   return cleanId(`rel_${memberId}_align_to_${source.type || "axis"}_${owner}`);
 }
 
-export function axisSourceFromSnap(snap) {
+function axisSourceFromSnap(snap) {
   if (!snap || snap.kind !== "line" || !AXIS_SNAP_TYPES.has(snap.type)) return null;
   if (snap.type === "global-axis" && snap.axis) {
     const direction = globalDirection(snap.axis);
@@ -66,10 +60,6 @@ export function axisSourceFromSnap(snap) {
     axis: snap.axis || undefined,
     label: snap.label || "Axis"
   };
-}
-
-export function isAxisSnap(snap) {
-  return Boolean(axisSourceFromSnap(snap));
 }
 
 export function axisRelationFromSnap(memberId, endpoint, snap, options = {}) {
@@ -123,7 +113,7 @@ export function relationUpsertKey(relation) {
   fail(`${relation?.id || "relation"} has unsupported type ${relation?.type || "missing"}`);
 }
 
-export function axisForSource(project, source, origin = [0, 0, 0]) {
+function axisForSource(project, source, origin = [0, 0, 0]) {
   if (source?.type === "global-axis") {
     const direction = source.direction || globalDirection(source.axis);
     if (!direction) fail("global axis source requires direction");

@@ -33,16 +33,16 @@
       "unit": "mm",
       "default": 280
     },
+    "treads.overlap": {
+      "kind": "nonNegativeNumber",
+      "label": "Tread overlap",
+      "unit": "mm",
+      "default": 20
+    },
     "treads.material": {
       "kind": "text",
       "label": "Tray material",
       "default": "S355"
-    },
-    "treads.frontLip": {
-      "kind": "positiveNumber",
-      "label": "Front lip",
-      "unit": "mm",
-      "default": 50
     },
     "treads.closedRisers": {
       "kind": "boolean",
@@ -59,12 +59,6 @@
       "label": "Timber thickness",
       "unit": "mm",
       "default": 32
-    },
-    "treads.woodInset": {
-      "kind": "nonNegativeNumber",
-      "label": "Timber side inset",
-      "unit": "mm",
-      "default": 35
     },
     "treads.woodNosing": {
       "kind": "nonNegativeNumber",
@@ -105,12 +99,11 @@
           "geometry.rise",
           "treads.thickness",
           "treads.depth",
+          "treads.overlap",
           "treads.material",
-          "treads.frontLip",
           "treads.closedRisers",
           "treads.finish",
           "treads.woodThickness",
-          "treads.woodInset",
           "treads.woodNosing",
           "treads.woodMaterial",
           "treads.woodFinish"

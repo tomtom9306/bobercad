@@ -161,43 +161,126 @@
             "local"
           ]
         },
-        "snapTolerancePx": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "pointSnapBiasPx": {
-          "type": "number",
-          "minimum": 0
-        },
-        "intersectionSnapBiasPx": {
-          "type": "number",
-          "minimum": 0
-        },
-        "faceAxisSnapBiasPx": {
-          "type": "number",
-          "minimum": 0
-        },
-        "multiSnapTolerancePx": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "startAxisIntersectionBiasPx": {
-          "type": "number",
-          "minimum": 0
-        },
-        "startAxisSnapBiasPx": {
-          "type": "number",
-          "minimum": 0
-        },
-        "profileAxisSnapBiasPx": {
-          "type": "number",
-          "minimum": 0
+        "snap": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "strength": {
+              "enum": [
+                "off",
+                "light",
+                "normal",
+                "strong",
+                "training"
+              ]
+            },
+            "scopeMode": {
+              "enum": [
+                "smart",
+                "manual"
+              ]
+            },
+            "holdToDisableKey": {
+              "type": "string"
+            },
+            "cycleKey": {
+              "type": "string"
+            },
+            "gridSteps": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "gridMinScreenPx": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "gridUseSpeedBoost": {
+              "type": "boolean"
+            },
+            "profiles": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "screenTolerancePx": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "intersectionTolerancePx": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "pointBiasPx": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "intersectionBiasPx": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "projectionBiasPx": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "axisBiasPx": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "maxIntersectionSources": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "gridMaxStep": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "gridMaxSteps": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "sketchWorldTolerance": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "showLabels": {
+                    "type": "boolean"
+                  },
+                  "includeSurfaceTargets": {
+                    "enum": [
+                      false,
+                      "corners",
+                      "edges",
+                      "faces"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "scope": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "boolean"
+              }
+            }
+          },
+          "additionalProperties": true
         },
         "globalAxisSnapSpan": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "globalAxisSnapTolerancePx": {
           "type": "number",
           "exclusiveMinimum": 0
         },
@@ -205,33 +288,9 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
-        "profileAxisSnapSpan": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "profileAxisSnapTolerancePx": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "creationAxisSnapSpan": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "creationAxisSnapTolerancePx": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
         "activeReferenceMemberLimit": {
           "type": "integer",
           "minimum": 0
-        },
-        "activeReferenceAxisSnapTolerancePx": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "compositeSnapTolerancePx": {
-          "type": "number",
-          "exclusiveMinimum": 0
         },
         "snapAxisHighlightSpan": {
           "type": "number",

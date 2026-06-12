@@ -766,26 +766,6 @@
         "id": "connection_beam_to_beam_fin_plate_1_fin_plate",
         "type": "rectangular-plate",
         "thickness": 10,
-        "width": 180,
-        "height": 160,
-        "outline": [
-          [
-            90,
-            -80
-          ],
-          [
-            90,
-            80
-          ],
-          [
-            -90,
-            80
-          ],
-          [
-            -90,
-            -80
-          ]
-        ],
         "center": [
           -9,
           -94,
@@ -836,6 +816,61 @@
           "componentInstanceId": "connection_beam_to_beam_fin_plate_1",
           "componentStatus": "managed",
           "componentRole": "finPlate"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "connection_beam_to_beam_fin_plate_1_fin_plate_v1",
+              "point": [
+                90,
+                -80
+              ]
+            },
+            {
+              "id": "connection_beam_to_beam_fin_plate_1_fin_plate_v2",
+              "point": [
+                90,
+                80
+              ]
+            },
+            {
+              "id": "connection_beam_to_beam_fin_plate_1_fin_plate_v3",
+              "point": [
+                -90,
+                80
+              ]
+            },
+            {
+              "id": "connection_beam_to_beam_fin_plate_1_fin_plate_v4",
+              "point": [
+                -90,
+                -80
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "connection_beam_to_beam_fin_plate_1_fin_plate_e1",
+              "from": "connection_beam_to_beam_fin_plate_1_fin_plate_v1",
+              "to": "connection_beam_to_beam_fin_plate_1_fin_plate_v2"
+            },
+            {
+              "id": "connection_beam_to_beam_fin_plate_1_fin_plate_e2",
+              "from": "connection_beam_to_beam_fin_plate_1_fin_plate_v2",
+              "to": "connection_beam_to_beam_fin_plate_1_fin_plate_v3"
+            },
+            {
+              "id": "connection_beam_to_beam_fin_plate_1_fin_plate_e3",
+              "from": "connection_beam_to_beam_fin_plate_1_fin_plate_v3",
+              "to": "connection_beam_to_beam_fin_plate_1_fin_plate_v4"
+            },
+            {
+              "id": "connection_beam_to_beam_fin_plate_1_fin_plate_e4",
+              "from": "connection_beam_to_beam_fin_plate_1_fin_plate_v4",
+              "to": "connection_beam_to_beam_fin_plate_1_fin_plate_v1"
+            }
+          ]
         }
       }
     },

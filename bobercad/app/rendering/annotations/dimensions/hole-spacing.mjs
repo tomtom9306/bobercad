@@ -1,4 +1,4 @@
-import { combine, dimensionOffset, distance, featureBasis, finite, holePair, optionalPath, patternLayoutBasis, patternPositionsInBasis, positionPoint, roleObject, spacingDimension, spacingPairs } from "../dimension-context.mjs";
+import { combine, dimensionOffset, distance, featureBasis, finite, holePair, optionalPath, patternLayoutBasis, patternPositionsInBasis, positionPoint, roleObject, spacingDimension, spacingPairs } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
 export function holeSpacingDimension(ctx, spec) {
   const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);

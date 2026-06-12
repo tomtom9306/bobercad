@@ -1,14 +1,55 @@
-﻿import { v } from "../../engine/core/math.mjs";
-import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs";
-import { memberFrame } from "../../engine/geometry/member-geometry.mjs";
+﻿import { clamp, finiteNumber, finiteNumberOr, screenDistance, v } from "../../engine/core/math.mjs?v=integer-number-dry-1";
+import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs?v=polygon-ear-clipping-1";
+import { arrayValues, sameIdSet, truthyValues, uniqueTruthy } from "../../engine/core/model.mjs?v=webgl-array-values-dry-1";
+import { libraryProfileById } from "../../engine/api/project/profiles.mjs?v=profile-api-dry-1";
+import { memberFrame } from "../../engine/geometry/member-geometry.mjs?v=geometry-api-array-values-dry-1";
 import { trimOperationIconMarkup, trimOperationLabel } from "../trim-operation-icons.mjs?v=plane-region-hard-1";
-import { createCamera } from "./camera.mjs";
-import { createDimensionOverlayUi } from "./dimension-overlay-ui.mjs";
-import { createTextLabelRenderer } from "./text-label-renderer.mjs";
+import { createCamera } from "./camera.mjs?v=camera-direct-viewport-dry-1";
+import { createDimensionOverlayUi } from "./dimension-overlay-ui.mjs?v=dimension-button-dry-1";
+import { hexToRgb, hexToRgba } from "./colors.mjs?v=hex-color-regex-dry-1";
+import { labelRotation } from "./label-rotation.mjs?v=authoring-label-rotation-1";
+import { createTextLabelRenderer } from "./text-label-renderer.mjs?v=dimensions-on-top-1";
+import { isActiveSmartComponentObject } from "../scene/scene-object-visibility.mjs?v=array-values-dry-1";
 
-export function createWebglViewer(canvas, reset, settings) {
-  const qaCapture = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("qaCapture");
+const COLOR_FRAGMENT_SHADER = `
+  precision mediump float;
+  varying vec4 vColor;
+  void main() {
+    gl_FragColor = vColor;
+  }
+`;
+
+const VIEW_VERTEX_SHADER = `
+  uniform float uYaw;
+  uniform float uPitch;
+  uniform float uScale;
+  uniform vec2 uPan;
+  uniform vec2 uViewport;
+  uniform vec3 uPivot;
+  uniform float uDepthHalf;
+
+  vec3 cameraRotate(vec3 point) {
+    float cy = cos(uYaw);
+    float sy = sin(uYaw);
+    float cp = cos(uPitch);
+    float sp = sin(uPitch);
+    float x = cy * point.x - sy * point.y;
+    float y = sy * point.x + cy * point.y;
+    return vec3(x, cp * y - sp * point.z, sp * y + cp * point.z);
+  }
+
+  vec4 clipPosition(vec3 view) {
+    float screenX = uViewport.x * 0.5 + uPan.x + view.x * uScale;
+    float screenY = uViewport.y * 0.5 + uPan.y - view.y * uScale;
+    float depth = clamp(-view.z / uDepthHalf, -1.0, 1.0);
+    return vec4(screenX / uViewport.x * 2.0 - 1.0, 1.0 - screenY / uViewport.y * 2.0, depth, 1.0);
+  }
+`;
+
+export function createWebglViewer(canvas, reset, settings, options = {}) {
+  const qaCapture = !!options.qaCapture;
   const gl = canvas.getContext("webgl", { antialias: true, preserveDrawingBuffer: qaCapture });
+  const currentPointerMaxAgeMs = Math.max(0, finiteNumberOr(settings.authoring?.currentPointerMaxAgeMs, 15000));
   let scene = null;
   const camera = createCamera(settings);
   let drag = null;
@@ -23,6 +64,7 @@ export function createWebglViewer(canvas, reset, settings) {
   let pickColorIdByObjectKey = new Map();
   let nextPickColorId = 1;
   let pickHandler = null;
+  let pickHandlerOptions = {};
   let clickHandler = null;
   let doubleClickHandler = null;
   let authoringHandler = null;
@@ -33,7 +75,9 @@ export function createWebglViewer(canvas, reset, settings) {
   let pendingWheelZoom = null;
   let authoringOverlay = { lines: [], handles: [] };
   let authoringHoveredHandle = null;
+  let lastCanvasPointer = null;
   let dimensionOverlay = { lines: [], labels: [] };
+  let dimensionPlacementHandler = null;
   let objectPreview = null;
   let projectedSceneTriangles = null;
   let frameDrawPending = false;
@@ -93,7 +137,7 @@ export function createWebglViewer(canvas, reset, settings) {
       const zoom = pendingWheelZoom;
       pendingWheelZoom = null;
       if (!scene || !zoom) return;
-      const steps = Math.min(12, Math.max(1, zoom.steps));
+      const steps = clamp(zoom.steps, 1, 12);
       for (let index = 0; index < steps; index += 1) {
         camera.zoomAt(zoom.deltaY, zoom.x, zoom.y, canvas);
       }
@@ -119,19 +163,10 @@ export function createWebglViewer(canvas, reset, settings) {
   const highlight = {
     edge: "#38bdf8"
   };
-  const detailPixelThreshold = Number.isFinite(settings.render.lod?.detailPixelThreshold)
+  const detailPixelThreshold = finiteNumber(settings.render.lod?.detailPixelThreshold)
     ? settings.render.lod.detailPixelThreshold
     : 24;
 
-
-  function hexToRgb(hex) {
-    const value = hex.replace("#", "");
-    return [
-      parseInt(value.slice(0, 2), 16),
-      parseInt(value.slice(2, 4), 16),
-      parseInt(value.slice(4, 6), 16)
-    ];
-  }
 
   function shadedRgba(color, points, opacity = 1) {
     const rgb = hexToRgb(color);
@@ -146,20 +181,11 @@ export function createWebglViewer(canvas, reset, settings) {
     ];
   }
 
-  function hexToRgba(color, opacity = 1) {
-    const rgb = hexToRgb(color);
-    return [rgb[0], rgb[1], rgb[2], Math.round(255 * opacity)];
-  }
-
-  function isActiveSmartComponentObject(objectId) {
-    return Boolean(objectId && scene?.activeSmartComponentObjectIds?.has?.(objectId));
-  }
-
   function lodDetailVisible(objectId) {
     if (!objectId) return true;
     const detail = scene?.lodDetails?.[objectId];
     if (!detail) return false;
-    if (isActiveSmartComponentObject(objectId) || highlightedObjectIds.has(objectId)) return true;
+    if (isActiveSmartComponentObject(scene, objectId) || highlightedObjectIds.has(objectId)) return true;
     return detail.radius * camera.screenScale() >= detailPixelThreshold;
   }
 
@@ -172,11 +198,6 @@ export function createWebglViewer(canvas, reset, settings) {
     return !item?.lodDetailObjectId || lodDetailVisible(item.lodDetailObjectId);
   }
 
-  function sameObjectIdSet(a, values = []) {
-    if (a.size !== values.length) return false;
-    return values.every((id) => a.has(id));
-  }
-
   function resetPickObjects() {
     pickObjectByColorId = new Map();
     pickColorIdByObjectKey = new Map();
@@ -185,7 +206,7 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function pickObjectKey(item) {
     if (!item?.collection || !item?.objectId) return null;
-    return [
+    return truthyValues([
       item.collection,
       item.objectId,
       item.operationId ? `operation:${item.operationId}` : null,
@@ -193,7 +214,7 @@ export function createWebglViewer(canvas, reset, settings) {
       item.referencePlaneId ? `plane:${item.referencePlaneId}` : null,
       item.componentKind ? `kind:${item.componentKind}` : null,
       item.positionIndex !== undefined ? `position:${item.positionIndex}` : null
-    ].filter(Boolean).join(":");
+    ]).join(":");
   }
 
   function encodePickColorId(id) {
@@ -247,12 +268,18 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function memberOnlyHighlightChange(nextObjectIds = []) {
     if (!isLargeScene()) return false;
-    const ids = [...highlightedObjectIds, ...nextObjectIds].filter(Boolean);
+    const ids = uniqueTruthy([...highlightedObjectIds, ...nextObjectIds]);
     return ids.length > 0 && ids.every((id) => objectCollection(id) === "members");
   }
 
   function useHighlightOverlay() {
     return highlightedObjectIds.size > 0;
+  }
+
+  function highlightedObjectIdsForOverlay() {
+    const suppressed = new Set(arrayValues(authoringOverlay?.suppressHighlightObjectIds));
+    if (!suppressed.size) return highlightedObjectIds;
+    return new Set([...highlightedObjectIds].filter((objectId) => !suppressed.has(objectId)));
   }
 
   function compileShader(type, source) {
@@ -272,6 +299,18 @@ export function createWebglViewer(canvas, reset, settings) {
     return program;
   }
 
+  function viewUniformLocations(program) {
+    return {
+      yaw: gl.getUniformLocation(program, "uYaw"),
+      pitch: gl.getUniformLocation(program, "uPitch"),
+      scale: gl.getUniformLocation(program, "uScale"),
+      pan: gl.getUniformLocation(program, "uPan"),
+      viewport: gl.getUniformLocation(program, "uViewport"),
+      pivot: gl.getUniformLocation(program, "uPivot"),
+      depthHalf: gl.getUniformLocation(program, "uDepthHalf")
+    };
+  }
+
   function initRenderer() {
     if (renderer) return renderer;
     if (!gl) throw new Error("WebGL is required for depth-correct viewing");
@@ -284,13 +323,7 @@ export function createWebglViewer(canvas, reset, settings) {
         gl_Position = vec4(aPosition, 1.0);
         vColor = aColor;
       }
-    `, `
-      precision mediump float;
-      varying vec4 vColor;
-      void main() {
-        gl_FragColor = vColor;
-      }
-    `);
+    `, COLOR_FRAGMENT_SHADER);
 
     renderer = {
       program,
@@ -310,54 +343,21 @@ export function createWebglViewer(canvas, reset, settings) {
       precision highp float;
       attribute vec3 aWorldPosition;
       attribute vec4 aColor;
-      uniform float uYaw;
-      uniform float uPitch;
-      uniform float uScale;
-      uniform vec2 uPan;
-      uniform vec2 uViewport;
-      uniform vec3 uPivot;
-      uniform float uDepthHalf;
       varying vec4 vColor;
-
-      vec3 cameraRotate(vec3 point) {
-        float cy = cos(uYaw);
-        float sy = sin(uYaw);
-        float cp = cos(uPitch);
-        float sp = sin(uPitch);
-        float x = cy * point.x - sy * point.y;
-        float y = sy * point.x + cy * point.y;
-        return vec3(x, cp * y - sp * point.z, sp * y + cp * point.z);
-      }
+      ${VIEW_VERTEX_SHADER}
 
       void main() {
         vec3 view = cameraRotate(aWorldPosition - uPivot);
-        float screenX = uViewport.x * 0.5 + uPan.x + view.x * uScale;
-        float screenY = uViewport.y * 0.5 + uPan.y - view.y * uScale;
-        float depth = clamp(-view.z / uDepthHalf, -1.0, 1.0);
-        gl_Position = vec4(screenX / uViewport.x * 2.0 - 1.0, 1.0 - screenY / uViewport.y * 2.0, depth, 1.0);
+        gl_Position = clipPosition(view);
         vColor = aColor;
       }
-    `, `
-      precision mediump float;
-      varying vec4 vColor;
-      void main() {
-        gl_FragColor = vColor;
-      }
-    `);
+    `, COLOR_FRAGMENT_SHADER);
 
     staticSceneRenderer = {
       program,
       position: gl.getAttribLocation(program, "aWorldPosition"),
       color: gl.getAttribLocation(program, "aColor"),
-      uniforms: {
-        yaw: gl.getUniformLocation(program, "uYaw"),
-        pitch: gl.getUniformLocation(program, "uPitch"),
-        scale: gl.getUniformLocation(program, "uScale"),
-        pan: gl.getUniformLocation(program, "uPan"),
-        viewport: gl.getUniformLocation(program, "uViewport"),
-        pivot: gl.getUniformLocation(program, "uPivot"),
-        depthHalf: gl.getUniformLocation(program, "uDepthHalf")
-      }
+      uniforms: viewUniformLocations(program)
     };
     return staticSceneRenderer;
   }
@@ -378,27 +378,11 @@ export function createWebglViewer(canvas, reset, settings) {
       attribute vec3 aAxisZ;
       attribute float aLength;
       attribute vec4 aColor;
-      uniform float uYaw;
-      uniform float uPitch;
-      uniform float uScale;
-      uniform vec2 uPan;
-      uniform vec2 uViewport;
-      uniform vec3 uPivot;
-      uniform float uDepthHalf;
       uniform vec3 uLight;
       uniform float uAmbient;
       uniform float uDiffuse;
       varying vec4 vColor;
-
-      vec3 cameraRotate(vec3 point) {
-        float cy = cos(uYaw);
-        float sy = sin(uYaw);
-        float cp = cos(uPitch);
-        float sp = sin(uPitch);
-        float x = cy * point.x - sy * point.y;
-        float y = sy * point.x + cy * point.y;
-        return vec3(x, cp * y - sp * point.z, sp * y + cp * point.z);
-      }
+      ${VIEW_VERTEX_SHADER}
 
       void main() {
         vec3 world = aStart
@@ -406,21 +390,12 @@ export function createWebglViewer(canvas, reset, settings) {
           + aAxisY * aLocalPosition.y
           + aAxisZ * aLocalPosition.z;
         vec3 view = cameraRotate(world - uPivot);
-        float screenX = uViewport.x * 0.5 + uPan.x + view.x * uScale;
-        float screenY = uViewport.y * 0.5 + uPan.y - view.y * uScale;
-        float depth = clamp(-view.z / uDepthHalf, -1.0, 1.0);
         vec3 normal = normalize(aAxisX * aLocalNormal.x + aAxisY * aLocalNormal.y + aAxisZ * aLocalNormal.z);
         float shade = uAmbient + max(0.0, dot(normal, normalize(uLight))) * uDiffuse;
-        gl_Position = vec4(screenX / uViewport.x * 2.0 - 1.0, 1.0 - screenY / uViewport.y * 2.0, depth, 1.0);
+        gl_Position = clipPosition(view);
         vColor = vec4(aColor.rgb * shade, aColor.a);
       }
-    `, `
-      precision mediump float;
-      varying vec4 vColor;
-      void main() {
-        gl_FragColor = vColor;
-      }
-    `);
+    `, COLOR_FRAGMENT_SHADER);
 
     memberInstanceRenderer = {
       program,
@@ -434,13 +409,7 @@ export function createWebglViewer(canvas, reset, settings) {
       length: gl.getAttribLocation(program, "aLength"),
       color: gl.getAttribLocation(program, "aColor"),
       uniforms: {
-        yaw: gl.getUniformLocation(program, "uYaw"),
-        pitch: gl.getUniformLocation(program, "uPitch"),
-        scale: gl.getUniformLocation(program, "uScale"),
-        pan: gl.getUniformLocation(program, "uPan"),
-        viewport: gl.getUniformLocation(program, "uViewport"),
-        pivot: gl.getUniformLocation(program, "uPivot"),
-        depthHalf: gl.getUniformLocation(program, "uDepthHalf"),
+        ...viewUniformLocations(program),
         light: gl.getUniformLocation(program, "uLight"),
         ambient: gl.getUniformLocation(program, "uAmbient"),
         diffuse: gl.getUniformLocation(program, "uDiffuse")
@@ -542,9 +511,9 @@ export function createWebglViewer(canvas, reset, settings) {
       const b = camera.projectPoint(v.add(instance.start, v.mul(instance.axisX, instance.length)), scene, canvas);
       const t = screenLineParameter(cursor, a, b);
       const closestScreen = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-      const distance = Math.hypot(cursor.x - closestScreen.x, cursor.y - closestScreen.y);
+      const distance = screenDistance(cursor, closestScreen);
       const radiusPx = instance.profileRadius * camera.screenScale();
-      const threshold = Math.max(6, Math.min(16, radiusPx));
+      const threshold = clamp(radiusPx, 6, 16);
       if (distance > threshold) continue;
       const depth = a.depth + (b.depth - a.depth) * t;
       if (!best || depth < best.depth || (depth === best.depth && distance < best.distance)) {
@@ -565,7 +534,8 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function pickScene(x, y, options = {}) {
     if (!scene) return null;
-    if (!options.forceCpu && shouldUseGpuPick()) return pickSceneGpu(x, y, options);
+    const filteredPick = Boolean(options.objectIds || options.componentKind);
+    if (!options.forceCpu && shouldUseGpuPick() && !filteredPick) return pickSceneGpu(x, y, options);
     const cursor = { x, y };
     const objectIds = options.objectIds ? new Set(options.objectIds) : null;
     let best = null;
@@ -624,13 +594,22 @@ export function createWebglViewer(canvas, reset, settings) {
     return precise || coarse;
   }
 
-  function authoringPointerState() {
-    if (!drag || drag.mode !== "authoring") return null;
+  function canvasPointer(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const screen = {
-      x: drag.x - rect.left,
-      y: drag.y - rect.top
+      x: clientX - rect.left,
+      y: clientY - rect.top
     };
+    return {
+      rect,
+      screen,
+      inside: screen.x >= 0 && screen.y >= 0 && screen.x <= rect.width && screen.y <= rect.height
+    };
+  }
+
+  function authoringPointerState() {
+    if (!drag || drag.mode !== "authoring") return null;
+    const { rect, screen } = canvasPointer(drag.x, drag.y);
     return { rect, screen };
   }
 
@@ -638,7 +617,7 @@ export function createWebglViewer(canvas, reset, settings) {
     const margin = settings.authoring?.autoPanEdgePx || 72;
     const maxStep = settings.authoring?.autoPanMaxStepPx || 18;
     const edgeStep = (distance) => {
-      const t = Math.max(0, Math.min(1, (margin - distance) / margin));
+      const t = clamp((margin - distance) / margin, 0, 1);
       return maxStep * t * t;
     };
     const dx = screen.x < margin
@@ -653,6 +632,28 @@ export function createWebglViewer(canvas, reset, settings) {
   function authoringHitAt(screen, rect) {
     if (screen.x < 0 || screen.y < 0 || screen.x > rect.width || screen.y > rect.height) return null;
     return pickCursorDepth(screen.x, screen.y);
+  }
+
+  function pointerStateFromEvent(event) {
+    const { rect, screen, inside } = canvasPointer(event.clientX, event.clientY);
+    if (inside) lastCanvasPointer = { screen, time: Date.now() };
+    return {
+      rect,
+      screen,
+      hit: inside ? pickCursorDepth(screen.x, screen.y) : null
+    };
+  }
+
+  function currentPointerState() {
+    if (!scene || !lastCanvasPointer?.screen) return null;
+    if (currentPointerMaxAgeMs > 0 && Date.now() - (lastCanvasPointer.time || 0) > currentPointerMaxAgeMs) return null;
+    const rect = canvas.getBoundingClientRect();
+    const screen = { ...lastCanvasPointer.screen };
+    if (screen.x < 0 || screen.y < 0 || screen.x > rect.width || screen.y > rect.height) return null;
+    return {
+      screen,
+      hit: pickCursorDepth(screen.x, screen.y)
+    };
   }
 
   function stopAuthoringAutoPan() {
@@ -694,12 +695,15 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function pointInCaptureRange(point, options = {}) {
-    if (!Array.isArray(options.center) || !Number.isFinite(options.radius)) return true;
+    if (!v.isVec3(options.center) || !finiteNumber(options.radius)) return true;
     return v.len(v.sub(point, options.center)) <= options.radius;
   }
 
   function captureItemPoints(item, options = {}) {
-    const points = item.points || (item.start && item.axisX && item.length ? [item.start, v.add(item.start, v.mul(item.axisX, item.length))] : []);
+    const itemPoints = arrayValues(item.points);
+    const points = itemPoints.length || Array.isArray(item.points)
+      ? itemPoints
+      : (item.start && item.axisX && item.length ? [item.start, v.add(item.start, v.mul(item.axisX, item.length))] : []);
     if (!points.length) return [];
     if (!options.clipMembers || item.collection !== "members") return points;
     const filtered = points.filter((point) => pointInCaptureRange(point, options));
@@ -710,7 +714,7 @@ export function createWebglViewer(canvas, reset, settings) {
     if (!scene) return [];
     const ids = new Set(objectIds);
     const points = [];
-    for (const item of [...scene.faces, ...scene.lines, ...(scene.memberInstances || [])]) {
+    for (const item of [...arrayValues(scene.faces), ...arrayValues(scene.lines), ...arrayValues(scene.memberInstances)]) {
       if (isObjectPreviewed(item)) continue;
       if (!ids.has(item.objectId)) continue;
       points.push(...captureItemPoints(item, options));
@@ -731,7 +735,7 @@ export function createWebglViewer(canvas, reset, settings) {
   function cloneSceneItem(item) {
     return {
       ...item,
-      points: (item.points || []).map(clonePoint),
+      points: arrayValues(item.points).map(clonePoint),
       start: clonePoint(item.start),
       axisX: clonePoint(item.axisX),
       axisY: clonePoint(item.axisY),
@@ -739,10 +743,40 @@ export function createWebglViewer(canvas, reset, settings) {
     };
   }
 
-  function sameIdSet(left, right) {
-    if (!left || left.size !== right.size) return false;
-    for (const id of right) if (!left.has(id)) return false;
-    return true;
+  function authoringOverlaySnapshot() {
+    return {
+      lineCount: arrayValues(authoringOverlay?.lines).length,
+      handleCount: arrayValues(authoringOverlay?.handles).length,
+      labelCount: arrayValues(authoringOverlay?.labels).length,
+      quickListCount: arrayValues(authoringOverlay?.quickLists).length,
+      labels: arrayValues(authoringOverlay?.labels).map((label) => ({
+        text: label.text || "",
+        className: label.className || "",
+        title: label.title || "",
+        point: clonePoint(label.point),
+        screenOffsetPx: label.screenOffsetPx ? { ...label.screenOffsetPx } : null
+      })),
+      handleKinds: arrayValues(authoringOverlay?.handles).map((handle) => handle.kind || handle.type || ""),
+      quickLists: arrayValues(authoringOverlay?.quickLists).map((quickList) => ({
+        id: quickList.id || "",
+        title: quickList.title || "",
+        items: arrayValues(quickList.items).map((item) => item.label || item.text || item.id || "")
+      }))
+    };
+  }
+
+  function updateAuthoringOverlayDebugState() {
+    if (typeof document === "undefined" || !document.documentElement) return;
+    const snapshot = authoringOverlaySnapshot();
+    document.documentElement.dataset.authoringOverlay = JSON.stringify({
+      lines: snapshot.lineCount,
+      handles: snapshot.handleCount,
+      labels: snapshot.labelCount,
+      quickLists: snapshot.quickListCount,
+      handleKinds: snapshot.handleKinds,
+      labelTexts: snapshot.labels.map((label) => label.text),
+      quickListItems: snapshot.quickLists.flatMap((quickList) => quickList.items)
+    });
   }
 
   function previewDelta() {
@@ -750,7 +784,7 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function previewOpacity(fallback = 1) {
-    return Number.isFinite(objectPreview?.opacity) ? objectPreview.opacity : fallback;
+    return finiteNumberOr(objectPreview?.opacity, fallback);
   }
 
   function previewPoint(point) {
@@ -761,7 +795,7 @@ export function createWebglViewer(canvas, reset, settings) {
     const draft = objectPreview?.memberDrafts?.get(instance.objectId);
     if (draft) {
       const length = v.len(v.sub(draft.end, draft.start));
-      if (Number.isFinite(length) && length > 1e-6) {
+      if (finiteNumber(length) && length > 1e-6) {
         const frame = memberFrame(draft);
         return {
           ...instance,
@@ -793,7 +827,7 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function beginObjectPreview(objectIds = []) {
     if (!scene) return false;
-    const ids = new Set([...objectIds].filter(Boolean));
+    const ids = new Set(uniqueTruthy([...objectIds]));
     if (!ids.size) return false;
     if (sameIdSet(objectPreview?.objectIds, ids)) return true;
     const isPreviewItem = (item) => item?.objectId && ids.has(item.objectId);
@@ -801,26 +835,25 @@ export function createWebglViewer(canvas, reset, settings) {
       objectIds: ids,
       delta: [0, 0, 0],
       opacity: null,
-      faces: (scene.faces || []).filter(isPreviewItem).map(cloneSceneItem),
-      lines: (scene.lines || []).filter(isPreviewItem).map(cloneSceneItem),
-      memberInstances: (scene.memberInstances || []).filter(isPreviewItem).map(cloneSceneItem),
+      faces: arrayValues(scene.faces).filter(isPreviewItem).map(cloneSceneItem),
+      lines: arrayValues(scene.lines).filter(isPreviewItem).map(cloneSceneItem),
+      memberInstances: arrayValues(scene.memberInstances).filter(isPreviewItem).map(cloneSceneItem),
       memberDrafts: new Map()
     };
-    invalidateStaticSceneCache();
-    invalidateMemberInstanceCache();
+    invalidateRenderableCaches();
     requestDraw();
     return true;
   }
 
   function updateMemberMovePreview(member, options = {}) {
     if (!member?.id) return false;
-    const ids = new Set([member.id, ...(options.objectIds || [])].filter(Boolean));
+    const ids = new Set(uniqueTruthy([member.id, ...arrayValues(options.objectIds)]));
     if (!beginObjectPreview(ids)) return false;
-    const delta = Array.isArray(options.delta) && options.delta.length === 3 && options.delta.every(Number.isFinite)
+    const delta = v.isVec3(options.delta)
       ? options.delta
       : [0, 0, 0];
     objectPreview.delta = [...delta];
-    objectPreview.opacity = Number.isFinite(options.opacity) ? options.opacity : null;
+    objectPreview.opacity = finiteNumberOr(options.opacity, null);
     objectPreview.memberDrafts.set(member.id, {
       ...member,
       start: [...member.start],
@@ -833,13 +866,12 @@ export function createWebglViewer(canvas, reset, settings) {
   function clearObjectPreview() {
     if (!objectPreview) return;
     objectPreview = null;
-    invalidateStaticSceneCache();
-    invalidateMemberInstanceCache();
+    invalidateRenderableCaches();
     requestDraw();
   }
 
   function translateSceneObjects(objectIds = [], delta = null) {
-    if (!scene || !objectIds.length || !Array.isArray(delta) || delta.length !== 3 || delta.some((value) => !Number.isFinite(value))) return false;
+    if (!scene || !objectIds.length || !v.isVec3(delta)) return false;
     const ids = new Set(objectIds);
     const movedPoints = new WeakSet();
     let changed = false;
@@ -852,11 +884,11 @@ export function createWebglViewer(canvas, reset, settings) {
       changed = true;
     };
 
-    for (const item of [...scene.faces, ...scene.lines]) {
+    for (const item of [...arrayValues(scene.faces), ...arrayValues(scene.lines)]) {
       if (!ids.has(item.objectId)) continue;
-      for (const point of item.points || []) movePoint(point);
+      for (const point of arrayValues(item.points)) movePoint(point);
     }
-    for (const instance of scene.memberInstances || []) {
+    for (const instance of arrayValues(scene.memberInstances)) {
       if (!ids.has(instance.objectId)) continue;
       movePoint(instance.start);
     }
@@ -869,19 +901,19 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function updateMemberInstance(member, options = {}) {
     if (!scene || !member?.id) return false;
-    const translatedObjects = translateSceneObjects(options.translateObjectIds || [], options.delta);
-    const translatedMemberDetail = translatedObjects && (options.translateObjectIds || []).includes(member.id);
-    const instance = (scene.memberInstances || []).find((item) => item.objectId === member.id);
+    const translateObjectIds = arrayValues(options.translateObjectIds);
+    const translatedObjects = translateSceneObjects(translateObjectIds, options.delta);
+    const translatedMemberDetail = translatedObjects && translateObjectIds.includes(member.id);
+    const instance = arrayValues(scene.memberInstances).find((item) => item.objectId === member.id);
     if (!instance) {
       if (translatedObjects) {
-        invalidateStaticSceneCache();
-        invalidateMemberInstanceCache();
+        invalidateRenderableCaches();
         requestDraw();
       }
       return translatedObjects;
     }
     const length = v.len(v.sub(member.end, member.start));
-    if (!Number.isFinite(length) || length <= 1e-6) return false;
+    if (!finiteNumber(length) || length <= 1e-6) return false;
     const frame = memberFrame(member);
 
     if (options.project) scene.project = options.project;
@@ -893,8 +925,7 @@ export function createWebglViewer(canvas, reset, settings) {
     instance.length = length;
     if (scene.lodDetails && !translatedMemberDetail) delete scene.lodDetails[member.id];
 
-    invalidateStaticSceneCache();
-    invalidateMemberInstanceCache();
+    invalidateRenderableCaches();
     requestDraw();
     return true;
   }
@@ -902,7 +933,7 @@ export function createWebglViewer(canvas, reset, settings) {
   function replaceSceneObjects(patchScene, objectIds = []) {
     const idValues = objectIds && typeof objectIds[Symbol.iterator] === "function" ? [...objectIds] : [];
     if (!scene || !patchScene || !idValues.length) return false;
-    const ids = new Set(idValues.filter(Boolean));
+    const ids = new Set(uniqueTruthy(idValues));
     if (!ids.size) return false;
     const isPatchedObject = (item) => item?.objectId && ids.has(item.objectId);
     const appendPatched = (target, source = []) => {
@@ -911,10 +942,10 @@ export function createWebglViewer(canvas, reset, settings) {
       }
     };
 
-    scene.faces = (scene.faces || []).filter((item) => !isPatchedObject(item));
-    scene.lines = (scene.lines || []).filter((item) => !isPatchedObject(item));
-    scene.callouts = (scene.callouts || []).filter((item) => !isPatchedObject(item));
-    scene.memberInstances = (scene.memberInstances || []).filter((item) => !isPatchedObject(item));
+    scene.faces = arrayValues(scene.faces).filter((item) => !isPatchedObject(item));
+    scene.lines = arrayValues(scene.lines).filter((item) => !isPatchedObject(item));
+    scene.callouts = arrayValues(scene.callouts).filter((item) => !isPatchedObject(item));
+    scene.memberInstances = arrayValues(scene.memberInstances).filter((item) => !isPatchedObject(item));
 
     appendPatched(scene.faces, patchScene.faces);
     appendPatched(scene.lines, patchScene.lines);
@@ -939,18 +970,17 @@ export function createWebglViewer(canvas, reset, settings) {
     scene.activeSmartComponentObjectIds = patchScene.activeSmartComponentObjectIds || scene.activeSmartComponentObjectIds;
     scene.generatedSmartComponentObjectIds = patchScene.generatedSmartComponentObjectIds || scene.generatedSmartComponentObjectIds;
     projectedSceneTriangles = null;
-    invalidateStaticSceneCache();
-    invalidateMemberInstanceCache();
+    invalidateRenderableCaches();
     requestDraw();
     return true;
   }
 
   function hideDimensionsBehindGeometry() {
-    return settings.render.dimensions?.hideBehindGeometry !== false;
+    return false;
   }
 
   function hasDimensionOverlay() {
-    return Boolean((dimensionOverlay.lines || []).length || (dimensionOverlay.labels || []).length);
+    return Boolean(arrayValues(dimensionOverlay.lines).length || arrayValues(dimensionOverlay.labels).length);
   }
 
   function fallbackAxisScreen(axisId) {
@@ -1093,11 +1123,9 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function updateAuthoringHover(event) {
     if (!scene || drag) return false;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const next = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height
-      ? pickAuthoringHandle(x, y)
+    const { screen, inside } = canvasPointer(event.clientX, event.clientY);
+    const next = inside
+      ? pickAuthoringHandle(screen.x, screen.y)
       : null;
     if (authoringHandleKey(next) === authoringHandleKey(authoringHoveredHandle)) return Boolean(next);
     authoringHoveredHandle = next;
@@ -1144,13 +1172,35 @@ export function createWebglViewer(canvas, reset, settings) {
         continue;
       }
 
+      if ((handle.kind === "plate-sketch-edge" || handle.kind === "plate-sketch-construction-edge") && Array.isArray(handle.points) && handle.points.length >= 2) {
+        const start = projectPoint(handle.points[0]);
+        const end = projectPoint(handle.points[1]);
+        if (!start || !end) continue;
+        const distance = screenLineDistance(cursor, start, end);
+        if (distance > (handle.hitTolerancePx || 12)) continue;
+        const t = screenLineParameter(cursor, start, end);
+        const screen = {
+          x: start.x + (end.x - start.x) * t,
+          y: start.y + (end.y - start.y) * t
+        };
+        const pickPriority = Number.isFinite(handle.pickPriority) ? handle.pickPriority : 8;
+        const pickScore = distance - pickPriority;
+        if (!best || pickScore < best.pickScore) {
+          const dragAxes = projectedDragAxes(handle);
+          best = { ...handle, distance, pickScore, screen, ...(dragAxes ? { dragAxesScreen: dragAxes } : {}) };
+        }
+        continue;
+      }
+
       const projected = projectOffsetPoint(handle.point, handle.screenOffsetPx);
       if (!projected) continue;
-      const distance = Math.hypot(projected.x - x, projected.y - y);
-      if (distance > (handle.radius || 10)) continue;
-      if (!best || distance < best.distance) {
+      const distance = screenDistance(projected, cursor);
+      if (distance > (handle.hitTolerancePx || handle.radius || 10)) continue;
+      const pickPriority = Number.isFinite(handle.pickPriority) ? handle.pickPriority : 0;
+      const pickScore = distance - pickPriority;
+      if (!best || pickScore < best.pickScore) {
         const dragAxes = projectedDragAxes(handle);
-        best = { ...handle, distance, screen: projected, ...(dragAxes ? { dragAxesScreen: dragAxes } : {}) };
+        best = { ...handle, distance, pickScore, screen: projected, ...(dragAxes ? { dragAxesScreen: dragAxes } : {}) };
       }
     }
     return best;
@@ -1162,7 +1212,7 @@ export function createWebglViewer(canvas, reset, settings) {
     const lengthSq = abx * abx + aby * aby;
     return lengthSq <= 0.000001
       ? 0
-      : Math.max(0, Math.min(1, ((point.x - a.x) * abx + (point.y - a.y) * aby) / lengthSq));
+      : clamp(((point.x - a.x) * abx + (point.y - a.y) * aby) / lengthSq, 0, 1);
   }
 
   function screenLineDistance(point, a, b) {
@@ -1176,10 +1226,10 @@ export function createWebglViewer(canvas, reset, settings) {
     if (!scene || !dimensionUi.hasClickHandler()) return null;
     if (!hasDimensionOverlay()) return null;
     const labelHit = dimensionTextRenderer?.hitTest(x, y);
-    if (labelHit) return labelHit;
+    if (labelHit?.smartComponentId) return labelHit;
     const cursor = { x, y };
     let best = null;
-    for (const line of dimensionOverlay.lines || []) {
+    for (const line of arrayValues(dimensionOverlay.lines)) {
       const a = projectPoint(line.points[0]);
       const b = projectPoint(line.points[1]);
       if (!a || !b) continue;
@@ -1190,25 +1240,42 @@ export function createWebglViewer(canvas, reset, settings) {
     return best;
   }
 
+  function dimensionPlacementDelta(dimension, totalDx, totalDy) {
+    if (!Array.isArray(dimension?.labelUpAxis)) return 0;
+    const anchor = Array.isArray(dimension.point)
+      ? dimension.point
+      : Array.isArray(dimension.dimensionStart) && Array.isArray(dimension.dimensionEnd)
+        ? v.mul(v.add(dimension.dimensionStart, dimension.dimensionEnd), 0.5)
+        : Array.isArray(dimension.points?.[0]) && Array.isArray(dimension.points?.[1])
+          ? v.mul(v.add(dimension.points[0], dimension.points[1]), 0.5)
+          : null;
+    if (!anchor) return 0;
+    const origin = projectPoint(anchor);
+    const axisPoint = projectPoint(v.add(anchor, v.norm(dimension.labelUpAxis)));
+    if (!origin || !axisPoint) return 0;
+    const axis = { x: axisPoint.x - origin.x, y: axisPoint.y - origin.y };
+    const scale = Math.hypot(axis.x, axis.y);
+    if (scale <= 1e-6) return 0;
+    const unit = { x: axis.x / scale, y: axis.y / scale };
+    return (totalDx * unit.x + totalDy * unit.y) / scale;
+  }
+
+  function clearDimensionHover(event) {
+    dimensionUi.setHoveredDimensionId(null, event);
+  }
+
   function updateDimensionHover(event) {
     if (!scene || drag) return;
-    if (!hasDimensionOverlay()) {
-      dimensionUi.setHoveredDimensionId(null, event);
-      return;
-    }
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
-      dimensionUi.setHoveredDimensionId(null, event);
-      return;
-    }
-    dimensionUi.setHoveredDimensionId(pickDimension(x, y)?.dimensionId || null, event);
+    if (!hasDimensionOverlay()) return clearDimensionHover(event);
+    const { screen, inside } = canvasPointer(event.clientX, event.clientY);
+    if (!inside) return clearDimensionHover(event);
+    dimensionUi.setHoveredDimensionId(pickDimension(screen.x, screen.y)?.dimensionId || null, event);
   }
 
   function renderAuthoringLabels() {
     authoringLabelLayer.replaceChildren();
-    for (const label of authoringOverlay?.labels || []) {
+    for (const label of arrayValues(authoringOverlay?.labels)) {
+      if (label.draftingDimension) continue;
       const projected = projectOffsetPoint(label.point, label.screenOffsetPx);
       if (!projected) continue;
       const node = document.createElement("div");
@@ -1218,6 +1285,64 @@ export function createWebglViewer(canvas, reset, settings) {
       if (label.color) node.style.color = label.color;
       node.style.left = `${projected.x}px`;
       node.style.top = `${projected.y}px`;
+      if (label.rotateWithLine || label.labelLine || label.labelAxis) {
+        node.style.transformOrigin = "50% 50%";
+        node.style.transform = `${label.transform || "translate(-50%, -50%)"} rotate(${labelRotation(label, projectPoint)}rad)`;
+      } else if (label.transform) {
+        node.style.transform = label.transform;
+      }
+      authoringLabelLayer.appendChild(node);
+    }
+    for (const quickList of arrayValues(authoringOverlay?.quickLists)) {
+      const projected = projectOffsetPoint(quickList.point, quickList.screenOffsetPx);
+      const items = arrayValues(quickList.items);
+      if (!projected || !items.length) continue;
+      const node = document.createElement("div");
+      node.className = `authoring-quick-list ${quickList.className || ""}`.trim();
+      node.style.left = `${projected.x}px`;
+      node.style.top = `${projected.y}px`;
+      if (quickList.title) {
+        const title = document.createElement("div");
+        title.className = "authoring-quick-list-title";
+        title.textContent = quickList.title;
+        node.appendChild(title);
+      }
+      const buttonRow = document.createElement("div");
+      buttonRow.className = "authoring-quick-list-items";
+      for (const item of items) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `authoring-quick-list-item ${item.tone || ""}${item.disabled ? " disabled" : ""}`.trim();
+        button.disabled = Boolean(item.disabled);
+        button.title = item.title || item.label || item.text || "";
+        if (item.badge) {
+          const badge = document.createElement("span");
+          badge.className = "authoring-quick-list-badge";
+          badge.textContent = item.badge;
+          button.appendChild(badge);
+        }
+        const label = document.createElement("span");
+        label.className = "authoring-quick-list-label";
+        label.textContent = item.label || item.text || item.id || "Action";
+        button.appendChild(label);
+        button.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        });
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (button.disabled) return;
+          const handled = authoringHandler?.quickListAction?.({ quickList, item, event });
+          if (handled !== false) {
+            authoringHoveredHandle = null;
+            canvas.classList.remove("authoring-hover");
+            requestDraw();
+          }
+        });
+        buttonRow.appendChild(button);
+      }
+      node.appendChild(buttonRow);
       authoringLabelLayer.appendChild(node);
     }
     if (authoringHoveredHandle?.point) {
@@ -1384,6 +1509,7 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function pushAuthoringHandle(positionData, colorData, handle) {
+    if (handle.visible === false) return;
     if (handle.type === "axis") {
       pushAxisHandle(positionData, colorData, handle);
       return;
@@ -1395,8 +1521,12 @@ export function createWebglViewer(canvas, reset, settings) {
     const projected = projectOffsetPoint(handle.point, handle.screenOffsetPx);
     if (!projected) return;
     const hovered = isAuthoringHovered(handle);
-    const radius = (handle.radius || 10) + (hovered ? 3 : 0);
-    const color = hexToRgba(hovered ? "#fef08a" : handle.color);
+    const hoverGrow = finiteNumberOr(handle.hoverRadiusAddPx, 3);
+    const radius = (handle.radius || 10) + (hovered ? hoverGrow : 0);
+    const color = hexToRgba(
+      hovered ? handle.hoverColor || "#fef08a" : handle.color,
+      hovered ? finiteNumberOr(handle.hoverOpacity, 1) : finiteNumberOr(handle.opacity, 1)
+    );
     if (handle.type === "space-toggle") {
       pushScreenDiamond(positionData, colorData, projected, radius, color);
       return;
@@ -1413,22 +1543,21 @@ export function createWebglViewer(canvas, reset, settings) {
     colorData.push(rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3] / 255);
   }
 
+  function uploadDynamicAttribute(buffer, location, size, data) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(location);
+    gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+  }
+
   function drawArrays(mode, positionData, colorData) {
     if (!positionData.length) return;
     const state = initRenderer();
 
     gl.useProgram(state.program);
     resetInstancedAttribs(state.position, state.color);
-    gl.bindBuffer(gl.ARRAY_BUFFER, state.positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(state.position);
-    gl.vertexAttribPointer(state.position, 3, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, state.colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(state.color);
-    gl.vertexAttribPointer(state.color, 4, gl.FLOAT, false, 0, 0);
-
+    uploadDynamicAttribute(state.positionBuffer, state.position, 3, positionData);
+    uploadDynamicAttribute(state.colorBuffer, state.color, 4, colorData);
     gl.drawArrays(mode, 0, positionData.length / 3);
   }
 
@@ -1456,9 +1585,9 @@ export function createWebglViewer(canvas, reset, settings) {
   function invalidateStaticSceneCache() {
     if (!staticSceneCache) return;
     for (const group of [
-      ...(staticSceneCache.opaqueFaces || []),
-      ...(staticSceneCache.transparentFaces || []),
-      ...(staticSceneCache.lines || [])
+      ...arrayValues(staticSceneCache.opaqueFaces),
+      ...arrayValues(staticSceneCache.transparentFaces),
+      ...arrayValues(staticSceneCache.lines)
     ]) {
       deleteRenderGroup(group);
     }
@@ -1473,7 +1602,7 @@ export function createWebglViewer(canvas, reset, settings) {
       gl.deleteBuffer(buffer);
       deleted.add(buffer);
     };
-    for (const group of memberInstanceCache.staticGroups || []) {
+    for (const group of arrayValues(memberInstanceCache.staticGroups)) {
       deleteOnce(group.localPositionBuffer);
       deleteOnce(group.localNormalBuffer);
       deleteOnce(group.startBuffer);
@@ -1485,6 +1614,11 @@ export function createWebglViewer(canvas, reset, settings) {
       deleteOnce(group.pickColorBuffer);
     }
     memberInstanceCache = null;
+  }
+
+  function invalidateRenderableCaches() {
+    invalidateStaticSceneCache();
+    invalidateMemberInstanceCache();
   }
 
   function appendWorldVertex(group, point, rgba, pickRgba = null) {
@@ -1566,18 +1700,7 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function drawStaticRenderGroups(groups) {
     if (!groups.length) return;
-    const state = initStaticSceneRenderer();
-    const view = camera.viewUniforms(scene, canvas);
-
-    gl.useProgram(state.program);
-    resetInstancedAttribs(state.position, state.color);
-    gl.uniform1f(state.uniforms.yaw, view.yaw);
-    gl.uniform1f(state.uniforms.pitch, view.pitch);
-    gl.uniform1f(state.uniforms.scale, view.scale);
-    gl.uniform2fv(state.uniforms.pan, view.pan);
-    gl.uniform2fv(state.uniforms.viewport, view.viewport);
-    gl.uniform3fv(state.uniforms.pivot, view.pivot);
-    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
+    const state = prepareStaticSceneRenderer();
 
     for (const group of groups) {
       gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
@@ -1592,32 +1715,13 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function drawWorldArrays(mode, positionData, colorData) {
     if (!positionData.length) return;
-    const state = initStaticSceneRenderer();
-    const view = camera.viewUniforms(scene, canvas);
-
-    gl.useProgram(state.program);
-    resetInstancedAttribs(state.position, state.color);
-    gl.uniform1f(state.uniforms.yaw, view.yaw);
-    gl.uniform1f(state.uniforms.pitch, view.pitch);
-    gl.uniform1f(state.uniforms.scale, view.scale);
-    gl.uniform2fv(state.uniforms.pan, view.pan);
-    gl.uniform2fv(state.uniforms.viewport, view.viewport);
-    gl.uniform3fv(state.uniforms.pivot, view.pivot);
-    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
+    const state = prepareStaticSceneRenderer();
 
     if (!state.dynamicPositionBuffer) state.dynamicPositionBuffer = gl.createBuffer();
     if (!state.dynamicColorBuffer) state.dynamicColorBuffer = gl.createBuffer();
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, state.dynamicPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(state.position);
-    gl.vertexAttribPointer(state.position, 3, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, state.dynamicColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(state.color);
-    gl.vertexAttribPointer(state.color, 4, gl.FLOAT, false, 0, 0);
-
+    uploadDynamicAttribute(state.dynamicPositionBuffer, state.position, 3, positionData);
+    uploadDynamicAttribute(state.dynamicColorBuffer, state.color, 4, colorData);
     gl.drawArrays(mode, 0, positionData.length / 3);
   }
 
@@ -1699,43 +1803,85 @@ export function createWebglViewer(canvas, reset, settings) {
     state.instancing.vertexAttribDivisorANGLE(location, divisor);
   }
 
-  function drawMemberInstances() {
-    if (!scene?.memberInstances?.length) return;
-    const state = initMemberInstanceRenderer();
-    if (!state) return;
-    if (!memberInstanceCache) memberInstanceCache = buildMemberInstanceCache();
-    const groups = memberInstanceCache.staticGroups;
-    if (!groups.length) return;
-
+  function prepareStaticSceneRenderer() {
+    const state = initStaticSceneRenderer();
     const view = camera.viewUniforms(scene, canvas);
     gl.useProgram(state.program);
-    gl.uniform1f(state.uniforms.yaw, view.yaw);
-    gl.uniform1f(state.uniforms.pitch, view.pitch);
-    gl.uniform1f(state.uniforms.scale, view.scale);
-    gl.uniform2fv(state.uniforms.pan, view.pan);
-    gl.uniform2fv(state.uniforms.viewport, view.viewport);
-    gl.uniform3fv(state.uniforms.pivot, view.pivot);
-    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
-    gl.uniform3fv(state.uniforms.light, settings.render.lighting.direction);
-    gl.uniform1f(state.uniforms.ambient, settings.render.lighting.ambient);
-    gl.uniform1f(state.uniforms.diffuse, settings.render.lighting.diffuse);
+    resetInstancedAttribs(state.position, state.color);
+    setViewUniforms(state, view);
+    return state;
+  }
+
+  function setViewUniforms(state, view) {
+    const { uniforms } = state;
+    gl.uniform1f(uniforms.yaw, view.yaw);
+    gl.uniform1f(uniforms.pitch, view.pitch);
+    gl.uniform1f(uniforms.scale, view.scale);
+    gl.uniform2fv(uniforms.pan, view.pan);
+    gl.uniform2fv(uniforms.viewport, view.viewport);
+    gl.uniform3fv(uniforms.pivot, view.pivot);
+    gl.uniform1f(uniforms.depthHalf, view.depthHalf);
+  }
+
+  function setLightingUniforms(state, ambient, diffuse) {
+    const { uniforms } = state;
+    gl.uniform3fv(uniforms.light, settings.render.lighting.direction);
+    gl.uniform1f(uniforms.ambient, ambient);
+    gl.uniform1f(uniforms.diffuse, diffuse);
+  }
+
+  function memberInstanceAttributeLocations(state) {
+    return [state.localPosition, state.localNormal, state.start, state.axisX, state.axisY, state.axisZ, state.length, state.color];
+  }
+
+  function bindMemberInstanceGroup(state, group, colorBuffer) {
+    bindAttribute(state.localPosition, group.localPositionBuffer, 3);
+    bindAttribute(state.localNormal, group.localNormalBuffer, 3);
+    bindAttribute(state.start, group.startBuffer, 3, 1);
+    bindAttribute(state.axisX, group.axisXBuffer, 3, 1);
+    bindAttribute(state.axisY, group.axisYBuffer, 3, 1);
+    bindAttribute(state.axisZ, group.axisZBuffer, 3, 1);
+    bindAttribute(state.length, group.lengthBuffer, 1, 1);
+    bindAttribute(state.color, colorBuffer, 4, 1);
+  }
+
+  function resetMemberInstanceDivisors(state) {
+    for (const location of memberInstanceAttributeLocations(state)) {
+      if (location >= 0) state.instancing.vertexAttribDivisorANGLE(location, 0);
+    }
+  }
+
+  function preparedMemberInstanceGroups() {
+    if (!scene?.memberInstances?.length) return null;
+    const state = initMemberInstanceRenderer();
+    if (!state) return null;
+    if (!memberInstanceCache) memberInstanceCache = buildMemberInstanceCache();
+    const groups = memberInstanceCache.staticGroups;
+    return groups.length ? { state, groups } : null;
+  }
+
+  function prepareMemberInstanceDraw(ambient, diffuse) {
+    const prepared = preparedMemberInstanceGroups();
+    if (!prepared) return null;
+    const view = camera.viewUniforms(scene, canvas);
+    gl.useProgram(prepared.state.program);
+    setViewUniforms(prepared.state, view);
+    setLightingUniforms(prepared.state, ambient, diffuse);
+    return prepared;
+  }
+
+  function drawMemberInstances() {
+    const prepared = prepareMemberInstanceDraw(settings.render.lighting.ambient, settings.render.lighting.diffuse);
+    if (!prepared) return;
+    const { state, groups } = prepared;
 
     for (const group of groups) {
       if (!group.instanceCount) continue;
-      bindAttribute(state.localPosition, group.localPositionBuffer, 3);
-      bindAttribute(state.localNormal, group.localNormalBuffer, 3);
-      bindAttribute(state.start, group.startBuffer, 3, 1);
-      bindAttribute(state.axisX, group.axisXBuffer, 3, 1);
-      bindAttribute(state.axisY, group.axisYBuffer, 3, 1);
-      bindAttribute(state.axisZ, group.axisZBuffer, 3, 1);
-      bindAttribute(state.length, group.lengthBuffer, 1, 1);
-      bindAttribute(state.color, group.colorBuffer, 4, 1);
+      bindMemberInstanceGroup(state, group, group.colorBuffer);
       state.instancing.drawArraysInstancedANGLE(gl.TRIANGLES, 0, group.vertexCount, group.instanceCount);
     }
 
-    for (const location of [state.localPosition, state.localNormal, state.start, state.axisX, state.axisY, state.axisZ, state.length, state.color]) {
-      if (location >= 0) state.instancing.vertexAttribDivisorANGLE(location, 0);
-    }
+    resetMemberInstanceDivisors(state);
   }
 
   function appendMemberInstanceSurface(positionData, colorData, instance, colorOverride = null) {
@@ -1778,9 +1924,9 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function appendMemberInstanceOutline(positionData, colorData, instance, rgba) {
-    const contours = scene.profiles?.[instance.profileId]?.section?.contours || [];
+    const contours = arrayValues(libraryProfileById(scene.profiles, instance.profileId)?.section?.contours);
     for (const contour of contours) {
-      const points = contour.points || [];
+      const points = arrayValues(contour.points);
       if (points.length < 2) continue;
       for (let index = 0; index < points.length; index += 1) {
         const a = points[index];
@@ -1842,23 +1988,24 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function drawHighlightOverlayLines() {
-    if (!highlightedObjectIds.size || !useHighlightOverlay()) return;
+    const visibleHighlightedObjectIds = highlightedObjectIdsForOverlay();
+    if (!visibleHighlightedObjectIds.size || !useHighlightOverlay()) return;
     const positions = [];
     const colors = [];
     const rgba = hexToRgba(highlight.edge);
-    for (const instance of memberInstancesForPick(highlightedObjectIds)) {
+    for (const instance of memberInstancesForPick(visibleHighlightedObjectIds)) {
       if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
       appendMemberInstanceOutline(positions, colors, instance, rgba);
     }
-    for (const face of scene.faces || []) {
-      if (!highlightedObjectIds.has(face.objectId) || face.hideEdges) continue;
+    for (const face of arrayValues(scene.faces)) {
+      if (!visibleHighlightedObjectIds.has(face.objectId) || face.hideEdges) continue;
       if (!shouldDrawSceneItem(face)) continue;
       for (let index = 0; index < face.points.length; index += 1) {
         appendWorldLine(positions, colors, face.points[index], face.points[(index + 1) % face.points.length], rgba);
       }
     }
-    for (const line of scene.lines || []) {
-      if (!highlightedObjectIds.has(line.objectId)) continue;
+    for (const line of arrayValues(scene.lines)) {
+      if (!visibleHighlightedObjectIds.has(line.objectId)) continue;
       if (!shouldDrawSceneItem(line)) continue;
       appendWorldLine(positions, colors, line.points[0], line.points[1], rgba);
     }
@@ -1867,18 +2014,7 @@ export function createWebglViewer(canvas, reset, settings) {
 
   function drawStaticPickGroups(groups) {
     if (!groups.length) return;
-    const state = initStaticSceneRenderer();
-    const view = camera.viewUniforms(scene, canvas);
-
-    gl.useProgram(state.program);
-    resetInstancedAttribs(state.position, state.color);
-    gl.uniform1f(state.uniforms.yaw, view.yaw);
-    gl.uniform1f(state.uniforms.pitch, view.pitch);
-    gl.uniform1f(state.uniforms.scale, view.scale);
-    gl.uniform2fv(state.uniforms.pan, view.pan);
-    gl.uniform2fv(state.uniforms.viewport, view.viewport);
-    gl.uniform3fv(state.uniforms.pivot, view.pivot);
-    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
+    const state = prepareStaticSceneRenderer();
 
     for (const group of groups) {
       if (!group.pickColorBuffer) continue;
@@ -1893,42 +2029,17 @@ export function createWebglViewer(canvas, reset, settings) {
   }
 
   function drawMemberInstancePickGroups() {
-    if (!scene?.memberInstances?.length) return;
-    const state = initMemberInstanceRenderer();
-    if (!state) return;
-    if (!memberInstanceCache) memberInstanceCache = buildMemberInstanceCache();
-    const groups = memberInstanceCache.staticGroups;
-    if (!groups.length) return;
-
-    const view = camera.viewUniforms(scene, canvas);
-    gl.useProgram(state.program);
-    gl.uniform1f(state.uniforms.yaw, view.yaw);
-    gl.uniform1f(state.uniforms.pitch, view.pitch);
-    gl.uniform1f(state.uniforms.scale, view.scale);
-    gl.uniform2fv(state.uniforms.pan, view.pan);
-    gl.uniform2fv(state.uniforms.viewport, view.viewport);
-    gl.uniform3fv(state.uniforms.pivot, view.pivot);
-    gl.uniform1f(state.uniforms.depthHalf, view.depthHalf);
-    gl.uniform3fv(state.uniforms.light, settings.render.lighting.direction);
-    gl.uniform1f(state.uniforms.ambient, 1);
-    gl.uniform1f(state.uniforms.diffuse, 0);
+    const prepared = prepareMemberInstanceDraw(1, 0);
+    if (!prepared) return;
+    const { state, groups } = prepared;
 
     for (const group of groups) {
       if (!group.instanceCount || !group.pickColorBuffer) continue;
-      bindAttribute(state.localPosition, group.localPositionBuffer, 3);
-      bindAttribute(state.localNormal, group.localNormalBuffer, 3);
-      bindAttribute(state.start, group.startBuffer, 3, 1);
-      bindAttribute(state.axisX, group.axisXBuffer, 3, 1);
-      bindAttribute(state.axisY, group.axisYBuffer, 3, 1);
-      bindAttribute(state.axisZ, group.axisZBuffer, 3, 1);
-      bindAttribute(state.length, group.lengthBuffer, 1, 1);
-      bindAttribute(state.color, group.pickColorBuffer, 4, 1);
+      bindMemberInstanceGroup(state, group, group.pickColorBuffer);
       state.instancing.drawArraysInstancedANGLE(gl.TRIANGLES, 0, group.vertexCount, group.instanceCount);
     }
 
-    for (const location of [state.localPosition, state.localNormal, state.start, state.axisX, state.axisY, state.axisZ, state.length, state.color]) {
-      if (location >= 0) state.instancing.vertexAttribDivisorANGLE(location, 0);
-    }
+    resetMemberInstanceDivisors(state);
   }
 
   function pickSceneGpu(x, y, options = {}) {
@@ -1954,8 +2065,8 @@ export function createWebglViewer(canvas, reset, settings) {
     gl.disable(gl.POLYGON_OFFSET_FILL);
 
     const pixel = new Uint8Array(4);
-    const pixelX = Math.max(0, Math.min(canvas.width - 1, Math.floor(x)));
-    const pixelY = Math.max(0, Math.min(canvas.height - 1, canvas.height - 1 - Math.floor(y)));
+    const pixelX = clamp(Math.floor(x), 0, canvas.width - 1);
+    const pixelY = clamp(canvas.height - 1 - Math.floor(y), 0, canvas.height - 1);
     gl.readPixels(pixelX, pixelY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
     const picked = pickObjectFromPixel(pixel);
     draw();
@@ -2002,9 +2113,9 @@ export function createWebglViewer(canvas, reset, settings) {
 
     const authoringFacePositions = [];
     const authoringFaceColors = [];
-    for (const face of authoringOverlay.faces || []) {
+    for (const face of arrayValues(authoringOverlay.faces)) {
       const rgba = hexToRgba(face.color, face.opacity ?? 0.32);
-      for (const triangle of triangulateFace(face.points || [])) {
+      for (const triangle of triangulateFace(arrayValues(face.points))) {
         for (const point of triangle) appendWorldVertex(authoringFacePositions, authoringFaceColors, point, rgba);
       }
     }
@@ -2016,19 +2127,40 @@ export function createWebglViewer(canvas, reset, settings) {
       gl.enable(gl.DEPTH_TEST);
     }
 
-    const authoringLinePositions = [];
-    const authoringLineColors = [];
-    for (const line of authoringOverlay.lines || []) {
-      const rgba = hexToRgba(line.color);
-      pushVertex(authoringLinePositions, authoringLineColors, clipPoint(line.points[0]), rgba);
-      pushVertex(authoringLinePositions, authoringLineColors, clipPoint(line.points[1]), rgba);
+    const authoringLineGroups = new Map();
+    const defaultAuthoringLineWidth = Math.max(settings.authoring?.lineWidth || 2, settings.render.edges.lineWidth);
+    const authoringLineGroup = (lineWidth) => {
+      const width = Number.isFinite(lineWidth) ? Math.max(1, lineWidth) : defaultAuthoringLineWidth;
+      const key = String(width);
+      if (!authoringLineGroups.has(key)) authoringLineGroups.set(key, { width, positions: [], colors: [] });
+      return authoringLineGroups.get(key);
+    };
+    const isHoveredAuthoringLine = (line) => {
+      if (!authoringHoveredHandle?.edgeId || !line?.edgeId || authoringHoveredHandle.edgeId !== line.edgeId) return false;
+      return (authoringHoveredHandle.kind === "plate-sketch-edge" && line.kind === "plate-sketch-edge")
+        || (authoringHoveredHandle.kind === "plate-sketch-construction-edge" && line.kind === "plate-sketch-construction-edge");
+    };
+    for (const line of arrayValues(authoringOverlay.lines)) {
+      const hovered = isHoveredAuthoringLine(line);
+      const rgba = hexToRgba(hovered ? settings.authoring?.hoverColor || "#fef08a" : line.color);
+      const group = authoringLineGroup(hovered ? Math.max(line.lineWidth || defaultAuthoringLineWidth, settings.authoring?.hoverLineWidth || 6) : line.lineWidth);
+      pushVertex(group.positions, group.colors, clipPoint(line.points[0]), rgba);
+      pushVertex(group.positions, group.colors, clipPoint(line.points[1]), rgba);
     }
-    drawArrays(gl.LINES, authoringLinePositions, authoringLineColors);
+    if (authoringLineGroups.size) {
+      gl.disable(gl.DEPTH_TEST);
+      for (const group of authoringLineGroups.values()) {
+        gl.lineWidth(group.width);
+        drawArrays(gl.LINES, group.positions, group.colors);
+      }
+      gl.enable(gl.DEPTH_TEST);
+      gl.lineWidth(settings.render.edges.lineWidth);
+    }
     gl.disable(gl.BLEND);
 
     const dimensionPositions = [];
     const dimensionColors = [];
-    for (const line of dimensionOverlay.lines || []) {
+    for (const line of arrayValues(dimensionOverlay.lines)) {
       const rgba = hexToRgba(dimensionUi.isHovered(line) ? dimensionUi.hoverColor : line.color);
       pushVertex(dimensionPositions, dimensionColors, clipPoint(line.points[0]), rgba);
       pushVertex(dimensionPositions, dimensionColors, clipPoint(line.points[1]), rgba);
@@ -2039,8 +2171,9 @@ export function createWebglViewer(canvas, reset, settings) {
       drawArrays(gl.LINES, dimensionPositions, dimensionColors);
       gl.enable(gl.DEPTH_TEST);
     }
+    const draftingAuthoringLabels = arrayValues(authoringOverlay.labels).filter((label) => label.draftingDimension);
     dimensionTextRenderer?.draw({
-      labels: dimensionOverlay.labels || [],
+      labels: [...arrayValues(dimensionOverlay.labels), ...draftingAuthoringLabels],
       projectPoint,
       screenScale: () => camera.screenScale(),
       isHovered: (label) => dimensionUi.isHovered(label),
@@ -2049,7 +2182,7 @@ export function createWebglViewer(canvas, reset, settings) {
 
     const handlePositions = [];
     const handleColors = [];
-    for (const handle of authoringOverlay.handles || []) {
+    for (const handle of arrayValues(authoringOverlay.handles)) {
       if (isAuthoringHovered(handle)) continue;
       pushAuthoringHandle(handlePositions, handleColors, handle);
     }
@@ -2057,9 +2190,11 @@ export function createWebglViewer(canvas, reset, settings) {
       pushAuthoringHandle(handlePositions, handleColors, authoringHoveredHandle);
     }
     if (handlePositions.length) {
+      gl.lineWidth(Math.max(settings.authoring?.handleLineWidth || 2, settings.render.edges.lineWidth));
       gl.disable(gl.DEPTH_TEST);
       drawArrays(gl.LINES, handlePositions, handleColors);
       gl.enable(gl.DEPTH_TEST);
+      gl.lineWidth(settings.render.edges.lineWidth);
     }
     dimensionUi.renderLabels();
     renderAuthoringLabels();
@@ -2123,16 +2258,23 @@ export function createWebglViewer(canvas, reset, settings) {
     canvas.addEventListener("pointerdown", (event) => {
       if (!scene) return;
       event.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      const pointer = pointerStateFromEvent(event);
+      const { x, y } = pointer.screen;
       const mode = event.button === 1 || event.button === 2 || event.shiftKey ? "pan" : "pending-orbit";
+      const leftHandle = event.button === 0 && !event.shiftKey ? pickAuthoringHandle(x, y) : null;
+      const contextHandle = event.button === 2 && !event.shiftKey ? pickAuthoringHandle(x, y) : null;
+      const contextHandleKind = contextHandle?.kind || "";
+      const contextAuthoringHandle = contextHandleKind === "plate-sketch-vertex"
+        || contextHandleKind === "plate-sketch-edge";
+      const handle = leftHandle || (
+        contextAuthoringHandle
+          ? contextHandle
+          : null
+      );
       if (commandHandler?.active?.() && event.button === 0) {
-        const hitResult = pickCursorDepth(x, y);
-        commandHandler.pointerDown?.({ event, screen: { x, y }, hit: hitResult });
+        commandHandler.pointerDown?.({ event, screen: pointer.screen, hit: pointer.hit, handle });
         return;
       }
-      const handle = event.button === 0 && !event.shiftKey ? pickAuthoringHandle(x, y) : null;
       if (handle?.kind === "coordinate-space-toggle") {
         if (authoringHandler?.click?.({ handle, screen: { x, y } }) !== false) {
           authoringHoveredHandle = null;
@@ -2141,28 +2283,77 @@ export function createWebglViewer(canvas, reset, settings) {
         }
         return;
       }
-      if (handle && authoringHandler?.beginDrag?.({ handle, screen: { x, y } }) !== false) {
-        authoringHoveredHandle = handle;
+      if (handle) {
+        const beginResult = authoringHandler?.beginDrag?.({
+          handle,
+          screen: { x, y },
+          event,
+          modifiers: {
+            altKey: Boolean(event.altKey),
+            ctrlKey: Boolean(event.ctrlKey),
+            metaKey: Boolean(event.metaKey),
+            shiftKey: Boolean(event.shiftKey)
+          }
+        });
+        if (beginResult === false) {
+          // Continue into normal scene picking/orbiting when the authoring handler explicitly declines the handle.
+        } else if (handle.draggable === false || beginResult === "handled") {
+          authoringHoveredHandle = null;
+          canvas.classList.remove("authoring-hover");
+          requestDraw();
+          return;
+        } else {
+          authoringHoveredHandle = handle;
+          drag = {
+            x: event.clientX,
+            y: event.clientY,
+            startX: event.clientX,
+            startY: event.clientY,
+            mode: "authoring",
+            handle,
+            pointerId: event.pointerId
+          };
+          capturePointer(event);
+          return;
+        }
+      }
+      if (event.button === 2 && !event.shiftKey) {
+        const contextResult = authoringHandler?.contextMenu?.({
+          screen: { x, y },
+          event,
+          hit: pointer.hit,
+          modifiers: {
+            altKey: Boolean(event.altKey),
+            ctrlKey: Boolean(event.ctrlKey),
+            metaKey: Boolean(event.metaKey),
+            shiftKey: Boolean(event.shiftKey)
+          }
+        });
+        if (contextResult) {
+          authoringHoveredHandle = null;
+          canvas.classList.remove("authoring-hover");
+          requestDraw();
+          return;
+        }
+      }
+      const dimension = event.button === 0 && !event.shiftKey ? pickDimension(x, y) : null;
+      if (dimension) {
         drag = {
           x: event.clientX,
           y: event.clientY,
           startX: event.clientX,
           startY: event.clientY,
-          mode: "authoring",
-          handle,
+          mode: "dimension",
+          dimension,
+          moved: false,
           pointerId: event.pointerId
         };
         capturePointer(event);
         return;
       }
       if (pickHandler && event.button === 0 && !event.shiftKey) {
-        const hitResult = pickScene(x, y);
+        const hitResult = pickScene(x, y, pickHandlerOptions);
         pickHandler(hitResult?.face || null);
-        return;
-      }
-      const dimension = event.button === 0 && !event.shiftKey ? pickDimension(x, y) : null;
-      if (dimension) {
-        dimensionUi.clickDimension(dimension);
         return;
       }
       if (mode === "pending-orbit") {
@@ -2194,32 +2385,42 @@ export function createWebglViewer(canvas, reset, settings) {
     canvas.addEventListener("dblclick", (event) => {
       if (!scene || pickHandler || !doubleClickHandler || event.shiftKey) return;
       event.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      if (pickDimension(x, y)) return;
-      doubleClickHandler(pickScene(x, y)?.face || null);
+      const { screen } = canvasPointer(event.clientX, event.clientY);
+      if (pickDimension(screen.x, screen.y)) return;
+      doubleClickHandler(pickScene(screen.x, screen.y)?.face || null);
     });
 
     canvas.addEventListener("pointermove", (event) => {
       if (!drag) {
         if (commandHandler?.active?.()) {
-          const rect = canvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          const hitResult = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height ? pickCursorDepth(x, y) : null;
-          commandHandler.pointerMove?.({ event, screen: { x, y }, hit: hitResult });
+          const pointer = pointerStateFromEvent(event);
+          commandHandler.pointerMove?.({ event, screen: pointer.screen, hit: pointer.hit });
           return;
         }
+        pointerStateFromEvent(event);
         if (updateAuthoringHover(event)) {
-          dimensionUi.setHoveredDimensionId(null, event);
+          clearDimensionHover(event);
           return;
         }
         clearAuthoringHover();
         updateDimensionHover(event);
         return;
       }
-      dimensionUi.setHoveredDimensionId(null, event);
+      clearDimensionHover(event);
+      if (drag.mode === "dimension") {
+        const totalDx = event.clientX - drag.startX;
+        const totalDy = event.clientY - drag.startY;
+        if (Math.hypot(totalDx, totalDy) > 2) drag.moved = true;
+        dimensionPlacementHandler?.(drag.dimension, {
+          totalDx,
+          totalDy,
+          offsetDelta: dimensionPlacementDelta(drag.dimension, totalDx, totalDy)
+        });
+        drag.x = event.clientX;
+        drag.y = event.clientY;
+        requestDraw();
+        return;
+      }
       if (drag.mode === "authoring") {
         if (authoringPanGesture(event)) {
           stopAuthoringAutoPan();
@@ -2233,14 +2434,17 @@ export function createWebglViewer(canvas, reset, settings) {
           requestDraw();
           return;
         }
-        const rect = canvas.getBoundingClientRect();
-        const screen = {
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top
-        };
+        const { rect, screen } = canvasPointer(event.clientX, event.clientY);
         const hit = authoringHitAt(screen, rect);
         authoringHandler?.drag?.({
           handle: drag.handle,
+          event,
+          modifiers: {
+            altKey: Boolean(event.altKey),
+            ctrlKey: Boolean(event.ctrlKey),
+            metaKey: Boolean(event.metaKey),
+            shiftKey: Boolean(event.shiftKey)
+          },
           dx: event.clientX - drag.x,
           dy: event.clientY - drag.y,
           totalDx: event.clientX - drag.startX,
@@ -2291,6 +2495,9 @@ export function createWebglViewer(canvas, reset, settings) {
         const cancel = eventOrOptions?.type === "pointercancel" || eventOrOptions?.type === "lostpointercapture";
         (cancel ? authoringHandler?.cancel : authoringHandler?.end)?.({ handle: currentDrag.handle });
       }
+      if (currentDrag?.mode === "dimension" && eventOrOptions?.type === "pointerup" && !currentDrag.moved) {
+        dimensionUi.clickDimension(currentDrag.dimension);
+      }
       if (currentDrag?.mode === "pending-orbit" && eventOrOptions?.type === "pointerup" && clickHandler) {
         const regionHit = pickScene(currentDrag.screen.x, currentDrag.screen.y, {
           forceCpu: true,
@@ -2310,10 +2517,8 @@ export function createWebglViewer(canvas, reset, settings) {
         } else if (shouldUseGpuPick()) {
           clickHandler(null);
         } else {
-          const rect = canvas.getBoundingClientRect();
-          const x = eventOrOptions.clientX - rect.left;
-          const y = eventOrOptions.clientY - rect.top;
-          const hit = pickScene(x, y);
+          const { screen } = canvasPointer(eventOrOptions.clientX, eventOrOptions.clientY);
+          const hit = pickScene(screen.x, screen.y);
           clickHandler(hit?.face ? { ...hit.face, ...(hit.point ? { hitPoint: hit.point } : {}) } : null);
         }
       }
@@ -2344,7 +2549,7 @@ export function createWebglViewer(canvas, reset, settings) {
     });
     document.addEventListener("pointermove", (event) => {
       if (event.target === canvas || dimensionUi.contains(event.target)) return;
-      dimensionUi.setHoveredDimensionId(null, event);
+      clearDimensionHover(event);
       clearAuthoringHover();
     });
 
@@ -2357,8 +2562,7 @@ export function createWebglViewer(canvas, reset, settings) {
       if (!scene) return;
       camera.reset();
       camera.fit(scene, canvas);
-      invalidateStaticSceneCache();
-      invalidateMemberInstanceCache();
+      invalidateRenderableCaches();
       scheduleDetailScaleChange();
       draw();
     });
@@ -2369,8 +2573,7 @@ export function createWebglViewer(canvas, reset, settings) {
   return {
     setScene(nextScene, options = {}) {
       const preserveCamera = options.preserveCamera && scene;
-      invalidateStaticSceneCache();
-      invalidateMemberInstanceCache();
+      invalidateRenderableCaches();
       invalidateMemberInstanceLookup();
       clearPendingDetailScaleChange();
       resetPickObjects();
@@ -2383,8 +2586,9 @@ export function createWebglViewer(canvas, reset, settings) {
       }
       draw();
     },
-    setPickHandler(handler) {
+    setPickHandler(handler, options = {}) {
       pickHandler = handler;
+      pickHandlerOptions = handler ? { ...options } : {};
     },
     setClickHandler(handler) {
       clickHandler = handler;
@@ -2408,11 +2612,17 @@ export function createWebglViewer(canvas, reset, settings) {
     viewportSize() {
       return { width: canvas.width, height: canvas.height };
     },
+    currentPointer() {
+      return currentPointerState();
+    },
+    authoringOverlaySnapshot,
     setAuthoringOverlay(overlay = { lines: [], handles: [] }) {
       authoringOverlay = overlay || { lines: [], handles: [], labels: [] };
+      updateAuthoringOverlayDebugState();
       if (!authoringOverlay.handles?.some((handle) => authoringHandleKey(handle) === authoringHandleKey(authoringHoveredHandle))) {
         clearAuthoringHover();
       }
+      renderAuthoringLabels();
       requestDraw();
     },
     setDimensionOverlay(overlay = { lines: [], labels: [] }) {
@@ -2435,8 +2645,11 @@ export function createWebglViewer(canvas, reset, settings) {
     setDimensionRepairHandler(handler) {
       dimensionUi.setRepairHandler(handler);
     },
+    setDimensionPlacementHandler(handler) {
+      dimensionPlacementHandler = handler;
+    },
     setHighlightedObjects(objectIds = []) {
-      if (sameObjectIdSet(highlightedObjectIds, objectIds)) return;
+      if (sameIdSet(highlightedObjectIds, objectIds)) return;
       const memberOnlyHighlight = memberOnlyHighlightChange(objectIds);
       highlightedObjectIds = new Set(objectIds);
       if (!memberOnlyHighlight) {
@@ -2453,8 +2666,7 @@ export function createWebglViewer(canvas, reset, settings) {
     replaceSceneObjects,
     fitPoints(points, options = {}) {
       if (camera.fitPoints(points, canvas, options)) {
-        invalidateStaticSceneCache();
-        invalidateMemberInstanceCache();
+        invalidateRenderableCaches();
         scheduleDetailScaleChange();
         draw();
       }

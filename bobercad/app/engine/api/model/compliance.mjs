@@ -1,11 +1,9 @@
-import { clone, solverDiagnostic } from "./solver-result.mjs";
+import { arrayValues, isPlainObject as plainObject, jsonClone } from "../../core/model.mjs?v=array-values-dry-1";
+import { finiteNumber } from "../../core/math.mjs?v=compliance-number-dry-1";
+import { solverDiagnostic } from "./solver-result.mjs?v=final-array-values-dry-1";
 
 function fail(message) {
   throw new Error(`compliance api: ${message}`);
-}
-
-function plainObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function pathValue(source, path) {
@@ -18,13 +16,14 @@ function appliesToContext(rule, context = {}) {
   if (Array.isArray(applies.componentKinds) && applies.componentKinds.length && !applies.componentKinds.includes(context.componentKind)) return false;
   if (Array.isArray(applies.componentTypes) && applies.componentTypes.length && !applies.componentTypes.includes(context.componentType)) return false;
   if (Array.isArray(applies.tags) && applies.tags.length) {
-    const tags = new Set(context.tags || []);
+    const tags = new Set(arrayValues(context.tags));
     if (!applies.tags.some((tag) => tags.has(tag))) return false;
   }
   return true;
 }
 
 function comparisonDiagnostic(rule, measured, allowed, message) {
+  const parameterPaths = arrayValues(rule.parameterPaths);
   return solverDiagnostic({
     severity: rule.severity || "error",
     code: rule.id,
@@ -32,11 +31,11 @@ function comparisonDiagnostic(rule, measured, allowed, message) {
     ruleId: rule.id,
     clause: rule.clause,
     source: rule.source,
-    parameterPaths: rule.parameterPaths || (rule.parameterPath ? [rule.parameterPath] : []),
-    objectRoles: rule.objectRoles || [],
+    parameterPaths: parameterPaths.length ? parameterPaths : (rule.parameterPath ? [rule.parameterPath] : []),
+    objectRoles: arrayValues(rule.objectRoles),
     measured,
     allowed,
-    resolve: rule.resolve || []
+    resolve: arrayValues(rule.resolve)
   });
 }
 
@@ -45,12 +44,12 @@ function runNumberRangeRule(rule, context) {
     ? pathValue(context, rule.valuePath)
     : rule.measurementPath ? pathValue(context.measurements || {}, rule.measurementPath)
       : undefined;
-  if (typeof value !== "number" || !Number.isFinite(value)) {
+  if (!finiteNumber(value)) {
     if (rule.required === false) return [];
     return [comparisonDiagnostic(rule, value, { min: rule.min, max: rule.max }, rule.missingMessage || `${rule.id}: measured value is missing`)];
   }
-  const min = typeof rule.min === "number" ? rule.min : undefined;
-  const max = typeof rule.max === "number" ? rule.max : undefined;
+  const min = finiteNumber(rule.min) ? rule.min : undefined;
+  const max = finiteNumber(rule.max) ? rule.max : undefined;
   if (min !== undefined && value < min) return [comparisonDiagnostic(rule, value, { min, max })];
   if (max !== undefined && value > max) return [comparisonDiagnostic(rule, value, { min, max })];
   return [];
@@ -70,9 +69,9 @@ export function createRulePack(config = {}) {
     title: config.title,
     jurisdiction: config.jurisdiction || "",
     edition: config.edition || "",
-    sourceReferences: Array.isArray(config.sourceReferences) ? clone(config.sourceReferences) : [],
-    applicableComponentKinds: Array.isArray(config.applicableComponentKinds) ? [...config.applicableComponentKinds] : [],
-    rules: Array.isArray(config.rules) ? clone(config.rules) : []
+    sourceReferences: jsonClone(arrayValues(config.sourceReferences)),
+    applicableComponentKinds: [...arrayValues(config.applicableComponentKinds)],
+    rules: jsonClone(arrayValues(config.rules))
   };
 }
 
@@ -91,15 +90,6 @@ export function runRulePack(rulePack, context = {}, helpers = {}) {
     return { rulePack: pack, diagnostics: [] };
   }
   const diagnostics = [];
-  for (const rule of rulePack.rules || []) diagnostics.push(...runRule(rule, context, helpers));
+  for (const rule of arrayValues(rulePack.rules)) diagnostics.push(...runRule(rule, context, helpers));
   return { rulePack: pack, diagnostics };
-}
-
-export function diagnosticsBySeverity(diagnostics = []) {
-  return diagnostics.reduce((groups, diagnostic) => {
-    const severity = diagnostic.severity || "error";
-    groups[severity] ||= [];
-    groups[severity].push(diagnostic);
-    return groups;
-  }, {});
 }

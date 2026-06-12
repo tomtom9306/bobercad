@@ -1,25 +1,18 @@
-export const DEFAULT_GHOST_OPACITY = 0.01;
+import { smartComponentDetachedObjectIds, smartComponentOwnedObjectIds } from "../../engine/api/project/dependencies.mjs?v=array-values-dry-1";
 
-function flattenIds(value) {
-  if (!value) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap(flattenIds);
-  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
-  return [];
-}
+export const DEFAULT_GHOST_OPACITY = 0.01;
 
 export function activeSmartComponentObjectIds(project, smartComponentId) {
   const smartComponent = smartComponentId ? project.model.smartComponentInstances?.[smartComponentId] : null;
   if (!smartComponent) return new Set();
   return new Set([
-    ...flattenIds(smartComponent.objectRoles),
-    ...(smartComponent.ownedObjectIds || []),
-    ...(smartComponent.detachedObjectIds || [])
-  ].filter(Boolean));
+    ...smartComponentOwnedObjectIds(smartComponent),
+    ...smartComponentDetachedObjectIds(smartComponent)
+  ]);
 }
 
 export function isActiveSmartComponentObject(scene, objectId) {
-  return Boolean(objectId && scene.activeSmartComponentObjectIds?.has(objectId));
+  return Boolean(objectId && scene?.activeSmartComponentObjectIds?.has?.(objectId));
 }
 
 export function shouldRenderObject(scene, object) {

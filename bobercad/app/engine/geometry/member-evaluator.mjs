@@ -1,4 +1,5 @@
-import { v } from "../core/math.mjs";
+import { finiteNumber, projectPointToPlane, v } from "../core/math.mjs?v=member-evaluator-number-dry-1";
+import { arrayValues, uniqueValues } from "../core/model.mjs?v=geometry-api-array-values-dry-1";
 
 const UP = [0, 0, 1];
 const EPSILON = 1e-9;
@@ -8,16 +9,8 @@ function fail(message) {
   throw new Error(`member evaluator: ${message}`);
 }
 
-function finiteNumber(value) {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-function projectPointToPlane(point, planeOrigin, normal) {
-  return v.sub(point, v.mul(normal, v.dot(v.sub(point, planeOrigin), normal)));
-}
-
 function sectionSolidPoints(profile) {
-  const points = profile.section?.contours?.flatMap((contour) => contour.role === "solid" ? contour.points : []) || [];
+  const points = arrayValues(profile.section?.contours).flatMap((contour) => contour.role === "solid" ? arrayValues(contour.points) : []);
   if (!points.length) fail(`${profile.id}: profile must contain solid contour points`);
   return points;
 }
@@ -113,7 +106,7 @@ export function sectionBounds(profile) {
 function iSectionWebMetrics(profile) {
   if (profile.profileType !== "i-section") fail(`${profile.id}: web face references require an i-section profile`);
   const points = sectionSolidPoints(profile);
-  const positiveY = [...new Set(points.map((point) => Math.abs(point[0])).filter((value) => value > EPSILON))].sort((a, b) => a - b);
+  const positiveY = uniqueValues(points.map((point) => Math.abs(point[0])).filter((value) => value > EPSILON)).sort((a, b) => a - b);
   if (positiveY.length < 2) fail(`${profile.id}: cannot resolve i-section web thickness from contour points`);
   const webHalfThickness = positiveY[0];
   const webPoints = points.filter((point) => Math.abs(point[0]) <= webHalfThickness + EPSILON);

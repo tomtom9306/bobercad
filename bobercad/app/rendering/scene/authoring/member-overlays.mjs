@@ -1,18 +1,13 @@
-import { v } from "../../../engine/core/math.mjs";
-import { memberAuthoringPoints } from "../../../engine/api/project/members.mjs";
-import { coordinateSpaceLabel, memberAxesByTarget, normalizeCoordinateSpace } from "./member-axis-space.mjs";
+import { WORLD_AXIS_ENTRIES, clamp, finiteNumber, sameVec3, v } from "../../../engine/core/math.mjs?v=world-axis-dry-1";
+import { formatNumber } from "../../../engine/core/format.mjs?v=format-number-dry-1";
+import { memberAuthoringPoints, memberById } from "../../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
+import { authoringAxisLines, authoringLine as line } from "./authoring-primitives.mjs?v=work-plane-axis-dry-1";
+import { activeAxisFromSnap, snapPointOverlay } from "./snap-overlays.mjs?v=unified-snap-manager-8";
+import { coordinateSpaceLabel, memberAxesByTarget, normalizeCoordinateSpace } from "./member-axis-space.mjs?v=member-api-distance-dry-1";
 import { memberManipulatorHandles } from "./member-manipulator-overlays.mjs";
-
-function line(points, color, meta = {}) {
-  return { points, color, collection: "authoring", ...meta };
-}
 
 function handle(memberId, kind, point, color, radius = 10) {
   return { memberId, kind, point, color, radius };
-}
-
-function finitePoint(point) {
-  return Array.isArray(point) && point.length === 3 && point.every((value) => typeof value === "number" && Number.isFinite(value));
 }
 
 function axisColor(axis, settings = {}, active = false) {
@@ -23,139 +18,54 @@ function axisColor(axis, settings = {}, active = false) {
   return axes.zColor || "#2563eb";
 }
 
-function globalAxisGuides(origins, settings = {}, activeAxis = null) {
-  const originList = Array.isArray(origins?.[0]) ? origins : finitePoint(origins) ? [origins] : [];
-  if (!originList.length) return { lines: [], labels: [] };
-  const span = settings.globalAxesSpan || settings.globalAxisGuideSpan || 1600;
-  const guides = [
-    { axis: "x", direction: [1, 0, 0] },
-    { axis: "y", direction: [0, 1, 0] },
-    { axis: "z", direction: [0, 0, 1] }
-  ];
+function axisGuideSet(entries, settings, activeAxis, span, className) {
   const lines = [];
   const labels = [];
-  for (const [originIndex, origin] of originList.entries()) {
-    if (!finitePoint(origin)) continue;
-    for (const guide of guides) {
-      const active = activeAxis === guide.axis;
-      const color = axisColor(guide.axis, settings, active);
-      const negative = v.sub(origin, v.mul(guide.direction, span));
-      const positive = v.add(origin, v.mul(guide.direction, span));
-      lines.push(line([negative, positive], color, { kind: `global-${guide.axis}-axis-guide`, axis: guide.axis, originIndex }));
-      labels.push({
-        point: positive,
-        text: guide.axis.toUpperCase(),
-        color,
-        className: active ? "snap global-axis active" : "snap global-axis"
-      });
-    }
-  }
-  return { lines, labels };
-}
-
-function profileAxisGuides(profileAxes = [], settings = {}, activeAxis = null) {
-  const span = settings.profileAxisGuideSpan || settings.globalAxisGuideSpan || 1600;
-  const lines = [];
-  const labels = [];
-  for (const guide of profileAxes) {
-    if (!guide?.point || !guide?.direction) continue;
-    const active = activeAxis === guide.axis;
-    const color = axisColor(guide.axis, settings, active);
-    const negative = v.sub(guide.point, v.mul(guide.direction, span));
-    const positive = v.add(guide.point, v.mul(guide.direction, span));
-    lines.push(line([negative, positive], color, { kind: `profile-${guide.axis}-axis-guide`, axis: guide.axis, objectId: guide.memberId }));
+  for (const entry of entries) {
+    if (!v.isVec3(entry.point) || !v.isVec3(entry.direction)) continue;
+    const active = activeAxis === entry.axis;
+    const color = axisColor(entry.axis, settings, active);
+    const offset = v.mul(entry.direction, span);
+    const positive = v.add(entry.point, offset);
+    lines.push(line([v.sub(entry.point, offset), positive], color, { kind: entry.kind, axis: entry.axis, ...entry.meta }));
     labels.push({
       point: positive,
-      text: String(guide.axis || "").toUpperCase(),
+      text: String(entry.axis || "").toUpperCase(),
       color,
-      className: active ? "snap profile-axis active" : "snap profile-axis"
+      className: active ? `${className} active` : className
     });
   }
   return { lines, labels };
 }
 
-function activeAxisFromSnap(snap, type) {
-  if (snap?.type === type) return snap.axis || null;
-  const source = Array.isArray(snap?.sources) ? snap.sources.find((item) => item.type === type && item.axis) : null;
-  return source?.axis || null;
+function globalAxisGuides(origins, settings = {}, activeAxis = null) {
+  const originList = Array.isArray(origins?.[0]) ? origins : v.isVec3(origins) ? [origins] : [];
+  if (!originList.length) return { lines: [], labels: [] };
+  const span = settings.globalAxesSpan || settings.globalAxisGuideSpan || 1600;
+  const entries = originList.flatMap((origin, originIndex) => WORLD_AXIS_ENTRIES.map(([axis, direction]) => ({
+    axis,
+    direction,
+    point: origin,
+    kind: `global-${axis}-axis-guide`,
+    meta: { originIndex }
+  })));
+  return axisGuideSet(entries, settings, activeAxis, span, "snap global-axis");
 }
 
-function isSnapAxisSource(source) {
-  return source?.kind === "line" && finitePoint(source.a) && finitePoint(source.b) && v.len(v.sub(source.b, source.a)) > 1e-9;
-}
-
-function snapAxisSources(snap) {
-  const sources = [];
-  if (isSnapAxisSource(snap)) sources.push(snap);
-  for (const source of snap?.sources || []) {
-    if (isSnapAxisSource(source)) sources.push(source);
-  }
-  const seen = new Set();
-  return sources.filter((source) => {
-    const key = `${source.type || ""}:${source.objectId || ""}:${source.axis || ""}:${source.a.join(",")}:${source.b.join(",")}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function stationOnAxis(source, point) {
-  const axis = v.sub(source.b, source.a);
-  const lengthSq = v.dot(axis, axis);
-  if (lengthSq <= 1e-12 || !finitePoint(point)) return null;
-  return v.dot(v.sub(point, source.a), axis) / lengthSq;
-}
-
-function memberAxisHighlightPoints(source, snap, settings = {}) {
-  const direction = v.norm(v.sub(source.b, source.a));
-  const length = v.len(v.sub(source.b, source.a));
-  const pad = settings.snapAxisExtensionPadding || settings.snapAxisHighlightPadding || 300;
-  const station = stationOnAxis(source, snap?.point);
-  if (station === null) return [v.sub(source.a, v.mul(direction, pad)), v.add(source.b, v.mul(direction, pad))];
-  const snapDistance = station * length;
-  const startDistance = Math.min(0, snapDistance) - pad;
-  const endDistance = Math.max(length, snapDistance) + pad;
-  return [
-    v.add(source.a, v.mul(direction, startDistance)),
-    v.add(source.a, v.mul(direction, endDistance))
-  ];
-}
-
-function snapAxisLinePoints(source, snap, settings = {}) {
-  if (source.type === "composite-guide-axis") return [source.a, source.b];
-  if (source.type === "member-axis" || source.type === "layout-axis") return memberAxisHighlightPoints(source, snap, settings);
-  const center = finitePoint(snap?.point) ? snap.point : finitePoint(source.point) ? source.point : v.mul(v.add(source.a, source.b), 0.5);
-  const direction = v.norm(v.sub(source.b, source.a));
-  const span = settings.snapAxisHighlightSpan || settings.globalAxisGuideSpan || settings.profileAxisGuideSpan || 1600;
-  return [v.sub(center, v.mul(direction, span)), v.add(center, v.mul(direction, span))];
-}
-
-function snapAxisSourceLines(snap, settings = {}) {
-  const color = settings.snapAxisColor || settings.snapColor || "#38bdf8";
-  return snapAxisSources(snap).map((source) => line(
-    snapAxisLinePoints(source, snap, settings),
-    color,
-    {
-      kind: "snap-axis-active",
-      axis: source.axis,
-      objectId: source.objectId,
-      sourceType: source.type
-    }
-  ));
-}
-
-function formatNumber(value) {
-  if (!Number.isFinite(value)) return "";
-  const rounded = Math.round(value * 100) / 100;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
-}
-
-function memberById(project, memberId, draftMember = null) {
-  return draftMember || project.model?.members?.[memberId] || null;
+function profileAxisGuides(profileAxes = [], settings = {}, activeAxis = null) {
+  const span = settings.profileAxisGuideSpan || settings.globalAxisGuideSpan || 1600;
+  const entries = profileAxes.map((guide) => ({
+    axis: guide?.axis,
+    direction: guide?.direction,
+    point: guide?.point,
+    kind: `profile-${guide?.axis}-axis-guide`,
+    meta: { objectId: guide?.memberId }
+  }));
+  return axisGuideSet(entries, settings, activeAxis, span, "snap profile-axis");
 }
 
 export function memberAuthoringOverlay(project, memberId, options = {}) {
-  const member = memberById(project, memberId, options.member);
+  const member = options.member || memberById(project, memberId);
   if (!member) return { lines: [], handles: [], labels: [] };
   const points = memberAuthoringPoints(member);
   const showLayoutAxis = options.showLayoutAxis === true;
@@ -165,10 +75,13 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
   if (showLayoutAxis) {
     lines.push(line([points.layoutStart, points.layoutEnd], "#f59e0b", { objectId: memberId, kind: "layout-axis" }));
   }
-  if (options.snap?.point) {
-    lines.push(line([options.dragPoint || options.snap.point, options.snap.point], "#38bdf8", { objectId: memberId, kind: "snap-line" }));
-  }
-  lines.push(...snapAxisSourceLines(options.snap, options.settings || {}));
+  const snapOverlay = snapPointOverlay({
+    snap: options.snap,
+    rawPoint: options.dragPoint,
+    settings: options.settings || {},
+    objectId: memberId
+  });
+  lines.push(...snapOverlay.lines);
   const axisGuides = globalAxisGuides(
     options.globalAxesOrigins || options.globalAxesOrigin,
     { ...(options.settings || {}), globalAxesSpan: options.globalAxesSpan },
@@ -197,12 +110,8 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
     );
   }
   const labels = [...axisGuides.labels];
-  if (options.snap?.point) labels.push({
-    point: options.snap.point,
-    text: options.snap.label || options.snap.type || "Snap",
-    color: "#38bdf8",
-    className: "snap"
-  });
+  handles.push(...snapOverlay.handles);
+  labels.push(...snapOverlay.labels);
   if (manipulatorSettings.visible !== false) {
     labels.push({
       point: points.center,
@@ -226,11 +135,7 @@ export function memberCreationOverlay({ start, end, snap, rawPoint, type, workPl
   const labels = [];
   const color = settings.previewColor || "#2563eb";
   if (workPlane?.origin) {
-    const size = settings.workPlaneSize || 220;
-    const axisX = v.mul(v.norm(workPlane.axisX), size);
-    const axisY = v.mul(v.norm(workPlane.axisY), size);
-    lines.push(line([v.sub(workPlane.origin, axisX), v.add(workPlane.origin, axisX)], settings.workPlaneColor || "#94a3b8", { kind: "work-plane-x" }));
-    lines.push(line([v.sub(workPlane.origin, axisY), v.add(workPlane.origin, axisY)], settings.workPlaneColor || "#94a3b8", { kind: "work-plane-y" }));
+    lines.push(...authoringAxisLines(workPlane.origin, workPlane.axisX, workPlane.axisY, settings.workPlaneSize || 220, settings.workPlaneColor || "#94a3b8"));
   }
   if (start) {
     handles.push({ kind: "create-start", point: start, color, radius: 11 });
@@ -243,7 +148,13 @@ export function memberCreationOverlay({ start, end, snap, rawPoint, type, workPl
       labels.push(...axisGuides.labels);
     }
   }
-  lines.push(...snapAxisSourceLines(snap, settings));
+  const snapOverlay = snapPointOverlay({
+    snap,
+    rawPoint,
+    settings,
+    handleRadius: 12
+  });
+  lines.push(...snapOverlay.lines);
   if (start && end) {
     lines.push(line([start, end], color, { kind: "create-axis" }));
     handles.push({ kind: "create-end", point: end, color, radius: 11 });
@@ -256,10 +167,171 @@ export function memberCreationOverlay({ start, end, snap, rawPoint, type, workPl
       className: "creation-dimension"
     });
   }
-  if (snap?.point) {
-    if (rawPoint) lines.push(line([rawPoint, snap.point], settings.snapColor || "#38bdf8", { kind: "snap-link" }));
-    handles.push({ kind: "snap", point: snap.point, color: settings.snapColor || "#38bdf8", radius: 12 });
-    labels.push({ point: snap.point, text: snap.label || snap.type || "Snap", color: settings.snapColor || "#38bdf8", className: "snap" });
-  }
+  handles.push(...snapOverlay.handles);
+  labels.push(...snapOverlay.labels);
   return { lines, handles, labels };
+}
+
+function isFreshPoint(point, points) {
+  return v.isVec3(point) && !points.some((other) => sameVec3(other, point));
+}
+
+function addPlatePointMarker(handles, point, color, kind, radius = 12) {
+  if (!v.isVec3(point)) return;
+  handles.push({ kind, point, color, radius });
+}
+
+function addPlateGuideLabel(labels, point, text, color, className, offset = { x: 18, y: -18 }) {
+  if (!v.isVec3(point)) return;
+  labels.push({ point, text, color, className, screenOffsetPx: offset });
+}
+
+function addPlatePreviewCornerHandles(handles, points, color) {
+  for (let index = 0; index < points.length; index += 1) {
+    handles.push({ kind: `plate-preview-corner-${index + 1}`, point: points[index], color, radius: 7 });
+  }
+}
+
+function plateActiveInstruction(pointCount) {
+  if (pointCount <= 0) return "P1/3 first corner";
+  if (pointCount === 1) return "P2/3 edge end";
+  return "P3/3 depth point";
+}
+
+export function plateCreationOverlay({ points = [], current = null, guidePoint = null, rawPoint = null, snap = null, previewPoints = [], workPlane, step = null, relations = {}, settings = {} }) {
+  const faces = [];
+  const lines = [];
+  const handles = [];
+  const labels = [];
+  const color = settings.previewColor || "#2563eb";
+  const fillColor = settings.platePreviewColor || settings.previewColor || "#0ea5e9";
+  const snapColor = settings.snapColor || "#38bdf8";
+  const workPlaneColor = settings.workPlaneColor || "#94a3b8";
+  const validPoints = points.filter(v.isVec3);
+  const activePoint = v.isVec3(guidePoint) ? guidePoint : current;
+  const firstPointPreview = validPoints.length === 0 && previewPoints.length >= 4;
+  const previewBaseStart = validPoints[0] || (firstPointPreview ? previewPoints[0] : null);
+  const previewBaseEnd = validPoints[1] || (validPoints.length === 1 && v.isVec3(activePoint) ? activePoint : null) || (firstPointPreview ? previewPoints[1] : null);
+  const activeStepIndex = finiteNumber(step) ? clamp(Math.floor(step) - 1, 0, 2) : validPoints.length;
+  const activeInstruction = plateActiveInstruction(activeStepIndex);
+  if (workPlane?.origin) {
+    lines.push(...authoringAxisLines(workPlane.origin, workPlane.axisX, workPlane.axisY, settings.workPlaneSize || 220, workPlaneColor));
+  }
+  const drawingOrigin = validPoints[0] || (v.isVec3(current) ? current : null);
+  if (drawingOrigin && workPlane?.axisX && workPlane?.axisY) {
+    const size = settings.plateGuideSize || Math.min(settings.workPlaneSize || 220, 180);
+    lines.push(...authoringAxisLines(drawingOrigin, workPlane.axisX, workPlane.axisY, size, workPlaneColor, {
+      x: "plate-draw-axis-x",
+      y: "plate-draw-axis-y"
+    }));
+  }
+
+  for (const [index, point] of points.entries()) {
+    if (!v.isVec3(point)) continue;
+    addPlatePointMarker(handles, point, color, `plate-point-${index + 1}`, index === points.length - 1 ? 12 : 11);
+    addPlateGuideLabel(labels, point, `P${index + 1} set`, color, "creation-start plate-point-set", { x: 8, y: -8 });
+  }
+
+  const currentIsFresh = isFreshPoint(current, points);
+  const activeIsFresh = isFreshPoint(activePoint, points);
+  const activeIsGuide = activeIsFresh && !sameVec3(activePoint, current);
+  const lastPoint = validPoints[validPoints.length - 1] || null;
+  if (currentIsFresh) {
+    addPlatePointMarker(handles, current, snapColor, "plate-current", 11);
+    addPlateGuideLabel(labels, current, activeInstruction, snapColor, "snap plate-cursor plate-active-step");
+  }
+  const snapOverlay = snapPointOverlay({
+    snap,
+    rawPoint,
+    settings,
+    labelOffset: { x: 18, y: -34 },
+    handleRadius: 10
+  });
+  lines.push(...snapOverlay.lines);
+  handles.push(...snapOverlay.handles);
+  labels.push(...snapOverlay.labels);
+  if (activeIsGuide) {
+    addPlatePointMarker(handles, activePoint, fillColor, "plate-guide", 11);
+    addPlateGuideLabel(labels, activePoint, activeInstruction, fillColor, "plate-guide plate-active-step", { x: 18, y: 18 });
+  }
+  if (lastPoint && activeIsFresh) {
+    lines.push(line([lastPoint, activePoint], color, { kind: "create-axis" }));
+  }
+
+  if (previewBaseStart && previewBaseEnd && !sameVec3(previewBaseStart, previewBaseEnd)) {
+    lines.push(line([previewBaseStart, previewBaseEnd], color, { kind: "create-axis" }));
+    const base = v.sub(previewBaseEnd, previewBaseStart);
+    const baseLength = v.len(base);
+    const planeNormal = v.safeNorm(workPlane?.normal || v.cross(workPlane?.axisX || [1, 0, 0], workPlane?.axisY || [0, 1, 0]), [0, 0, 1]);
+    const depthAxis = baseLength > 1e-9 ? v.safeNorm(v.cross(planeNormal, v.mul(base, 1 / baseLength)), [0, 0, 0]) : [0, 0, 0];
+    if (v.len(depthAxis) > 1e-9) {
+      const guideLength = settings.plateDepthGuideLength || Math.max(settings.workPlaneSize || 220, 360);
+      const guideColor = settings.plateDepthGuideColor || snapColor;
+      for (const point of [previewBaseStart, previewBaseEnd]) {
+        lines.push(line([v.sub(point, v.mul(depthAxis, guideLength)), v.add(point, v.mul(depthAxis, guideLength))], guideColor, { kind: "plate-depth-guide" }));
+      }
+    }
+    const relationPoint = v.mul(v.add(previewBaseStart, previewBaseEnd), 0.5);
+    const relationText = relations.axisLocked === false ? "Free angle" : "Axis lock";
+    const relationColor = relations.axisLocked === false ? settings.warningColor || "#f97316" : snapColor;
+    handles.push({
+      kind: "plate-create-axis-lock-toggle",
+      point: relationPoint,
+      color: relationColor,
+      radius: 9,
+      hitTolerancePx: 14,
+      title: relations.axisLocked === false ? "Enable axis lock" : "Disable axis lock"
+    });
+    labels.push({
+      point: relationPoint,
+      text: relationText,
+      color: relationColor,
+      className: relations.axisLocked === false ? "snap plate-relation free-angle" : "snap plate-relation axis-lock",
+      screenOffsetPx: { x: 14, y: -30 }
+    });
+  }
+
+  if (points.length === 1 && activeIsFresh) {
+    const length = v.len(v.sub(activePoint, points[0]));
+    labels.push({
+      point: v.mul(v.add(points[0], activePoint), 0.5),
+      text: `L ${formatNumber(length)}`,
+      color,
+      className: "creation-dimension"
+    });
+  }
+
+  if (previewBaseStart && previewBaseEnd && previewPoints.length >= 4) {
+    faces.push({
+      points: previewPoints,
+      color: fillColor,
+      opacity: Math.min(settings.previewOpacity || 0.32, 0.24)
+    });
+    for (let index = 0; index < previewPoints.length; index += 1) {
+      lines.push(line([previewPoints[index], previewPoints[(index + 1) % previewPoints.length]], color, { kind: "plate-preview-outline" }));
+    }
+    addPlatePreviewCornerHandles(handles, previewPoints, fillColor);
+    const edgeLength = v.len(v.sub(previewBaseEnd, previewBaseStart));
+    const depthLength = v.len(v.sub(previewPoints[3], previewPoints[0]));
+    labels.push({
+      point: v.mul(previewPoints.reduce((sum, point) => v.add(sum, point), [0, 0, 0]), 1 / previewPoints.length),
+      text: `${formatNumber(edgeLength)} x ${formatNumber(depthLength)}`,
+      color,
+      className: "creation-dimension"
+    });
+    if (validPoints.length > 0 && activeIsFresh) {
+      lines.push(line([activePoint, previewPoints[3]], snapColor, { kind: "plate-depth-projection" }));
+      labels.push({
+        point: v.add(v.mul(activePoint, 0.25), v.mul(previewPoints[3], 0.75)),
+        text: "depth",
+        color: snapColor,
+        className: "snap plate-projection",
+        screenOffsetPx: { x: 12, y: 20 }
+      });
+    }
+  } else if (points.length >= 2 && activeIsFresh) {
+    lines.push(line([points[0], activePoint], color, { kind: "create-axis" }));
+  }
+
+  return { faces, lines, handles, labels };
 }

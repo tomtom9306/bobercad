@@ -1,4 +1,5 @@
-import { v } from "../../engine/core/math.mjs";
+import { finiteNumber, finitePositiveNumber, v } from "../../engine/core/math.mjs?v=render-number-dry-1";
+import { pointFromPlaneCoordinates } from "../../engine/api/project/work-plane.mjs?v=plane-coordinates-dry-1";
 
 const DEFAULT_EXTENTS = { xMin: -120, xMax: 120, yMin: -90, yMax: 90 };
 const MIN_PLANE_DISPLAY_SIZE = 20;
@@ -10,14 +11,14 @@ function featureReferencePlaneId(project, objectId) {
 }
 
 function finiteExtents(extents) {
-  return extents && Number.isFinite(extents.xMin) && Number.isFinite(extents.xMax)
-    && Number.isFinite(extents.yMin) && Number.isFinite(extents.yMax)
+  return extents && finiteNumber(extents.xMin) && finiteNumber(extents.xMax)
+    && finiteNumber(extents.yMin) && finiteNumber(extents.yMax)
     && extents.xMax > extents.xMin && extents.yMax > extents.yMin;
 }
 
 function planeExtents(plane) {
   if (finiteExtents(plane?.extents)) return { ...plane.extents };
-  if (Array.isArray(plane?.size) && plane.size.length === 2 && plane.size.every((value) => Number.isFinite(value) && value > 0)) {
+  if (Array.isArray(plane?.size) && plane.size.length === 2 && plane.size.every(finitePositiveNumber)) {
     return {
       xMin: -plane.size[0] / 2,
       xMax: plane.size[0] / 2,
@@ -28,14 +29,8 @@ function planeExtents(plane) {
   return { ...DEFAULT_EXTENTS };
 }
 
-function planeCoordPoint(plane, x, y) {
-  const axisX = v.norm(plane.axisX);
-  const axisY = v.norm(plane.axisY);
-  return v.add(plane.origin, v.add(v.mul(axisX, x), v.mul(axisY, y)));
-}
-
 function planePoint(plane, extents, xKey, yKey) {
-  return planeCoordPoint(plane, extents[xKey], extents[yKey]);
+  return pointFromPlaneCoordinates([extents[xKey], extents[yKey]], plane);
 }
 
 function dashedLine(a, b, color, meta = {}) {
@@ -87,8 +82,8 @@ function overlayForPlane(plane) {
     }],
     lines: [
       ...outline,
-      ...dashedLine(planeCoordPoint(plane, extents.xMin, centerY), planeCoordPoint(plane, extents.xMax, centerY), "#64748b", { objectId: plane.id, kind: "reference-plane-center-x" }),
-      ...dashedLine(planeCoordPoint(plane, centerX, extents.yMin), planeCoordPoint(plane, centerX, extents.yMax), "#64748b", { objectId: plane.id, kind: "reference-plane-center-y" })
+      ...dashedLine(pointFromPlaneCoordinates([extents.xMin, centerY], plane), pointFromPlaneCoordinates([extents.xMax, centerY], plane), "#64748b", { objectId: plane.id, kind: "reference-plane-center-x" }),
+      ...dashedLine(pointFromPlaneCoordinates([centerX, extents.yMin], plane), pointFromPlaneCoordinates([centerX, extents.yMax], plane), "#64748b", { objectId: plane.id, kind: "reference-plane-center-y" })
     ],
     handles: [
       ...corners.map(([xKey, yKey], index) => ({
@@ -110,7 +105,7 @@ function overlayForPlane(plane) {
         corner: xKey ? `${xKey}:mid` : `mid:${yKey}`,
         xKey,
         yKey,
-        point: xKey ? planeCoordPoint(plane, extents[xKey], yKey) : planeCoordPoint(plane, xValue, extents[yKey]),
+        point: pointFromPlaneCoordinates(xKey ? [extents[xKey], yKey] : [xValue, extents[yKey]], plane),
         dragAxes: { x: v.norm(plane.axisX), y: v.norm(plane.axisY) },
         color: "#00c853",
         radius: 5

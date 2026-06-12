@@ -481,8 +481,6 @@
         },
         "base-plate": {
           "thickness": 12,
-          "width": 260,
-          "height": 260,
           "normal": [
             0,
             0,
@@ -510,8 +508,6 @@
         },
         "beam-end-plate": {
           "thickness": 12,
-          "width": 180,
-          "height": 240,
           "display": {
             "color": "#5f8f88"
           },
@@ -1563,6 +1559,61 @@
         },
         "fabrication": {
           "partMark": "BP1A"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "base_plate_1a_v1",
+              "point": [
+                -130,
+                -130
+              ]
+            },
+            {
+              "id": "base_plate_1a_v2",
+              "point": [
+                130,
+                -130
+              ]
+            },
+            {
+              "id": "base_plate_1a_v3",
+              "point": [
+                130,
+                130
+              ]
+            },
+            {
+              "id": "base_plate_1a_v4",
+              "point": [
+                -130,
+                130
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "base_plate_1a_e1",
+              "from": "base_plate_1a_v1",
+              "to": "base_plate_1a_v2"
+            },
+            {
+              "id": "base_plate_1a_e2",
+              "from": "base_plate_1a_v2",
+              "to": "base_plate_1a_v3"
+            },
+            {
+              "id": "base_plate_1a_e3",
+              "from": "base_plate_1a_v3",
+              "to": "base_plate_1a_v4"
+            },
+            {
+              "id": "base_plate_1a_e4",
+              "from": "base_plate_1a_v4",
+              "to": "base_plate_1a_v1"
+            }
+          ]
         }
       },
       "base_plate_1b": {
@@ -1583,6 +1634,61 @@
         },
         "fabrication": {
           "partMark": "BP1B"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "base_plate_1b_v1",
+              "point": [
+                -130,
+                -130
+              ]
+            },
+            {
+              "id": "base_plate_1b_v2",
+              "point": [
+                130,
+                -130
+              ]
+            },
+            {
+              "id": "base_plate_1b_v3",
+              "point": [
+                130,
+                130
+              ]
+            },
+            {
+              "id": "base_plate_1b_v4",
+              "point": [
+                -130,
+                130
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "base_plate_1b_e1",
+              "from": "base_plate_1b_v1",
+              "to": "base_plate_1b_v2"
+            },
+            {
+              "id": "base_plate_1b_e2",
+              "from": "base_plate_1b_v2",
+              "to": "base_plate_1b_v3"
+            },
+            {
+              "id": "base_plate_1b_e3",
+              "from": "base_plate_1b_v3",
+              "to": "base_plate_1b_v4"
+            },
+            {
+              "id": "base_plate_1b_e4",
+              "from": "base_plate_1b_v4",
+              "to": "base_plate_1b_v1"
+            }
+          ]
         }
       },
       "base_plate_2a": {
@@ -1603,6 +1709,61 @@
         },
         "fabrication": {
           "partMark": "BP2A"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "base_plate_2a_v1",
+              "point": [
+                -130,
+                -130
+              ]
+            },
+            {
+              "id": "base_plate_2a_v2",
+              "point": [
+                130,
+                -130
+              ]
+            },
+            {
+              "id": "base_plate_2a_v3",
+              "point": [
+                130,
+                130
+              ]
+            },
+            {
+              "id": "base_plate_2a_v4",
+              "point": [
+                -130,
+                130
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "base_plate_2a_e1",
+              "from": "base_plate_2a_v1",
+              "to": "base_plate_2a_v2"
+            },
+            {
+              "id": "base_plate_2a_e2",
+              "from": "base_plate_2a_v2",
+              "to": "base_plate_2a_v3"
+            },
+            {
+              "id": "base_plate_2a_e3",
+              "from": "base_plate_2a_v3",
+              "to": "base_plate_2a_v4"
+            },
+            {
+              "id": "base_plate_2a_e4",
+              "from": "base_plate_2a_v4",
+              "to": "base_plate_2a_v1"
+            }
+          ]
         }
       },
       "base_plate_2b": {
@@ -1623,6 +1784,61 @@
         },
         "fabrication": {
           "partMark": "BP2B"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "base_plate_2b_v1",
+              "point": [
+                -130,
+                -130
+              ]
+            },
+            {
+              "id": "base_plate_2b_v2",
+              "point": [
+                130,
+                -130
+              ]
+            },
+            {
+              "id": "base_plate_2b_v3",
+              "point": [
+                130,
+                130
+              ]
+            },
+            {
+              "id": "base_plate_2b_v4",
+              "point": [
+                -130,
+                130
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "base_plate_2b_e1",
+              "from": "base_plate_2b_v1",
+              "to": "base_plate_2b_v2"
+            },
+            {
+              "id": "base_plate_2b_e2",
+              "from": "base_plate_2b_v2",
+              "to": "base_plate_2b_v3"
+            },
+            {
+              "id": "base_plate_2b_e3",
+              "from": "base_plate_2b_v3",
+              "to": "base_plate_2b_v4"
+            },
+            {
+              "id": "base_plate_2b_e4",
+              "from": "base_plate_2b_v4",
+              "to": "base_plate_2b_v1"
+            }
+          ]
         }
       },
       "end_plate_side_a_start": {
@@ -1663,6 +1879,61 @@
         },
         "fabrication": {
           "partMark": "P-SA1"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "end_plate_side_a_start_v1",
+              "point": [
+                -90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_side_a_start_v2",
+              "point": [
+                90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_side_a_start_v3",
+              "point": [
+                90,
+                120
+              ]
+            },
+            {
+              "id": "end_plate_side_a_start_v4",
+              "point": [
+                -90,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "end_plate_side_a_start_e1",
+              "from": "end_plate_side_a_start_v1",
+              "to": "end_plate_side_a_start_v2"
+            },
+            {
+              "id": "end_plate_side_a_start_e2",
+              "from": "end_plate_side_a_start_v2",
+              "to": "end_plate_side_a_start_v3"
+            },
+            {
+              "id": "end_plate_side_a_start_e3",
+              "from": "end_plate_side_a_start_v3",
+              "to": "end_plate_side_a_start_v4"
+            },
+            {
+              "id": "end_plate_side_a_start_e4",
+              "from": "end_plate_side_a_start_v4",
+              "to": "end_plate_side_a_start_v1"
+            }
+          ]
         }
       },
       "end_plate_side_a_end": {
@@ -1703,6 +1974,61 @@
         },
         "fabrication": {
           "partMark": "P-SA2"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "end_plate_side_a_end_v1",
+              "point": [
+                -90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_side_a_end_v2",
+              "point": [
+                90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_side_a_end_v3",
+              "point": [
+                90,
+                120
+              ]
+            },
+            {
+              "id": "end_plate_side_a_end_v4",
+              "point": [
+                -90,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "end_plate_side_a_end_e1",
+              "from": "end_plate_side_a_end_v1",
+              "to": "end_plate_side_a_end_v2"
+            },
+            {
+              "id": "end_plate_side_a_end_e2",
+              "from": "end_plate_side_a_end_v2",
+              "to": "end_plate_side_a_end_v3"
+            },
+            {
+              "id": "end_plate_side_a_end_e3",
+              "from": "end_plate_side_a_end_v3",
+              "to": "end_plate_side_a_end_v4"
+            },
+            {
+              "id": "end_plate_side_a_end_e4",
+              "from": "end_plate_side_a_end_v4",
+              "to": "end_plate_side_a_end_v1"
+            }
+          ]
         }
       },
       "end_plate_side_b_start": {
@@ -1743,6 +2069,61 @@
         },
         "fabrication": {
           "partMark": "P-SB1"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "end_plate_side_b_start_v1",
+              "point": [
+                -90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_side_b_start_v2",
+              "point": [
+                90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_side_b_start_v3",
+              "point": [
+                90,
+                120
+              ]
+            },
+            {
+              "id": "end_plate_side_b_start_v4",
+              "point": [
+                -90,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "end_plate_side_b_start_e1",
+              "from": "end_plate_side_b_start_v1",
+              "to": "end_plate_side_b_start_v2"
+            },
+            {
+              "id": "end_plate_side_b_start_e2",
+              "from": "end_plate_side_b_start_v2",
+              "to": "end_plate_side_b_start_v3"
+            },
+            {
+              "id": "end_plate_side_b_start_e3",
+              "from": "end_plate_side_b_start_v3",
+              "to": "end_plate_side_b_start_v4"
+            },
+            {
+              "id": "end_plate_side_b_start_e4",
+              "from": "end_plate_side_b_start_v4",
+              "to": "end_plate_side_b_start_v1"
+            }
+          ]
         }
       },
       "end_plate_side_b_end": {
@@ -1783,6 +2164,61 @@
         },
         "fabrication": {
           "partMark": "P-SB2"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "end_plate_side_b_end_v1",
+              "point": [
+                -90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_side_b_end_v2",
+              "point": [
+                90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_side_b_end_v3",
+              "point": [
+                90,
+                120
+              ]
+            },
+            {
+              "id": "end_plate_side_b_end_v4",
+              "point": [
+                -90,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "end_plate_side_b_end_e1",
+              "from": "end_plate_side_b_end_v1",
+              "to": "end_plate_side_b_end_v2"
+            },
+            {
+              "id": "end_plate_side_b_end_e2",
+              "from": "end_plate_side_b_end_v2",
+              "to": "end_plate_side_b_end_v3"
+            },
+            {
+              "id": "end_plate_side_b_end_e3",
+              "from": "end_plate_side_b_end_v3",
+              "to": "end_plate_side_b_end_v4"
+            },
+            {
+              "id": "end_plate_side_b_end_e4",
+              "from": "end_plate_side_b_end_v4",
+              "to": "end_plate_side_b_end_v1"
+            }
+          ]
         }
       },
       "end_plate_cross_a": {
@@ -1823,6 +2259,61 @@
         },
         "fabrication": {
           "partMark": "P-XA"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "end_plate_cross_a_v1",
+              "point": [
+                -90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_cross_a_v2",
+              "point": [
+                90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_cross_a_v3",
+              "point": [
+                90,
+                120
+              ]
+            },
+            {
+              "id": "end_plate_cross_a_v4",
+              "point": [
+                -90,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "end_plate_cross_a_e1",
+              "from": "end_plate_cross_a_v1",
+              "to": "end_plate_cross_a_v2"
+            },
+            {
+              "id": "end_plate_cross_a_e2",
+              "from": "end_plate_cross_a_v2",
+              "to": "end_plate_cross_a_v3"
+            },
+            {
+              "id": "end_plate_cross_a_e3",
+              "from": "end_plate_cross_a_v3",
+              "to": "end_plate_cross_a_v4"
+            },
+            {
+              "id": "end_plate_cross_a_e4",
+              "from": "end_plate_cross_a_v4",
+              "to": "end_plate_cross_a_v1"
+            }
+          ]
         }
       },
       "end_plate_cross_b": {
@@ -1863,6 +2354,61 @@
         },
         "fabrication": {
           "partMark": "P-XB"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "end_plate_cross_b_v1",
+              "point": [
+                -90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_cross_b_v2",
+              "point": [
+                90,
+                -120
+              ]
+            },
+            {
+              "id": "end_plate_cross_b_v3",
+              "point": [
+                90,
+                120
+              ]
+            },
+            {
+              "id": "end_plate_cross_b_v4",
+              "point": [
+                -90,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "end_plate_cross_b_e1",
+              "from": "end_plate_cross_b_v1",
+              "to": "end_plate_cross_b_v2"
+            },
+            {
+              "id": "end_plate_cross_b_e2",
+              "from": "end_plate_cross_b_v2",
+              "to": "end_plate_cross_b_v3"
+            },
+            {
+              "id": "end_plate_cross_b_e3",
+              "from": "end_plate_cross_b_v3",
+              "to": "end_plate_cross_b_v4"
+            },
+            {
+              "id": "end_plate_cross_b_e4",
+              "from": "end_plate_cross_b_v4",
+              "to": "end_plate_cross_b_v1"
+            }
+          ]
         }
       }
     },

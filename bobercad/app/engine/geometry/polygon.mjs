@@ -1,8 +1,35 @@
 import { v } from "../core/math.mjs";
 
+const EPSILON = 1e-9;
+
 export function faceNormal(points) {
   if (points.length < 3) return [0, 0, 1];
-  return v.norm(v.cross(v.sub(points[1], points[0]), v.sub(points[2], points[0])));
+  let normal = [0, 0, 0];
+  for (let index = 0; index < points.length; index += 1) {
+    const current = points[index];
+    const next = points[(index + 1) % points.length];
+    normal = v.add(normal, [
+      (current[1] - next[1]) * (current[2] + next[2]),
+      (current[2] - next[2]) * (current[0] + next[0]),
+      (current[0] - next[0]) * (current[1] + next[1])
+    ]);
+  }
+  if (v.len(normal) > EPSILON) return v.norm(normal);
+  for (let index = 1; index + 1 < points.length; index += 1) {
+    const candidate = v.cross(v.sub(points[index], points[0]), v.sub(points[index + 1], points[0]));
+    if (v.len(candidate) > EPSILON) return v.norm(candidate);
+  }
+  return [0, 0, 1];
+}
+
+export function signedArea2d(points) {
+  let area = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index];
+    const b = points[(index + 1) % points.length];
+    area += a[0] * b[1] - b[0] * a[1];
+  }
+  return area / 2;
 }
 
 function edge(a, b, p) {
@@ -23,7 +50,8 @@ function pointInTriangle(p, a, b, c) {
   const d1 = edge(a, b, p);
   const d2 = edge(b, c, p);
   const d3 = edge(c, a, p);
-  return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
+  return (d1 > EPSILON && d2 > EPSILON && d3 > EPSILON)
+    || (d1 < -EPSILON && d2 < -EPSILON && d3 < -EPSILON);
 }
 
 function projectFacePoint(point, dropAxis) {

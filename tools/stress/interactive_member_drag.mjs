@@ -76,7 +76,7 @@ async function main() {
 
     target = await page.evaluate((memberId) => window.__boberCadQa.memberInteractionTarget({ memberId }), target.memberId);
     const before = await page.evaluate((memberId) => window.__boberCadQa.memberState(memberId), target.memberId);
-    const connectionBefore = await page.evaluate((memberId) => window.__boberCadQa.memberConnectionPoints(memberId), target.memberId);
+    const connectionBefore = await page.evaluate((memberId) => window.__boberCadQa.memberSmartComponentPoints(memberId), target.memberId);
     const start = target.handles.move;
     const end = { x: start.x + args.dx, y: start.y + args.dy };
 
@@ -87,7 +87,7 @@ async function main() {
     await page.waitForFunction(() => window.__boberCadPerf?.events?.some((event) => event.name === "member-drag-live-preview-updated"), null, { timeout: 10_000 });
     const live = await page.evaluate((memberId) => ({
       events: window.__boberCadPerf.events,
-      connection: window.__boberCadQa.memberConnectionPoints(memberId)
+      connection: window.__boberCadQa.memberSmartComponentPoints(memberId)
     }), target.memberId);
     await page.mouse.up();
     await page.waitForFunction(() => window.__boberCadPerf?.events?.some((event) => event.name === "member-drag-local-patch-finished"), null, { timeout: 10_000 });
@@ -96,7 +96,7 @@ async function main() {
     const immediate = await page.evaluate((memberId) => ({
       events: window.__boberCadPerf.events,
       state: window.__boberCadQa.memberState(memberId),
-      connection: window.__boberCadQa.memberConnectionPoints(memberId),
+      connection: window.__boberCadQa.memberSmartComponentPoints(memberId),
       body: document.body.innerText.slice(0, 500)
     }), target.memberId);
     const final = immediate;

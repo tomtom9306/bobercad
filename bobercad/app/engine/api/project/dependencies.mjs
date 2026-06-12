@@ -1,28 +1,11 @@
+import { arrayValues, flattenIds, uniqueTruthy as unique } from "../../core/model.mjs?v=array-values-dry-1";
+import { objectCollection } from "./objects.mjs?v=array-values-dry-1";
+import { trimJointOperations, trimJointParticipants, trimOperationReferencePlaneIds } from "./trim-operations.mjs?v=geometry-api-array-values-dry-1";
+
 const RENDER_COLLECTIONS = new Set(["members", "plates", "features", "trimJoints", "fastenerGroups", "welds"]);
 
 function fail(message) {
   throw new Error(`project dependencies: ${message}`);
-}
-
-function unique(values) {
-  return [...new Set(values.filter(Boolean))];
-}
-
-export function flattenIds(value) {
-  if (!value) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap(flattenIds);
-  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
-  fail(`unsupported id reference ${value}`);
-}
-
-export function objectCollection(project, objectId) {
-  const indexed = project.objectIndex?.[objectId]?.collection;
-  if (indexed && project.model?.[indexed]?.[objectId]) return indexed;
-  for (const [collection, objects] of Object.entries(project.model || {})) {
-    if (objects && typeof objects === "object" && !Array.isArray(objects) && objects[objectId]) return collection;
-  }
-  return null;
 }
 
 function filterProjectIds(project, ids, options = {}) {
@@ -48,7 +31,7 @@ export function smartComponentDetachedObjectIds(instance) {
 }
 
 export function smartComponentOwnedObjectIds(instance) {
-  const owned = Array.isArray(instance.ownedObjectIds) ? instance.ownedObjectIds : [];
+  const owned = arrayValues(instance.ownedObjectIds);
   return unique([...owned, ...flattenIds(instance.objectRoles)]);
 }
 
@@ -99,6 +82,18 @@ function instanceMemberIds(instance) {
   ]);
 }
 
+export function smartComponentMainMemberId(instance) {
+  return instance?.inputs?.main?.memberId || null;
+}
+
+export function smartComponentSecondaryMemberId(instance) {
+  return instance?.inputs?.secondary?.memberId || null;
+}
+
+export function smartComponentConnectionZoneId(instance) {
+  return instance?.inputs?.connectionZoneId || null;
+}
+
 export function affectedSmartComponentsForMember(project, memberId) {
   return Object.values(project.model?.smartComponentInstances || {}).filter((instance) => (
     instanceMemberIds(instance).includes(memberId)
@@ -115,7 +110,7 @@ function featureSourceMemberId(feature) {
 
 function trimJointsUsingReferencePlane(project, referencePlaneId) {
   return Object.values(project.model?.trimJoints || {}).filter((trimJoint) => (
-    (trimJoint.operations || []).some((operation) => (operation.referencePlaneIds || []).includes(referencePlaneId))
+    trimJointOperations(trimJoint).some((operation) => trimOperationReferencePlaneIds(operation).includes(referencePlaneId))
   ));
 }
 
@@ -128,29 +123,26 @@ function memberSourceFeatureObjectIds(project, memberId) {
   return ids;
 }
 
-export function trimJointObjectIds(project, trimJoint, options = {}) {
+function trimJointObjectIds(project, trimJoint, options = {}) {
   return filterProjectIds(project, [
     trimJoint.id,
-    ...(trimJoint.participants || []).map((participant) => participant.memberId),
-    ...(trimJoint.operations || []).flatMap((operation) => [
+    ...trimJointParticipants(trimJoint).map((participant) => participant.memberId),
+    ...trimJointOperations(trimJoint).flatMap((operation) => [
       operation.memberAId,
       operation.memberBId,
-      ...(operation.referencePlaneIds || [])
+      ...trimOperationReferencePlaneIds(operation)
     ])
   ], options);
-}
-
-export function affectedTrimJointsForMember(project, memberId) {
-  return Object.values(project.model?.trimJoints || {}).filter((trimJoint) => (
-    (trimJoint.participants || []).some((participant) => participant.memberId === memberId)
-    || (trimJoint.operations || []).some((operation) => operation.memberAId === memberId || operation.memberBId === memberId)
-  ));
 }
 
 export function memberDependencyObjectIds(project, memberId, options = {}) {
   const ids = options.includeMember === false ? [] : [memberId];
   ids.push(...memberSourceFeatureObjectIds(project, memberId));
-  for (const trimJoint of affectedTrimJointsForMember(project, memberId)) ids.push(...trimJointObjectIds(project, trimJoint, options));
+  for (const trimJoint of Object.values(project.model?.trimJoints || {})) {
+    if (!trimJointParticipants(trimJoint).some((participant) => participant.memberId === memberId)
+      && !trimJointOperations(trimJoint).some((operation) => operation.memberAId === memberId || operation.memberBId === memberId)) continue;
+    ids.push(...trimJointObjectIds(project, trimJoint, options));
+  }
   for (const instance of affectedSmartComponentsForMember(project, memberId)) {
     if (options.includeSmartComponentMembers !== false) ids.push(...instanceMemberIds(instance));
     ids.push(...smartComponentObjectIds(project, instance, options));
@@ -188,13 +180,6 @@ export function affectedObjectIdsForMemberChange(beforeProject, afterProject, me
   return unique([
     ...memberDependencyObjectIds(beforeProject, memberId, options),
     ...memberDependencyObjectIds(afterProject, memberId, { ...options, includeMissing: true })
-  ]);
-}
-
-export function affectedObjectIdsForFeatureChange(beforeProject, afterProject, featureId, options = {}) {
-  return unique([
-    ...featureDependencyObjectIds(beforeProject, featureId, options),
-    ...featureDependencyObjectIds(afterProject, featureId, { ...options, includeMissing: true })
   ]);
 }
 

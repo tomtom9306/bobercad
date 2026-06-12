@@ -1,5 +1,5 @@
-import { frameAtStation, normalizePath, pointAtStation } from "../../../../../../app/engine/api/geometry/paths.mjs";
-import { createSolverResult } from "../../../../../../app/engine/api/model/solver-result.mjs";
+import { frameAtStation, normalizePath, pointAtStation } from "../../../../../../app/engine/api/geometry/paths.mjs?v=path-segment-parameter-dry-1";
+import { createSolverResult } from "../../../../../../app/engine/api/model/solver-result.mjs?v=final-array-values-dry-1";
 import { runUkPartK } from "../rule-packs/uk-part-k/rules.mjs";
 
 const EPSILON = 1e-9;
@@ -26,8 +26,16 @@ function add(a, b) {
   return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 }
 
+function sub(a, b) {
+  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+
 function mul(a, scale) {
   return [a[0] * scale, a[1] * scale, a[2] * scale];
+}
+
+function dot(a, b) {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
 function len(a) {
@@ -90,6 +98,73 @@ function frameOnSegment(planPath, station, elevation, prefer = "before") {
     lateral: lateralFromTangent(tangent),
     up: [0, 0, 1]
   };
+}
+
+function localPoint(frame, point) {
+  const delta = sub(point, frame.origin);
+  return [dot(delta, frame.lateral), dot(delta, frame.tangent)];
+}
+
+function pointOnSegment(segment, distance) {
+  if (segment?.type === "line") {
+    return add(segment.start, mul(segment.tangentAt(0), distance));
+  }
+  if (segment?.type === "arc" && Array.isArray(segment.axisX) && Array.isArray(segment.axisY)) {
+    const t = distance / segment.length;
+    const sweep = finite(segment.sweep, segment.endAngle - segment.startAngle);
+    const angle = segment.startAngle + sweep * t;
+    return add(
+      add(segment.center, mul(segment.axisX, Math.cos(angle) * segment.radius)),
+      mul(segment.axisY, Math.sin(angle) * segment.radius)
+    );
+  }
+  const clamped = Math.max(0, Math.min(segment.length, distance));
+  return segment.pointAt(clamped);
+}
+
+function tangentOnSegment(segment, distance) {
+  if (segment?.type === "arc" && Array.isArray(segment.axisX) && Array.isArray(segment.axisY)) {
+    const t = distance / segment.length;
+    const sweep = finite(segment.sweep, segment.endAngle - segment.startAngle);
+    const directionSign = finite(segment.directionSign, Math.sign(sweep || 1));
+    const angle = segment.startAngle + sweep * t;
+    return unit(add(
+      mul(segment.axisX, -Math.sin(angle) * directionSign),
+      mul(segment.axisY, Math.cos(angle) * directionSign)
+    ));
+  }
+  const clamped = Math.max(0, Math.min(segment.length, distance));
+  return unit([...(segment.tangentAt(clamped) || [1, 0, 0])].map((value, index) => index === 2 ? 0 : value), [1, 0, 0]);
+}
+
+function frameOnSpecificSegment(segment, station, elevation) {
+  const distance = station - segment.stationStart;
+  const origin = pointOnSegment(segment, distance);
+  const tangent = tangentOnSegment(segment, distance);
+  return {
+    station,
+    origin: [origin[0], origin[1], elevation],
+    tangent,
+    lateral: lateralFromTangent(tangent),
+    up: [0, 0, 1]
+  };
+}
+
+function stripFootprint(planPath, stationStart, stationEnd, width, frame, sampleCount = 8, sourceSegment = null) {
+  if (stationEnd <= stationStart + EPSILON) return null;
+  const count = Math.max(2, Math.round(sampleCount));
+  const sidePoints = (offset, reverse = false) => Array.from({ length: count }, (_, index) => {
+    const t = (reverse ? count - 1 - index : index) / (count - 1);
+    const station = stationStart + (stationEnd - stationStart) * t;
+    const localFrame = sourceSegment
+      ? frameOnSpecificSegment(sourceSegment, station, frame.origin[2])
+      : frameOnSegment(planPath, station, frame.origin[2], t <= 0.5 ? "after" : "before");
+    return localPoint(frame, add(localFrame.origin, mul(localFrame.lateral, offset)));
+  });
+  return cleanFootprint([
+    ...sidePoints(-width / 2, false),
+    ...sidePoints(width / 2, true)
+  ]);
 }
 
 function splitStepCounts(stepCount, segments) {
@@ -198,11 +273,11 @@ function solveFlightStepDistribution(modules = [], targetStepCount) {
 
 function routeTypeForModules(modules = []) {
   const flightTypes = modules.filter(isFlightModule).map((module) => module.type);
+  const landingTypes = modules.filter(isLandingModule).map((module) => module.type);
   if (flightTypes.includes("flight.helical")) return "helical";
   if (flightTypes.includes("flight.spiral")) return "spiral";
-  if (flightTypes.includes("flight.curved")) return "curved";
+  if (flightTypes.includes("flight.curved")) return modules.length === 1 ? "curved" : "mixed-curved";
   if (flightTypes.includes("flight.winder")) return "winder";
-  const landingTypes = modules.filter(isLandingModule).map((module) => module.type);
   if (landingTypes.includes("landing.u")) return "u-switchback";
   if (landingTypes.includes("landing.l")) return "l-landing";
   if (landingTypes.includes("landing.straight")) return "straight-landing";
@@ -230,6 +305,19 @@ function translateLandings(landings, delta) {
   }
 }
 
+function translatePathSegments(segments, delta) {
+  for (const segment of segments) {
+    if (Array.isArray(segment.start)) segment.start = add(segment.start, delta);
+    if (Array.isArray(segment.end)) segment.end = add(segment.end, delta);
+    if (Array.isArray(segment.center)) segment.center = add(segment.center, delta);
+  }
+}
+
+function appendLineSegment(segments, start, end, id) {
+  if (len([end[0] - start[0], end[1] - start[1], end[2] - start[2]]) <= EPSILON) return;
+  segments.push({ id, type: "line", start, end });
+}
+
 function straightRoute({ origin, stepCount, going }) {
   const run = stepCount * going;
   return {
@@ -237,6 +325,40 @@ function straightRoute({ origin, stepCount, going }) {
     modules: [{ id: "flight_1", type: "flight.straight" }],
     flights: [{ id: "flight_1", startStation: 0, run, stepStart: 0, stepCount }],
     landings: []
+  };
+}
+
+function curvedFlightSegment({ id, currentPoint, tangent, lateral, run, radius, turnDirection }) {
+  const sign = turnDirection === "right" ? -1 : 1;
+  const sweep = sign * run / radius;
+  const center = add(currentPoint, mul(lateral, sign * radius));
+  const startAngle = sign > 0 ? -Math.PI / 2 : Math.PI / 2;
+  const endAngle = startAngle + sweep;
+  const endPoint = add(
+    add(center, mul(tangent, Math.cos(endAngle) * radius)),
+    mul(lateral, Math.sin(endAngle) * radius)
+  );
+  const endTangent = unit(
+    add(
+      mul(tangent, -Math.sin(endAngle) * sign),
+      mul(lateral, Math.cos(endAngle) * sign)
+    ),
+    tangent
+  );
+  return {
+    segment: {
+      id,
+      type: "arc",
+      center,
+      radius,
+      startAngle,
+      endAngle,
+      axisX: tangent,
+      axisY: lateral
+    },
+    point: endPoint,
+    tangent: endTangent,
+    lateral: lateralFromTangent(endTangent)
   };
 }
 
@@ -444,6 +566,7 @@ function uLanding({ module, landingIndex, currentPoint, currentStation, currentS
 function modularRoute({ origin, modules, parameters, computed }) {
   const flightCounts = computed.flightStepCounts || [];
   const points = [origin];
+  const pathSegments = [];
   const flights = [];
   const landings = [];
   let currentPoint = origin;
@@ -459,6 +582,7 @@ function modularRoute({ origin, modules, parameters, computed }) {
     if (isFlightModule(module)) {
       const count = Math.max(0, Math.round(finite(flightCounts[flightIndex], 0)));
       const run = count * computed.going;
+      const flightStartPoint = currentPoint;
       flights.push({
         id: module.id || `flight_${flightIndex + 1}`,
         startStation: currentStation,
@@ -466,7 +590,25 @@ function modularRoute({ origin, modules, parameters, computed }) {
         stepStart: currentStep,
         stepCount: count
       });
-      currentPoint = add(currentPoint, mul(tangent, run));
+      if ((module.type === "flight.curved" || module.type === "flight.winder") && run > EPSILON) {
+        const radius = positive(module.radius, Math.max(computed.width, computed.going * 2));
+        const arc = curvedFlightSegment({
+          id: `${module.id || `flight_${flightIndex + 1}`}_path`,
+          currentPoint,
+          tangent,
+          lateral,
+          run,
+          radius,
+          turnDirection: module.turnDirection || "left"
+        });
+        pathSegments.push(arc.segment);
+        currentPoint = arc.point;
+        tangent = arc.tangent;
+        lateral = arc.lateral;
+      } else {
+        currentPoint = add(currentPoint, mul(tangent, run));
+        appendLineSegment(pathSegments, flightStartPoint, currentPoint, `${module.id || `flight_${flightIndex + 1}`}_path`);
+      }
       currentStation += run;
       currentStep += count;
       replacedGoing = computed.going;
@@ -480,14 +622,21 @@ function modularRoute({ origin, modules, parameters, computed }) {
       const upstreamShift = mul(tangent, -entryExtension);
       translatePoints(points, upstreamShift);
       translateLandings(landings, upstreamShift);
+      translatePathSegments(pathSegments, upstreamShift);
       currentPoint = add(currentPoint, upstreamShift);
     }
+    const landingStartPoint = currentPoint;
     const result = module.type === "landing.u"
       ? uLanding({ module, landingIndex, currentPoint, currentStation, currentStep, tangent, lateral, replacedGoing, parameters, computed })
       : module.type === "landing.l"
         ? lLanding({ module, landingIndex, currentPoint, currentStation, currentStep, tangent, lateral, replacedGoing, parameters, computed })
         : straightLanding({ module, landingIndex, currentPoint, currentStation, currentStep, tangent, lateral, replacedGoing, parameters, computed });
-    for (const point of result.points || [result.point]) pushPoint(points, point);
+    let previousPoint = landingStartPoint;
+    for (const [pointIndex, point] of (result.points || [result.point]).entries()) {
+      pushPoint(points, point);
+      appendLineSegment(pathSegments, previousPoint, point, `${module.id || `landing_${landingIndex + 1}`}_path_${pointIndex + 1}`);
+      previousPoint = point;
+    }
     landings.push(result.landing);
     currentPoint = result.point;
     currentStation = result.station;
@@ -498,7 +647,7 @@ function modularRoute({ origin, modules, parameters, computed }) {
 
   if (!flights.length) return straightRoute({ origin, stepCount: computed.stepCount, going: computed.going });
   return {
-    path: polylinePath(points),
+    path: pathSegments.length ? normalizePath({ type: "custom", segments: pathSegments }) : polylinePath(points),
     modules,
     flights,
     landings
@@ -544,7 +693,7 @@ function solveRoute(parameters, inputs, computed) {
   const run = computed.going * computed.stepCount;
   const modules = computed.routeModules;
   const specialFlight = specialFlightModule(modules);
-  if (specialFlight?.type === "flight.curved" || specialFlight?.type === "flight.winder") {
+  if (modules.length === 1 && (specialFlight?.type === "flight.curved" || specialFlight?.type === "flight.winder")) {
     const radius = positive(specialFlight.radius, Math.max(computed.width, computed.going * 2));
     return arcRoute({
       origin,
@@ -556,7 +705,7 @@ function solveRoute(parameters, inputs, computed) {
       modules
     });
   }
-  if (specialFlight?.type === "flight.spiral" || specialFlight?.type === "flight.helical") {
+  if (modules.length === 1 && (specialFlight?.type === "flight.spiral" || specialFlight?.type === "flight.helical")) {
     const radius = positive(specialFlight.radius, Math.max(computed.width, computed.going * 2));
     const rotation = deg(positive(specialFlight.rotationDegrees, 360));
     return arcRoute({
@@ -585,16 +734,36 @@ function createTreadFrames(planPath, flights, computed, landings = []) {
   for (const flight of flights) {
     const count = flight.stepCount ?? computed.stepCount;
     const going = flight.run / count;
+    const depth = going + computed.treadOverlap;
     for (let localIndex = 0; localIndex < count; localIndex += 1) {
       const index = flight.stepStart + localIndex;
       if (isTreadReplacedByLanding(flight, index, landings)) continue;
+      const stationStart = flight.startStation + localIndex * going;
+      const stationEnd = flight.startStation + (localIndex + 1) * going;
       const station = flight.startStation + (localIndex + 0.5) * going;
+      const footprintStationStart = station - depth / 2;
+      const footprintStationEnd = station + depth / 2;
+      const frame = frameWithElevation(planPath, station, computed.baseElevation + computed.rise * (index + 1));
+      const segment = segmentForStation(planPath, station, "before");
+      const curvedFootprint = segment?.type === "arc"
+        ? stripFootprint(planPath, footprintStationStart, footprintStationEnd, computed.width, frame, Math.max(6, Math.ceil(depth / 80)), segment)
+        : null;
       frames.push({
-        ...frameWithElevation(planPath, station, computed.baseElevation + computed.rise * (index + 1)),
+        ...frame,
         id: `tread_${index + 1}`,
         index,
         flightId: flight.id,
-        going
+        going,
+        overlap: computed.treadOverlap,
+        depth,
+        stationStart,
+        stationEnd,
+        footprintStationStart,
+        footprintStationEnd,
+        centerWidth: computed.width,
+        centerDepth: depth,
+        footprint: curvedFootprint,
+        footprintKind: curvedFootprint ? "curved-strip" : undefined
       });
     }
   }
@@ -739,9 +908,11 @@ function diagnosticsForSpecialRoutes(computed) {
 
 function moduleRouteDiagnostics(computed) {
   const modules = computed.routeModules || [];
-  const special = specialFlightModule(modules);
-  if (!special) return [];
+  const specialFlights = modules.filter((module) => ["flight.winder", "flight.curved", "flight.spiral", "flight.helical"].includes(module.type));
+  if (!specialFlights.length) return [];
   if (modules.length === 1) return [];
+  const unsupported = specialFlights.find((module) => module.type !== "flight.curved");
+  if (!unsupported) return [];
   return [{
     severity: "error",
     code: "stair-special-route-modules-unsupported",
@@ -791,7 +962,7 @@ function capabilityDiagnostics(parameters, computed) {
       resolve: "Use spiral-column, mono-stringer, or twin-stringer support for spiral/helical stairs."
     });
   }
-  if (["winder", "curved", "spiral", "helical"].includes(routeType) && treads === "grating-tread") {
+  if (["winder", "curved", "mixed-curved", "spiral", "helical"].includes(routeType) && treads === "grating-tread") {
     diagnostics.push({
       severity: "warning",
       code: "stair-curved-grating-review-required",
@@ -830,7 +1001,7 @@ function riseCalculationDiagnostics(computed) {
 
 function railingPostSpacing(parameters, computed) {
   const baseSpacing = positive(parameters.railings?.postSpacing, 1200);
-  if (!["spiral", "helical", "winder", "curved"].includes(computed.routeType)) return baseSpacing;
+  if (!["spiral", "helical", "winder", "curved", "mixed-curved"].includes(computed.routeType)) return baseSpacing;
   const curvedDefault = Math.max(360, computed.width * 0.55);
   return Math.min(baseSpacing, positive(parameters.railings?.curvePostSpacing, curvedDefault));
 }
@@ -876,6 +1047,8 @@ export function solveStairSystem(parameters = {}, inputs = {}) {
   const rise = levels.finishedFloorRise / stepCount;
   const totalRise = levels.finishedFloorRise;
   const going = positive(parameters.geometry?.going, 260);
+  const treadDepthFallback = positive(parameters.treads?.depth, going);
+  const treadOverlap = nonNegative(parameters.treads?.overlap, Math.max(0, treadDepthFallback - going));
   const routeType = routeTypeForModules(routeModules);
   const computed = {
     stepCount,
@@ -887,6 +1060,8 @@ export function solveStairSystem(parameters = {}, inputs = {}) {
     width,
     rise,
     going,
+    treadOverlap,
+    treadDepth: going + treadOverlap,
     maxStepHeight: levels.maxStepHeight,
     floorToFloor: levels.floorToFloor,
     finishedFloorRise: levels.finishedFloorRise,
@@ -929,6 +1104,8 @@ export function solveStairSystem(parameters = {}, inputs = {}) {
     calculatedStepCount: computed.calculatedStepCount,
     flightStepDistribution: computed.flightStepDistribution,
     maxStepHeight: computed.maxStepHeight,
+    treadOverlap: computed.treadOverlap,
+    treadDepth: computed.treadDepth,
     finishedFloorRise: computed.finishedFloorRise,
     width,
     headroom: computed.headroom,

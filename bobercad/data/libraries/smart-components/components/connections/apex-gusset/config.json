@@ -4,9 +4,6 @@
   "version": 1,
   "recipe": [
     {
-      "operation": "design-status"
-    },
-    {
       "operation": "dual-member-gusset"
     }
   ],

@@ -33,6 +33,12 @@
       "unit": "mm",
       "default": 280
     },
+    "treads.overlap": {
+      "kind": "nonNegativeNumber",
+      "label": "Tread overlap",
+      "unit": "mm",
+      "default": 20
+    },
     "treads.material": {
       "kind": "text",
       "label": "Material",
@@ -71,6 +77,7 @@
           "geometry.rise",
           "treads.thickness",
           "treads.depth",
+          "treads.overlap",
           "treads.material",
           "treads.closedRisers",
           "treads.finish"

@@ -1,4 +1,5 @@
-import { objectById } from "../core/model.mjs";
+import { arrayValues, objectById } from "../core/model.mjs?v=geometry-api-array-values-dry-1";
+import { requiredProfileById } from "../api/project/profiles.mjs?v=profile-api-dry-1";
 import {
   evaluateMemberInterface,
   memberFrame,
@@ -7,23 +8,13 @@ import {
   resolveMemberFaceRef,
   sectionBounds,
   sectionWebBounds
-} from "./member-evaluator.mjs";
+} from "./member-evaluator.mjs?v=geometry-api-array-values-dry-1";
 
 function fail(message) {
   throw new Error(`member geometry: ${message}`);
 }
 
-function profileById(profiles, profileId) {
-  const profile = profiles?.[profileId] || profiles?.profiles?.[profileId];
-  if (!profile) fail(`profile not found: ${profileId}`);
-  return profile;
-}
-
 export { memberFrame, memberFrameAt, memberLength, resolveMemberFaceRef, sectionBounds, sectionWebBounds };
-
-export function resolveMemberInterface(iface, member, profile, options = {}) {
-  return evaluateMemberInterface(iface, member, profile, options);
-}
 
 function stationReferenceError(error) {
   return String(error?.message || "").includes("stationReference requires a connection reference point");
@@ -33,15 +24,11 @@ function rawInterface(project, interfaceOrId) {
   return typeof interfaceOrId === "string" ? objectById(project, interfaceOrId) : interfaceOrId;
 }
 
-export function connectionZoneForInterface(project, interfaceId) {
-  return Object.values(project.model.connectionZones || {}).find((zone) => (zone.interfaceIds || []).includes(interfaceId)) || null;
-}
-
-export function connectionReferencePointForInterface(project, profiles, interfaceOrId) {
+function connectionReferencePointForInterface(project, profiles, interfaceOrId) {
   const iface = rawInterface(project, interfaceOrId);
-  const zone = connectionZoneForInterface(project, iface.id);
+  const zone = Object.values(project.model.connectionZones || {}).find((item) => arrayValues(item.interfaceIds).includes(iface.id)) || null;
   if (!zone) return null;
-  for (const otherId of (zone.interfaceIds || []).filter((id) => id !== iface.id)) {
+  for (const otherId of arrayValues(zone.interfaceIds).filter((id) => id !== iface.id)) {
     try {
       return resolveInterface(project, profiles, otherId).origin;
     } catch (error) {
@@ -70,7 +57,7 @@ export function resolveInterface(project, profiles, interfaceOrId, options = {})
   const ownerEntry = project.objectIndex?.[iface.ownerId];
   if (ownerEntry?.collection === "members") {
     const member = objectById(project, iface.ownerId);
-    return resolveMemberInterface(iface, member, profileById(profiles, member.profile), options);
+    return evaluateMemberInterface(iface, member, requiredProfileById(profiles, member.profile, fail), options);
   }
 
   for (const key of ["origin", "normal", "localAxisY", "localAxisZ"]) {

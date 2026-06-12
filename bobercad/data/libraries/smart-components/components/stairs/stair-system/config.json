@@ -163,6 +163,12 @@
       "unit": "mm",
       "default": 280
     },
+    "treads.overlap": {
+      "kind": "nonNegativeNumber",
+      "label": "Tread overlap",
+      "unit": "mm",
+      "default": 20
+    },
     "treads.material": {
       "kind": "text",
       "label": "Tread material",
@@ -170,7 +176,7 @@
     },
     "treads.frontLip": {
       "kind": "positiveNumber",
-      "label": "Front lip",
+      "label": "Pan front lip",
       "unit": "mm",
       "default": 55
     },
@@ -179,12 +185,6 @@
       "label": "Timber thickness",
       "unit": "mm",
       "default": 32
-    },
-    "treads.woodInset": {
-      "kind": "nonNegativeNumber",
-      "label": "Tray side inset",
-      "unit": "mm",
-      "default": 35
     },
     "treads.woodNosing": {
       "kind": "nonNegativeNumber",
@@ -782,8 +782,8 @@
           "family": "folded-tray-tread",
           "thickness": 10,
           "depth": 280,
+          "overlap": 20,
           "woodThickness": 32,
-          "woodInset": 35,
           "woodNosing": 25,
           "woodMaterial": "OAK_TIMBER",
           "woodFinish": "clear-sealed-oak",
@@ -889,10 +889,10 @@
         "items": [
           "treads.thickness",
           "treads.depth",
+          "treads.overlap",
           "treads.material",
           "treads.frontLip",
           "treads.woodThickness",
-          "treads.woodInset",
           "treads.woodNosing",
           "treads.woodMaterial",
           "treads.woodFinish",

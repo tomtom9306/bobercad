@@ -1,4 +1,4 @@
-import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs";
+import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs?v=member-end-point-dry-1";
 
 function addWeldRun(runs, edge, size, side = null) {
   if (size > 0) runs.push({ edge, ...(side ? { side } : {}), size });

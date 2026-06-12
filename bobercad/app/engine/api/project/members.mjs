@@ -1,4 +1,4 @@
-import { v } from "../../core/math.mjs";
+import { clamp, distance3, finiteVec3, sameVec3, v } from "../../core/math.mjs?v=distance3-dry-1";
 
 const EPSILON = 1e-9;
 
@@ -7,22 +7,50 @@ function fail(message) {
 }
 
 export function vec3(value, label = "point") {
-  if (!Array.isArray(value) || value.length !== 3 || value.some((item) => typeof item !== "number" || !Number.isFinite(item))) {
-    fail(`${label} must be a finite [x, y, z] point`);
-  }
-  return [...value];
-}
-
-export function clone(value) {
-  return JSON.parse(JSON.stringify(value));
+  return finiteVec3(value, label, fail);
 }
 
 export function almostSamePoint(a, b, tolerance = EPSILON) {
-  return Array.isArray(a) && Array.isArray(b) && v.len(v.sub(a, b)) <= tolerance;
+  return sameVec3(a, b, tolerance);
 }
 
 export function memberCenter(member) {
   return v.mul(v.add(member.start, member.end), 0.5);
+}
+
+export function memberPointAtEnd(member, memberEnd, fallback = null) {
+  if (memberEnd === "start") return member.start;
+  if (memberEnd === "end") return member.end;
+  return fallback;
+}
+
+export function memberStationAtPoint(member, point, source = null) {
+  const referenceAxis = source?.type === "layout-axis" && member.layoutAxis
+    ? memberLayoutAxis(member)
+    : { start: member.start, end: member.end };
+  const axis = v.sub(referenceAxis.end, referenceAxis.start);
+  const referenceLength = distance3(referenceAxis.start, referenceAxis.end);
+  const physicalLength = memberAxisData(member)?.length || 0;
+  if (referenceLength <= EPSILON || physicalLength <= EPSILON) return 0;
+  const ratio = clamp(v.dot(v.sub(point, referenceAxis.start), axis) / (referenceLength * referenceLength), 0, 1);
+  return ratio * physicalLength;
+}
+
+export function memberById(project, memberId) {
+  return project?.model?.members?.[memberId] || null;
+}
+
+export function memberAxisData(member) {
+  if (!member || !v.isVec3(member.start) || !v.isVec3(member.end)) return null;
+  const axis = v.sub(member.end, member.start);
+  const length = distance3(member.start, member.end);
+  if (length <= EPSILON) return null;
+  return {
+    start: member.start,
+    end: member.end,
+    direction: v.mul(axis, 1 / length),
+    length
+  };
 }
 
 export function memberLayoutAxis(member) {

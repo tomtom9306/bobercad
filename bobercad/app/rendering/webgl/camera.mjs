@@ -1,32 +1,8 @@
-import { v } from "../../engine/core/math.mjs";
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
+import { bounds2, bounds3, clamp, finiteNumber, finiteNumberOr, validVec3Points, v } from "../../engine/core/math.mjs?v=camera-bounds2-dry-2";
 
 function wrapAngle(value) {
   const fullTurn = Math.PI * 2;
   return ((value + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
-}
-
-function viewportSize(viewport) {
-  return { width: viewport.width, height: viewport.height };
-}
-
-function finiteNumber(value) {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-function pointsBounds(points) {
-  const min = [Infinity, Infinity, Infinity];
-  const max = [-Infinity, -Infinity, -Infinity];
-  for (const point of points) {
-    for (let i = 0; i < 3; i += 1) {
-      min[i] = Math.min(min[i], point[i]);
-      max[i] = Math.max(max[i], point[i]);
-    }
-  }
-  return { min, max, center: v.mul(v.add(min, max), 0.5) };
 }
 
 export function createCamera(settings) {
@@ -80,15 +56,8 @@ export function createCamera(settings) {
       const r = rotate(point, scene);
       return [r[0], r[1]];
     });
-    const min = [Infinity, Infinity];
-    const max = [-Infinity, -Infinity];
-    for (const point of projected) {
-      min[0] = Math.min(min[0], point[0]);
-      min[1] = Math.min(min[1], point[1]);
-      max[0] = Math.max(max[0], point[0]);
-      max[1] = Math.max(max[1], point[1]);
-    }
-    const { width: viewportWidth, height: viewportHeight } = viewportSize(viewport);
+    const { min, max } = bounds2(projected);
+    const { width: viewportWidth, height: viewportHeight } = viewport;
     const width = Math.max(1, max[0] - min[0]);
     const height = Math.max(1, max[1] - min[1]);
     state.scale = Math.min(viewportWidth * settings.camera.fit.padding / width, viewportHeight * settings.camera.fit.padding / height);
@@ -97,30 +66,23 @@ export function createCamera(settings) {
   }
 
   function fitPoints(points, viewport, options = {}) {
-    const validPoints = (points || []).filter((point) => Array.isArray(point) && point.length === 3 && point.every(finiteNumber));
+    const validPoints = validVec3Points(points);
     if (!validPoints.length) return false;
     if (finiteNumber(options.yaw)) state.yaw = wrapAngle(options.yaw);
     if (finiteNumber(options.pitch)) state.pitch = wrapAngle(options.pitch);
 
-    const bounds = pointsBounds(validPoints);
+    const bounds = bounds3(validPoints);
     state.pivot = [...bounds.center];
     const projected = validPoints.map((point) => {
       const r = rotate(point);
       return [r[0], r[1]];
     });
-    const min = [Infinity, Infinity];
-    const max = [-Infinity, -Infinity];
-    for (const point of projected) {
-      min[0] = Math.min(min[0], point[0]);
-      min[1] = Math.min(min[1], point[1]);
-      max[0] = Math.max(max[0], point[0]);
-      max[1] = Math.max(max[1], point[1]);
-    }
+    const { min, max } = bounds2(projected);
     const minSpan = Math.max(1, options.minSpan || 1);
     const width = Math.max(minSpan, max[0] - min[0]);
     const height = Math.max(minSpan, max[1] - min[1]);
-    const { width: viewportWidth, height: viewportHeight } = viewportSize(viewport);
-    const padding = finiteNumber(options.padding) ? options.padding : settings.camera.fit.padding;
+    const { width: viewportWidth, height: viewportHeight } = viewport;
+    const padding = finiteNumberOr(options.padding, settings.camera.fit.padding);
     state.scale = Math.min(viewportWidth * padding / width, viewportHeight * padding / height);
     state.panX = 0;
     state.panY = 0;
@@ -141,7 +103,7 @@ export function createCamera(settings) {
 
   function zoomAt(deltaY, x, y, viewport) {
     const factor = deltaY > 0 ? settings.controls.zoomOutFactor : settings.controls.zoomInFactor;
-    const { width, height } = viewportSize(viewport);
+    const { width, height } = viewport;
     const relX = x - width / 2;
     const relY = y - height / 2;
     state.panX += (relX - state.panX) * (1 - factor);
@@ -151,7 +113,7 @@ export function createCamera(settings) {
 
   function projectPoint(point, scene, viewport) {
     const r = rotate(point, scene);
-    const { width, height } = viewportSize(viewport);
+    const { width, height } = viewport;
     const x = width / 2 + state.panX + r[0] * state.scale;
     const y = height / 2 + state.panY - r[1] * state.scale;
     const pivotOffset = scene.bounds.center ? v.len(v.sub(state.pivot, scene.bounds.center)) : 0;
@@ -165,7 +127,7 @@ export function createCamera(settings) {
 
   function clipPoint(point, scene, viewport) {
     const projected = projectPoint(point, scene, viewport);
-    const { width, height } = viewportSize(viewport);
+    const { width, height } = viewport;
     return [
       projected.x / width * 2 - 1,
       1 - projected.y / height * 2,
@@ -174,7 +136,7 @@ export function createCamera(settings) {
   }
 
   function viewUniforms(scene, viewport) {
-    const { width, height } = viewportSize(viewport);
+    const { width, height } = viewport;
     const pivotOffset = scene.bounds.center ? v.len(v.sub(state.pivot, scene.bounds.center)) : 0;
     return {
       yaw: state.yaw,
@@ -200,7 +162,7 @@ export function createCamera(settings) {
   }
 
   function screenRay(x, y, viewport) {
-    const { width, height } = viewportSize(viewport);
+    const { width, height } = viewport;
     const viewX = (x - width / 2 - state.panX) / state.scale;
     const viewY = -(y - height / 2 - state.panY) / state.scale;
     return {

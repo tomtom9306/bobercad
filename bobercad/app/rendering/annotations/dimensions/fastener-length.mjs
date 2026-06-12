@@ -1,4 +1,4 @@
-import { closestHole, dimensionOffset, featureBasis, finite, makeDimension, positionPoint, roleObject, v } from "../dimension-context.mjs";
+import { closestHole, dimensionOffset, featureBasis, finite, makeDimension, positionPoint, roleObject, v } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
 export function fastenerLengthDimension(ctx, spec) {
   const group = roleObject(ctx.project, ctx.smartComponent, spec.reference.fastenerRole);

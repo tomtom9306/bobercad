@@ -282,11 +282,7 @@
     },
     "sc_stair_system_treads_tread_1": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_1": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_1": {
       "collection": "plates",
@@ -294,11 +290,7 @@
     },
     "sc_stair_system_treads_tread_2": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_2": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_2": {
       "collection": "plates",
@@ -306,11 +298,7 @@
     },
     "sc_stair_system_treads_tread_3": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_3": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_3": {
       "collection": "plates",
@@ -318,11 +306,7 @@
     },
     "sc_stair_system_treads_tread_4": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_4": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_4": {
       "collection": "plates",
@@ -330,11 +314,7 @@
     },
     "sc_stair_system_treads_tread_6": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_6": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_6": {
       "collection": "plates",
@@ -342,11 +322,7 @@
     },
     "sc_stair_system_treads_tread_7": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_7": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_7": {
       "collection": "plates",
@@ -354,11 +330,7 @@
     },
     "sc_stair_system_treads_tread_8": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_8": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_8": {
       "collection": "plates",
@@ -942,11 +914,7 @@
     },
     "sc_stair_system_treads_tread_9": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_9": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_9": {
       "collection": "plates",
@@ -954,11 +922,7 @@
     },
     "sc_stair_system_treads_tread_10": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_stair_system_treads_front_plate_10": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_stair_system_treads_wood_tread_10": {
       "collection": "plates",
@@ -2065,15 +2029,6 @@
           "sc_stair_system_treads_tread_8",
           "sc_stair_system_treads_tread_9",
           "sc_stair_system_treads_tread_10",
-          "sc_stair_system_treads_front_plate_1",
-          "sc_stair_system_treads_front_plate_2",
-          "sc_stair_system_treads_front_plate_3",
-          "sc_stair_system_treads_front_plate_4",
-          "sc_stair_system_treads_front_plate_6",
-          "sc_stair_system_treads_front_plate_7",
-          "sc_stair_system_treads_front_plate_8",
-          "sc_stair_system_treads_front_plate_9",
-          "sc_stair_system_treads_front_plate_10",
           "sc_stair_system_treads_wood_tread_1",
           "sc_stair_system_treads_wood_tread_2",
           "sc_stair_system_treads_wood_tread_3",
@@ -2095,15 +2050,6 @@
           "sc_stair_system_treads_tread_8",
           "sc_stair_system_treads_tread_9",
           "sc_stair_system_treads_tread_10",
-          "sc_stair_system_treads_front_plate_1",
-          "sc_stair_system_treads_front_plate_2",
-          "sc_stair_system_treads_front_plate_3",
-          "sc_stair_system_treads_front_plate_4",
-          "sc_stair_system_treads_front_plate_6",
-          "sc_stair_system_treads_front_plate_7",
-          "sc_stair_system_treads_front_plate_8",
-          "sc_stair_system_treads_front_plate_9",
-          "sc_stair_system_treads_front_plate_10",
           "sc_stair_system_treads_wood_tread_1",
           "sc_stair_system_treads_wood_tread_2",
           "sc_stair_system_treads_wood_tread_3",
@@ -4163,12 +4109,10 @@
     "plates": {
       "sc_stair_system_treads_tread_1": {
         "id": "sc_stair_system_treads_tread_1",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          130,
+          142.5,
           0,
           175
         ],
@@ -4189,12 +4133,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 0,
           "station": 130,
+          "stationStart": 0,
+          "stationEnd": 260,
           "flightId": "flight_1",
+          "overlap": 20,
           "walkingSurface": [
             130,
             0,
@@ -4206,9 +4153,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -4218,72 +4165,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread1",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_1": {
-        "id": "sc_stair_system_treads_front_plate_1",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          265,
-          0,
-          152.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 0,
-          "station": 130,
-          "flightId": "flight_1",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_1"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 1"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate1",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_1_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_1_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_1_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_1_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_1_e1",
+              "from": "sc_stair_system_treads_tread_1_v1",
+              "to": "sc_stair_system_treads_tread_1_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_1_e2",
+              "from": "sc_stair_system_treads_tread_1_v2",
+              "to": "sc_stair_system_treads_tread_1_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_1_e3",
+              "from": "sc_stair_system_treads_tread_1_v3",
+              "to": "sc_stair_system_treads_tread_1_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_1_e4",
+              "from": "sc_stair_system_treads_tread_1_v4",
+              "to": "sc_stair_system_treads_tread_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_1": {
         "id": "sc_stair_system_treads_wood_tread_1",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           142.5,
           0,
@@ -4311,8 +4253,12 @@
           "surfaceKind": "tread",
           "index": 0,
           "station": 130,
+          "stationStart": 0,
+          "stationEnd": 260,
+          "flightId": "flight_1",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_1"
+            "backingPlateId": "sc_stair_system_treads_tread_1"
           }
         },
         "display": {
@@ -4321,6 +4267,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -4330,16 +4277,69 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_1_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_1_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_1_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_1_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_1_e1",
+              "from": "sc_stair_system_treads_wood_tread_1_v1",
+              "to": "sc_stair_system_treads_wood_tread_1_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_1_e2",
+              "from": "sc_stair_system_treads_wood_tread_1_v2",
+              "to": "sc_stair_system_treads_wood_tread_1_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_1_e3",
+              "from": "sc_stair_system_treads_wood_tread_1_v3",
+              "to": "sc_stair_system_treads_wood_tread_1_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_1_e4",
+              "from": "sc_stair_system_treads_wood_tread_1_v4",
+              "to": "sc_stair_system_treads_wood_tread_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_tread_2": {
         "id": "sc_stair_system_treads_tread_2",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          390,
+          402.5,
           0,
           355
         ],
@@ -4360,12 +4360,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 1,
           "station": 390,
+          "stationStart": 260,
+          "stationEnd": 520,
           "flightId": "flight_1",
+          "overlap": 20,
           "walkingSurface": [
             390,
             0,
@@ -4377,9 +4380,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -4389,72 +4392,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread2",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_2": {
-        "id": "sc_stair_system_treads_front_plate_2",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          525,
-          0,
-          332.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 1,
-          "station": 390,
-          "flightId": "flight_1",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_2"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 2"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate2",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_2_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_2_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_2_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_2_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_2_e1",
+              "from": "sc_stair_system_treads_tread_2_v1",
+              "to": "sc_stair_system_treads_tread_2_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_2_e2",
+              "from": "sc_stair_system_treads_tread_2_v2",
+              "to": "sc_stair_system_treads_tread_2_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_2_e3",
+              "from": "sc_stair_system_treads_tread_2_v3",
+              "to": "sc_stair_system_treads_tread_2_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_2_e4",
+              "from": "sc_stair_system_treads_tread_2_v4",
+              "to": "sc_stair_system_treads_tread_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_2": {
         "id": "sc_stair_system_treads_wood_tread_2",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           402.5,
           0,
@@ -4482,8 +4480,12 @@
           "surfaceKind": "tread",
           "index": 1,
           "station": 390,
+          "stationStart": 260,
+          "stationEnd": 520,
+          "flightId": "flight_1",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_2"
+            "backingPlateId": "sc_stair_system_treads_tread_2"
           }
         },
         "display": {
@@ -4492,6 +4494,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -4501,16 +4504,69 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_2_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_2_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_2_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_2_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_2_e1",
+              "from": "sc_stair_system_treads_wood_tread_2_v1",
+              "to": "sc_stair_system_treads_wood_tread_2_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_2_e2",
+              "from": "sc_stair_system_treads_wood_tread_2_v2",
+              "to": "sc_stair_system_treads_wood_tread_2_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_2_e3",
+              "from": "sc_stair_system_treads_wood_tread_2_v3",
+              "to": "sc_stair_system_treads_wood_tread_2_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_2_e4",
+              "from": "sc_stair_system_treads_wood_tread_2_v4",
+              "to": "sc_stair_system_treads_wood_tread_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_tread_3": {
         "id": "sc_stair_system_treads_tread_3",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          650,
+          662.5,
           0,
           535
         ],
@@ -4531,12 +4587,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 2,
           "station": 650,
+          "stationStart": 520,
+          "stationEnd": 780,
           "flightId": "flight_1",
+          "overlap": 20,
           "walkingSurface": [
             650,
             0,
@@ -4548,9 +4607,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -4560,72 +4619,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread3",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_3": {
-        "id": "sc_stair_system_treads_front_plate_3",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          785,
-          0,
-          512.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 2,
-          "station": 650,
-          "flightId": "flight_1",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_3"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 3"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate3",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_3_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_3_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_3_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_3_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_3_e1",
+              "from": "sc_stair_system_treads_tread_3_v1",
+              "to": "sc_stair_system_treads_tread_3_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_3_e2",
+              "from": "sc_stair_system_treads_tread_3_v2",
+              "to": "sc_stair_system_treads_tread_3_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_3_e3",
+              "from": "sc_stair_system_treads_tread_3_v3",
+              "to": "sc_stair_system_treads_tread_3_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_3_e4",
+              "from": "sc_stair_system_treads_tread_3_v4",
+              "to": "sc_stair_system_treads_tread_3_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_3": {
         "id": "sc_stair_system_treads_wood_tread_3",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           662.5,
           0,
@@ -4653,8 +4707,12 @@
           "surfaceKind": "tread",
           "index": 2,
           "station": 650,
+          "stationStart": 520,
+          "stationEnd": 780,
+          "flightId": "flight_1",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_3"
+            "backingPlateId": "sc_stair_system_treads_tread_3"
           }
         },
         "display": {
@@ -4663,6 +4721,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -4672,16 +4731,69 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread3",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_3_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_3_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_3_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_3_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_3_e1",
+              "from": "sc_stair_system_treads_wood_tread_3_v1",
+              "to": "sc_stair_system_treads_wood_tread_3_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_3_e2",
+              "from": "sc_stair_system_treads_wood_tread_3_v2",
+              "to": "sc_stair_system_treads_wood_tread_3_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_3_e3",
+              "from": "sc_stair_system_treads_wood_tread_3_v3",
+              "to": "sc_stair_system_treads_wood_tread_3_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_3_e4",
+              "from": "sc_stair_system_treads_wood_tread_3_v4",
+              "to": "sc_stair_system_treads_wood_tread_3_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_tread_4": {
         "id": "sc_stair_system_treads_tread_4",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          909.9999999999999,
+          922.4999999999999,
           0,
           715
         ],
@@ -4702,12 +4814,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 3,
           "station": 910,
+          "stationStart": 780,
+          "stationEnd": 1040,
           "flightId": "flight_1",
+          "overlap": 20,
           "walkingSurface": [
             909.9999999999999,
             0,
@@ -4719,9 +4834,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -4731,72 +4846,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread4",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_4": {
-        "id": "sc_stair_system_treads_front_plate_4",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          1045,
-          0,
-          692.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 3,
-          "station": 910,
-          "flightId": "flight_1",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_4"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 4"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate4",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_4_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_4_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_4_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_4_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_4_e1",
+              "from": "sc_stair_system_treads_tread_4_v1",
+              "to": "sc_stair_system_treads_tread_4_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_4_e2",
+              "from": "sc_stair_system_treads_tread_4_v2",
+              "to": "sc_stair_system_treads_tread_4_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_4_e3",
+              "from": "sc_stair_system_treads_tread_4_v3",
+              "to": "sc_stair_system_treads_tread_4_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_4_e4",
+              "from": "sc_stair_system_treads_tread_4_v4",
+              "to": "sc_stair_system_treads_tread_4_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_4": {
         "id": "sc_stair_system_treads_wood_tread_4",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           922.4999999999999,
           0,
@@ -4824,8 +4934,12 @@
           "surfaceKind": "tread",
           "index": 3,
           "station": 910,
+          "stationStart": 780,
+          "stationEnd": 1040,
+          "flightId": "flight_1",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_4"
+            "backingPlateId": "sc_stair_system_treads_tread_4"
           }
         },
         "display": {
@@ -4834,6 +4948,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -4843,16 +4958,69 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread4",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_4_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_4_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_4_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_4_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_4_e1",
+              "from": "sc_stair_system_treads_wood_tread_4_v1",
+              "to": "sc_stair_system_treads_wood_tread_4_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_4_e2",
+              "from": "sc_stair_system_treads_wood_tread_4_v2",
+              "to": "sc_stair_system_treads_wood_tread_4_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_4_e3",
+              "from": "sc_stair_system_treads_wood_tread_4_v3",
+              "to": "sc_stair_system_treads_wood_tread_4_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_4_e4",
+              "from": "sc_stair_system_treads_wood_tread_4_v4",
+              "to": "sc_stair_system_treads_wood_tread_4_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_tread_6": {
         "id": "sc_stair_system_treads_tread_6",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          2370,
+          2382.5,
           0,
           1075
         ],
@@ -4873,12 +5041,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 5,
           "station": 2370,
+          "stationStart": 2240,
+          "stationEnd": 2500,
           "flightId": "flight_2",
+          "overlap": 20,
           "walkingSurface": [
             2370,
             0,
@@ -4890,9 +5061,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -4902,72 +5073,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread6",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_6": {
-        "id": "sc_stair_system_treads_front_plate_6",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          2505,
-          0,
-          1052.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 5,
-          "station": 2370,
-          "flightId": "flight_2",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_6"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 6"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate6",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_6_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_6_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_6_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_6_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_6_e1",
+              "from": "sc_stair_system_treads_tread_6_v1",
+              "to": "sc_stair_system_treads_tread_6_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_6_e2",
+              "from": "sc_stair_system_treads_tread_6_v2",
+              "to": "sc_stair_system_treads_tread_6_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_6_e3",
+              "from": "sc_stair_system_treads_tread_6_v3",
+              "to": "sc_stair_system_treads_tread_6_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_6_e4",
+              "from": "sc_stair_system_treads_tread_6_v4",
+              "to": "sc_stair_system_treads_tread_6_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_6": {
         "id": "sc_stair_system_treads_wood_tread_6",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           2382.5,
           0,
@@ -4995,8 +5161,12 @@
           "surfaceKind": "tread",
           "index": 5,
           "station": 2370,
+          "stationStart": 2240,
+          "stationEnd": 2500,
+          "flightId": "flight_2",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_6"
+            "backingPlateId": "sc_stair_system_treads_tread_6"
           }
         },
         "display": {
@@ -5005,6 +5175,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -5014,16 +5185,69 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread6",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_6_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_6_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_6_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_6_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_6_e1",
+              "from": "sc_stair_system_treads_wood_tread_6_v1",
+              "to": "sc_stair_system_treads_wood_tread_6_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_6_e2",
+              "from": "sc_stair_system_treads_wood_tread_6_v2",
+              "to": "sc_stair_system_treads_wood_tread_6_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_6_e3",
+              "from": "sc_stair_system_treads_wood_tread_6_v3",
+              "to": "sc_stair_system_treads_wood_tread_6_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_6_e4",
+              "from": "sc_stair_system_treads_wood_tread_6_v4",
+              "to": "sc_stair_system_treads_wood_tread_6_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_tread_7": {
         "id": "sc_stair_system_treads_tread_7",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          2630,
+          2642.5,
           0,
           1255
         ],
@@ -5044,12 +5268,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 6,
           "station": 2630,
+          "stationStart": 2500,
+          "stationEnd": 2760,
           "flightId": "flight_2",
+          "overlap": 20,
           "walkingSurface": [
             2630,
             0,
@@ -5061,9 +5288,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -5073,72 +5300,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread7",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_7": {
-        "id": "sc_stair_system_treads_front_plate_7",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          2765,
-          0,
-          1232.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 6,
-          "station": 2630,
-          "flightId": "flight_2",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_7"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 7"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate7",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_7_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_7_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_7_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_7_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_7_e1",
+              "from": "sc_stair_system_treads_tread_7_v1",
+              "to": "sc_stair_system_treads_tread_7_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_7_e2",
+              "from": "sc_stair_system_treads_tread_7_v2",
+              "to": "sc_stair_system_treads_tread_7_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_7_e3",
+              "from": "sc_stair_system_treads_tread_7_v3",
+              "to": "sc_stair_system_treads_tread_7_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_7_e4",
+              "from": "sc_stair_system_treads_tread_7_v4",
+              "to": "sc_stair_system_treads_tread_7_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_7": {
         "id": "sc_stair_system_treads_wood_tread_7",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           2642.5,
           0,
@@ -5166,8 +5388,12 @@
           "surfaceKind": "tread",
           "index": 6,
           "station": 2630,
+          "stationStart": 2500,
+          "stationEnd": 2760,
+          "flightId": "flight_2",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_7"
+            "backingPlateId": "sc_stair_system_treads_tread_7"
           }
         },
         "display": {
@@ -5176,6 +5402,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -5185,16 +5412,69 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread7",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_7_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_7_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_7_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_7_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_7_e1",
+              "from": "sc_stair_system_treads_wood_tread_7_v1",
+              "to": "sc_stair_system_treads_wood_tread_7_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_7_e2",
+              "from": "sc_stair_system_treads_wood_tread_7_v2",
+              "to": "sc_stair_system_treads_wood_tread_7_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_7_e3",
+              "from": "sc_stair_system_treads_wood_tread_7_v3",
+              "to": "sc_stair_system_treads_wood_tread_7_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_7_e4",
+              "from": "sc_stair_system_treads_wood_tread_7_v4",
+              "to": "sc_stair_system_treads_wood_tread_7_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_tread_8": {
         "id": "sc_stair_system_treads_tread_8",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          2890,
+          2902.5,
           0,
           1435
         ],
@@ -5215,12 +5495,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 7,
           "station": 2890,
+          "stationStart": 2760,
+          "stationEnd": 3020,
           "flightId": "flight_2",
+          "overlap": 20,
           "walkingSurface": [
             2890,
             0,
@@ -5232,9 +5515,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -5244,72 +5527,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread8",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_8": {
-        "id": "sc_stair_system_treads_front_plate_8",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          3025,
-          0,
-          1412.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 7,
-          "station": 2890,
-          "flightId": "flight_2",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_8"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 8"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate8",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_8_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_8_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_8_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_8_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_8_e1",
+              "from": "sc_stair_system_treads_tread_8_v1",
+              "to": "sc_stair_system_treads_tread_8_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_8_e2",
+              "from": "sc_stair_system_treads_tread_8_v2",
+              "to": "sc_stair_system_treads_tread_8_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_8_e3",
+              "from": "sc_stair_system_treads_tread_8_v3",
+              "to": "sc_stair_system_treads_tread_8_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_8_e4",
+              "from": "sc_stair_system_treads_tread_8_v4",
+              "to": "sc_stair_system_treads_tread_8_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_8": {
         "id": "sc_stair_system_treads_wood_tread_8",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           2902.5,
           0,
@@ -5337,8 +5615,12 @@
           "surfaceKind": "tread",
           "index": 7,
           "station": 2890,
+          "stationStart": 2760,
+          "stationEnd": 3020,
+          "flightId": "flight_2",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_8"
+            "backingPlateId": "sc_stair_system_treads_tread_8"
           }
         },
         "display": {
@@ -5347,6 +5629,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -5356,17 +5639,70 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread8",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_8_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_8_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_8_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_8_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_8_e1",
+              "from": "sc_stair_system_treads_wood_tread_8_v1",
+              "to": "sc_stair_system_treads_wood_tread_8_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_8_e2",
+              "from": "sc_stair_system_treads_wood_tread_8_v2",
+              "to": "sc_stair_system_treads_wood_tread_8_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_8_e3",
+              "from": "sc_stair_system_treads_wood_tread_8_v3",
+              "to": "sc_stair_system_treads_wood_tread_8_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_8_e4",
+              "from": "sc_stair_system_treads_wood_tread_8_v4",
+              "to": "sc_stair_system_treads_wood_tread_8_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat1_1": {
         "id": "sc_stair_system_connections_treadCleat1_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          130,
-          -380,
+          142.5,
+          -415,
           105
         ],
         "normal": [
@@ -5407,17 +5743,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat1_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat1_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat1_1_e1",
+              "from": "sc_stair_system_connections_treadCleat1_1_v1",
+              "to": "sc_stair_system_connections_treadCleat1_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_1_e2",
+              "from": "sc_stair_system_connections_treadCleat1_1_v2",
+              "to": "sc_stair_system_connections_treadCleat1_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_1_e3",
+              "from": "sc_stair_system_connections_treadCleat1_1_v3",
+              "to": "sc_stair_system_connections_treadCleat1_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_1_e4",
+              "from": "sc_stair_system_connections_treadCleat1_1_v4",
+              "to": "sc_stair_system_connections_treadCleat1_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat1_2": {
         "id": "sc_stair_system_connections_treadCleat1_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          130,
-          380,
+          142.5,
+          415,
           105
         ],
         "normal": [
@@ -5458,17 +5847,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat1_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat1_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat1_2_e1",
+              "from": "sc_stair_system_connections_treadCleat1_2_v1",
+              "to": "sc_stair_system_connections_treadCleat1_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_2_e2",
+              "from": "sc_stair_system_connections_treadCleat1_2_v2",
+              "to": "sc_stair_system_connections_treadCleat1_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_2_e3",
+              "from": "sc_stair_system_connections_treadCleat1_2_v3",
+              "to": "sc_stair_system_connections_treadCleat1_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat1_2_e4",
+              "from": "sc_stair_system_connections_treadCleat1_2_v4",
+              "to": "sc_stair_system_connections_treadCleat1_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat2_1": {
         "id": "sc_stair_system_connections_treadCleat2_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          390,
-          -380,
+          402.5,
+          -415,
           285
         ],
         "normal": [
@@ -5509,17 +5951,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat2_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat2_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat2_1_e1",
+              "from": "sc_stair_system_connections_treadCleat2_1_v1",
+              "to": "sc_stair_system_connections_treadCleat2_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_1_e2",
+              "from": "sc_stair_system_connections_treadCleat2_1_v2",
+              "to": "sc_stair_system_connections_treadCleat2_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_1_e3",
+              "from": "sc_stair_system_connections_treadCleat2_1_v3",
+              "to": "sc_stair_system_connections_treadCleat2_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_1_e4",
+              "from": "sc_stair_system_connections_treadCleat2_1_v4",
+              "to": "sc_stair_system_connections_treadCleat2_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat2_2": {
         "id": "sc_stair_system_connections_treadCleat2_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          390,
-          380,
+          402.5,
+          415,
           285
         ],
         "normal": [
@@ -5560,17 +6055,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat2_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat2_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat2_2_e1",
+              "from": "sc_stair_system_connections_treadCleat2_2_v1",
+              "to": "sc_stair_system_connections_treadCleat2_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_2_e2",
+              "from": "sc_stair_system_connections_treadCleat2_2_v2",
+              "to": "sc_stair_system_connections_treadCleat2_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_2_e3",
+              "from": "sc_stair_system_connections_treadCleat2_2_v3",
+              "to": "sc_stair_system_connections_treadCleat2_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat2_2_e4",
+              "from": "sc_stair_system_connections_treadCleat2_2_v4",
+              "to": "sc_stair_system_connections_treadCleat2_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat3_1": {
         "id": "sc_stair_system_connections_treadCleat3_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          650,
-          -380,
+          662.5,
+          -415,
           465
         ],
         "normal": [
@@ -5611,17 +6159,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat3_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat3_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat3_1_e1",
+              "from": "sc_stair_system_connections_treadCleat3_1_v1",
+              "to": "sc_stair_system_connections_treadCleat3_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_1_e2",
+              "from": "sc_stair_system_connections_treadCleat3_1_v2",
+              "to": "sc_stair_system_connections_treadCleat3_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_1_e3",
+              "from": "sc_stair_system_connections_treadCleat3_1_v3",
+              "to": "sc_stair_system_connections_treadCleat3_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_1_e4",
+              "from": "sc_stair_system_connections_treadCleat3_1_v4",
+              "to": "sc_stair_system_connections_treadCleat3_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat3_2": {
         "id": "sc_stair_system_connections_treadCleat3_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          650,
-          380,
+          662.5,
+          415,
           465
         ],
         "normal": [
@@ -5662,17 +6263,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat3_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat3_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat3_2_e1",
+              "from": "sc_stair_system_connections_treadCleat3_2_v1",
+              "to": "sc_stair_system_connections_treadCleat3_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_2_e2",
+              "from": "sc_stair_system_connections_treadCleat3_2_v2",
+              "to": "sc_stair_system_connections_treadCleat3_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_2_e3",
+              "from": "sc_stair_system_connections_treadCleat3_2_v3",
+              "to": "sc_stair_system_connections_treadCleat3_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat3_2_e4",
+              "from": "sc_stair_system_connections_treadCleat3_2_v4",
+              "to": "sc_stair_system_connections_treadCleat3_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat4_1": {
         "id": "sc_stair_system_connections_treadCleat4_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          909.9999999999999,
-          -380,
+          922.4999999999999,
+          -415,
           645
         ],
         "normal": [
@@ -5713,17 +6367,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat4_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat4_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat4_1_e1",
+              "from": "sc_stair_system_connections_treadCleat4_1_v1",
+              "to": "sc_stair_system_connections_treadCleat4_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_1_e2",
+              "from": "sc_stair_system_connections_treadCleat4_1_v2",
+              "to": "sc_stair_system_connections_treadCleat4_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_1_e3",
+              "from": "sc_stair_system_connections_treadCleat4_1_v3",
+              "to": "sc_stair_system_connections_treadCleat4_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_1_e4",
+              "from": "sc_stair_system_connections_treadCleat4_1_v4",
+              "to": "sc_stair_system_connections_treadCleat4_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat4_2": {
         "id": "sc_stair_system_connections_treadCleat4_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          909.9999999999999,
-          380,
+          922.4999999999999,
+          415,
           645
         ],
         "normal": [
@@ -5764,17 +6471,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat4_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat4_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat4_2_e1",
+              "from": "sc_stair_system_connections_treadCleat4_2_v1",
+              "to": "sc_stair_system_connections_treadCleat4_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_2_e2",
+              "from": "sc_stair_system_connections_treadCleat4_2_v2",
+              "to": "sc_stair_system_connections_treadCleat4_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_2_e3",
+              "from": "sc_stair_system_connections_treadCleat4_2_v3",
+              "to": "sc_stair_system_connections_treadCleat4_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat4_2_e4",
+              "from": "sc_stair_system_connections_treadCleat4_2_v4",
+              "to": "sc_stair_system_connections_treadCleat4_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat5_1": {
         "id": "sc_stair_system_connections_treadCleat5_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          2370,
-          -380,
+          2382.5,
+          -415,
           1005
         ],
         "normal": [
@@ -5815,17 +6575,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat5_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat5_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat5_1_e1",
+              "from": "sc_stair_system_connections_treadCleat5_1_v1",
+              "to": "sc_stair_system_connections_treadCleat5_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_1_e2",
+              "from": "sc_stair_system_connections_treadCleat5_1_v2",
+              "to": "sc_stair_system_connections_treadCleat5_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_1_e3",
+              "from": "sc_stair_system_connections_treadCleat5_1_v3",
+              "to": "sc_stair_system_connections_treadCleat5_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_1_e4",
+              "from": "sc_stair_system_connections_treadCleat5_1_v4",
+              "to": "sc_stair_system_connections_treadCleat5_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat5_2": {
         "id": "sc_stair_system_connections_treadCleat5_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          2370,
-          380,
+          2382.5,
+          415,
           1005
         ],
         "normal": [
@@ -5866,17 +6679,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat5_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat5_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat5_2_e1",
+              "from": "sc_stair_system_connections_treadCleat5_2_v1",
+              "to": "sc_stair_system_connections_treadCleat5_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_2_e2",
+              "from": "sc_stair_system_connections_treadCleat5_2_v2",
+              "to": "sc_stair_system_connections_treadCleat5_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_2_e3",
+              "from": "sc_stair_system_connections_treadCleat5_2_v3",
+              "to": "sc_stair_system_connections_treadCleat5_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat5_2_e4",
+              "from": "sc_stair_system_connections_treadCleat5_2_v4",
+              "to": "sc_stair_system_connections_treadCleat5_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat6_1": {
         "id": "sc_stair_system_connections_treadCleat6_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          2630,
-          -380,
+          2642.5,
+          -415,
           1185
         ],
         "normal": [
@@ -5917,17 +6783,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat6_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat6_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat6_1_e1",
+              "from": "sc_stair_system_connections_treadCleat6_1_v1",
+              "to": "sc_stair_system_connections_treadCleat6_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_1_e2",
+              "from": "sc_stair_system_connections_treadCleat6_1_v2",
+              "to": "sc_stair_system_connections_treadCleat6_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_1_e3",
+              "from": "sc_stair_system_connections_treadCleat6_1_v3",
+              "to": "sc_stair_system_connections_treadCleat6_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_1_e4",
+              "from": "sc_stair_system_connections_treadCleat6_1_v4",
+              "to": "sc_stair_system_connections_treadCleat6_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat6_2": {
         "id": "sc_stair_system_connections_treadCleat6_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          2630,
-          380,
+          2642.5,
+          415,
           1185
         ],
         "normal": [
@@ -5968,17 +6887,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat6_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat6_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat6_2_e1",
+              "from": "sc_stair_system_connections_treadCleat6_2_v1",
+              "to": "sc_stair_system_connections_treadCleat6_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_2_e2",
+              "from": "sc_stair_system_connections_treadCleat6_2_v2",
+              "to": "sc_stair_system_connections_treadCleat6_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_2_e3",
+              "from": "sc_stair_system_connections_treadCleat6_2_v3",
+              "to": "sc_stair_system_connections_treadCleat6_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat6_2_e4",
+              "from": "sc_stair_system_connections_treadCleat6_2_v4",
+              "to": "sc_stair_system_connections_treadCleat6_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat7_1": {
         "id": "sc_stair_system_connections_treadCleat7_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          2890,
-          -380,
+          2902.5,
+          -415,
           1365
         ],
         "normal": [
@@ -6019,17 +6991,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat7_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat7_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat7_1_e1",
+              "from": "sc_stair_system_connections_treadCleat7_1_v1",
+              "to": "sc_stair_system_connections_treadCleat7_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_1_e2",
+              "from": "sc_stair_system_connections_treadCleat7_1_v2",
+              "to": "sc_stair_system_connections_treadCleat7_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_1_e3",
+              "from": "sc_stair_system_connections_treadCleat7_1_v3",
+              "to": "sc_stair_system_connections_treadCleat7_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_1_e4",
+              "from": "sc_stair_system_connections_treadCleat7_1_v4",
+              "to": "sc_stair_system_connections_treadCleat7_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat7_2": {
         "id": "sc_stair_system_connections_treadCleat7_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          2890,
-          380,
+          2902.5,
+          415,
           1365
         ],
         "normal": [
@@ -6070,17 +7095,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat7_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat7_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat7_2_e1",
+              "from": "sc_stair_system_connections_treadCleat7_2_v1",
+              "to": "sc_stair_system_connections_treadCleat7_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_2_e2",
+              "from": "sc_stair_system_connections_treadCleat7_2_v2",
+              "to": "sc_stair_system_connections_treadCleat7_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_2_e3",
+              "from": "sc_stair_system_connections_treadCleat7_2_v3",
+              "to": "sc_stair_system_connections_treadCleat7_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat7_2_e4",
+              "from": "sc_stair_system_connections_treadCleat7_2_v4",
+              "to": "sc_stair_system_connections_treadCleat7_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat8_1": {
         "id": "sc_stair_system_connections_treadCleat8_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          3150,
-          -380,
+          3162.5,
+          -415,
           1545
         ],
         "normal": [
@@ -6121,17 +7199,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat8_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat8_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat8_1_e1",
+              "from": "sc_stair_system_connections_treadCleat8_1_v1",
+              "to": "sc_stair_system_connections_treadCleat8_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_1_e2",
+              "from": "sc_stair_system_connections_treadCleat8_1_v2",
+              "to": "sc_stair_system_connections_treadCleat8_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_1_e3",
+              "from": "sc_stair_system_connections_treadCleat8_1_v3",
+              "to": "sc_stair_system_connections_treadCleat8_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_1_e4",
+              "from": "sc_stair_system_connections_treadCleat8_1_v4",
+              "to": "sc_stair_system_connections_treadCleat8_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat8_2": {
         "id": "sc_stair_system_connections_treadCleat8_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          3150,
-          380,
+          3162.5,
+          415,
           1545
         ],
         "normal": [
@@ -6172,14 +7303,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat8_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat8_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat8_2_e1",
+              "from": "sc_stair_system_connections_treadCleat8_2_v1",
+              "to": "sc_stair_system_connections_treadCleat8_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_2_e2",
+              "from": "sc_stair_system_connections_treadCleat8_2_v2",
+              "to": "sc_stair_system_connections_treadCleat8_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_2_e3",
+              "from": "sc_stair_system_connections_treadCleat8_2_v3",
+              "to": "sc_stair_system_connections_treadCleat8_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat8_2_e4",
+              "from": "sc_stair_system_connections_treadCleat8_2_v4",
+              "to": "sc_stair_system_connections_treadCleat8_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_floor_mounting_surface": {
         "id": "sc_stair_system_connections_floor_mounting_surface",
         "type": "concrete-floor-mounting-surface",
         "thickness": 120,
-        "width": 720,
-        "height": 1500,
         "center": [
           -80,
           0,
@@ -6222,14 +7406,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "floorMountingSurface",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_floor_mounting_surface_v1",
+              "point": [
+                -360,
+                -750
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floor_mounting_surface_v2",
+              "point": [
+                360,
+                -750
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floor_mounting_surface_v3",
+              "point": [
+                360,
+                750
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floor_mounting_surface_v4",
+              "point": [
+                -360,
+                750
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_floor_mounting_surface_e1",
+              "from": "sc_stair_system_connections_floor_mounting_surface_v1",
+              "to": "sc_stair_system_connections_floor_mounting_surface_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_floor_mounting_surface_e2",
+              "from": "sc_stair_system_connections_floor_mounting_surface_v2",
+              "to": "sc_stair_system_connections_floor_mounting_surface_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_floor_mounting_surface_e3",
+              "from": "sc_stair_system_connections_floor_mounting_surface_v3",
+              "to": "sc_stair_system_connections_floor_mounting_surface_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_floor_mounting_surface_e4",
+              "from": "sc_stair_system_connections_floor_mounting_surface_v4",
+              "to": "sc_stair_system_connections_floor_mounting_surface_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_top_slab_mounting_surface": {
         "id": "sc_stair_system_connections_top_slab_mounting_surface",
         "type": "concrete-top-slab-mounting-surface",
         "thickness": 160,
-        "width": 1500,
-        "height": 620,
         "center": [
           3700,
           0,
@@ -6272,14 +7509,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "topSlabMountingSurface",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_top_slab_mounting_surface_v1",
+              "point": [
+                -750,
+                -310
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_top_slab_mounting_surface_v2",
+              "point": [
+                750,
+                -310
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_top_slab_mounting_surface_v3",
+              "point": [
+                750,
+                310
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_top_slab_mounting_surface_v4",
+              "point": [
+                -750,
+                310
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_top_slab_mounting_surface_e1",
+              "from": "sc_stair_system_connections_top_slab_mounting_surface_v1",
+              "to": "sc_stair_system_connections_top_slab_mounting_surface_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_top_slab_mounting_surface_e2",
+              "from": "sc_stair_system_connections_top_slab_mounting_surface_v2",
+              "to": "sc_stair_system_connections_top_slab_mounting_surface_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_top_slab_mounting_surface_e3",
+              "from": "sc_stair_system_connections_top_slab_mounting_surface_v3",
+              "to": "sc_stair_system_connections_top_slab_mounting_surface_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_top_slab_mounting_surface_e4",
+              "from": "sc_stair_system_connections_top_slab_mounting_surface_v4",
+              "to": "sc_stair_system_connections_top_slab_mounting_surface_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_floorBasePlate1": {
         "id": "sc_stair_system_connections_floorBasePlate1",
         "type": "floor-base-plate",
         "thickness": 14,
-        "width": 300,
-        "height": 240,
         "center": [
           0,
           -450,
@@ -6321,14 +7611,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "floorBasePlate1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_floorBasePlate1_v1",
+              "point": [
+                -150,
+                -120
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate1_v2",
+              "point": [
+                150,
+                -120
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate1_v3",
+              "point": [
+                150,
+                120
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate1_v4",
+              "point": [
+                -150,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_floorBasePlate1_e1",
+              "from": "sc_stair_system_connections_floorBasePlate1_v1",
+              "to": "sc_stair_system_connections_floorBasePlate1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate1_e2",
+              "from": "sc_stair_system_connections_floorBasePlate1_v2",
+              "to": "sc_stair_system_connections_floorBasePlate1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate1_e3",
+              "from": "sc_stair_system_connections_floorBasePlate1_v3",
+              "to": "sc_stair_system_connections_floorBasePlate1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate1_e4",
+              "from": "sc_stair_system_connections_floorBasePlate1_v4",
+              "to": "sc_stair_system_connections_floorBasePlate1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_floorBasePlate2": {
         "id": "sc_stair_system_connections_floorBasePlate2",
         "type": "floor-base-plate",
         "thickness": 14,
-        "width": 300,
-        "height": 240,
         "center": [
           0,
           450,
@@ -6370,14 +7713,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "floorBasePlate2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_floorBasePlate2_v1",
+              "point": [
+                -150,
+                -120
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate2_v2",
+              "point": [
+                150,
+                -120
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate2_v3",
+              "point": [
+                150,
+                120
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate2_v4",
+              "point": [
+                -150,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_floorBasePlate2_e1",
+              "from": "sc_stair_system_connections_floorBasePlate2_v1",
+              "to": "sc_stair_system_connections_floorBasePlate2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate2_e2",
+              "from": "sc_stair_system_connections_floorBasePlate2_v2",
+              "to": "sc_stair_system_connections_floorBasePlate2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate2_e3",
+              "from": "sc_stair_system_connections_floorBasePlate2_v3",
+              "to": "sc_stair_system_connections_floorBasePlate2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_floorBasePlate2_e4",
+              "from": "sc_stair_system_connections_floorBasePlate2_v4",
+              "to": "sc_stair_system_connections_floorBasePlate2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase1": {
         "id": "sc_stair_system_connections_postBase1",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           0,
           -380,
@@ -6418,14 +7814,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase1_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase1_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase1_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase1_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase1_e1",
+              "from": "sc_stair_system_connections_postBase1_v1",
+              "to": "sc_stair_system_connections_postBase1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase1_e2",
+              "from": "sc_stair_system_connections_postBase1_v2",
+              "to": "sc_stair_system_connections_postBase1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase1_e3",
+              "from": "sc_stair_system_connections_postBase1_v3",
+              "to": "sc_stair_system_connections_postBase1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase1_e4",
+              "from": "sc_stair_system_connections_postBase1_v4",
+              "to": "sc_stair_system_connections_postBase1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase2": {
         "id": "sc_stair_system_connections_postBase2",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           650,
           -380,
@@ -6466,14 +7915,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase2_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase2_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase2_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase2_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase2_e1",
+              "from": "sc_stair_system_connections_postBase2_v1",
+              "to": "sc_stair_system_connections_postBase2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase2_e2",
+              "from": "sc_stair_system_connections_postBase2_v2",
+              "to": "sc_stair_system_connections_postBase2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase2_e3",
+              "from": "sc_stair_system_connections_postBase2_v3",
+              "to": "sc_stair_system_connections_postBase2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase2_e4",
+              "from": "sc_stair_system_connections_postBase2_v4",
+              "to": "sc_stair_system_connections_postBase2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase3": {
         "id": "sc_stair_system_connections_postBase3",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           1300,
           -380,
@@ -6514,14 +8016,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase3",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase3_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase3_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase3_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase3_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase3_e1",
+              "from": "sc_stair_system_connections_postBase3_v1",
+              "to": "sc_stair_system_connections_postBase3_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase3_e2",
+              "from": "sc_stair_system_connections_postBase3_v2",
+              "to": "sc_stair_system_connections_postBase3_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase3_e3",
+              "from": "sc_stair_system_connections_postBase3_v3",
+              "to": "sc_stair_system_connections_postBase3_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase3_e4",
+              "from": "sc_stair_system_connections_postBase3_v4",
+              "to": "sc_stair_system_connections_postBase3_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase4": {
         "id": "sc_stair_system_connections_postBase4",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           2240,
           -380,
@@ -6562,14 +8117,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase4",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase4_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase4_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase4_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase4_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase4_e1",
+              "from": "sc_stair_system_connections_postBase4_v1",
+              "to": "sc_stair_system_connections_postBase4_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase4_e2",
+              "from": "sc_stair_system_connections_postBase4_v2",
+              "to": "sc_stair_system_connections_postBase4_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase4_e3",
+              "from": "sc_stair_system_connections_postBase4_v3",
+              "to": "sc_stair_system_connections_postBase4_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase4_e4",
+              "from": "sc_stair_system_connections_postBase4_v4",
+              "to": "sc_stair_system_connections_postBase4_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase5": {
         "id": "sc_stair_system_connections_postBase5",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           2890,
           -380,
@@ -6610,14 +8218,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase5",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase5_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase5_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase5_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase5_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase5_e1",
+              "from": "sc_stair_system_connections_postBase5_v1",
+              "to": "sc_stair_system_connections_postBase5_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase5_e2",
+              "from": "sc_stair_system_connections_postBase5_v2",
+              "to": "sc_stair_system_connections_postBase5_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase5_e3",
+              "from": "sc_stair_system_connections_postBase5_v3",
+              "to": "sc_stair_system_connections_postBase5_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase5_e4",
+              "from": "sc_stair_system_connections_postBase5_v4",
+              "to": "sc_stair_system_connections_postBase5_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase6": {
         "id": "sc_stair_system_connections_postBase6",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           3540,
           -380,
@@ -6658,16 +8319,69 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase6",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase6_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase6_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase6_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase6_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase6_e1",
+              "from": "sc_stair_system_connections_postBase6_v1",
+              "to": "sc_stair_system_connections_postBase6_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase6_e2",
+              "from": "sc_stair_system_connections_postBase6_v2",
+              "to": "sc_stair_system_connections_postBase6_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase6_e3",
+              "from": "sc_stair_system_connections_postBase6_v3",
+              "to": "sc_stair_system_connections_postBase6_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase6_e4",
+              "from": "sc_stair_system_connections_postBase6_v4",
+              "to": "sc_stair_system_connections_postBase6_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_tread_9": {
         "id": "sc_stair_system_treads_tread_9",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          3150,
+          3162.5,
           0,
           1615
         ],
@@ -6688,12 +8402,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 8,
           "station": 3150,
+          "stationStart": 3020,
+          "stationEnd": 3280,
           "flightId": "flight_2",
+          "overlap": 20,
           "walkingSurface": [
             3150,
             0,
@@ -6705,9 +8422,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -6717,72 +8434,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread9",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_9": {
-        "id": "sc_stair_system_treads_front_plate_9",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          3285,
-          0,
-          1592.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 8,
-          "station": 3150,
-          "flightId": "flight_2",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_9"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 9"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate9",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_9_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_9_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_9_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_9_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_9_e1",
+              "from": "sc_stair_system_treads_tread_9_v1",
+              "to": "sc_stair_system_treads_tread_9_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_9_e2",
+              "from": "sc_stair_system_treads_tread_9_v2",
+              "to": "sc_stair_system_treads_tread_9_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_9_e3",
+              "from": "sc_stair_system_treads_tread_9_v3",
+              "to": "sc_stair_system_treads_tread_9_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_9_e4",
+              "from": "sc_stair_system_treads_tread_9_v4",
+              "to": "sc_stair_system_treads_tread_9_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_9": {
         "id": "sc_stair_system_treads_wood_tread_9",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           3162.5,
           0,
@@ -6810,8 +8522,12 @@
           "surfaceKind": "tread",
           "index": 8,
           "station": 3150,
+          "stationStart": 3020,
+          "stationEnd": 3280,
+          "flightId": "flight_2",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_9"
+            "backingPlateId": "sc_stair_system_treads_tread_9"
           }
         },
         "display": {
@@ -6820,6 +8536,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -6829,16 +8546,69 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread9",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_9_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_9_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_9_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_9_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_9_e1",
+              "from": "sc_stair_system_treads_wood_tread_9_v1",
+              "to": "sc_stair_system_treads_wood_tread_9_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_9_e2",
+              "from": "sc_stair_system_treads_wood_tread_9_v2",
+              "to": "sc_stair_system_treads_wood_tread_9_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_9_e3",
+              "from": "sc_stair_system_treads_wood_tread_9_v3",
+              "to": "sc_stair_system_treads_wood_tread_9_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_9_e4",
+              "from": "sc_stair_system_treads_wood_tread_9_v4",
+              "to": "sc_stair_system_treads_wood_tread_9_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_tread_10": {
         "id": "sc_stair_system_treads_tread_10",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 10,
-        "width": 830,
-        "height": 280,
         "center": [
-          3410,
+          3422.5,
           0,
           1795
         ],
@@ -6859,12 +8629,15 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 9,
           "station": 3410,
+          "stationStart": 3280,
+          "stationEnd": 3540,
           "flightId": "flight_2",
+          "overlap": 20,
           "walkingSurface": [
             3410,
             0,
@@ -6876,9 +8649,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "shop-primer"
         },
         "bim": {
@@ -6888,72 +8661,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "tread10",
           "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_treads_front_plate_10": {
-        "id": "sc_stair_system_treads_front_plate_10",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 10,
-        "width": 830,
-        "height": 55,
-        "center": [
-          3545,
-          0,
-          1772.5
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 9,
-          "station": 3410,
-          "flightId": "flight_2",
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_10"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 55,
-          "traySideInset": 35,
-          "finish": "shop-primer"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 10"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "frontPlate10",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_tread_10_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_10_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_10_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_tread_10_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_tread_10_e1",
+              "from": "sc_stair_system_treads_tread_10_v1",
+              "to": "sc_stair_system_treads_tread_10_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_10_e2",
+              "from": "sc_stair_system_treads_tread_10_v2",
+              "to": "sc_stair_system_treads_tread_10_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_10_e3",
+              "from": "sc_stair_system_treads_tread_10_v3",
+              "to": "sc_stair_system_treads_tread_10_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_tread_10_e4",
+              "from": "sc_stair_system_treads_tread_10_v4",
+              "to": "sc_stair_system_treads_tread_10_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_treads_wood_tread_10": {
         "id": "sc_stair_system_treads_wood_tread_10",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 900,
-        "height": 305,
         "center": [
           3422.5,
           0,
@@ -6981,8 +8749,12 @@
           "surfaceKind": "tread",
           "index": 9,
           "station": 3410,
+          "stationStart": 3280,
+          "stationEnd": 3540,
+          "flightId": "flight_2",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_stair_system_treads_tread_10"
+            "backingPlateId": "sc_stair_system_treads_tread_10"
           }
         },
         "display": {
@@ -6991,6 +8763,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -7000,32 +8773,67 @@
           "componentInstanceId": "sc_stair_system_treads",
           "componentRole": "woodTread10",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_10_v1",
+              "point": [
+                -450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_10_v2",
+              "point": [
+                450,
+                -152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_10_v3",
+              "point": [
+                450,
+                152.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_10_v4",
+              "point": [
+                -450,
+                152.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_treads_wood_tread_10_e1",
+              "from": "sc_stair_system_treads_wood_tread_10_v1",
+              "to": "sc_stair_system_treads_wood_tread_10_v2"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_10_e2",
+              "from": "sc_stair_system_treads_wood_tread_10_v2",
+              "to": "sc_stair_system_treads_wood_tread_10_v3"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_10_e3",
+              "from": "sc_stair_system_treads_wood_tread_10_v3",
+              "to": "sc_stair_system_treads_wood_tread_10_v4"
+            },
+            {
+              "id": "sc_stair_system_treads_wood_tread_10_e4",
+              "from": "sc_stair_system_treads_wood_tread_10_v4",
+              "to": "sc_stair_system_treads_wood_tread_10_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_landings_landing_1": {
         "id": "sc_stair_system_landings_landing_1",
         "type": "rectangular-plate",
         "thickness": 10,
-        "width": 900,
-        "height": 1200,
-        "outline": [
-          [
-            -450,
-            -600
-          ],
-          [
-            450,
-            -600
-          ],
-          [
-            450,
-            600
-          ],
-          [
-            -450,
-            600
-          ]
-        ],
         "center": [
           1640,
           0,
@@ -7064,17 +8872,70 @@
           "componentInstanceId": "sc_stair_system_landings",
           "componentRole": "landing1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_landings_landing_1_v1",
+              "point": [
+                -450,
+                -600
+              ]
+            },
+            {
+              "id": "sc_stair_system_landings_landing_1_v2",
+              "point": [
+                450,
+                -600
+              ]
+            },
+            {
+              "id": "sc_stair_system_landings_landing_1_v3",
+              "point": [
+                450,
+                600
+              ]
+            },
+            {
+              "id": "sc_stair_system_landings_landing_1_v4",
+              "point": [
+                -450,
+                600
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_landings_landing_1_e1",
+              "from": "sc_stair_system_landings_landing_1_v1",
+              "to": "sc_stair_system_landings_landing_1_v2"
+            },
+            {
+              "id": "sc_stair_system_landings_landing_1_e2",
+              "from": "sc_stair_system_landings_landing_1_v2",
+              "to": "sc_stair_system_landings_landing_1_v3"
+            },
+            {
+              "id": "sc_stair_system_landings_landing_1_e3",
+              "from": "sc_stair_system_landings_landing_1_v3",
+              "to": "sc_stair_system_landings_landing_1_v4"
+            },
+            {
+              "id": "sc_stair_system_landings_landing_1_e4",
+              "from": "sc_stair_system_landings_landing_1_v4",
+              "to": "sc_stair_system_landings_landing_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat9_1": {
         "id": "sc_stair_system_connections_treadCleat9_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          3410,
-          -380,
+          3422.5,
+          -415,
           1725
         ],
         "normal": [
@@ -7115,17 +8976,70 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat9_1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat9_1_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_1_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_1_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_1_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat9_1_e1",
+              "from": "sc_stair_system_connections_treadCleat9_1_v1",
+              "to": "sc_stair_system_connections_treadCleat9_1_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_1_e2",
+              "from": "sc_stair_system_connections_treadCleat9_1_v2",
+              "to": "sc_stair_system_connections_treadCleat9_1_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_1_e3",
+              "from": "sc_stair_system_connections_treadCleat9_1_v3",
+              "to": "sc_stair_system_connections_treadCleat9_1_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_1_e4",
+              "from": "sc_stair_system_connections_treadCleat9_1_v4",
+              "to": "sc_stair_system_connections_treadCleat9_1_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_treadCleat9_2": {
         "id": "sc_stair_system_connections_treadCleat9_2",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "width": 170,
-        "height": 95,
         "center": [
-          3410,
-          380,
+          3422.5,
+          415,
           1725
         ],
         "normal": [
@@ -7166,14 +9080,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "treadCleat9_2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_treadCleat9_2_v1",
+              "point": [
+                -85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_2_v2",
+              "point": [
+                85,
+                -47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_2_v3",
+              "point": [
+                85,
+                47.5
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_2_v4",
+              "point": [
+                -85,
+                47.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_treadCleat9_2_e1",
+              "from": "sc_stair_system_connections_treadCleat9_2_v1",
+              "to": "sc_stair_system_connections_treadCleat9_2_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_2_e2",
+              "from": "sc_stair_system_connections_treadCleat9_2_v2",
+              "to": "sc_stair_system_connections_treadCleat9_2_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_2_e3",
+              "from": "sc_stair_system_connections_treadCleat9_2_v3",
+              "to": "sc_stair_system_connections_treadCleat9_2_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_treadCleat9_2_e4",
+              "from": "sc_stair_system_connections_treadCleat9_2_v4",
+              "to": "sc_stair_system_connections_treadCleat9_2_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_topSlabBracket3": {
         "id": "sc_stair_system_connections_topSlabBracket3",
         "type": "top-slab-fixing-plate",
         "thickness": 14,
-        "width": 260,
-        "height": 280,
         "center": [
           3620,
           -450,
@@ -7215,14 +9182,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "topSlabBracket3",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_topSlabBracket3_v1",
+              "point": [
+                -130,
+                -140
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket3_v2",
+              "point": [
+                130,
+                -140
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket3_v3",
+              "point": [
+                130,
+                140
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket3_v4",
+              "point": [
+                -130,
+                140
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_topSlabBracket3_e1",
+              "from": "sc_stair_system_connections_topSlabBracket3_v1",
+              "to": "sc_stair_system_connections_topSlabBracket3_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket3_e2",
+              "from": "sc_stair_system_connections_topSlabBracket3_v2",
+              "to": "sc_stair_system_connections_topSlabBracket3_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket3_e3",
+              "from": "sc_stair_system_connections_topSlabBracket3_v3",
+              "to": "sc_stair_system_connections_topSlabBracket3_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket3_e4",
+              "from": "sc_stair_system_connections_topSlabBracket3_v4",
+              "to": "sc_stair_system_connections_topSlabBracket3_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_topSlabBracket4": {
         "id": "sc_stair_system_connections_topSlabBracket4",
         "type": "top-slab-fixing-plate",
         "thickness": 14,
-        "width": 260,
-        "height": 280,
         "center": [
           3620,
           450,
@@ -7264,14 +9284,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "topSlabBracket4",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_topSlabBracket4_v1",
+              "point": [
+                -130,
+                -140
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket4_v2",
+              "point": [
+                130,
+                -140
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket4_v3",
+              "point": [
+                130,
+                140
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket4_v4",
+              "point": [
+                -130,
+                140
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_topSlabBracket4_e1",
+              "from": "sc_stair_system_connections_topSlabBracket4_v1",
+              "to": "sc_stair_system_connections_topSlabBracket4_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket4_e2",
+              "from": "sc_stair_system_connections_topSlabBracket4_v2",
+              "to": "sc_stair_system_connections_topSlabBracket4_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket4_e3",
+              "from": "sc_stair_system_connections_topSlabBracket4_v3",
+              "to": "sc_stair_system_connections_topSlabBracket4_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_topSlabBracket4_e4",
+              "from": "sc_stair_system_connections_topSlabBracket4_v4",
+              "to": "sc_stair_system_connections_topSlabBracket4_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase7": {
         "id": "sc_stair_system_connections_postBase7",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           0,
           380,
@@ -7312,14 +9385,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase7",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase7_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase7_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase7_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase7_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase7_e1",
+              "from": "sc_stair_system_connections_postBase7_v1",
+              "to": "sc_stair_system_connections_postBase7_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase7_e2",
+              "from": "sc_stair_system_connections_postBase7_v2",
+              "to": "sc_stair_system_connections_postBase7_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase7_e3",
+              "from": "sc_stair_system_connections_postBase7_v3",
+              "to": "sc_stair_system_connections_postBase7_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase7_e4",
+              "from": "sc_stair_system_connections_postBase7_v4",
+              "to": "sc_stair_system_connections_postBase7_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase8": {
         "id": "sc_stair_system_connections_postBase8",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           650,
           380,
@@ -7360,14 +9486,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase8",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase8_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase8_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase8_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase8_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase8_e1",
+              "from": "sc_stair_system_connections_postBase8_v1",
+              "to": "sc_stair_system_connections_postBase8_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase8_e2",
+              "from": "sc_stair_system_connections_postBase8_v2",
+              "to": "sc_stair_system_connections_postBase8_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase8_e3",
+              "from": "sc_stair_system_connections_postBase8_v3",
+              "to": "sc_stair_system_connections_postBase8_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase8_e4",
+              "from": "sc_stair_system_connections_postBase8_v4",
+              "to": "sc_stair_system_connections_postBase8_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase9": {
         "id": "sc_stair_system_connections_postBase9",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           1300,
           380,
@@ -7408,14 +9587,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase9",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase9_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase9_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase9_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase9_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase9_e1",
+              "from": "sc_stair_system_connections_postBase9_v1",
+              "to": "sc_stair_system_connections_postBase9_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase9_e2",
+              "from": "sc_stair_system_connections_postBase9_v2",
+              "to": "sc_stair_system_connections_postBase9_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase9_e3",
+              "from": "sc_stair_system_connections_postBase9_v3",
+              "to": "sc_stair_system_connections_postBase9_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase9_e4",
+              "from": "sc_stair_system_connections_postBase9_v4",
+              "to": "sc_stair_system_connections_postBase9_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase10": {
         "id": "sc_stair_system_connections_postBase10",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           2240,
           380,
@@ -7456,14 +9688,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase10",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase10_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase10_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase10_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase10_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase10_e1",
+              "from": "sc_stair_system_connections_postBase10_v1",
+              "to": "sc_stair_system_connections_postBase10_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase10_e2",
+              "from": "sc_stair_system_connections_postBase10_v2",
+              "to": "sc_stair_system_connections_postBase10_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase10_e3",
+              "from": "sc_stair_system_connections_postBase10_v3",
+              "to": "sc_stair_system_connections_postBase10_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase10_e4",
+              "from": "sc_stair_system_connections_postBase10_v4",
+              "to": "sc_stair_system_connections_postBase10_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase11": {
         "id": "sc_stair_system_connections_postBase11",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           2890,
           380,
@@ -7504,14 +9789,67 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase11",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase11_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase11_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase11_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase11_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase11_e1",
+              "from": "sc_stair_system_connections_postBase11_v1",
+              "to": "sc_stair_system_connections_postBase11_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase11_e2",
+              "from": "sc_stair_system_connections_postBase11_v2",
+              "to": "sc_stair_system_connections_postBase11_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase11_e3",
+              "from": "sc_stair_system_connections_postBase11_v3",
+              "to": "sc_stair_system_connections_postBase11_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase11_e4",
+              "from": "sc_stair_system_connections_postBase11_v4",
+              "to": "sc_stair_system_connections_postBase11_v1"
+            }
+          ]
         }
       },
       "sc_stair_system_connections_postBase12": {
         "id": "sc_stair_system_connections_postBase12",
         "type": "post-base-plate",
         "thickness": 10,
-        "width": 170,
-        "height": 150,
         "center": [
           3540,
           380,
@@ -7552,6 +9890,61 @@
           "componentInstanceId": "sc_stair_system_connections",
           "componentRole": "postBase12",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_stair_system_connections_postBase12_v1",
+              "point": [
+                -85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase12_v2",
+              "point": [
+                85,
+                -75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase12_v3",
+              "point": [
+                85,
+                75
+              ]
+            },
+            {
+              "id": "sc_stair_system_connections_postBase12_v4",
+              "point": [
+                -85,
+                75
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_stair_system_connections_postBase12_e1",
+              "from": "sc_stair_system_connections_postBase12_v1",
+              "to": "sc_stair_system_connections_postBase12_v2"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase12_e2",
+              "from": "sc_stair_system_connections_postBase12_v2",
+              "to": "sc_stair_system_connections_postBase12_v3"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase12_e3",
+              "from": "sc_stair_system_connections_postBase12_v3",
+              "to": "sc_stair_system_connections_postBase12_v4"
+            },
+            {
+              "id": "sc_stair_system_connections_postBase12_e4",
+              "from": "sc_stair_system_connections_postBase12_v4",
+              "to": "sc_stair_system_connections_postBase12_v1"
+            }
+          ]
         }
       }
     },
@@ -8434,7 +10827,7 @@
             ],
             "path": {
               "id": "path",
-              "type": "polyline",
+              "type": "custom",
               "length": 3540
             },
             "core": null,
@@ -8539,6 +10932,8 @@
               5
             ],
             "maxStepHeight": 180,
+            "treadOverlap": 20,
+            "treadDepth": 280,
             "finishedFloorRise": 1800,
             "width": 900,
             "headroom": 2000,
@@ -8624,15 +11019,6 @@
           "sc_stair_system_treads_tread_8",
           "sc_stair_system_treads_tread_9",
           "sc_stair_system_treads_tread_10",
-          "sc_stair_system_treads_front_plate_1",
-          "sc_stair_system_treads_front_plate_2",
-          "sc_stair_system_treads_front_plate_3",
-          "sc_stair_system_treads_front_plate_4",
-          "sc_stair_system_treads_front_plate_6",
-          "sc_stair_system_treads_front_plate_7",
-          "sc_stair_system_treads_front_plate_8",
-          "sc_stair_system_treads_front_plate_9",
-          "sc_stair_system_treads_front_plate_10",
           "sc_stair_system_treads_wood_tread_1",
           "sc_stair_system_treads_wood_tread_2",
           "sc_stair_system_treads_wood_tread_3",
@@ -8648,7 +11034,7 @@
           "kind": "stair-treads",
           "family": "folded-tray-tread",
           "capabilities": {
-            "trayLips": true,
+            "trayLips": false,
             "timberBoard": true,
             "risers": true
           },
@@ -8890,8 +11276,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            130,
-            -380,
+            142.5,
+            -415,
             105
           ],
           "localAxisY": [
@@ -8928,8 +11314,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            130,
-            380,
+            142.5,
+            415,
             105
           ],
           "localAxisY": [
@@ -8966,8 +11352,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            390,
-            -380,
+            402.5,
+            -415,
             285
           ],
           "localAxisY": [
@@ -9004,8 +11390,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            390,
-            380,
+            402.5,
+            415,
             285
           ],
           "localAxisY": [
@@ -9042,8 +11428,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            650,
-            -380,
+            662.5,
+            -415,
             465
           ],
           "localAxisY": [
@@ -9080,8 +11466,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            650,
-            380,
+            662.5,
+            415,
             465
           ],
           "localAxisY": [
@@ -9118,8 +11504,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            909.9999999999999,
-            -380,
+            922.4999999999999,
+            -415,
             645
           ],
           "localAxisY": [
@@ -9156,8 +11542,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            909.9999999999999,
-            380,
+            922.4999999999999,
+            415,
             645
           ],
           "localAxisY": [
@@ -9194,8 +11580,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            2370,
-            -380,
+            2382.5,
+            -415,
             1005
           ],
           "localAxisY": [
@@ -9232,8 +11618,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            2370,
-            380,
+            2382.5,
+            415,
             1005
           ],
           "localAxisY": [
@@ -9270,8 +11656,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            2630,
-            -380,
+            2642.5,
+            -415,
             1185
           ],
           "localAxisY": [
@@ -9308,8 +11694,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            2630,
-            380,
+            2642.5,
+            415,
             1185
           ],
           "localAxisY": [
@@ -9346,8 +11732,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            2890,
-            -380,
+            2902.5,
+            -415,
             1365
           ],
           "localAxisY": [
@@ -9384,8 +11770,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            2890,
-            380,
+            2902.5,
+            415,
             1365
           ],
           "localAxisY": [
@@ -9422,8 +11808,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            3150,
-            -380,
+            3162.5,
+            -415,
             1545
           ],
           "localAxisY": [
@@ -9460,8 +11846,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            3150,
-            380,
+            3162.5,
+            415,
             1545
           ],
           "localAxisY": [
@@ -9798,8 +12184,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            3410,
-            -380,
+            3422.5,
+            -415,
             1725
           ],
           "localAxisY": [
@@ -9836,8 +12222,8 @@
           "kind": "plate-face",
           "face": "back",
           "origin": [
-            3410,
-            380,
+            3422.5,
+            415,
             1725
           ],
           "localAxisY": [
@@ -14260,8 +16646,8 @@
             "family": "folded-tray-tread",
             "thickness": 10,
             "depth": 280,
+            "overlap": 20,
             "woodThickness": 32,
-            "woodInset": 35,
             "woodNosing": 25,
             "woodMaterial": "OAK_TIMBER",
             "woodFinish": "clear-sealed-oak",
@@ -14360,8 +16746,8 @@
             "family": "folded-tray-tread",
             "thickness": 10,
             "depth": 280,
+            "overlap": 20,
             "woodThickness": 32,
-            "woodInset": 35,
             "woodNosing": 25,
             "woodMaterial": "OAK_TIMBER",
             "woodFinish": "clear-sealed-oak",
@@ -14474,7 +16860,7 @@
             ],
             "path": {
               "id": "path",
-              "type": "polyline",
+              "type": "custom",
               "length": 3540
             },
             "core": null,
@@ -14579,6 +16965,8 @@
               5
             ],
             "maxStepHeight": 180,
+            "treadOverlap": 20,
+            "treadDepth": 280,
             "finishedFloorRise": 1800,
             "width": 900,
             "headroom": 2000,
@@ -14872,10 +17260,10 @@
             "family": "folded-tray-tread",
             "thickness": 10,
             "depth": 280,
+            "overlap": 20,
             "material": "S355",
             "frontLip": 55,
             "woodThickness": 32,
-            "woodInset": 35,
             "woodNosing": 25,
             "woodMaterial": "OAK_TIMBER",
             "woodFinish": "clear-sealed-oak",
@@ -14909,7 +17297,16 @@
                 "id": "tread_1",
                 "index": 0,
                 "flightId": "flight_1",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 0,
+                "stationEnd": 260,
+                "footprintStationStart": -10,
+                "footprintStationEnd": 270,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               },
               {
                 "station": 390,
@@ -14936,7 +17333,16 @@
                 "id": "tread_2",
                 "index": 1,
                 "flightId": "flight_1",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 260,
+                "stationEnd": 520,
+                "footprintStationStart": 250,
+                "footprintStationEnd": 530,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               },
               {
                 "station": 650,
@@ -14963,7 +17369,16 @@
                 "id": "tread_3",
                 "index": 2,
                 "flightId": "flight_1",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 520,
+                "stationEnd": 780,
+                "footprintStationStart": 510,
+                "footprintStationEnd": 790,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               },
               {
                 "station": 910,
@@ -14990,7 +17405,16 @@
                 "id": "tread_4",
                 "index": 3,
                 "flightId": "flight_1",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 780,
+                "stationEnd": 1040,
+                "footprintStationStart": 770,
+                "footprintStationEnd": 1050,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               },
               {
                 "station": 2370,
@@ -15017,7 +17441,16 @@
                 "id": "tread_6",
                 "index": 5,
                 "flightId": "flight_2",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 2240,
+                "stationEnd": 2500,
+                "footprintStationStart": 2230,
+                "footprintStationEnd": 2510,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               },
               {
                 "station": 2630,
@@ -15044,7 +17477,16 @@
                 "id": "tread_7",
                 "index": 6,
                 "flightId": "flight_2",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 2500,
+                "stationEnd": 2760,
+                "footprintStationStart": 2490,
+                "footprintStationEnd": 2770,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               },
               {
                 "station": 2890,
@@ -15071,7 +17513,16 @@
                 "id": "tread_8",
                 "index": 7,
                 "flightId": "flight_2",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 2760,
+                "stationEnd": 3020,
+                "footprintStationStart": 2750,
+                "footprintStationEnd": 3030,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               },
               {
                 "station": 3150,
@@ -15098,7 +17549,16 @@
                 "id": "tread_9",
                 "index": 8,
                 "flightId": "flight_2",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 3020,
+                "stationEnd": 3280,
+                "footprintStationStart": 3010,
+                "footprintStationEnd": 3290,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               },
               {
                 "station": 3410,
@@ -15125,7 +17585,16 @@
                 "id": "tread_10",
                 "index": 9,
                 "flightId": "flight_2",
-                "going": 260
+                "going": 260,
+                "overlap": 20,
+                "depth": 280,
+                "stationStart": 3280,
+                "stationEnd": 3540,
+                "footprintStationStart": 3270,
+                "footprintStationEnd": 3550,
+                "centerWidth": 900,
+                "centerDepth": 280,
+                "footprint": null
               }
             ],
             "noTreadZones": [
@@ -15159,31 +17628,22 @@
         "childComponentRoles": {},
         "objectRoles": {
           "tread1": "sc_stair_system_treads_tread_1",
-          "frontPlate1": "sc_stair_system_treads_front_plate_1",
           "woodTread1": "sc_stair_system_treads_wood_tread_1",
           "tread2": "sc_stair_system_treads_tread_2",
-          "frontPlate2": "sc_stair_system_treads_front_plate_2",
           "woodTread2": "sc_stair_system_treads_wood_tread_2",
           "tread3": "sc_stair_system_treads_tread_3",
-          "frontPlate3": "sc_stair_system_treads_front_plate_3",
           "woodTread3": "sc_stair_system_treads_wood_tread_3",
           "tread4": "sc_stair_system_treads_tread_4",
-          "frontPlate4": "sc_stair_system_treads_front_plate_4",
           "woodTread4": "sc_stair_system_treads_wood_tread_4",
           "tread6": "sc_stair_system_treads_tread_6",
-          "frontPlate6": "sc_stair_system_treads_front_plate_6",
           "woodTread6": "sc_stair_system_treads_wood_tread_6",
           "tread7": "sc_stair_system_treads_tread_7",
-          "frontPlate7": "sc_stair_system_treads_front_plate_7",
           "woodTread7": "sc_stair_system_treads_wood_tread_7",
           "tread8": "sc_stair_system_treads_tread_8",
-          "frontPlate8": "sc_stair_system_treads_front_plate_8",
           "woodTread8": "sc_stair_system_treads_wood_tread_8",
           "tread9": "sc_stair_system_treads_tread_9",
-          "frontPlate9": "sc_stair_system_treads_front_plate_9",
           "woodTread9": "sc_stair_system_treads_wood_tread_9",
           "tread10": "sc_stair_system_treads_tread_10",
-          "frontPlate10": "sc_stair_system_treads_front_plate_10",
           "woodTread10": "sc_stair_system_treads_wood_tread_10",
           "treadPattern": "sc_stair_system_treads_tread_pattern",
           "treadAssembly": "sc_stair_system_treads_tread_assembly"
@@ -15211,17 +17671,7 @@
             "sc_stair_system_treads_tread_9",
             "sc_stair_system_treads_tread_10"
           ],
-          "treadFrontPlateIds": [
-            "sc_stair_system_treads_front_plate_1",
-            "sc_stair_system_treads_front_plate_2",
-            "sc_stair_system_treads_front_plate_3",
-            "sc_stair_system_treads_front_plate_4",
-            "sc_stair_system_treads_front_plate_6",
-            "sc_stair_system_treads_front_plate_7",
-            "sc_stair_system_treads_front_plate_8",
-            "sc_stair_system_treads_front_plate_9",
-            "sc_stair_system_treads_front_plate_10"
-          ],
+          "treadFrontPlateIds": [],
           "woodTreadPlateIds": [
             "sc_stair_system_treads_wood_tread_1",
             "sc_stair_system_treads_wood_tread_2",
@@ -15238,31 +17688,22 @@
         },
         "ownedObjectIds": [
           "sc_stair_system_treads_tread_1",
-          "sc_stair_system_treads_front_plate_1",
           "sc_stair_system_treads_wood_tread_1",
           "sc_stair_system_treads_tread_2",
-          "sc_stair_system_treads_front_plate_2",
           "sc_stair_system_treads_wood_tread_2",
           "sc_stair_system_treads_tread_3",
-          "sc_stair_system_treads_front_plate_3",
           "sc_stair_system_treads_wood_tread_3",
           "sc_stair_system_treads_tread_4",
-          "sc_stair_system_treads_front_plate_4",
           "sc_stair_system_treads_wood_tread_4",
           "sc_stair_system_treads_tread_6",
-          "sc_stair_system_treads_front_plate_6",
           "sc_stair_system_treads_wood_tread_6",
           "sc_stair_system_treads_tread_7",
-          "sc_stair_system_treads_front_plate_7",
           "sc_stair_system_treads_wood_tread_7",
           "sc_stair_system_treads_tread_8",
-          "sc_stair_system_treads_front_plate_8",
           "sc_stair_system_treads_wood_tread_8",
           "sc_stair_system_treads_tread_9",
-          "sc_stair_system_treads_front_plate_9",
           "sc_stair_system_treads_wood_tread_9",
           "sc_stair_system_treads_tread_10",
-          "sc_stair_system_treads_front_plate_10",
           "sc_stair_system_treads_wood_tread_10",
           "sc_stair_system_treads_tread_pattern",
           "sc_stair_system_treads_tread_assembly"

@@ -278,11 +278,7 @@
     },
     "sc_folded_tray_tread_tread_1": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_folded_tray_tread_front_plate_1": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_folded_tray_tread_wood_tread_1": {
       "collection": "plates",
@@ -290,11 +286,7 @@
     },
     "sc_folded_tray_tread_tread_2": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_folded_tray_tread_front_plate_2": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_folded_tray_tread_wood_tread_2": {
       "collection": "plates",
@@ -302,11 +294,7 @@
     },
     "sc_folded_tray_tread_tread_3": {
       "collection": "plates",
-      "type": "folded-tray-tread"
-    },
-    "sc_folded_tray_tread_front_plate_3": {
-      "collection": "plates",
-      "type": "folded-tray-tread-front-plate"
+      "type": "timber-backing-plate"
     },
     "sc_folded_tray_tread_wood_tread_3": {
       "collection": "plates",
@@ -572,9 +560,6 @@
           "sc_folded_tray_tread_tread_1",
           "sc_folded_tray_tread_tread_2",
           "sc_folded_tray_tread_tread_3",
-          "sc_folded_tray_tread_front_plate_1",
-          "sc_folded_tray_tread_front_plate_2",
-          "sc_folded_tray_tread_front_plate_3",
           "sc_folded_tray_tread_wood_tread_1",
           "sc_folded_tray_tread_wood_tread_2",
           "sc_folded_tray_tread_wood_tread_3"
@@ -584,9 +569,6 @@
           "sc_folded_tray_tread_tread_1",
           "sc_folded_tray_tread_tread_2",
           "sc_folded_tray_tread_tread_3",
-          "sc_folded_tray_tread_front_plate_1",
-          "sc_folded_tray_tread_front_plate_2",
-          "sc_folded_tray_tread_front_plate_3",
           "sc_folded_tray_tread_wood_tread_1",
           "sc_folded_tray_tread_wood_tread_2",
           "sc_folded_tray_tread_wood_tread_3"
@@ -608,8 +590,6 @@
         "id": "sc_plate_tread_tread_1",
         "type": "plate-tread",
         "thickness": 12,
-        "width": 900,
-        "height": 300,
         "center": [
           0,
           0,
@@ -638,6 +618,7 @@
           "index": 0,
           "station": 0,
           "flightId": "plate_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             0,
             0,
@@ -650,6 +631,7 @@
         },
         "fabrication": {
           "family": "plate-tread",
+          "overlap": 20,
           "finish": "galvanized"
         },
         "bim": {
@@ -659,14 +641,67 @@
           "componentInstanceId": "sc_plate_tread",
           "componentRole": "tread1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_plate_tread_tread_1_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_1_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_1_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_1_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_plate_tread_tread_1_e1",
+              "from": "sc_plate_tread_tread_1_v1",
+              "to": "sc_plate_tread_tread_1_v2"
+            },
+            {
+              "id": "sc_plate_tread_tread_1_e2",
+              "from": "sc_plate_tread_tread_1_v2",
+              "to": "sc_plate_tread_tread_1_v3"
+            },
+            {
+              "id": "sc_plate_tread_tread_1_e3",
+              "from": "sc_plate_tread_tread_1_v3",
+              "to": "sc_plate_tread_tread_1_v4"
+            },
+            {
+              "id": "sc_plate_tread_tread_1_e4",
+              "from": "sc_plate_tread_tread_1_v4",
+              "to": "sc_plate_tread_tread_1_v1"
+            }
+          ]
         }
       },
       "sc_plate_tread_tread_2": {
         "id": "sc_plate_tread_tread_2",
         "type": "plate-tread",
         "thickness": 12,
-        "width": 900,
-        "height": 300,
         "center": [
           430,
           0,
@@ -695,6 +730,7 @@
           "index": 1,
           "station": 430,
           "flightId": "plate_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             430,
             0,
@@ -707,6 +743,7 @@
         },
         "fabrication": {
           "family": "plate-tread",
+          "overlap": 20,
           "finish": "galvanized"
         },
         "bim": {
@@ -716,14 +753,67 @@
           "componentInstanceId": "sc_plate_tread",
           "componentRole": "tread2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_plate_tread_tread_2_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_2_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_2_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_2_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_plate_tread_tread_2_e1",
+              "from": "sc_plate_tread_tread_2_v1",
+              "to": "sc_plate_tread_tread_2_v2"
+            },
+            {
+              "id": "sc_plate_tread_tread_2_e2",
+              "from": "sc_plate_tread_tread_2_v2",
+              "to": "sc_plate_tread_tread_2_v3"
+            },
+            {
+              "id": "sc_plate_tread_tread_2_e3",
+              "from": "sc_plate_tread_tread_2_v3",
+              "to": "sc_plate_tread_tread_2_v4"
+            },
+            {
+              "id": "sc_plate_tread_tread_2_e4",
+              "from": "sc_plate_tread_tread_2_v4",
+              "to": "sc_plate_tread_tread_2_v1"
+            }
+          ]
         }
       },
       "sc_plate_tread_tread_3": {
         "id": "sc_plate_tread_tread_3",
         "type": "plate-tread",
         "thickness": 12,
-        "width": 900,
-        "height": 300,
         "center": [
           860,
           0,
@@ -752,6 +842,7 @@
           "index": 2,
           "station": 860,
           "flightId": "plate_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             860,
             0,
@@ -764,6 +855,7 @@
         },
         "fabrication": {
           "family": "plate-tread",
+          "overlap": 20,
           "finish": "galvanized"
         },
         "bim": {
@@ -773,14 +865,67 @@
           "componentInstanceId": "sc_plate_tread",
           "componentRole": "tread3",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_plate_tread_tread_3_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_3_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_3_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_plate_tread_tread_3_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_plate_tread_tread_3_e1",
+              "from": "sc_plate_tread_tread_3_v1",
+              "to": "sc_plate_tread_tread_3_v2"
+            },
+            {
+              "id": "sc_plate_tread_tread_3_e2",
+              "from": "sc_plate_tread_tread_3_v2",
+              "to": "sc_plate_tread_tread_3_v3"
+            },
+            {
+              "id": "sc_plate_tread_tread_3_e3",
+              "from": "sc_plate_tread_tread_3_v3",
+              "to": "sc_plate_tread_tread_3_v4"
+            },
+            {
+              "id": "sc_plate_tread_tread_3_e4",
+              "from": "sc_plate_tread_tread_3_v4",
+              "to": "sc_plate_tread_tread_3_v1"
+            }
+          ]
         }
       },
       "sc_grating_tread_tread_1": {
         "id": "sc_grating_tread_tread_1",
         "type": "grating-tread",
         "thickness": 35,
-        "width": 900,
-        "height": 300,
         "center": [
           0,
           1450,
@@ -809,6 +954,7 @@
           "index": 0,
           "station": 0,
           "flightId": "grating_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             0,
             1450,
@@ -821,6 +967,7 @@
         },
         "fabrication": {
           "family": "grating-tread",
+          "overlap": 20,
           "finish": "galvanized"
         },
         "bim": {
@@ -830,14 +977,67 @@
           "componentInstanceId": "sc_grating_tread",
           "componentRole": "tread1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_grating_tread_tread_1_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_1_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_1_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_1_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_grating_tread_tread_1_e1",
+              "from": "sc_grating_tread_tread_1_v1",
+              "to": "sc_grating_tread_tread_1_v2"
+            },
+            {
+              "id": "sc_grating_tread_tread_1_e2",
+              "from": "sc_grating_tread_tread_1_v2",
+              "to": "sc_grating_tread_tread_1_v3"
+            },
+            {
+              "id": "sc_grating_tread_tread_1_e3",
+              "from": "sc_grating_tread_tread_1_v3",
+              "to": "sc_grating_tread_tread_1_v4"
+            },
+            {
+              "id": "sc_grating_tread_tread_1_e4",
+              "from": "sc_grating_tread_tread_1_v4",
+              "to": "sc_grating_tread_tread_1_v1"
+            }
+          ]
         }
       },
       "sc_grating_tread_tread_2": {
         "id": "sc_grating_tread_tread_2",
         "type": "grating-tread",
         "thickness": 35,
-        "width": 900,
-        "height": 300,
         "center": [
           430,
           1450,
@@ -866,6 +1066,7 @@
           "index": 1,
           "station": 430,
           "flightId": "grating_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             430,
             1450,
@@ -878,6 +1079,7 @@
         },
         "fabrication": {
           "family": "grating-tread",
+          "overlap": 20,
           "finish": "galvanized"
         },
         "bim": {
@@ -887,14 +1089,67 @@
           "componentInstanceId": "sc_grating_tread",
           "componentRole": "tread2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_grating_tread_tread_2_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_2_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_2_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_2_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_grating_tread_tread_2_e1",
+              "from": "sc_grating_tread_tread_2_v1",
+              "to": "sc_grating_tread_tread_2_v2"
+            },
+            {
+              "id": "sc_grating_tread_tread_2_e2",
+              "from": "sc_grating_tread_tread_2_v2",
+              "to": "sc_grating_tread_tread_2_v3"
+            },
+            {
+              "id": "sc_grating_tread_tread_2_e3",
+              "from": "sc_grating_tread_tread_2_v3",
+              "to": "sc_grating_tread_tread_2_v4"
+            },
+            {
+              "id": "sc_grating_tread_tread_2_e4",
+              "from": "sc_grating_tread_tread_2_v4",
+              "to": "sc_grating_tread_tread_2_v1"
+            }
+          ]
         }
       },
       "sc_grating_tread_tread_3": {
         "id": "sc_grating_tread_tread_3",
         "type": "grating-tread",
         "thickness": 35,
-        "width": 900,
-        "height": 300,
         "center": [
           860,
           1450,
@@ -923,6 +1178,7 @@
           "index": 2,
           "station": 860,
           "flightId": "grating_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             860,
             1450,
@@ -935,6 +1191,7 @@
         },
         "fabrication": {
           "family": "grating-tread",
+          "overlap": 20,
           "finish": "galvanized"
         },
         "bim": {
@@ -944,14 +1201,67 @@
           "componentInstanceId": "sc_grating_tread",
           "componentRole": "tread3",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_grating_tread_tread_3_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_3_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_3_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_grating_tread_tread_3_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_grating_tread_tread_3_e1",
+              "from": "sc_grating_tread_tread_3_v1",
+              "to": "sc_grating_tread_tread_3_v2"
+            },
+            {
+              "id": "sc_grating_tread_tread_3_e2",
+              "from": "sc_grating_tread_tread_3_v2",
+              "to": "sc_grating_tread_tread_3_v3"
+            },
+            {
+              "id": "sc_grating_tread_tread_3_e3",
+              "from": "sc_grating_tread_tread_3_v3",
+              "to": "sc_grating_tread_tread_3_v4"
+            },
+            {
+              "id": "sc_grating_tread_tread_3_e4",
+              "from": "sc_grating_tread_tread_3_v4",
+              "to": "sc_grating_tread_tread_3_v1"
+            }
+          ]
         }
       },
       "sc_pan_tread_tread_1": {
         "id": "sc_pan_tread_tread_1",
         "type": "pan-tread",
         "thickness": 8,
-        "width": 900,
-        "height": 300,
         "center": [
           2100,
           0,
@@ -980,6 +1290,7 @@
           "index": 0,
           "station": 0,
           "flightId": "pan_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             2100,
             0,
@@ -992,6 +1303,7 @@
         },
         "fabrication": {
           "family": "pan-tread",
+          "overlap": 20,
           "frontLip": 45,
           "finish": "powder-coated"
         },
@@ -1002,16 +1314,69 @@
           "componentInstanceId": "sc_pan_tread",
           "componentRole": "tread1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_pan_tread_tread_1_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_1_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_1_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_1_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_pan_tread_tread_1_e1",
+              "from": "sc_pan_tread_tread_1_v1",
+              "to": "sc_pan_tread_tread_1_v2"
+            },
+            {
+              "id": "sc_pan_tread_tread_1_e2",
+              "from": "sc_pan_tread_tread_1_v2",
+              "to": "sc_pan_tread_tread_1_v3"
+            },
+            {
+              "id": "sc_pan_tread_tread_1_e3",
+              "from": "sc_pan_tread_tread_1_v3",
+              "to": "sc_pan_tread_tread_1_v4"
+            },
+            {
+              "id": "sc_pan_tread_tread_1_e4",
+              "from": "sc_pan_tread_tread_1_v4",
+              "to": "sc_pan_tread_tread_1_v1"
+            }
+          ]
         }
       },
       "sc_pan_tread_front_plate_1": {
         "id": "sc_pan_tread_front_plate_1",
         "type": "pan-tread-front-plate",
         "thickness": 8,
-        "width": 900,
-        "height": 45,
         "center": [
-          2254,
+          2246,
           0,
           -22.5
         ],
@@ -1038,6 +1403,7 @@
           "index": 0,
           "station": 0,
           "flightId": "pan_detail_row",
+          "overlap": 20,
           "host": {
             "treadId": "sc_pan_tread_tread_1"
           }
@@ -1050,6 +1416,7 @@
           "family": "tread-front-plate",
           "hostFamily": "pan-tread",
           "frontLip": 45,
+          "overlap": 20,
           "finish": "powder-coated"
         },
         "bim": {
@@ -1059,14 +1426,67 @@
           "componentInstanceId": "sc_pan_tread",
           "componentRole": "frontPlate1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_pan_tread_front_plate_1_v1",
+              "point": [
+                -450,
+                -22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_1_v2",
+              "point": [
+                450,
+                -22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_1_v3",
+              "point": [
+                450,
+                22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_1_v4",
+              "point": [
+                -450,
+                22.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_pan_tread_front_plate_1_e1",
+              "from": "sc_pan_tread_front_plate_1_v1",
+              "to": "sc_pan_tread_front_plate_1_v2"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_1_e2",
+              "from": "sc_pan_tread_front_plate_1_v2",
+              "to": "sc_pan_tread_front_plate_1_v3"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_1_e3",
+              "from": "sc_pan_tread_front_plate_1_v3",
+              "to": "sc_pan_tread_front_plate_1_v4"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_1_e4",
+              "from": "sc_pan_tread_front_plate_1_v4",
+              "to": "sc_pan_tread_front_plate_1_v1"
+            }
+          ]
         }
       },
       "sc_pan_tread_tread_2": {
         "id": "sc_pan_tread_tread_2",
         "type": "pan-tread",
         "thickness": 8,
-        "width": 900,
-        "height": 300,
         "center": [
           2530,
           0,
@@ -1095,6 +1515,7 @@
           "index": 1,
           "station": 430,
           "flightId": "pan_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             2530,
             0,
@@ -1107,6 +1528,7 @@
         },
         "fabrication": {
           "family": "pan-tread",
+          "overlap": 20,
           "frontLip": 45,
           "finish": "powder-coated"
         },
@@ -1117,16 +1539,69 @@
           "componentInstanceId": "sc_pan_tread",
           "componentRole": "tread2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_pan_tread_tread_2_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_2_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_2_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_2_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_pan_tread_tread_2_e1",
+              "from": "sc_pan_tread_tread_2_v1",
+              "to": "sc_pan_tread_tread_2_v2"
+            },
+            {
+              "id": "sc_pan_tread_tread_2_e2",
+              "from": "sc_pan_tread_tread_2_v2",
+              "to": "sc_pan_tread_tread_2_v3"
+            },
+            {
+              "id": "sc_pan_tread_tread_2_e3",
+              "from": "sc_pan_tread_tread_2_v3",
+              "to": "sc_pan_tread_tread_2_v4"
+            },
+            {
+              "id": "sc_pan_tread_tread_2_e4",
+              "from": "sc_pan_tread_tread_2_v4",
+              "to": "sc_pan_tread_tread_2_v1"
+            }
+          ]
         }
       },
       "sc_pan_tread_front_plate_2": {
         "id": "sc_pan_tread_front_plate_2",
         "type": "pan-tread-front-plate",
         "thickness": 8,
-        "width": 900,
-        "height": 45,
         "center": [
-          2684,
+          2676,
           0,
           -22.5
         ],
@@ -1153,6 +1628,7 @@
           "index": 1,
           "station": 430,
           "flightId": "pan_detail_row",
+          "overlap": 20,
           "host": {
             "treadId": "sc_pan_tread_tread_2"
           }
@@ -1165,6 +1641,7 @@
           "family": "tread-front-plate",
           "hostFamily": "pan-tread",
           "frontLip": 45,
+          "overlap": 20,
           "finish": "powder-coated"
         },
         "bim": {
@@ -1174,14 +1651,67 @@
           "componentInstanceId": "sc_pan_tread",
           "componentRole": "frontPlate2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_pan_tread_front_plate_2_v1",
+              "point": [
+                -450,
+                -22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_2_v2",
+              "point": [
+                450,
+                -22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_2_v3",
+              "point": [
+                450,
+                22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_2_v4",
+              "point": [
+                -450,
+                22.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_pan_tread_front_plate_2_e1",
+              "from": "sc_pan_tread_front_plate_2_v1",
+              "to": "sc_pan_tread_front_plate_2_v2"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_2_e2",
+              "from": "sc_pan_tread_front_plate_2_v2",
+              "to": "sc_pan_tread_front_plate_2_v3"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_2_e3",
+              "from": "sc_pan_tread_front_plate_2_v3",
+              "to": "sc_pan_tread_front_plate_2_v4"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_2_e4",
+              "from": "sc_pan_tread_front_plate_2_v4",
+              "to": "sc_pan_tread_front_plate_2_v1"
+            }
+          ]
         }
       },
       "sc_pan_tread_tread_3": {
         "id": "sc_pan_tread_tread_3",
         "type": "pan-tread",
         "thickness": 8,
-        "width": 900,
-        "height": 300,
         "center": [
           2960,
           0,
@@ -1210,6 +1740,7 @@
           "index": 2,
           "station": 860,
           "flightId": "pan_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             2960,
             0,
@@ -1222,6 +1753,7 @@
         },
         "fabrication": {
           "family": "pan-tread",
+          "overlap": 20,
           "frontLip": 45,
           "finish": "powder-coated"
         },
@@ -1232,16 +1764,69 @@
           "componentInstanceId": "sc_pan_tread",
           "componentRole": "tread3",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_pan_tread_tread_3_v1",
+              "point": [
+                -450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_3_v2",
+              "point": [
+                450,
+                -150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_3_v3",
+              "point": [
+                450,
+                150
+              ]
+            },
+            {
+              "id": "sc_pan_tread_tread_3_v4",
+              "point": [
+                -450,
+                150
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_pan_tread_tread_3_e1",
+              "from": "sc_pan_tread_tread_3_v1",
+              "to": "sc_pan_tread_tread_3_v2"
+            },
+            {
+              "id": "sc_pan_tread_tread_3_e2",
+              "from": "sc_pan_tread_tread_3_v2",
+              "to": "sc_pan_tread_tread_3_v3"
+            },
+            {
+              "id": "sc_pan_tread_tread_3_e3",
+              "from": "sc_pan_tread_tread_3_v3",
+              "to": "sc_pan_tread_tread_3_v4"
+            },
+            {
+              "id": "sc_pan_tread_tread_3_e4",
+              "from": "sc_pan_tread_tread_3_v4",
+              "to": "sc_pan_tread_tread_3_v1"
+            }
+          ]
         }
       },
       "sc_pan_tread_front_plate_3": {
         "id": "sc_pan_tread_front_plate_3",
         "type": "pan-tread-front-plate",
         "thickness": 8,
-        "width": 900,
-        "height": 45,
         "center": [
-          3114,
+          3106,
           0,
           -22.5
         ],
@@ -1268,6 +1853,7 @@
           "index": 2,
           "station": 860,
           "flightId": "pan_detail_row",
+          "overlap": 20,
           "host": {
             "treadId": "sc_pan_tread_tread_3"
           }
@@ -1280,6 +1866,7 @@
           "family": "tread-front-plate",
           "hostFamily": "pan-tread",
           "frontLip": 45,
+          "overlap": 20,
           "finish": "powder-coated"
         },
         "bim": {
@@ -1289,16 +1876,69 @@
           "componentInstanceId": "sc_pan_tread",
           "componentRole": "frontPlate3",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_pan_tread_front_plate_3_v1",
+              "point": [
+                -450,
+                -22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_3_v2",
+              "point": [
+                450,
+                -22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_3_v3",
+              "point": [
+                450,
+                22.5
+              ]
+            },
+            {
+              "id": "sc_pan_tread_front_plate_3_v4",
+              "point": [
+                -450,
+                22.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_pan_tread_front_plate_3_e1",
+              "from": "sc_pan_tread_front_plate_3_v1",
+              "to": "sc_pan_tread_front_plate_3_v2"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_3_e2",
+              "from": "sc_pan_tread_front_plate_3_v2",
+              "to": "sc_pan_tread_front_plate_3_v3"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_3_e3",
+              "from": "sc_pan_tread_front_plate_3_v3",
+              "to": "sc_pan_tread_front_plate_3_v4"
+            },
+            {
+              "id": "sc_pan_tread_front_plate_3_e4",
+              "from": "sc_pan_tread_front_plate_3_v4",
+              "to": "sc_pan_tread_front_plate_3_v1"
+            }
+          ]
         }
       },
       "sc_folded_tray_tread_tread_1": {
         "id": "sc_folded_tray_tread_tread_1",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 8,
-        "width": 900,
-        "height": 300,
         "center": [
-          2100,
+          2112.5,
           1450,
           -4
         ],
@@ -1319,12 +1959,13 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 0,
           "station": 0,
           "flightId": "foldedTray_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             2100,
             1450,
@@ -1336,8 +1977,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 50,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "powder-coated"
         },
         "bim": {
@@ -1347,71 +1989,67 @@
           "componentInstanceId": "sc_folded_tray_tread",
           "componentRole": "tread1",
           "componentStatus": "managed"
-        }
-      },
-      "sc_folded_tray_tread_front_plate_1": {
-        "id": "sc_folded_tray_tread_front_plate_1",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 8,
-        "width": 900,
-        "height": 50,
-        "center": [
-          2254,
-          1450,
-          -25
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 0,
-          "station": 0,
-          "flightId": "foldedTray_detail_row",
-          "host": {
-            "treadId": "sc_folded_tray_tread_tread_1"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 50,
-          "finish": "powder-coated"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 1"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_folded_tray_tread",
-          "componentRole": "frontPlate1",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_folded_tray_tread_tread_1_v1",
+              "point": [
+                -450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_1_v2",
+              "point": [
+                450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_1_v3",
+              "point": [
+                450,
+                162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_1_v4",
+              "point": [
+                -450,
+                162.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_folded_tray_tread_tread_1_e1",
+              "from": "sc_folded_tray_tread_tread_1_v1",
+              "to": "sc_folded_tray_tread_tread_1_v2"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_1_e2",
+              "from": "sc_folded_tray_tread_tread_1_v2",
+              "to": "sc_folded_tray_tread_tread_1_v3"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_1_e3",
+              "from": "sc_folded_tray_tread_tread_1_v3",
+              "to": "sc_folded_tray_tread_tread_1_v4"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_1_e4",
+              "from": "sc_folded_tray_tread_tread_1_v4",
+              "to": "sc_folded_tray_tread_tread_1_v1"
+            }
+          ]
         }
       },
       "sc_folded_tray_tread_wood_tread_1": {
         "id": "sc_folded_tray_tread_wood_tread_1",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 830,
-        "height": 325,
         "center": [
           2112.5,
           1450,
@@ -1439,8 +2077,10 @@
           "surfaceKind": "tread",
           "index": 0,
           "station": 0,
+          "flightId": "foldedTray_detail_row",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_folded_tray_tread_tread_1"
+            "backingPlateId": "sc_folded_tray_tread_tread_1"
           }
         },
         "display": {
@@ -1449,6 +2089,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -1458,16 +2099,69 @@
           "componentInstanceId": "sc_folded_tray_tread",
           "componentRole": "woodTread1",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_folded_tray_tread_wood_tread_1_v1",
+              "point": [
+                -450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_1_v2",
+              "point": [
+                450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_1_v3",
+              "point": [
+                450,
+                162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_1_v4",
+              "point": [
+                -450,
+                162.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_folded_tray_tread_wood_tread_1_e1",
+              "from": "sc_folded_tray_tread_wood_tread_1_v1",
+              "to": "sc_folded_tray_tread_wood_tread_1_v2"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_1_e2",
+              "from": "sc_folded_tray_tread_wood_tread_1_v2",
+              "to": "sc_folded_tray_tread_wood_tread_1_v3"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_1_e3",
+              "from": "sc_folded_tray_tread_wood_tread_1_v3",
+              "to": "sc_folded_tray_tread_wood_tread_1_v4"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_1_e4",
+              "from": "sc_folded_tray_tread_wood_tread_1_v4",
+              "to": "sc_folded_tray_tread_wood_tread_1_v1"
+            }
+          ]
         }
       },
       "sc_folded_tray_tread_tread_2": {
         "id": "sc_folded_tray_tread_tread_2",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 8,
-        "width": 900,
-        "height": 300,
         "center": [
-          2530,
+          2542.5,
           1450,
           -4
         ],
@@ -1488,12 +2182,13 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 1,
           "station": 430,
           "flightId": "foldedTray_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             2530,
             1450,
@@ -1505,8 +2200,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 50,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "powder-coated"
         },
         "bim": {
@@ -1516,71 +2212,67 @@
           "componentInstanceId": "sc_folded_tray_tread",
           "componentRole": "tread2",
           "componentStatus": "managed"
-        }
-      },
-      "sc_folded_tray_tread_front_plate_2": {
-        "id": "sc_folded_tray_tread_front_plate_2",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 8,
-        "width": 900,
-        "height": 50,
-        "center": [
-          2684,
-          1450,
-          -25
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 1,
-          "station": 430,
-          "flightId": "foldedTray_detail_row",
-          "host": {
-            "treadId": "sc_folded_tray_tread_tread_2"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 50,
-          "finish": "powder-coated"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 2"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_folded_tray_tread",
-          "componentRole": "frontPlate2",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_folded_tray_tread_tread_2_v1",
+              "point": [
+                -450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_2_v2",
+              "point": [
+                450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_2_v3",
+              "point": [
+                450,
+                162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_2_v4",
+              "point": [
+                -450,
+                162.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_folded_tray_tread_tread_2_e1",
+              "from": "sc_folded_tray_tread_tread_2_v1",
+              "to": "sc_folded_tray_tread_tread_2_v2"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_2_e2",
+              "from": "sc_folded_tray_tread_tread_2_v2",
+              "to": "sc_folded_tray_tread_tread_2_v3"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_2_e3",
+              "from": "sc_folded_tray_tread_tread_2_v3",
+              "to": "sc_folded_tray_tread_tread_2_v4"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_2_e4",
+              "from": "sc_folded_tray_tread_tread_2_v4",
+              "to": "sc_folded_tray_tread_tread_2_v1"
+            }
+          ]
         }
       },
       "sc_folded_tray_tread_wood_tread_2": {
         "id": "sc_folded_tray_tread_wood_tread_2",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 830,
-        "height": 325,
         "center": [
           2542.5,
           1450,
@@ -1608,8 +2300,10 @@
           "surfaceKind": "tread",
           "index": 1,
           "station": 430,
+          "flightId": "foldedTray_detail_row",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_folded_tray_tread_tread_2"
+            "backingPlateId": "sc_folded_tray_tread_tread_2"
           }
         },
         "display": {
@@ -1618,6 +2312,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -1627,16 +2322,69 @@
           "componentInstanceId": "sc_folded_tray_tread",
           "componentRole": "woodTread2",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_folded_tray_tread_wood_tread_2_v1",
+              "point": [
+                -450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_2_v2",
+              "point": [
+                450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_2_v3",
+              "point": [
+                450,
+                162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_2_v4",
+              "point": [
+                -450,
+                162.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_folded_tray_tread_wood_tread_2_e1",
+              "from": "sc_folded_tray_tread_wood_tread_2_v1",
+              "to": "sc_folded_tray_tread_wood_tread_2_v2"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_2_e2",
+              "from": "sc_folded_tray_tread_wood_tread_2_v2",
+              "to": "sc_folded_tray_tread_wood_tread_2_v3"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_2_e3",
+              "from": "sc_folded_tray_tread_wood_tread_2_v3",
+              "to": "sc_folded_tray_tread_wood_tread_2_v4"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_2_e4",
+              "from": "sc_folded_tray_tread_wood_tread_2_v4",
+              "to": "sc_folded_tray_tread_wood_tread_2_v1"
+            }
+          ]
         }
       },
       "sc_folded_tray_tread_tread_3": {
         "id": "sc_folded_tray_tread_tread_3",
-        "type": "folded-tray-tread",
+        "type": "timber-backing-plate",
         "thickness": 8,
-        "width": 900,
-        "height": 300,
         "center": [
-          2960,
+          2972.5,
           1450,
           -4
         ],
@@ -1657,12 +2405,13 @@
         ],
         "featureIds": [],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
+          "role": "stair-timber-backing-plate",
           "surfaceKind": "tread",
           "family": "folded-tray-tread",
           "index": 2,
           "station": 860,
           "flightId": "foldedTray_detail_row",
+          "overlap": 20,
           "walkingSurface": [
             2960,
             1450,
@@ -1674,8 +2423,9 @@
           "edgeColor": "#475569"
         },
         "fabrication": {
-          "family": "folded-tray-tread",
-          "frontLip": 50,
+          "family": "timber-backing-plate",
+          "hostFamily": "folded-tray-tread",
+          "overlap": 20,
           "finish": "powder-coated"
         },
         "bim": {
@@ -1685,71 +2435,67 @@
           "componentInstanceId": "sc_folded_tray_tread",
           "componentRole": "tread3",
           "componentStatus": "managed"
-        }
-      },
-      "sc_folded_tray_tread_front_plate_3": {
-        "id": "sc_folded_tray_tread_front_plate_3",
-        "type": "folded-tray-tread-front-plate",
-        "thickness": 8,
-        "width": 900,
-        "height": 50,
-        "center": [
-          3114,
-          1450,
-          -25
-        ],
-        "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [],
-        "placementIntent": {
-          "role": "stair-tread-front-plate",
-          "family": "folded-tray-tread",
-          "surfaceKind": "tread",
-          "index": 2,
-          "station": 860,
-          "flightId": "foldedTray_detail_row",
-          "host": {
-            "treadId": "sc_folded_tray_tread_tread_3"
-          }
         },
-        "display": {
-          "color": "#71717a",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "tread-front-plate",
-          "hostFamily": "folded-tray-tread",
-          "frontLip": 50,
-          "finish": "powder-coated"
-        },
-        "bim": {
-          "name": "folded-tray-tread front plate 3"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_folded_tray_tread",
-          "componentRole": "frontPlate3",
-          "componentStatus": "managed"
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_folded_tray_tread_tread_3_v1",
+              "point": [
+                -450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_3_v2",
+              "point": [
+                450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_3_v3",
+              "point": [
+                450,
+                162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_3_v4",
+              "point": [
+                -450,
+                162.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_folded_tray_tread_tread_3_e1",
+              "from": "sc_folded_tray_tread_tread_3_v1",
+              "to": "sc_folded_tray_tread_tread_3_v2"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_3_e2",
+              "from": "sc_folded_tray_tread_tread_3_v2",
+              "to": "sc_folded_tray_tread_tread_3_v3"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_3_e3",
+              "from": "sc_folded_tray_tread_tread_3_v3",
+              "to": "sc_folded_tray_tread_tread_3_v4"
+            },
+            {
+              "id": "sc_folded_tray_tread_tread_3_e4",
+              "from": "sc_folded_tray_tread_tread_3_v4",
+              "to": "sc_folded_tray_tread_tread_3_v1"
+            }
+          ]
         }
       },
       "sc_folded_tray_tread_wood_tread_3": {
         "id": "sc_folded_tray_tread_wood_tread_3",
         "type": "timber-tread-board",
         "thickness": 32,
-        "width": 830,
-        "height": 325,
         "center": [
           2972.5,
           1450,
@@ -1777,8 +2523,10 @@
           "surfaceKind": "tread",
           "index": 2,
           "station": 860,
+          "flightId": "foldedTray_detail_row",
+          "overlap": 20,
           "host": {
-            "steelTrayId": "sc_folded_tray_tread_tread_3"
+            "backingPlateId": "sc_folded_tray_tread_tread_3"
           }
         },
         "display": {
@@ -1787,6 +2535,7 @@
         },
         "fabrication": {
           "family": "timber-cover-board",
+          "overlap": 20,
           "finish": "clear-sealed-oak"
         },
         "bim": {
@@ -1796,6 +2545,61 @@
           "componentInstanceId": "sc_folded_tray_tread",
           "componentRole": "woodTread3",
           "componentStatus": "managed"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_folded_tray_tread_wood_tread_3_v1",
+              "point": [
+                -450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_3_v2",
+              "point": [
+                450,
+                -162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_3_v3",
+              "point": [
+                450,
+                162.5
+              ]
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_3_v4",
+              "point": [
+                -450,
+                162.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_folded_tray_tread_wood_tread_3_e1",
+              "from": "sc_folded_tray_tread_wood_tread_3_v1",
+              "to": "sc_folded_tray_tread_wood_tread_3_v2"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_3_e2",
+              "from": "sc_folded_tray_tread_wood_tread_3_v2",
+              "to": "sc_folded_tray_tread_wood_tread_3_v3"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_3_e3",
+              "from": "sc_folded_tray_tread_wood_tread_3_v3",
+              "to": "sc_folded_tray_tread_wood_tread_3_v4"
+            },
+            {
+              "id": "sc_folded_tray_tread_wood_tread_3_e4",
+              "from": "sc_folded_tray_tread_wood_tread_3_v4",
+              "to": "sc_folded_tray_tread_wood_tread_3_v1"
+            }
+          ]
         }
       }
     },
@@ -1893,9 +2697,6 @@
           "sc_folded_tray_tread_tread_1",
           "sc_folded_tray_tread_tread_2",
           "sc_folded_tray_tread_tread_3",
-          "sc_folded_tray_tread_front_plate_1",
-          "sc_folded_tray_tread_front_plate_2",
-          "sc_folded_tray_tread_front_plate_3",
           "sc_folded_tray_tread_wood_tread_1",
           "sc_folded_tray_tread_wood_tread_2",
           "sc_folded_tray_tread_wood_tread_3"
@@ -1905,7 +2706,7 @@
           "kind": "stair-treads",
           "family": "folded-tray-tread",
           "capabilities": {
-            "trayLips": true,
+            "trayLips": false,
             "timberBoard": true,
             "risers": true
           },
@@ -2036,6 +2837,7 @@
           "treads": {
             "thickness": 12,
             "depth": 300,
+            "overlap": 20,
             "material": "S355",
             "closedRisers": false,
             "finish": "galvanized"
@@ -2052,6 +2854,7 @@
           "treads": {
             "thickness": 12,
             "depth": 300,
+            "overlap": 20,
             "material": "S355",
             "closedRisers": false,
             "finish": "galvanized"
@@ -2216,6 +3019,7 @@
           "treads": {
             "thickness": 35,
             "depth": 300,
+            "overlap": 20,
             "material": "S355",
             "closedRisers": false,
             "finish": "galvanized"
@@ -2232,6 +3036,7 @@
           "treads": {
             "thickness": 35,
             "depth": 300,
+            "overlap": 20,
             "material": "S355",
             "closedRisers": false,
             "finish": "galvanized"
@@ -2396,6 +3201,7 @@
           "treads": {
             "thickness": 8,
             "depth": 300,
+            "overlap": 20,
             "material": "S355",
             "frontLip": 45,
             "closedRisers": false,
@@ -2413,6 +3219,7 @@
           "treads": {
             "thickness": 8,
             "depth": 300,
+            "overlap": 20,
             "material": "S355",
             "frontLip": 45,
             "closedRisers": false,
@@ -2588,12 +3395,11 @@
           "treads": {
             "thickness": 8,
             "depth": 300,
+            "overlap": 20,
             "material": "S355",
-            "frontLip": 50,
             "closedRisers": false,
             "finish": "powder-coated",
             "woodThickness": 32,
-            "woodInset": 35,
             "woodNosing": 25,
             "woodMaterial": "OAK_TIMBER",
             "woodFinish": "clear-sealed-oak"
@@ -2610,12 +3416,11 @@
           "treads": {
             "thickness": 8,
             "depth": 300,
+            "overlap": 20,
             "material": "S355",
-            "frontLip": 50,
             "closedRisers": false,
             "finish": "powder-coated",
             "woodThickness": 32,
-            "woodInset": 35,
             "woodNosing": 25,
             "woodMaterial": "OAK_TIMBER",
             "woodFinish": "clear-sealed-oak"
@@ -2626,13 +3431,10 @@
         "childComponentRoles": {},
         "objectRoles": {
           "tread1": "sc_folded_tray_tread_tread_1",
-          "frontPlate1": "sc_folded_tray_tread_front_plate_1",
           "woodTread1": "sc_folded_tray_tread_wood_tread_1",
           "tread2": "sc_folded_tray_tread_tread_2",
-          "frontPlate2": "sc_folded_tray_tread_front_plate_2",
           "woodTread2": "sc_folded_tray_tread_wood_tread_2",
           "tread3": "sc_folded_tray_tread_tread_3",
-          "frontPlate3": "sc_folded_tray_tread_front_plate_3",
           "woodTread3": "sc_folded_tray_tread_wood_tread_3",
           "treadPattern": "sc_folded_tray_tread_tread_pattern",
           "treadAssembly": "sc_folded_tray_tread_tread_assembly"
@@ -2648,11 +3450,7 @@
             "sc_folded_tray_tread_tread_2",
             "sc_folded_tray_tread_tread_3"
           ],
-          "treadFrontPlateIds": [
-            "sc_folded_tray_tread_front_plate_1",
-            "sc_folded_tray_tread_front_plate_2",
-            "sc_folded_tray_tread_front_plate_3"
-          ],
+          "treadFrontPlateIds": [],
           "woodTreadPlateIds": [
             "sc_folded_tray_tread_wood_tread_1",
             "sc_folded_tray_tread_wood_tread_2",
@@ -2663,13 +3461,10 @@
         },
         "ownedObjectIds": [
           "sc_folded_tray_tread_tread_1",
-          "sc_folded_tray_tread_front_plate_1",
           "sc_folded_tray_tread_wood_tread_1",
           "sc_folded_tray_tread_tread_2",
-          "sc_folded_tray_tread_front_plate_2",
           "sc_folded_tray_tread_wood_tread_2",
           "sc_folded_tray_tread_tread_3",
-          "sc_folded_tray_tread_front_plate_3",
           "sc_folded_tray_tread_wood_tread_3",
           "sc_folded_tray_tread_tread_pattern",
           "sc_folded_tray_tread_tread_assembly"

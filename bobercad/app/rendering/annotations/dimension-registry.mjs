@@ -1,15 +1,15 @@
-import { plateAxisDimension } from "./dimensions/plate-axis.mjs";
-import { holeSpacingDimension } from "./dimensions/hole-spacing.mjs";
-import { holeEdgeDistanceDimension, holeInterfaceEdgeDistanceDimension } from "./dimensions/hole-edge-distance.mjs";
-import { holePatternDimension } from "./dimensions/hole-pattern.mjs";
-import { holeDiameterDimension } from "./dimensions/hole-diameter.mjs";
-import { featureDepthDimension } from "./dimensions/feature-depth.mjs";
-import { fastenerLengthDimension } from "./dimensions/fastener-length.mjs";
-import { interfaceOffsetDimension, trimPlaneOffsetDimension } from "./dimensions/interface-offsets.mjs?v=trim-manager-clean-1";
-import { clearanceCutOffsetDimension } from "./dimensions/clearance-cut-offset.mjs";
-import { featureOptionCalloutDimension, trimOptionCalloutDimension } from "./dimensions/feature-option-callout.mjs?v=trim-manager-clean-1";
-import { plateReferencePlaneOffsetDimension } from "./dimensions/plate-reference-plane-offset.mjs";
-import { weldSizeDimension } from "./dimensions/weld-size.mjs";
+import { plateAxisDimension } from "./dimensions/plate-axis.mjs?v=unified-dimension-overlay-1";
+import { holeSpacingDimension } from "./dimensions/hole-spacing.mjs?v=unified-dimension-overlay-1";
+import { holeEdgeDistanceDimension, holeInterfaceEdgeDistanceDimension } from "./dimensions/hole-edge-distance.mjs?v=unified-dimension-overlay-1";
+import { holePatternDimension } from "./dimensions/hole-pattern.mjs?v=unified-dimension-overlay-1";
+import { holeDiameterDimension } from "./dimensions/hole-diameter.mjs?v=unified-dimension-overlay-1";
+import { featureDepthDimension } from "./dimensions/feature-depth.mjs?v=unified-dimension-overlay-1";
+import { fastenerLengthDimension } from "./dimensions/fastener-length.mjs?v=unified-dimension-overlay-1";
+import { interfaceOffsetDimension, trimPlaneOffsetDimension } from "./dimensions/interface-offsets.mjs?v=unified-dimension-overlay-1";
+import { clearanceCutOffsetDimension } from "./dimensions/clearance-cut-offset.mjs?v=unified-dimension-overlay-1";
+import { featureOptionCalloutDimension, trimOptionCalloutDimension } from "./dimensions/feature-option-callout.mjs?v=unified-dimension-overlay-1";
+import { plateReferencePlaneOffsetDimension } from "./dimensions/plate-reference-plane-offset.mjs?v=unified-dimension-overlay-1";
+import { weldSizeDimension } from "./dimensions/weld-size.mjs?v=unified-dimension-overlay-1";
 
 const handlers = new Map([
   ["plate-axis", plateAxisDimension],
@@ -31,9 +31,4 @@ const handlers = new Map([
 
 export function dimensionHandler(kind) {
   return handlers.get(kind) || null;
-}
-
-export function registerDimensionHandler(kind, handler) {
-  if (!kind || typeof handler !== "function") return;
-  handlers.set(kind, handler);
 }

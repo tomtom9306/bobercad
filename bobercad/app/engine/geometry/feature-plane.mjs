@@ -1,22 +1,18 @@
+import { finitePositiveNumber, v } from "../core/math.mjs?v=positive-number-dry-1";
+
 function failDefault(message) {
   throw new Error(message);
-}
-
-function finiteVec3(value) {
-  return Array.isArray(value)
-    && value.length === 3
-    && value.every((item) => typeof item === "number" && Number.isFinite(item));
 }
 
 function sizeFromExtents(extents) {
   if (!extents || typeof extents !== "object") return null;
   const width = extents.xMax - extents.xMin;
   const height = extents.yMax - extents.yMin;
-  return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0 ? [width, height] : null;
+  return finitePositiveNumber(width) && finitePositiveNumber(height) ? [width, height] : null;
 }
 
 export function planeExtentsFromSize(size) {
-  if (!Array.isArray(size) || size.length !== 2 || size.some((value) => typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
+  if (!Array.isArray(size) || size.length !== 2 || size.some((value) => !finitePositiveNumber(value))) {
     return undefined;
   }
   return {
@@ -27,21 +23,16 @@ export function planeExtentsFromSize(size) {
   };
 }
 
-export function normalizeReferencePlane(plane) {
-  if (!plane || typeof plane !== "object") return null;
-  return {
-    ...plane,
-    ...(Array.isArray(plane.size) ? { size: [...plane.size] } : {}),
-    ...(Array.isArray(plane.size) ? {} : sizeFromExtents(plane.extents) ? { size: sizeFromExtents(plane.extents) } : {})
-  };
-}
-
 export function requiredReferencePlane(project, referencePlaneId, label = "reference plane", fail = failDefault) {
   if (!referencePlaneId) fail(`${label} missing referencePlaneId`);
   const plane = project?.model?.referencePlanes?.[referencePlaneId];
   if (!plane) fail(`${label}: reference plane not found: ${referencePlaneId}`);
-  const normalized = normalizeReferencePlane(plane);
-  if (!finiteVec3(normalized?.origin) || !finiteVec3(normalized?.normal) || !finiteVec3(normalized?.axisX) || !finiteVec3(normalized?.axisY)) {
+  const extentsSize = sizeFromExtents(plane.extents);
+  const normalized = {
+    ...plane,
+    ...(Array.isArray(plane.size) ? { size: [...plane.size] } : extentsSize ? { size: extentsSize } : {})
+  };
+  if (!v.isVec3(normalized?.origin) || !v.isVec3(normalized?.normal) || !v.isVec3(normalized?.axisX) || !v.isVec3(normalized?.axisY)) {
     fail(`${label}: reference plane ${referencePlaneId} must define origin, normal, axisX and axisY`);
   }
   return normalized;

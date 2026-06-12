@@ -1,56 +1,18 @@
-import { v } from "../../core/math.mjs";
+import { cleanVec2Loop, clamp, distancePointToSegment2, finitePositiveNumber as finitePositive, linePlaneIntersection, projectedAxis, projectPointToPlane, v } from "../../core/math.mjs?v=distance2-dry-1";
+import { signedArea2d } from "../../geometry/polygon.mjs?v=polygon-area-dry-1";
+import { plateOutline as sketchPlateOutline, rectangleOutline as sketchRectangleOutline } from "../project/plates.mjs?v=plate-outline-relation-safety-1";
+import { memberStationAtPoint } from "../project/members.mjs?v=member-station-api-dry-1";
 import {
   memberFrame,
   memberFrameAt,
   memberLength,
   sectionBounds,
   sectionWebBounds
-} from "../../geometry/member-geometry.mjs";
+} from "../../geometry/member-geometry.mjs?v=geometry-api-array-values-dry-1";
 
 const EPSILON = 1e-9;
 
-function finitePositive(value) {
-  return typeof value === "number" && Number.isFinite(value) && value > 0;
-}
-
-function projectPointToPlane(point, planeOrigin, normal) {
-  return v.sub(point, v.mul(normal, v.dot(v.sub(point, planeOrigin), normal)));
-}
-
-function linePlaneIntersection(point, direction, planeOrigin, normal) {
-  const denominator = v.dot(direction, normal);
-  if (Math.abs(denominator) <= EPSILON) return null;
-  return v.add(point, v.mul(direction, v.dot(v.sub(planeOrigin, point), normal) / denominator));
-}
-
-function projectedAxis(axis, normal) {
-  const projected = v.sub(axis, v.mul(normal, v.dot(axis, normal)));
-  return v.len(projected) > EPSILON ? v.norm(projected) : null;
-}
-
-function cleanOutline(outline) {
-  const clean = [];
-  for (const point of outline || []) {
-    if (!Array.isArray(point) || point.length !== 2 || point.some((value) => typeof value !== "number" || !Number.isFinite(value))) continue;
-    const previous = clean[clean.length - 1];
-    if (!previous || Math.hypot(previous[0] - point[0], previous[1] - point[1]) > EPSILON) clean.push([...point]);
-  }
-  if (clean.length > 1) {
-    const first = clean[0];
-    const last = clean[clean.length - 1];
-    if (Math.hypot(first[0] - last[0], first[1] - last[1]) <= EPSILON) clean.pop();
-  }
-  return clean;
-}
-
-function rectangleOutline(width, height) {
-  return [
-    [-width / 2, -height / 2],
-    [width / 2, -height / 2],
-    [width / 2, height / 2],
-    [-width / 2, height / 2]
-  ];
-}
+const cleanOutline = (outline) => cleanVec2Loop(outline, { tolerance: EPSILON });
 
 function platePoint(point, plateCenter, localAxisY, localAxisZ) {
   return v.add(plateCenter, v.add(v.mul(localAxisY, point[0]), v.mul(localAxisZ, point[1])));
@@ -100,13 +62,7 @@ function clipPlateOutlineByPlane({ outline, plateCenter, localAxisY, localAxisZ,
 
 function outlineArea(outline) {
   const points = cleanOutline(outline);
-  let area = 0;
-  for (let index = 0; index < points.length; index += 1) {
-    const a = points[index];
-    const b = points[(index + 1) % points.length];
-    area += a[0] * b[1] - b[0] * a[1];
-  }
-  return Math.abs(area) / 2;
+  return Math.abs(signedArea2d(points));
 }
 
 function pointInPolygon(point, outline) {
@@ -122,19 +78,11 @@ function pointInPolygon(point, outline) {
   return inside;
 }
 
-function pointSegmentDistance(point, a, b) {
-  const ab = [b[0] - a[0], b[1] - a[1]];
-  const lengthSq = ab[0] * ab[0] + ab[1] * ab[1];
-  const t = lengthSq <= EPSILON ? 0 : Math.max(0, Math.min(1, ((point[0] - a[0]) * ab[0] + (point[1] - a[1]) * ab[1]) / lengthSq));
-  const closest = [a[0] + ab[0] * t, a[1] + ab[1] * t];
-  return Math.hypot(point[0] - closest[0], point[1] - closest[1]);
-}
-
 function circleFitsPolygon(point, radius, outline) {
   const polygon = cleanOutline(outline);
   if (polygon.length < 3 || !pointInPolygon(point, polygon)) return false;
   for (let index = 0; index < polygon.length; index += 1) {
-    if (pointSegmentDistance(point, polygon[index], polygon[(index + 1) % polygon.length]) < radius - EPSILON) return false;
+    if (distancePointToSegment2(point, polygon[index], polygon[(index + 1) % polygon.length]) < radius - EPSILON) return false;
   }
   return true;
 }
@@ -211,21 +159,24 @@ function secondaryWebReference({ member, profile, supportInterface, beamInterfac
 export function createGeometryApi() {
   return {
     v,
+    clamp,
     finitePositive,
     circleFitsPolygon,
     cleanOutline,
+    plateOutline: sketchPlateOutline,
     clipPlateOutlineByPlane,
     outlineArea,
     platePoint,
     linePlaneIntersection,
     projectPointToPlane,
     projectedAxis,
-    rectangleOutline,
+    rectangleOutline: sketchRectangleOutline,
     endPlateAxes,
     plateAxes,
     memberFrame,
     memberFrameAt,
     memberLength,
+    memberStationAtPoint,
     sectionBounds,
     sectionWebBounds,
     secondaryBeamDirection,

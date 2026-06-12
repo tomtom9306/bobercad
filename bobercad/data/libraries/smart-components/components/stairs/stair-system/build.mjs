@@ -1,4 +1,4 @@
-import { solveStairSystem } from "./solver.mjs?v=landing-platform-footprints-1";
+import { solveStairSystem } from "./solver.mjs?v=path-radial-sweep-dry-1";
 
 function stairParameters(ctx) {
   const p = (path) => ctx.parameterValue(path);
@@ -30,10 +30,10 @@ function stairParameters(ctx) {
       family: p("treads.family"),
       thickness: p("treads.thickness"),
       depth: p("treads.depth"),
+      overlap: p("treads.overlap"),
       material: p("treads.material"),
       frontLip: p("treads.frontLip"),
       woodThickness: p("treads.woodThickness"),
-      woodInset: p("treads.woodInset"),
       woodNosing: p("treads.woodNosing"),
       woodMaterial: p("treads.woodMaterial"),
       woodFinish: p("treads.woodFinish"),

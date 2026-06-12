@@ -1,58 +1,24 @@
-import { matchesShortcut, shortcutSetting } from "../../../rendering/interaction/keyboard-shortcuts.mjs?v=axis-guide-shortcuts-1";
+import { matchesShortcut, shortcutSetting } from "../../../rendering/interaction/keyboard-shortcuts.mjs?v=truthy-values-dry-1";
+import { formatNumber } from "../../../engine/core/format.mjs?v=format-number-dry-1";
+import { arrayValues } from "../../../engine/core/model.mjs?v=ui-array-values-dry-1";
+import { button, hidePanel, parseNumericControlValue, text as element } from "./panel-elements.mjs?v=panel-controls-dry-1";
 
 const AXES = [
   { id: "x", label: "X", index: 0 },
   { id: "y", label: "Y", index: 1 },
   { id: "z", label: "Z", index: 2 }
 ];
-
-function element(tag, className = "", text = "") {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text) node.textContent = text;
-  return node;
-}
-
-function button(label, className, title, onClick) {
-  const node = document.createElement("button");
-  node.type = "button";
-  node.className = className;
-  node.textContent = label;
-  node.title = title;
-  node.addEventListener("click", onClick);
-  return node;
-}
-
-function finiteNumber(value) {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-function formatNumber(value) {
-  if (!finiteNumber(value)) return "";
-  const rounded = Math.round(value * 1000) / 1000;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
-}
+const POSITION_FORMAT = { digits: 3, trimTrailingZeros: true };
 
 function formatDelta(value) {
-  if (!finiteNumber(value)) return "";
-  const text = formatNumber(value);
+  const text = formatNumber(value, POSITION_FORMAT);
   if (!text || value < 0) return text;
   return `+${text}`;
 }
 
 function pointText(point) {
   if (!Array.isArray(point)) return "";
-  return AXES.map((axis) => `${axis.label} ${formatNumber(point[axis.index])}`).join("  ");
-}
-
-function spaceLabel(value) {
-  return value === "local" ? "Local axes" : "Global axes";
-}
-
-function parseNumber(input) {
-  const value = Number(String(input.value).trim());
-  input.classList.toggle("invalid", !finiteNumber(value));
-  return finiteNumber(value) ? value : null;
+  return AXES.map((axis) => `${axis.label} ${formatNumber(point[axis.index], POSITION_FORMAT)}`).join("  ");
 }
 
 function input(className, value, label, shortcuts, onApply, onConfirm, onCancel) {
@@ -64,7 +30,7 @@ function input(className, value, label, shortcuts, onApply, onConfirm, onCancel)
   node.setAttribute("aria-label", label);
 
   const apply = () => {
-    const parsed = parseNumber(node);
+    const parsed = parseNumericControlValue(node);
     if (parsed === null) return false;
     return onApply(parsed) !== false;
   };
@@ -109,14 +75,13 @@ export function mountMemberTransformPanel({
 
   function render() {
     if (!state) {
-      panel.hidden = true;
-      panel.replaceChildren();
+      hidePanel(panel);
       return;
     }
 
     const title = element("div", "member-transform-title", state.title || "Move member");
     const object = element("div", "member-transform-object", state.memberId || "");
-    const space = element("div", "member-transform-space", spaceLabel(state.coordinateSpace));
+    const space = element("div", "member-transform-space", state.coordinateSpace === "local" ? "Local axes" : "Global axes");
     const header = element("header", "member-transform-header");
     header.append(title, object, space);
 
@@ -150,7 +115,7 @@ export function mountMemberTransformPanel({
       );
       const resultInput = input(
         "member-transform-input",
-        formatNumber(after),
+        formatNumber(after, POSITION_FORMAT),
         `${axis.label} coordinate`,
         shortcuts,
         (value) => onResultChange(axis.id, value),
@@ -159,13 +124,13 @@ export function mountMemberTransformPanel({
       );
       const nudge = element("span", "member-transform-nudge");
       nudge.append(
-        button("-", "member-transform-step", `${axis.label} minus step`, () => onNudge(axis.id, -1)),
-        button("+", "member-transform-step", `${axis.label} plus step`, () => onNudge(axis.id, 1))
+        button("-", "member-transform-step", () => onNudge(axis.id, -1), { title: `${axis.label} minus step` }),
+        button("+", "member-transform-step", () => onNudge(axis.id, 1), { title: `${axis.label} plus step` })
       );
 
       grid.append(
         element("span", "member-transform-axis", axis.label),
-        element("span", "member-transform-before", formatNumber(before)),
+        element("span", "member-transform-before", formatNumber(before, POSITION_FORMAT)),
         deltaInput,
         resultInput,
         nudge
@@ -177,7 +142,7 @@ export function mountMemberTransformPanel({
       element("span", "member-transform-step-label", "Step"),
       input(
         "member-transform-step-input",
-        formatNumber(state.increment),
+        formatNumber(state.increment, POSITION_FORMAT),
         "Move step",
         shortcuts,
         (value) => onIncrementChange(value),
@@ -187,7 +152,7 @@ export function mountMemberTransformPanel({
     );
 
     const points = element("div", "member-transform-points");
-    for (const point of state.affectedPoints || []) points.append(pointRow(point));
+    for (const point of arrayValues(state.affectedPoints)) points.append(pointRow(point));
 
     const hint = state.committed
       ? "Applied. Enter or check closes. Esc or x undoes."
@@ -197,8 +162,8 @@ export function mountMemberTransformPanel({
 
     const actions = element("footer", "member-transform-actions");
     actions.append(
-      button("✓", "member-transform-action confirm", "Close move panel", onConfirm),
-      button("x", "member-transform-action cancel", state.committed ? "Undo move" : "Cancel move", onCancel)
+      button("✓", "member-transform-action confirm", onConfirm, { title: "Close move panel" }),
+      button("x", "member-transform-action cancel", onCancel, { title: state.committed ? "Undo move" : "Cancel move" })
     );
 
     panel.hidden = false;

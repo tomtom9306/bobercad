@@ -15,8 +15,10 @@ Do not write generated mesh data, preview state, or temporary snap state into pr
 ## Files
 
 - `bobercad/app/engine/api/project/member-factory.mjs`: builds semantic member objects.
-- `bobercad/app/engine/api/project/snap-candidates.mjs`: collects snap points and lines from the project.
-- `bobercad/app/engine/api/project/snap-solver.mjs`: chooses the best snap for a cursor.
+- `bobercad/app/rendering/interaction/snap-manager.mjs`: shared snap entry point for modeling tools.
+- `bobercad/app/rendering/interaction/snap-selection-manager.mjs`: shared selection/snap scope and filtering.
+- `bobercad/app/rendering/interaction/snap-providers.mjs`: collects snap points and lines from project objects, construction guides, active sketches, and member profile targets.
+- `bobercad/app/engine/api/project/snap-solver.mjs`: chooses the best snap from candidates supplied by the manager.
 - `bobercad/app/engine/api/project/work-plane.mjs`: active modeling plane helpers.
 - `bobercad/app/engine/store/project-store.mjs`: only place that mutates the project.
 - `bobercad/app/rendering/interaction/command-controller.mjs`: shared keyboard and pointer routing.
@@ -28,6 +30,6 @@ Do not write generated mesh data, preview state, or temporary snap state into pr
 
 - A command must commit through a headless API, usually `project-store`.
 - A command preview must be disposable rendering state.
-- New snap behavior belongs in candidate collection or solver files, not inside one command.
+- New snap behavior belongs in a provider, profile, or selection/scope rule, not inside one command.
 - Viewer settings such as snap tolerance, preview color, and default column height belong in `viewer-settings.json`.
 - If a command needs a new persistent JSON shape, update the matching schema in the same change.

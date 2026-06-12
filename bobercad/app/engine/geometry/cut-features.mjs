@@ -1,6 +1,7 @@
-import { objectById } from "../core/model.mjs";
-import { v } from "../core/math.mjs";
-import { memberFrame, memberFrameAt, memberLength, resolveInterfaceWithConnectionReference, sectionBounds, sectionWebBounds } from "./member-geometry.mjs";
+import { arrayValues, objectById } from "../core/model.mjs?v=geometry-api-array-values-dry-1";
+import { clamp, finiteNonNegativeNumberOr, finiteNumber, v } from "../core/math.mjs?v=cut-feature-number-or-dry-1";
+import { libraryProfileById } from "../api/project/profiles.mjs?v=profile-lookup-dry-1";
+import { memberFrame, memberFrameAt, memberLength, resolveInterfaceWithConnectionReference, sectionBounds, sectionWebBounds } from "./member-geometry.mjs?v=geometry-api-array-values-dry-1";
 
 const EPSILON = 1e-9;
 
@@ -8,12 +9,8 @@ function fail(message) {
   throw new Error(`cut feature: ${message}`);
 }
 
-function finiteOffset(value, fallback = 0) {
-  return typeof value === "number" && Number.isFinite(value) ? Math.max(0, value) : fallback;
-}
-
 function profileForMember(profiles, member) {
-  const profile = profiles?.[member.profile] || profiles?.profiles?.[member.profile];
+  const profile = libraryProfileById(profiles, member.profile);
   if (!profile) fail(`${member.id}: profile not found ${member.profile}`);
   return profile;
 }
@@ -38,7 +35,7 @@ function profileCutIntent(feature) {
 }
 
 function solidProfileOutlines(profile, featureId) {
-  const outlines = (profile.section?.contours || [])
+  const outlines = arrayValues(profile.section?.contours)
     .filter((contour) => contour.role === "solid")
     .map((contour) => contour.points);
   if (!outlines.length) fail(`${featureId}: source profile must contain at least one solid contour`);
@@ -46,12 +43,12 @@ function solidProfileOutlines(profile, featureId) {
 }
 
 function cutStation(project, profiles, intent, sourceMember, sourceFrame) {
-  if (typeof intent.source?.station === "number" && Number.isFinite(intent.source.station)) {
-    return Math.max(0, Math.min(memberLength(sourceMember), intent.source.station));
+  if (finiteNumber(intent.source?.station)) {
+    return clamp(intent.source.station, 0, memberLength(sourceMember));
   }
   if (intent.source?.interfaceId) {
     const iface = resolveInterfaceWithConnectionReference(project, profiles, intent.source.interfaceId);
-    return Math.max(0, Math.min(memberLength(sourceMember), v.dot(v.sub(iface.origin, sourceMember.start), sourceFrame.x)));
+    return clamp(v.dot(v.sub(iface.origin, sourceMember.start), sourceFrame.x), 0, memberLength(sourceMember));
   }
   return 0;
 }
@@ -59,12 +56,12 @@ function cutStation(project, profiles, intent, sourceMember, sourceFrame) {
 function cutOffsets(intent) {
   const offsets = intent.offsets || {};
   return {
-    xMinus: finiteOffset(offsets.xMinus),
-    xPlus: finiteOffset(offsets.xPlus),
-    yMinus: finiteOffset(offsets.yMinus),
-    yPlus: finiteOffset(offsets.yPlus),
-    zMinus: finiteOffset(offsets.zMinus),
-    zPlus: finiteOffset(offsets.zPlus)
+    xMinus: finiteNonNegativeNumberOr(offsets.xMinus, 0),
+    xPlus: finiteNonNegativeNumberOr(offsets.xPlus, 0),
+    yMinus: finiteNonNegativeNumberOr(offsets.yMinus, 0),
+    yPlus: finiteNonNegativeNumberOr(offsets.yPlus, 0),
+    zMinus: finiteNonNegativeNumberOr(offsets.zMinus, 0),
+    zPlus: finiteNonNegativeNumberOr(offsets.zPlus, 0)
   };
 }
 
@@ -82,7 +79,7 @@ function pointAt(basis, x, y, z) {
   return v.add(basis.origin, v.add(v.mul(basis.x, x), v.add(v.mul(basis.y, y), v.mul(basis.z, z))));
 }
 
-export function memberProfileCutGeometry(project, profiles, feature) {
+function memberProfileCutGeometry(project, profiles, feature) {
   const intent = profileCutIntent(feature);
   if (!intent) return null;
   if (!intent.source?.memberId) fail(`${feature.id}: member-profile cut missing source.memberId`);
@@ -160,7 +157,7 @@ export function clearanceCutGeometry(project, profiles, feature) {
     ranges.yMax - ranges.yMin,
     ranges.zMax - ranges.zMin
   ];
-  if (size.some((value) => !Number.isFinite(value) || value <= EPSILON)) fail(`${feature.id}: invalid clearance cut size`);
+  if (size.some((value) => !finiteNumber(value) || value <= EPSILON)) fail(`${feature.id}: invalid clearance cut size`);
 
   const basis = {
     origin: sourceAt.origin,
@@ -188,10 +185,6 @@ export function clearanceCutGeometry(project, profiles, feature) {
       size
     }
   };
-}
-
-export function cutBodyForFeature(project, profiles, feature) {
-  return cutBodiesForFeature(project, profiles, feature)[0] || null;
 }
 
 export function cutBodiesForFeature(project, profiles, feature) {

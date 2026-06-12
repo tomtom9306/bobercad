@@ -1,4 +1,16 @@
-import { atValue, dimensionOffset, longestPlateEdge, makeDimension, pickedEdgeOffset, plateBasis, plateBounds, platePoint, roleObject } from "../dimension-context.mjs";
+import { atValue, dimensionOffset, longestPlateEdge, makeDimension, pickedEdgeOffset, plateBasis, plateBounds, platePoint, roleObject } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
+
+function longestEdgeDimension(ctx, spec, plate, basis, axis, n) {
+  const edge = spec.reference.edgePick === "longest" ? longestPlateEdge(plate, axis) : null;
+  return edge ? makeDimension({
+    ...ctx,
+    spec,
+    a: platePoint(plate, basis, edge.a[0], edge.a[1], n),
+    b: platePoint(plate, basis, edge.b[0], edge.b[1], n),
+    offset: pickedEdgeOffset(axis, edge, basis, spec.reference.offset, ctx.dimensionSettings || {}),
+    measured: edge.length
+  }) : null;
+}
 
 export function plateAxisDimension(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);
@@ -22,17 +34,8 @@ export function plateAxisDimension(ctx, spec) {
     });
   }
   if (axis === "localAxisY") {
-    const edge = spec.reference.edgePick === "longest" ? longestPlateEdge(plate, axis) : null;
-    if (edge) {
-      return makeDimension({
-        ...ctx,
-        spec,
-        a: platePoint(plate, basis, edge.a[0], edge.a[1], n),
-        b: platePoint(plate, basis, edge.b[0], edge.b[1], n),
-        offset: pickedEdgeOffset(axis, edge, basis, spec.reference.offset, ctx.dimensionSettings || {}),
-        measured: edge.length
-      });
-    }
+    const edgeDimension = longestEdgeDimension(ctx, spec, plate, basis, axis, n);
+    if (edgeDimension) return edgeDimension;
     return makeDimension({
       ...ctx,
       spec,
@@ -43,17 +46,8 @@ export function plateAxisDimension(ctx, spec) {
     });
   }
   if (axis === "localAxisZ") {
-    const edge = spec.reference.edgePick === "longest" ? longestPlateEdge(plate, axis) : null;
-    if (edge) {
-      return makeDimension({
-        ...ctx,
-        spec,
-        a: platePoint(plate, basis, edge.a[0], edge.a[1], n),
-        b: platePoint(plate, basis, edge.b[0], edge.b[1], n),
-        offset: pickedEdgeOffset(axis, edge, basis, spec.reference.offset, ctx.dimensionSettings || {}),
-        measured: edge.length
-      });
-    }
+    const edgeDimension = longestEdgeDimension(ctx, spec, plate, basis, axis, n);
+    if (edgeDimension) return edgeDimension;
     return makeDimension({
       ...ctx,
       spec,

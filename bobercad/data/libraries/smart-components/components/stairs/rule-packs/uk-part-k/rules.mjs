@@ -1,4 +1,4 @@
-import { createRulePack, runRulePack } from "../../../../../../../app/engine/api/model/compliance.mjs";
+import { createRulePack, runRulePack } from "../../../../../../../app/engine/api/model/compliance.mjs?v=final-array-values-dry-1";
 
 const LIMITS = {
   private: { riseMin: 150, riseMax: 220, goingMin: 220, goingMax: 300, pitchMax: 42 },

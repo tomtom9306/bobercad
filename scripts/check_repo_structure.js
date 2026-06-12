@@ -29,15 +29,11 @@ const REQUIRED_FILES = [
   "bobercad/app/schemas/rule-pack.schema.json",
 
   "bobercad/app/engine/api/api-register.json",
-  "bobercad/app/engine/api/project/project-api.mjs",
   "bobercad/app/engine/api/project/members.mjs",
   "bobercad/app/engine/api/project/objects.mjs",
-  "bobercad/app/engine/api/project/snapping.mjs",
-  "bobercad/app/engine/api/geometry/geometry-api.mjs",
-  "bobercad/app/engine/api/geometry/vectors.mjs",
-  "bobercad/app/engine/api/geometry/planes.mjs",
+  "bobercad/app/engine/api/project/plates.mjs",
+  "bobercad/app/engine/api/project/snap-solver.mjs",
   "bobercad/app/engine/api/geometry/paths.mjs",
-  "bobercad/app/engine/api/model/authoring-context.mjs",
   "bobercad/app/engine/api/model/builders.mjs",
   "bobercad/app/engine/api/model/checks.mjs",
   "bobercad/app/engine/api/model/compliance.mjs",
@@ -56,14 +52,19 @@ const REQUIRED_FILES = [
   "bobercad/app/engine/modules/smart-components/smart-component-generator.mjs",
   "bobercad/app/engine/modules/smart-components/smart-component-recipe.mjs",
   "bobercad/app/engine/modules/smart-components/parameters.mjs",
-  "bobercad/app/engine/modules/drawings/drawing-generator.mjs",
-  "bobercad/app/engine/modules/reports/report-generator.mjs",
-
   "bobercad/app/rendering/annotations/README.md",
-  "bobercad/app/rendering/scene/build-authoring-overlays.mjs",
   "bobercad/app/rendering/scene/build-scene.mjs",
+  "bobercad/app/rendering/scene/plate-bend-geometry.mjs",
+  "bobercad/app/rendering/interaction/plate-create-controller.mjs",
+  "bobercad/app/rendering/interaction/plate-bend-controller.mjs",
+  "bobercad/app/rendering/interaction/sketch-create-controller.mjs",
+  "bobercad/app/rendering/interaction/work-plane-controller.mjs",
   "bobercad/app/rendering/interaction/member-edit-controller.mjs",
   "bobercad/app/rendering/interaction/selection-controller.mjs",
+  "bobercad/app/rendering/interaction/snap-manager.mjs",
+  "bobercad/app/rendering/interaction/snap-profiles.mjs",
+  "bobercad/app/rendering/interaction/snap-providers.mjs",
+  "bobercad/app/rendering/interaction/snap-selection-manager.mjs",
   "bobercad/app/rendering/webgl/camera.mjs",
   "bobercad/app/rendering/webgl/webgl-renderer.mjs",
 
@@ -72,18 +73,7 @@ const REQUIRED_FILES = [
   "bobercad/app/ui/viewer/style.css",
   "bobercad/app/ui/viewer/viewer-settings.json",
   "bobercad/app/ui/viewer/main.mjs",
-  "bobercad/app/ui/viewer/workbench/workbench.mjs",
-  "bobercad/app/ui/viewer/workbench/layout-store.mjs",
-  "bobercad/app/ui/viewer/workbench/command-registry.mjs",
-  "bobercad/app/ui/viewer/navigation/navigation-ui.mjs",
-  "bobercad/app/ui/viewer/navigation/toolbar-ui.mjs",
-  "bobercad/app/ui/viewer/panels/panel-host.mjs",
-  "bobercad/app/ui/viewer/panels/panel-registry.mjs",
   "bobercad/app/ui/viewer/panels/property-panel.mjs",
-  "bobercad/app/ui/viewer/panels/viewport-panel.mjs",
-  "bobercad/app/ui/viewer/controls/form-controls.mjs",
-  "bobercad/app/ui/viewer/controls/menu-controls.mjs",
-  "bobercad/app/ui/viewer/themes/theme.mjs",
 
   "bobercad/data/projects/sample_structure.json",
   "bobercad/data/projects/sample_portal_frame.json",
@@ -343,6 +333,152 @@ function checkProjectFiles(errors) {
   }
 }
 
+function checkViewerSettingsSnapApi(errors) {
+  const settingsRelative = "bobercad/app/ui/viewer/viewer-settings.json";
+  const schemaRelative = "bobercad/app/schemas/viewer-settings.schema.json";
+  const settings = readJson(settingsRelative);
+  const settingsText = fs.readFileSync(path.join(ROOT, settingsRelative), "utf8");
+  const schemaText = fs.readFileSync(path.join(ROOT, schemaRelative), "utf8");
+  const viewerMainText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/main.mjs"), "utf8");
+  const plateCreateText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/interaction/plate-create-controller.mjs"), "utf8");
+  const plateSketchEditText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/interaction/plate-sketch-edit-controller.mjs"), "utf8");
+  const modelingToolbarText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/toolbar/modeling-toolbar.mjs"), "utf8");
+  const sketchCreateText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/interaction/sketch-create-controller.mjs"), "utf8");
+  const workPlaneCreateText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/interaction/work-plane-controller.mjs"), "utf8");
+  const memberOverlaysText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/scene/authoring/member-overlays.mjs"), "utf8");
+  const snapOverlaysPath = path.join(ROOT, "bobercad/app/rendering/scene/authoring/snap-overlays.mjs");
+  const snapOverlaysText = fs.existsSync(snapOverlaysPath) ? fs.readFileSync(snapOverlaysPath, "utf8") : "";
+  const qaConnectionCaptureText = fs.readFileSync(path.join(ROOT, "tools/qa/capture_connection_views.mjs"), "utf8");
+  const stressMemberDragText = fs.readFileSync(path.join(ROOT, "tools/stress/interactive_member_drag.mjs"), "utf8");
+  const apiRegisterText = fs.readFileSync(path.join(ROOT, "bobercad/app/engine/api/api-register.json"), "utf8");
+  const snapSolverText = fs.readFileSync(path.join(ROOT, "bobercad/app/engine/api/project/snap-solver.mjs"), "utf8");
+  const snapProvidersText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/interaction/snap-providers.mjs"), "utf8");
+  const selectionControllerText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/interaction/selection-controller.mjs"), "utf8");
+  const webglRendererText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/webgl/webgl-renderer.mjs"), "utf8");
+  const deadSnapSettings = [
+    "pointSnapBiasPx",
+    "intersectionSnapBiasPx",
+    "faceAxisSnapBiasPx",
+    "multiSnapTolerancePx",
+    "startAxisIntersectionBiasPx",
+    "startAxisSnapBiasPx",
+    "profileAxisSnapBiasPx",
+    "globalAxisSnapTolerancePx",
+    "profileAxisSnapTolerancePx",
+    "profileAxisSnapSpan",
+    "creationAxisSnapTolerancePx",
+    "creationAxisSnapSpan",
+    "activeReferenceAxisSnapTolerancePx",
+    "compositeSnapTolerancePx",
+    "plateSketchEdgeSnapTolerancePx",
+    "plateSketchVertexSnapTolerancePx",
+    "plateSketchAngleSnapTolerancePx",
+    "snapTolerancePx",
+    "plateSketchGridSteps",
+    "plateSketchGridMinScreenPx",
+    "plateSketchCreateGridMaxStep",
+    "plateSketchEdgeGridMaxStep",
+    "plateSketchVertexGridMaxStep",
+    "plateSketchRelationGridMaxStep",
+    "plateSketchNotchGridMaxStep",
+    "plateSketchEdgeSnapMaxWorld",
+    "plateSketchVertexRelationSnapMaxWorld",
+    "plateSketchVertexAngleSnapMaxWorld",
+    "plateSketchVertexEqualLengthSnapMaxWorld"
+  ];
+  for (const name of deadSnapSettings) {
+    if (settingsText.includes(`"${name}"`) || schemaText.includes(`"${name}"`)) {
+      fail(errors, `viewer settings snap api: legacy snap setting should not exist: ${name}`);
+    }
+  }
+  const snap = settings.authoring?.snap || {};
+  const memberCreateShortcuts = settings.shortcuts?.memberCreate || {};
+  if (snap.cycleKey !== "Tab" || memberCreateShortcuts.cycleSnap !== snap.cycleKey) {
+    fail(errors, `viewer settings snap api: snap cycling must use the central cycle key, got snap=${snap.cycleKey} memberCreate=${memberCreateShortcuts.cycleSnap}`);
+  }
+  if (memberCreateShortcuts.toggleAxisGuideMode !== "Shift+Tab") {
+    fail(errors, `viewer settings snap api: member axis guide toggle should stay on Shift+Tab, got ${memberCreateShortcuts.toggleAxisGuideMode}`);
+  }
+  if (snap.scope?.welds !== false || snap.scope?.trimJoints !== false) {
+    fail(errors, "viewer settings snap api: inactive weld/trim scopes should default off until they have real snap providers");
+  }
+  if (snap.profiles?.normal?.includeSurfaceTargets !== "faces") {
+    fail(errors, `viewer settings snap api: normal snapping must include member faces, face centers, edges, edge midpoints, and corners; got ${snap.profiles?.normal?.includeSurfaceTargets}`);
+  }
+  if (snap.profiles?.normal?.gridMaxSteps?.fine !== 1 || snap.profiles?.normal?.gridMaxSteps?.micro !== 0.5) {
+    fail(errors, `viewer settings snap api: plate/detail grid limits must live in normal snap profile gridMaxSteps, got ${JSON.stringify(snap.profiles?.normal?.gridMaxSteps)}`);
+  }
+  if (!Number.isFinite(snap.profiles?.normal?.projectionBiasPx) || !schemaText.includes("\"projectionBiasPx\"")) {
+    fail(errors, "viewer settings snap api: projection bias must be a schema-backed central snap profile value");
+  }
+  if (!Number.isInteger(snap.profiles?.normal?.maxIntersectionSources) || !schemaText.includes("\"maxIntersectionSources\"")) {
+    fail(errors, "viewer settings snap api: intersection source limits must be schema-backed central snap profile values");
+  }
+  if (snap.profiles?.normal?.sketchWorldTolerance?.edge !== 10 || snap.profiles?.normal?.sketchWorldTolerance?.equalLength !== 20) {
+    fail(errors, `viewer settings snap api: sketch relation world tolerances must live in normal snap profile, got ${JSON.stringify(snap.profiles?.normal?.sketchWorldTolerance)}`);
+  }
+  for (const key of ["members", "plates", "features", "fasteners", "activeSketch", "selectedObjectsOnly", "currentSmartComponentOnly"]) {
+    if (!modelingToolbarText.includes(`["${key}"`)) {
+      fail(errors, `viewer settings snap api: snap manager toolbar must expose scope filter ${key}`);
+    }
+  }
+  if (!viewerMainText.includes("Object.defineProperty(window, \"__boberCadQa\"") || !viewerMainText.includes("dataset.qaApiReady") || !viewerMainText.includes("bobercad:qa-request") || !viewerMainText.includes("qaSnapSmoke")) {
+    fail(errors, "viewer settings snap api: QA API must expose a stable window contract, DOM ready marker, DOM request bridge, and startup snap smoke");
+  }
+  if (!viewerMainText.includes("diagnostics: (result.diagnostics || []).slice")) {
+    fail(errors, "viewer settings snap api: QA snap diagnostics must expose bounded candidate diagnostic details");
+  }
+  if (!plateCreateText.includes("adaptiveGrid: plateCreateAdaptiveGrid") || !snapProvidersText.includes("function addAdaptiveGridCandidates") || !snapProvidersText.includes("providerId: \"precision.adaptiveGrid\"")) {
+    fail(errors, "viewer settings snap api: adaptive grid snapping must flow through snap-providers via context.adaptiveGrid");
+  }
+  if (!sketchCreateText.includes("snapManager?.point") || !workPlaneCreateText.includes("snapManager?.point")) {
+    fail(errors, "viewer settings snap api: sketch and workplane creation must resolve points through the central snap manager");
+  }
+  if (qaConnectionCaptureText.includes("connectionSummaries") || qaConnectionCaptureText.includes("captureConnectionView") || stressMemberDragText.includes("memberConnectionPoints")) {
+    fail(errors, "viewer settings snap api: QA/stress tools must use smart component API names, not legacy connection-only aliases");
+  }
+  if (apiRegisterText.includes("project.nearestSnapPoint") || snapSolverText.includes("nearestSnapPoint")) {
+    fail(errors, "viewer settings snap api: nearestSnapPoint must not remain as a public parallel snap route");
+  }
+  const snapManagerText = fs.readFileSync(path.join(ROOT, "bobercad/app/rendering/interaction/snap-manager.mjs"), "utf8");
+  if (snapManagerText.includes("resolveSnapPoint")) {
+    fail(errors, "viewer settings snap api: snap-manager must not expose one-off resolveSnapPoint outside the shared selection-scoped manager");
+  }
+  if (snapManagerText.includes("extraCandidates") || snapProvidersText.includes("extraCandidates") || viewerMainText.includes("extraCandidates") || plateCreateText.includes("extraCandidates")) {
+    fail(errors, "viewer settings snap api: extraCandidates must not remain as a public snap route; use provider context instead");
+  }
+  if (!snapSolverText.includes("planeHit(") || !snapSolverText.includes("projectionPriorityBiasPx") || !snapSolverText.includes("function biasedDistance") || !snapSolverText.includes("intersectionSourceLimit") || !snapManagerText.includes("projectionPriorityBiasPx: activeProfile.projectionBiasPx") || !snapManagerText.includes("maxIntersectionSources: activeProfile.maxIntersectionSources") || !snapProvidersText.includes("type: \"member-profile-face\"") || !snapProvidersText.includes("kind: \"plane\"")) {
+    fail(errors, "viewer settings snap api: member faces must be first-class plane snap candidates through the shared solver/provider path");
+  }
+  if (!snapSolverText.includes("allowIntersections === false") || !snapProvidersText.includes("type: \"member-profile-face-centerline\"") || !snapProvidersText.includes("allowIntersections: false")) {
+    fail(errors, "viewer settings snap api: member surface snap lines must not generate noisy automatic intersection snaps");
+  }
+  if (!snapProvidersText.includes("function addActiveSketchCandidates") || !snapProvidersText.includes("providerId: \"sketch.active\"") || !snapProvidersText.includes("\"activeSketch\"")) {
+    fail(errors, "viewer settings snap api: active sketch snap candidates must be normalized by snap-providers, not by a tool controller");
+  }
+  if (plateSketchEditText.includes("providerId: \"sketch.active\"") || plateSketchEditText.includes("extraCandidates: localCandidates")) {
+    fail(errors, "viewer settings snap api: plate sketch edit controller must route local sketch candidates through context.activeSketch, not extraCandidates");
+  }
+  if (!snapOverlaysText.includes("export function snapPointOverlay") || !snapOverlaysText.includes("export function snapAxisSourceLines")) {
+    fail(errors, "viewer settings snap api: snap marker, label, link, and source guide overlays must share snap-overlays.mjs");
+  }
+  if (!memberOverlaysText.includes("snapPointOverlay") || !plateSketchEditText.includes("snapPointOverlay")) {
+    fail(errors, "viewer settings snap api: member, plate creation, and focused plate sketch overlays must use the shared snap overlay primitive");
+  }
+  if (memberOverlaysText.includes("plate-create-model-snap-link") || memberOverlaysText.includes("plate-model-snap") || plateSketchEditText.includes("plate-sketch-snap-link") || plateSketchEditText.includes("kind: \"plate-sketch-snap\"")) {
+    fail(errors, "viewer settings snap api: per-tool snap overlay marker names should not replace the shared snap overlay primitive");
+  }
+  if (!snapSolverText.includes("candidateId(") || !snapSolverText.includes("snapDiagnostic(") || !snapSolverText.includes("selected by rank/cycle")) {
+    fail(errors, "viewer settings snap api: snap solver must return sorted candidate diagnostics with stable ids and reasons");
+  }
+  if (!selectionControllerText.includes("scopeManager.pickOptions") || !selectionControllerText.includes("collection: \"members\"") || !selectionControllerText.includes("objectIdsForScope")) {
+    fail(errors, "viewer settings snap api: selection controller must feed shared scope filters into renderer picking");
+  }
+  if (!webglRendererText.includes("pickHandlerOptions") || !webglRendererText.includes("const filteredPick = Boolean(options.objectIds || options.componentKind)") || !webglRendererText.includes("pickScene(x, y, pickHandlerOptions)")) {
+    fail(errors, "viewer settings snap api: renderer picking must apply selection scope filters before hit testing filtered picks");
+  }
+}
+
 function emptyGeneratedSmartComponentModel(project) {
   const next = clone(project);
   for (const collection of ["groups", "interfaces", "connectionZones", "assemblies", "plates", "holePatterns", "objectPatterns", "features", "fastenerGroups", "welds", "smartComponentInstances"]) {
@@ -574,6 +710,7 @@ async function checkStairSystemGenerator(errors) {
     const topInstance = (project) => Object.values(project.model.smartComponentInstances || {}).find((instance) => instance.type === "stair-system");
     const child = (project, parent, role) => project.model.smartComponentInstances?.[parent.childComponentRoles?.[role]];
     const roleCount = (instance, pattern) => Object.keys(instance?.objectRoles || {}).filter((role) => pattern.test(role)).length;
+    const plateSketchPoints = (plate) => (plate.sketch?.vertices || []).map((vertex) => vertex.point).filter((point) => Array.isArray(point) && point.length >= 2);
 
     const straightStore = store();
     const created = straightStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
@@ -582,8 +719,20 @@ async function checkStairSystemGenerator(errors) {
     if (!top?.childComponentRoles?.support || !top.childComponentRoles?.treads || !top.childComponentRoles?.connections || !top.childComponentRoles?.railing) {
       fail(errors, `stair-system generator: straight preset should create support/treads/connections/railing children, got ${JSON.stringify(top?.childComponentRoles)}`);
     }
-    if (roleCount(child(project, top, "treads"), /^tread\d+$/) !== 8) {
+    const straightTreadsChild = child(project, top, "treads");
+    if (roleCount(straightTreadsChild, /^tread\d+$/) !== 8) {
       fail(errors, "stair-system generator: straight preset should create 8 tread roles");
+    }
+    if (roleCount(straightTreadsChild, /^frontPlate\d+$/) !== 0) {
+      fail(errors, "stair-system generator: timber treads should not create folded tray front plates");
+    }
+    const firstBackingPlate = project.model.plates?.[straightTreadsChild?.objectRoles?.tread1];
+    const firstWoodBoard = project.model.plates?.[straightTreadsChild?.objectRoles?.woodTread1];
+    if (firstBackingPlate?.type !== "timber-backing-plate" || firstWoodBoard?.placementIntent?.host?.backingPlateId !== firstBackingPlate?.id) {
+      fail(errors, "stair-system generator: folded-tray timber tread should use a flat backing plate hosted by the timber board");
+    }
+    if (Math.abs((firstBackingPlate?.width ?? NaN) - (firstWoodBoard?.width ?? NaN)) > 1e-6 || Math.abs((firstBackingPlate?.height ?? NaN) - (firstWoodBoard?.height ?? NaN)) > 1e-6) {
+      fail(errors, "stair-system generator: timber backing plate should match timber board width and depth");
     }
     const standardHardware = child(project, top, "connections");
     const standardHardwareZone = project.model.connectionZones?.[standardHardware?.inputs?.connectionZoneId];
@@ -675,6 +824,66 @@ async function checkStairSystemGenerator(errors) {
       fail(errors, "stair-system generator: straight-landing route should create a landing child with landing roles");
     }
 
+    const mixedCurvedStore = store();
+    const mixedCurvedCreated = mixedCurvedStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
+    mixedCurvedStore.updateSmartComponent(mixedCurvedCreated.smartComponentId, {
+      ...baseParameters,
+      levels: { ...baseParameters.levels, ffl2: 2160 },
+      route: {
+        ...baseParameters.route,
+        modules: [
+          { id: "flight_1", type: "flight.straight", stepCountOverride: 4 },
+          { id: "landing_1", type: "landing.l", turnDirection: "left", entryExtensionLength: 500, exitExtensionLength: 300 },
+          { id: "flight_2", type: "flight.straight", stepCountOverride: 4 },
+          { id: "landing_2", type: "landing.l", turnDirection: "right", entryExtensionLength: 700, exitExtensionLength: 400 },
+          { id: "flight_3", type: "flight.curved", radius: 1800, turnDirection: "left" },
+          { id: "flight_4", type: "flight.straight" }
+        ]
+      }
+    });
+    project = mixedCurvedStore.project();
+    top = project.model.smartComponentInstances[mixedCurvedCreated.smartComponentId];
+    const mixedCurvedDiagnosticCodes = new Set((top.diagnostics || []).map((diagnostic) => diagnostic.code));
+    if (top.health === "error" || mixedCurvedDiagnosticCodes.has("stair-special-route-modules-unsupported")) {
+      fail(errors, `stair-system generator: mixed straight/landing/curved route should be valid, got health=${top.health} diagnostics=${[...mixedCurvedDiagnosticCodes].join(",")}`);
+    }
+    if (roleCount(child(project, top, "treads"), /^tread\d+$/) < 8) {
+      fail(errors, "stair-system generator: mixed straight/landing/curved route should keep tread roles after curved module");
+    }
+    const curvedTreadOutlines = Object.values(project.model.plates || {}).filter((plate) => (
+      plate.placementIntent?.footprintKind === "curved-strip"
+      && plateSketchPoints(plate).length >= 6
+    ));
+    if (!curvedTreadOutlines.length) {
+      fail(errors, "stair-system generator: curved flight treads should use curved strip outlines, not rectangular plates");
+    }
+    if (curvedTreadOutlines.some((plate) => Math.abs((plate.placementIntent?.centerWidth ?? NaN) - baseParameters.geometry.width) > 1e-6)) {
+      fail(errors, "stair-system generator: curved flight tread width should be measured on the tread center line, not from outline bounds");
+    }
+    const expectedCurvedOverlap = baseParameters.treads.overlap ?? Math.max(0, baseParameters.treads.depth - baseParameters.geometry.going);
+    const expectedCurvedDepth = baseParameters.geometry.going + expectedCurvedOverlap;
+    if (curvedTreadOutlines.some((plate) => Math.abs((plate.placementIntent?.centerDepth ?? NaN) - expectedCurvedDepth) > 1e-6)) {
+      fail(errors, "stair-system generator: curved flight tread going/depth should be measured on the tread center line including overlap, not from outline bounds");
+    }
+    if (curvedTreadOutlines.some((plate) => Math.abs((plate.placementIntent?.overlap ?? NaN) - expectedCurvedOverlap) > 1e-6)) {
+      fail(errors, "stair-system generator: curved flight treads should store tread overlap in placementIntent");
+    }
+    if (curvedTreadOutlines.some((plate) => Math.abs((plate.fabrication?.overlap ?? NaN) - expectedCurvedOverlap) > 1e-6)) {
+      fail(errors, "stair-system generator: curved flight treads should store tread overlap in fabrication metadata");
+    }
+    const curvedTreadOutlineBounds = curvedTreadOutlines.map((plate) => {
+      const points = plateSketchPoints(plate);
+      const ys = points.map((point) => point[0]);
+      const zs = points.map((point) => point[1]);
+      return {
+        width: Math.max(...ys) - Math.min(...ys),
+        depth: Math.max(...zs) - Math.min(...zs)
+      };
+    });
+    if (curvedTreadOutlineBounds.some((bounds) => bounds.width > baseParameters.geometry.width * 1.5 || bounds.depth > expectedCurvedDepth * 1.5)) {
+      fail(errors, "stair-system generator: curved tread outlines should stay local to the curved flight and not fan across adjacent landing segments");
+    }
+
     const sectionStore = store();
     const sectionCreated = sectionStore.createSmartComponentFromPreset("stair_system_straight_basic", []);
     sectionStore.updateSmartComponent(sectionCreated.smartComponentId, {
@@ -733,7 +942,12 @@ async function checkStairSystemGenerator(errors) {
 }
 async function checkMemberAuthoringApi(errors) {
   const membersApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/project/members.mjs")).href);
-  const snappingApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/project/snapping.mjs")).href);
+  const snapSolverApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/api/project/snap-solver.mjs")).href);
+  const snapManagerApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/interaction/snap-manager.mjs")).href);
+  const snapProfilesApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/interaction/snap-profiles.mjs")).href);
+  const snapProvidersApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/interaction/snap-providers.mjs")).href);
+  const snapSelectionApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/interaction/snap-selection-manager.mjs")).href);
+  const snapOverlayApi = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/scene/authoring/snap-overlays.mjs")).href);
   const manipulatorMath = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/interaction/manipulator-math.mjs")).href);
   const axisSpace = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/scene/authoring/member-axis-space.mjs")).href);
   const member = {
@@ -770,13 +984,280 @@ async function checkMemberAuthoringApi(errors) {
 
   const project = readJson("bobercad/data/projects/sample_fin_plate.json");
   project.model.members.beam_1.layoutAxis = { start: [0, 0, 1500], end: [2300, 0, 1500] };
-  const candidates = snappingApi.snapCandidates(project);
-  for (const type of ["member-endpoint", "layout-endpoint", "grid-intersection"]) {
+  const starterProfiles = readJson("bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json");
+  const normalSnapProfile = snapProfilesApi.snapProfile({ snap: { enabled: true, strength: "normal" } });
+  if (normalSnapProfile.includeSurfaceTargets !== "faces") {
+    fail(errors, `member authoring api: normal snap profile must expose full member surface targets, got ${normalSnapProfile.includeSurfaceTargets}`);
+  }
+  const candidates = snapProvidersApi.collectSnapCandidates({
+    project,
+    profiles: starterProfiles.profiles,
+    context: { includeLines: true },
+    scope: {},
+    profile: { enabled: true, includeSurfaceTargets: "faces", screenTolerancePx: 16 }
+  });
+  for (const type of [
+    "member-endpoint",
+    "layout-endpoint",
+    "member-profile-corner",
+    "member-profile-edge",
+    "member-profile-edge-midpoint",
+    "member-profile-section-edge",
+    "member-profile-section-edge-midpoint",
+    "member-profile-face",
+    "member-profile-face-center",
+    "member-profile-face-centerline",
+    "plate-center",
+    "plate-sketch-vertex",
+    "plate-sketch-edge",
+    "plate-sketch-edge-midpoint",
+    "fastener-center",
+    "fastener-axis"
+  ]) {
     if (!candidates.some((candidate) => candidate.type === type)) fail(errors, `member authoring api: missing snap candidate type ${type}`);
   }
-  const snap = snappingApi.nearestSnapPoint(project, [171, 0, 1500], { tolerance: 5, candidates });
-  if (snap?.type !== "member-endpoint" || snap.objectId !== "beam_1") {
-    fail(errors, "member authoring api: nearestSnapPoint should find nearby member endpoints");
+  const memberFaceCandidate = candidates.find((candidate) => candidate.type === "member-profile-face");
+  if (memberFaceCandidate?.kind !== "plane" || !Array.isArray(memberFaceCandidate.points) || memberFaceCandidate.points.length < 4 || !memberFaceCandidate.bounds) {
+    fail(errors, "member authoring api: member face snap must be a bounded plane candidate with face points and local bounds");
+  }
+  const faceViewer = {
+    projectPoint: (point) => ({ x: point[0], y: point[2] }),
+    screenRay: (x, y) => ({ origin: [x, -1000, y], direction: [0, 1, 0] })
+  };
+  const faceSnap = snapSolverApi.solveSnap({
+    candidates: [memberFaceCandidate],
+    viewer: faceViewer,
+    screen: faceViewer.projectPoint(memberFaceCandidate.point),
+    rawPoint: memberFaceCandidate.point,
+    screenTolerance: 16
+  });
+  if (faceSnap.snap?.type !== "member-profile-face" || !faceSnap.diagnostics?.some((diagnostic) => diagnostic.status === "accepted" && diagnostic.reason === "selected by rank/cycle")) {
+    fail(errors, "member authoring api: bounded member face planes must resolve through solveSnap with accepted diagnostics");
+  }
+  const cappedIntersectionSnap = snapSolverApi.solveSnap({
+    candidates,
+    viewer: faceViewer,
+    screen: { x: 0, y: 0 },
+    rawPoint: [0, 0, 0],
+    screenTolerance: 100000,
+    intersectionTolerancePx: 100000,
+    maxIntersectionSources: 4
+  });
+  const cappedIntersections = (cappedIntersectionSnap.candidates || []).filter((candidate) => candidate.type === "axis-intersection").length;
+  if (cappedIntersections > 6) {
+    fail(errors, `member authoring api: solver should cap noisy line intersections from profile/settings limits, got ${cappedIntersections}`);
+  }
+  const noMemberCandidates = snapProvidersApi.collectSnapCandidates({
+    project,
+    profiles: starterProfiles.profiles,
+    context: { includeLines: true },
+    scope: { members: false },
+    profile: { enabled: true, includeSurfaceTargets: "faces", screenTolerancePx: 16 }
+  });
+  if (noMemberCandidates.some((candidate) => candidate.target?.collection === "members")) {
+    fail(errors, "member authoring api: members scope off should remove all member snap candidates");
+  }
+  const noFastenerCandidates = snapProvidersApi.collectSnapCandidates({
+    project,
+    profiles: starterProfiles.profiles,
+    context: { includeLines: true },
+    scope: { fasteners: false },
+    profile: { enabled: true, includeSurfaceTargets: "faces", screenTolerancePx: 16 }
+  });
+  if (noFastenerCandidates.some((candidate) => candidate.target?.collection === "fastenerGroups")) {
+    fail(errors, "member authoring api: fasteners scope off should remove all fastener snap candidates");
+  }
+  const samplePlate = Object.values(project.model?.plates || {})[0];
+  const activeSketchCandidates = snapProvidersApi.collectSnapCandidates({
+    project,
+    profiles: starterProfiles.profiles,
+    context: {
+      includeLines: false,
+      activeSketch: {
+        plate: samplePlate,
+        candidates: [{
+          point: [0, 0],
+          label: "Active sketch snap",
+          relations: [{ type: "coincident", vertexIds: ["a", "b"] }]
+        }]
+      }
+    },
+    scope: {},
+    profile: { enabled: true, includeSurfaceTargets: "faces", screenTolerancePx: 16 }
+  });
+  const activeSketchCandidate = activeSketchCandidates.find((candidate) => candidate.providerId === "sketch.active");
+  if (!activeSketchCandidate || activeSketchCandidate.target?.collection !== "activeSketch" || !Array.isArray(activeSketchCandidate.localPoint) || !activeSketchCandidate.relationHints?.length) {
+    fail(errors, "member authoring api: active sketch candidates must keep target, local point, and relation hints through the shared provider path");
+  }
+  const scopedOutSketchCandidates = snapProvidersApi.collectSnapCandidates({
+    project,
+    profiles: starterProfiles.profiles,
+    context: {
+      includeLines: false,
+      activeSketch: {
+        plate: samplePlate,
+        candidates: [{ point: [0, 0], label: "Active sketch snap" }]
+      }
+    },
+    scope: { activeSketch: false },
+    profile: { enabled: true, includeSurfaceTargets: "faces", screenTolerancePx: 16 }
+  });
+  if (scopedOutSketchCandidates.some((candidate) => candidate.providerId === "sketch.active")) {
+    fail(errors, "member authoring api: activeSketch scope off should remove focused sketch snap candidates");
+  }
+  const fakeViewer = { projectPoint: (point) => ({ x: point[0], y: point[2] }) };
+  const manager = snapManagerApi.createSnapManager({
+    viewer: fakeViewer,
+    api: { project: () => project },
+    profiles: starterProfiles.profiles,
+    settings: { authoring: { snap: { enabled: true, strength: "normal" } } },
+    selectionScope: { scope: () => ({}), candidateAllowed: () => true }
+  });
+  const cycleRequest = {
+    screen: { x: 171, y: 1500 },
+    rawPoint: [171, 0, 1500],
+    context: {
+      tool: "qa",
+      phase: "cycle",
+      projectToPlane: false,
+      includeLines: false
+    }
+  };
+  manager.resolve(cycleRequest);
+  manager.cycle();
+  const cycled = manager.resolve(cycleRequest);
+  if (cycled.cycleIndex !== 1 || manager.snapshot()?.cycleIndex !== 1) {
+    fail(errors, "member authoring api: snap manager should cycle candidates for the current snap request");
+  }
+  if (!cycled.diagnostics?.some((diagnostic) => diagnostic.status === "accepted" && diagnostic.candidateId && diagnostic.reason === "selected by rank/cycle")) {
+    fail(errors, `member authoring api: snap manager should expose accepted candidate diagnostics, got ${JSON.stringify(cycled.diagnostics?.slice(0, 3))}`);
+  }
+  const sketchCandidate = {
+    type: "plate-sketch-grid",
+    point: [0, 0],
+    label: "Sketch grid",
+    priority: 200,
+    relations: [{ type: "horizontal", edgeId: "edge_1" }],
+    subId: "grid",
+    semanticRole: "adaptive-grid"
+  };
+  const sketchScope = snapSelectionApi.createSnapSelectionManager({
+    settings: { authoring: { snap: { scope: { activeSketch: true } } } }
+  });
+  const sketchManager = snapManagerApi.createSnapManager({
+    viewer: fakeViewer,
+    api: { project: () => project },
+    profiles: starterProfiles.profiles,
+    settings: { authoring: { snap: { enabled: true, strength: "normal" } } },
+    selectionScope: sketchScope
+  });
+  const sketchSnap = sketchManager.resolve({
+    screen: fakeViewer.projectPoint(samplePlate.center),
+    rawPoint: samplePlate.center,
+    context: {
+      tool: "plate-sketch",
+      phase: "vertex-drag",
+      projectToPlane: false,
+      includeLines: false,
+      includeGlobalAxes: false,
+      activeSketch: {
+        plate: samplePlate,
+        candidates: [sketchCandidate]
+      }
+    }
+  });
+  if (!sketchSnap.accepted || sketchSnap.providerId !== "sketch.active" || sketchSnap.relationHints[0]?.type !== "horizontal") {
+    fail(errors, `member authoring api: active sketch candidates should resolve through snap manager with relation hints, got ${JSON.stringify(sketchSnap.diagnostics?.[0])}`);
+  }
+  sketchScope.setScope({ activeSketch: false });
+  const disabledSketchSnap = sketchManager.resolve({
+    screen: fakeViewer.projectPoint(samplePlate.center),
+    rawPoint: samplePlate.center,
+    scope: {
+      members: false,
+      plates: false,
+      fasteners: false,
+      workPoints: false,
+      referencePlanes: false,
+      grids: false,
+      constructionGuides: false,
+      activeSketch: false
+    },
+    context: {
+      tool: "plate-sketch",
+      phase: "vertex-drag-disabled",
+      projectToPlane: false,
+      includeLines: false,
+      includeGlobalAxes: false,
+      activeSketch: {
+        plate: samplePlate,
+        candidates: [sketchCandidate]
+      }
+    }
+  });
+  if (disabledSketchSnap.accepted) {
+    fail(errors, "member authoring api: activeSketch scope off should remove focused sketch snap candidates");
+  }
+  const snapOverlay = snapOverlayApi.snapPointOverlay({
+    snap: {
+      kind: "point",
+      type: "member-endpoint",
+      point: [1, 0, 0],
+      label: "Endpoint",
+      sources: [{ kind: "line", type: "member-axis", a: [0, 0, 0], b: [10, 0, 0], point: [0, 0, 0], label: "Axis" }]
+    },
+    rawPoint: [1, 10, 0]
+  });
+  if (snapOverlay.handles?.[0]?.kind !== "snap" || snapOverlay.labels?.[0]?.className !== "snap" || !snapOverlay.lines?.some((line) => line.kind === "snap-link") || !snapOverlay.lines?.some((line) => line.kind === "snap-axis-active")) {
+    fail(errors, `member authoring api: shared snap overlay should produce marker, label, link, and source guide, got ${JSON.stringify(snapOverlay)}`);
+  }
+  const pickScope = snapSelectionApi.createSnapSelectionManager({
+    settings: { authoring: { snap: { scope: { members: false, plates: true } } } }
+  });
+  const pickOptions = pickScope.pickOptions(project, { objectIds: Object.keys(project.objectIndex || {}) });
+  if ((pickOptions.objectIds || []).some((objectId) => project.objectIndex?.[objectId]?.collection === "members")) {
+    fail(errors, `member authoring api: pick options should share selection/snap scope filters, got ${JSON.stringify(pickOptions.objectIds)}`);
+  }
+  const selectedPlateId = Object.entries(project.objectIndex || {}).find(([, entry]) => entry?.collection === "plates")?.[0];
+  const unselectedMemberId = Object.entries(project.objectIndex || {}).find(([, entry]) => entry?.collection === "members")?.[0];
+  const selectedOnlyScope = snapSelectionApi.createSnapSelectionManager({
+    settings: { authoring: { snap: { scope: { selectedObjectsOnly: true } } } }
+  });
+  selectedOnlyScope.setSelected([selectedPlateId]);
+  if (!selectedOnlyScope.candidateAllowed(project, { target: { collection: "plates", objectId: selectedPlateId } })) {
+    fail(errors, "member authoring api: selected-only scope should keep snap candidates for selected objects");
+  }
+  if (selectedOnlyScope.candidateAllowed(project, { target: { collection: "members", objectId: unselectedMemberId } })) {
+    fail(errors, "member authoring api: selected-only scope should reject snap candidates for unselected objects");
+  }
+  const smartScope = snapSelectionApi.createSnapSelectionManager({
+    settings: { authoring: { snap: { scope: { currentSmartComponentOnly: true } } } }
+  });
+  smartScope.setActiveSmartComponent("connection_fin_plate_1");
+  if (!smartScope.candidateAllowed(project, { target: { collection: "plates", objectId: "connection_fin_plate_1_fin_plate" } })) {
+    fail(errors, "member authoring api: smart component scope should allow owned object roles");
+  }
+  if (smartScope.candidateAllowed(project, { target: { collection: "members", objectId: "beam_1" } })) {
+    fail(errors, "member authoring api: smart component scope should reject objects outside the active smart component");
+  }
+  const stairScopeProject = readJson("bobercad/data/projects/sample_stair_l_shape.json");
+  const recursiveSmartScope = snapSelectionApi.createSnapSelectionManager({
+    settings: { authoring: { snap: { scope: { currentSmartComponentOnly: true } } } }
+  });
+  recursiveSmartScope.setActiveSmartComponent("sc_stair_system");
+  if (!recursiveSmartScope.candidateAllowed(stairScopeProject, { target: { collection: "plates", objectId: "sc_stair_system_treads_tread_1" } })) {
+    fail(errors, "member authoring api: root smart component scope should include owned objects from child smart components");
+  }
+  const precisionScope = snapSelectionApi.createSnapSelectionManager({
+    settings: { authoring: { snap: { scope: { constructionGuides: true } } } }
+  });
+  const precisionCandidate = { providerId: "precision.adaptiveGrid", type: "adaptive-grid", point: [0, 0, 0] };
+  if (!precisionScope.candidateAllowed(project, precisionCandidate)) {
+    fail(errors, "member authoring api: adaptive precision grid should be allowed by default through the shared scope manager");
+  }
+  precisionScope.setScope({ constructionGuides: false });
+  if (precisionScope.candidateAllowed(project, precisionCandidate)) {
+    fail(errors, "member authoring api: adaptive precision grid should follow the Guides snap scope filter");
   }
 
   const closeStep = manipulatorMath.translationStepForScale({ minStep: 1, maxStep: 100, targetPixelsPerStep: 8 }, 4);
@@ -930,7 +1411,31 @@ async function checkGenericSectioningApi(errors) {
         m1: { id: "m1", type: "beam", profile: "DEMO_I_200X100X8X12", material: "S355", start: [0, 0, 0], end: [1000, 0, 0] }
       },
       plates: {
-        p1: { id: "p1", type: "plate", material: "S355", thickness: 10, width: 1000, height: 1000, center: [0, 0, 0] }
+        p1: {
+          id: "p1",
+          type: "plate",
+          material: "S355",
+          thickness: 10,
+          center: [0, 0, 0],
+          normal: [0, 0, 1],
+          localAxisY: [1, 0, 0],
+          localAxisZ: [0, 1, 0],
+          sketch: {
+            type: "plate-sketch",
+            vertices: [
+              { id: "p1_v1", point: [-500, -500] },
+              { id: "p1_v2", point: [500, -500] },
+              { id: "p1_v3", point: [500, 500] },
+              { id: "p1_v4", point: [-500, 500] }
+            ],
+            edges: [
+              { id: "p1_e1", from: "p1_v1", to: "p1_v2" },
+              { id: "p1_e2", from: "p1_v2", to: "p1_v3" },
+              { id: "p1_e3", from: "p1_v3", to: "p1_v4" },
+              { id: "p1_e4", from: "p1_v4", to: "p1_v1" }
+            ]
+          }
+        }
       }
     }
   };
@@ -983,6 +1488,7 @@ async function main() {
   checkSmartComponentFolders(errors);
   checkViewerHasNoDomainFiles(errors);
   checkProjectFiles(errors);
+  checkViewerSettingsSnapApi(errors);
   await checkApiRegister(errors);
   await checkAutoSmartComponentLifecycle(errors);
   await checkStairSystemGenerator(errors);

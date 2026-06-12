@@ -119,7 +119,10 @@
     "commands": {
       "createBeam": "B",
       "createColumn": "C",
+      "createSketch": "S",
       "createTrim": "T",
+      "setWorkPlane": "W",
+      "addPlateBend": "F",
       "cancel": "Escape"
     },
     "memberCreate": {
@@ -127,8 +130,8 @@
       "confirm": "Enter",
       "deleteInput": "Backspace",
       "elevationInput": "Z",
-      "toggleAxisGuideMode": "Tab",
-      "cycleSnap": ""
+      "toggleAxisGuideMode": "Shift+Tab",
+      "cycleSnap": "Tab"
     },
     "memberEdit": {
       "confirmTransform": "Enter",
@@ -138,24 +141,102 @@
   "authoring": {
     "autoAxisRelations": true,
     "axisGuideMode": "global",
-    "snapTolerancePx": 16,
-    "pointSnapBiasPx": 12,
-    "intersectionSnapBiasPx": 10,
-    "faceAxisSnapBiasPx": 10,
-    "multiSnapTolerancePx": 22,
-    "startAxisIntersectionBiasPx": 28,
-    "startAxisSnapBiasPx": 24,
-    "profileAxisSnapBiasPx": 24,
-    "globalAxisSnapTolerancePx": 34,
+    "snap": {
+      "enabled": true,
+      "strength": "normal",
+      "scopeMode": "smart",
+      "holdToDisableKey": "Alt",
+      "cycleKey": "Tab",
+      "gridSteps": [
+        0.1,
+        0.25,
+        0.5,
+        1,
+        2,
+        5,
+        10,
+        25,
+        50
+      ],
+      "gridMinScreenPx": 0.35,
+      "gridUseSpeedBoost": false,
+      "profiles": {
+        "light": {
+          "screenTolerancePx": 8,
+          "intersectionTolerancePx": 10,
+          "projectionBiasPx": 2,
+          "maxIntersectionSources": 24,
+          "gridMaxStep": 5,
+          "gridMaxSteps": {
+            "fine": 0.5,
+            "micro": 0.25
+          },
+          "sketchWorldTolerance": {
+            "edge": 6,
+            "relation": 5,
+            "angle": 8,
+            "equalLength": 12
+          },
+          "includeSurfaceTargets": "corners"
+        },
+        "normal": {
+          "screenTolerancePx": 16,
+          "intersectionTolerancePx": 22,
+          "projectionBiasPx": 5,
+          "maxIntersectionSources": 48,
+          "gridMaxStep": 10,
+          "gridMaxSteps": {
+            "fine": 1,
+            "micro": 0.5
+          },
+          "sketchWorldTolerance": {
+            "edge": 10,
+            "relation": 8,
+            "angle": 12,
+            "equalLength": 20
+          },
+          "includeSurfaceTargets": "faces"
+        },
+        "strong": {
+          "screenTolerancePx": 28,
+          "intersectionTolerancePx": 36,
+          "projectionBiasPx": 8,
+          "maxIntersectionSources": 64,
+          "gridMaxStep": 25,
+          "gridMaxSteps": {
+            "fine": 2,
+            "micro": 1
+          },
+          "sketchWorldTolerance": {
+            "edge": 16,
+            "relation": 12,
+            "angle": 18,
+            "equalLength": 28
+          },
+          "includeSurfaceTargets": "faces"
+        }
+      },
+      "scope": {
+        "members": true,
+        "plates": true,
+        "fasteners": true,
+        "welds": false,
+        "features": true,
+        "trimJoints": false,
+        "workPoints": true,
+        "referencePlanes": true,
+        "grids": true,
+        "activeSketch": true,
+        "constructionGuides": true,
+        "selectedObjectsOnly": false,
+        "currentSmartComponentOnly": false
+      }
+    },
+    "plateSketchDefaultNotchSize": 10,
+    "plateSketchDefaultNotchMaxSize": 40,
     "globalAxisSnapSpan": 100000,
     "globalAxisGuideSpan": 12000,
-    "profileAxisSnapTolerancePx": 34,
-    "profileAxisSnapSpan": 100000,
-    "creationAxisSnapTolerancePx": 34,
-    "creationAxisSnapSpan": 100000,
     "activeReferenceMemberLimit": 2,
-    "activeReferenceAxisSnapTolerancePx": 16,
-    "compositeSnapTolerancePx": 16,
     "snapAxisHighlightSpan": 1600,
     "snapAxisExtensionPadding": 300,
     "defaultColumnHeight": 3000,
@@ -166,6 +247,11 @@
     "snapColor": "#38bdf8",
     "workPlaneColor": "#94a3b8",
     "workPlaneSize": 280,
+    "lineWidth": 2,
+    "handleLineWidth": 2,
+    "platePreviewColor": "#0ea5e9",
+    "plateGuideSize": 320,
+    "plateDepthGuideLength": 520,
     "manipulator": {
       "visible": true,
       "coordinateSpace": "global",
@@ -229,7 +315,7 @@
       "textHeight": 6,
       "minFontPx": 2.5,
       "surfaceLift": 0,
-      "hideBehindGeometry": true,
+      "hideBehindGeometry": false,
       "tooltipDelayMs": 80,
       "tooltipFontPx": 13,
       "tooltipMaxWidthPx": 320

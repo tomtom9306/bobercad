@@ -1,5 +1,5 @@
-import { v } from "../core/math.mjs";
-import { triangulateFace } from "./polygon.mjs";
+import { finiteNumber, finitePositiveNumber, v } from "../core/math.mjs?v=csg-number-dry-1";
+import { signedArea2d, triangulateFace } from "./polygon.mjs?v=polygon-ear-clipping-1";
 
 let settings = null;
 
@@ -15,7 +15,7 @@ export function geometryError(message) {
 
 export function requiredVector(source, key, owner = "object") {
   const value = source?.[key];
-  if (!Array.isArray(value) || value.length !== 3 || value.some((item) => typeof item !== "number" || !Number.isFinite(item))) {
+  if (!v.isVec3(value)) {
     geometryError(`${owner} missing valid ${key}`);
   }
   return value;
@@ -23,7 +23,7 @@ export function requiredVector(source, key, owner = "object") {
 
 export function requiredNumber(source, key, owner = "object") {
   const value = source?.[key];
-  if (typeof value !== "number" || !Number.isFinite(value)) geometryError(`${owner} missing valid ${key}`);
+  if (!finiteNumber(value)) geometryError(`${owner} missing valid ${key}`);
   return value;
 }
 
@@ -65,7 +65,7 @@ function csgClonePolygon(polygon) {
 export function csgCleanPoints(points) {
   const cleaned = [];
   for (const point of points) {
-    if (!Array.isArray(point) || point.some((value) => !Number.isFinite(value))) geometryError("polygon contains an invalid point");
+    if (!Array.isArray(point) || point.some((value) => !finiteNumber(value))) geometryError("polygon contains an invalid point");
     const previous = cleaned[cleaned.length - 1];
     if (previous && v.len(v.sub(previous, point)) <= CSG_EPSILON) continue;
     cleaned.push(point);
@@ -74,7 +74,7 @@ export function csgCleanPoints(points) {
   return cleaned;
 }
 
-export function csgPolygon(points, shared = {}) {
+function csgPolygon(points, shared = {}) {
   const vertices = csgCleanPoints(points);
   if (vertices.length < 3) return null;
   const plane = csgPlaneFromPoints(vertices[0], vertices[1], vertices[2]);
@@ -193,10 +193,14 @@ class CsgNode {
   }
 }
 
+function csgNodeFromPolygons(polygons) {
+  return new CsgNode(polygons.map(csgClonePolygon));
+}
+
 export function csgSubtract(aPolygons, bPolygons) {
   if (!bPolygons.length) return aPolygons;
-  const a = new CsgNode(aPolygons.map(csgClonePolygon));
-  const b = new CsgNode(bPolygons.map(csgClonePolygon));
+  const a = csgNodeFromPolygons(aPolygons);
+  const b = csgNodeFromPolygons(bPolygons);
   a.invert();
   a.clipTo(b);
   b.clipTo(a);
@@ -210,8 +214,8 @@ export function csgSubtract(aPolygons, bPolygons) {
 
 export function csgUnion(aPolygons, bPolygons) {
   if (!bPolygons.length) return aPolygons;
-  const a = new CsgNode(aPolygons.map(csgClonePolygon));
-  const b = new CsgNode(bPolygons.map(csgClonePolygon));
+  const a = csgNodeFromPolygons(aPolygons);
+  const b = csgNodeFromPolygons(bPolygons);
   a.clipTo(b);
   b.clipTo(a);
   b.invert();
@@ -223,8 +227,8 @@ export function csgUnion(aPolygons, bPolygons) {
 
 export function csgIntersect(aPolygons, bPolygons) {
   if (!aPolygons.length || !bPolygons.length) return [];
-  const a = new CsgNode(aPolygons.map(csgClonePolygon));
-  const b = new CsgNode(bPolygons.map(csgClonePolygon));
+  const a = csgNodeFromPolygons(aPolygons);
+  const b = csgNodeFromPolygons(bPolygons);
   a.invert();
   b.clipTo(a);
   b.invert();
@@ -235,33 +239,15 @@ export function csgIntersect(aPolygons, bPolygons) {
   return a.allPolygons();
 }
 
-function polygonArea2d(points) {
-  let area = 0;
-  for (let i = 0; i < points.length; i += 1) {
-    const a = points[i];
-    const b = points[(i + 1) % points.length];
-    area += a[0] * b[1] - b[0] * a[1];
-  }
-  return area / 2;
-}
-
 export function ccwPoints(points) {
   const clean = csgCleanPoints(points);
-  return polygonArea2d(clean) >= 0 ? clean : [...clean].reverse();
+  return signedArea2d(clean) >= 0 ? clean : [...clean].reverse();
 }
 
-export function prismPolygons(center, axisX, axisY, axisZ, depth, outline, shared = {}) {
-  const x = v.norm(axisX);
-  const y = v.norm(axisY);
-  const z = v.norm(axisZ);
-  if (v.len(x) <= CSG_EPSILON || v.len(y) <= CSG_EPSILON || v.len(z) <= CSG_EPSILON) geometryError("cutter basis contains zero-length axis");
-  if (typeof depth !== "number" || !Number.isFinite(depth) || depth <= 0) geometryError("prism depth must be a positive number");
-  if (!Array.isArray(outline) || outline.length < 3) geometryError("prism outline must contain at least three points");
-  const handedness = v.dot(v.cross(x, y), z);
-  const points = handedness >= 0 ? ccwPoints(outline) : [...ccwPoints(outline)].reverse();
-  const at = (xOffset, point) => v.add(center, v.add(v.mul(x, xOffset), v.add(v.mul(y, point[0]), v.mul(z, point[1]))));
-  const back = points.map((point) => at(-depth / 2, point));
-  const front = points.map((point) => at(depth / 2, point));
+export function csgExtrudedRingPolygons(back, front, shared = {}) {
+  if (!Array.isArray(back) || !Array.isArray(front) || back.length !== front.length || back.length < 3) {
+    geometryError("extruded CSG rings must contain matching point loops");
+  }
   const polygons = [];
   const add = (vertices, triangulate = false) => {
     const faces = triangulate && vertices.length > 3 ? triangulateFace(vertices) : [vertices];
@@ -272,11 +258,26 @@ export function prismPolygons(center, axisX, axisY, axisZ, depth, outline, share
   };
   add([...back].reverse(), true);
   add(front, true);
-  for (let i = 0; i < points.length; i += 1) {
-    const j = (i + 1) % points.length;
+  for (let i = 0; i < back.length; i += 1) {
+    const j = (i + 1) % back.length;
     add([back[i], back[j], front[j], front[i]]);
   }
   return polygons;
+}
+
+export function prismPolygons(center, axisX, axisY, axisZ, depth, outline, shared = {}) {
+  const x = v.norm(axisX);
+  const y = v.norm(axisY);
+  const z = v.norm(axisZ);
+  if (v.len(x) <= CSG_EPSILON || v.len(y) <= CSG_EPSILON || v.len(z) <= CSG_EPSILON) geometryError("cutter basis contains zero-length axis");
+  if (!finitePositiveNumber(depth)) geometryError("prism depth must be a positive number");
+  if (!Array.isArray(outline) || outline.length < 3) geometryError("prism outline must contain at least three points");
+  const handedness = v.dot(v.cross(x, y), z);
+  const points = handedness >= 0 ? ccwPoints(outline) : [...ccwPoints(outline)].reverse();
+  const at = (xOffset, point) => v.add(center, v.add(v.mul(x, xOffset), v.add(v.mul(y, point[0]), v.mul(z, point[1]))));
+  const back = points.map((point) => at(-depth / 2, point));
+  const front = points.map((point) => at(depth / 2, point));
+  return csgExtrudedRingPolygons(back, front, shared);
 }
 
 export function cutBodyPolygons(body, shared = {}) {
@@ -285,7 +286,7 @@ export function cutBodyPolygons(body, shared = {}) {
   const basis = requiredBasis(body, `${body.type} body`);
   if (body.type === "box") {
     const size = requiredArray(body, "size", "box body");
-    if (size.length !== 3 || size.some((value) => typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
+    if (size.length !== 3 || size.some((value) => !finitePositiveNumber(value))) {
       geometryError("box body size must contain three positive numbers");
     }
     return prismPolygons(center, basis.x, basis.y, basis.z, size[0], [
@@ -314,7 +315,7 @@ export function cutBodyPolygons(body, shared = {}) {
 }
 
 export function slotOutline2d(length, width, angle) {
-  if (typeof angle !== "number" || !Number.isFinite(angle)) geometryError("slot-hole orientation must be a valid angle");
+  if (!finiteNumber(angle)) geometryError("slot-hole orientation must be a valid angle");
   if (length <= 0 || width <= 0) geometryError("slot-hole length and width must be positive");
   if (length < width) geometryError("slot-hole length must be greater than or equal to width");
   const radius = width / 2;

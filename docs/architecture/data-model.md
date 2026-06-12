@@ -182,11 +182,15 @@ Do not make profile geometry depend on web/flange thickness fields as the source
 
 ## Plate Geometry Convention
 
-Simple rectangular plates can use `width` and `height`.
+Plates use a stored semantic `sketch`, not `width`/`height`, `outline`, meshes, or B-reps as the source geometry.
 
-Non-rectangular plates use `outline` as local `[y, z]` points in the plate plane, with `center`, `normal`, `localAxisY`, `localAxisZ`, and `thickness` defining placement and extrusion. This is still semantic plate geometry, not a stored mesh.
+A plate sketch is a 2D loop in local `[y, z]` plate coordinates:
 
-Connection generators should trim flat plates by producing a semantic `outline`, not by storing generated mesh data. For example, a sloped fin plate may clip its local outline against the support face and secondary-member trim plane while keeping the same plate placement axes.
+- `sketch.vertices`: stable vertex ids with `[y, z]` points
+- `sketch.edges`: stable edge ids connecting vertices
+- `center`, `normal`, `localAxisY`, `localAxisZ`, and `thickness` define placement and extrusion
+
+Connection generators should trim flat plates by producing a semantic `sketch`, not by storing generated mesh data. For example, a sloped fin plate may clip its local sketch against the support face and secondary-member trim plane while keeping the same plate placement axes.
 
 Fin plate generators should start from an oversized semantic outline when slope trimming would otherwise shorten the support edge. `fit.beamGap` is the support-face-to-beam-end clearance; generated fin plate geometry should span that gap plus the configured plate length into the beam. `fit.clipBeam` controls whether the generated member trim actively trims the secondary member to the support face plane; when disabled, the trim operation stays stored with `enabled: false` for traceability. `bolts.parallelToSupport` may align the hole pattern axis to the support/column axis without rotating the plate. When `bolts.columns` is greater than one and `bolts.gauge` is zero, generators should report a diagnostic instead of inventing a gauge value.
 
@@ -194,15 +198,16 @@ Hole diameter should be derived from the selected fastener catalog entry and `ho
 
 Fastener groups may store semantic assembly options such as `assembly.length`, `assembly.washers.head`, and `assembly.washers.nut`. Bolt length should normally be chosen from the selected fastener catalog `lengths` list, with custom values stored as the same numeric `assembly.length`. The viewer should combine those options with fastener catalog dimensions for heads, nuts, shanks, and washers; projects should not store generated bolt meshes.
 
-Bent plates use `flatPattern` with a stored outline and `bendLines`. This is fabrication geometry, not a mesh.
+Bent plates use the same plate `sketch` plus `fabrication.bends`. This is fabrication geometry, not a mesh.
 
-Each bend line should store:
+Each bend stores:
 
-- `start`
-- `end`
+- `edgeId`: the sketch edge that acts as the bend line
 - `angle` in degrees
 - `radius`
-- `direction`
+- `direction`: `up` or `down`
+- `flangeLength`
+- optional `relief`: `none`, `round`, `rect`, `obround`, or `v-notch`
 
 ## Placement Intent
 
@@ -210,7 +215,7 @@ Manual objects can include `placementIntent`. This replaces older attachment met
 
 It must not drive rendering, silently fill missing geometry, or auto-correct object placement. Stored geometry remains authoritative:
 
-- plates still need stored `center`, `normal`, `localAxisY`, `localAxisZ`, `thickness`, and either `width`/`height` or `outline`
+- plates still need stored `center`, `normal`, `localAxisY`, `localAxisZ`, `thickness`, and `sketch`
 - features still need stored references and `holePatternRef` where a repeated hole/slot pattern is used
 - fasteners and welds still follow stored references
 - missing geometry should fail validation/rendering instead of falling back to `placementIntent`

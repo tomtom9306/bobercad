@@ -1,4 +1,5 @@
-import { v } from "../../core/math.mjs";
+import { clamp, finiteNumber, finiteVec3, v } from "../../core/math.mjs?v=finite-vec3-dry-1";
+import { arrayValues } from "../../core/model.mjs?v=final-array-values-dry-1";
 
 const EPSILON = 1e-9;
 const DEFAULT_UP = [0, 0, 1];
@@ -7,17 +8,12 @@ function fail(message) {
   throw new Error(`path api: ${message}`);
 }
 
-function finiteNumber(value, label) {
-  if (typeof value !== "number" || !Number.isFinite(value)) fail(`${label} must be a finite number`);
+function requiredFiniteNumber(value, label) {
+  if (!finiteNumber(value)) fail(`${label} must be a finite number`);
   return value;
 }
 
-function vec3(value, label) {
-  if (!Array.isArray(value) || value.length !== 3 || value.some((item) => typeof item !== "number" || !Number.isFinite(item))) {
-    fail(`${label} must be a finite [x,y,z] point`);
-  }
-  return [...value];
-}
+const vec3 = (value, label) => finiteVec3(value, label, fail);
 
 function unit(value, label) {
   const vector = vec3(value, label);
@@ -26,16 +22,16 @@ function unit(value, label) {
   return v.mul(vector, 1 / length);
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
 function lerpPoint(a, b, t) {
   return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+}
+
+function segmentParameter(distance, length) {
+  return clamp(distance / length, 0, 1);
 }
 
 function chooseFrameAxes(tangent, preferredUp = DEFAULT_UP) {
@@ -60,13 +56,13 @@ function lineSegment(spec, index = 0) {
     start,
     end,
     length,
-    pointAt: (distance) => lerpPoint(start, end, clamp(distance / length, 0, 1)),
+    pointAt: (distance) => lerpPoint(start, end, segmentParameter(distance, length)),
     tangentAt: () => v.mul(axis, 1 / length)
   };
 }
 
 function polylineSegments(spec) {
-  const points = (spec.points || []).map((point, index) => vec3(point, `polyline point ${index}`));
+  const points = arrayValues(spec.points).map((point, index) => vec3(point, `polyline point ${index}`));
   if (points.length < 2) fail("polyline path requires at least two points");
   return points.slice(0, -1).map((point, index) => lineSegment({
     id: spec.id ? `${spec.id}_${index + 1}` : undefined,
@@ -98,13 +94,17 @@ function arcTangent(axisX, axisY, angle, directionSign = 1) {
   ));
 }
 
+function radialSweep(spec, index) {
+  const radius = requiredFiniteNumber(spec.radius, `segment ${index} radius`);
+  if (radius <= EPSILON) fail(`segment ${index} radius must be positive`);
+  const startAngle = requiredFiniteNumber(spec.startAngle || 0, `segment ${index} startAngle`);
+  const endAngle = requiredFiniteNumber(spec.endAngle, `segment ${index} endAngle`);
+  return { radius, startAngle, endAngle, sweep: endAngle - startAngle };
+}
+
 function arcSegment(spec, index = 0) {
   const { center, axisX, axisY } = arcAxes(spec, index);
-  const radius = finiteNumber(spec.radius, `segment ${index} radius`);
-  if (radius <= EPSILON) fail(`segment ${index} radius must be positive`);
-  const startAngle = finiteNumber(spec.startAngle || 0, `segment ${index} startAngle`);
-  const endAngle = finiteNumber(spec.endAngle, `segment ${index} endAngle`);
-  const sweep = endAngle - startAngle;
+  const { radius, startAngle, endAngle, sweep } = radialSweep(spec, index);
   if (Math.abs(sweep) <= EPSILON) fail(`segment ${index} arc sweep cannot be zero`);
   const length = Math.abs(sweep) * radius;
   const directionSign = Math.sign(sweep);
@@ -113,15 +113,19 @@ function arcSegment(spec, index = 0) {
     type: "arc",
     center,
     radius,
+    axisX,
+    axisY,
     startAngle,
     endAngle,
+    sweep,
+    directionSign,
     length,
     pointAt: (distance) => {
-      const t = clamp(distance / length, 0, 1);
+      const t = segmentParameter(distance, length);
       return arcPoint(center, axisX, axisY, radius, startAngle + sweep * t);
     },
     tangentAt: (distance) => {
-      const t = clamp(distance / length, 0, 1);
+      const t = segmentParameter(distance, length);
       return arcTangent(axisX, axisY, startAngle + sweep * t, directionSign);
     }
   };
@@ -130,12 +134,8 @@ function arcSegment(spec, index = 0) {
 function helixSegment(spec, index = 0) {
   const { center, axisX, axisY } = arcAxes(spec, index);
   const axisZ = unit(spec.axisZ || v.cross(axisX, axisY), `segment ${index} axisZ`);
-  const radius = finiteNumber(spec.radius, `segment ${index} radius`);
-  if (radius <= EPSILON) fail(`segment ${index} radius must be positive`);
-  const startAngle = finiteNumber(spec.startAngle || 0, `segment ${index} startAngle`);
-  const endAngle = finiteNumber(spec.endAngle, `segment ${index} endAngle`);
-  const height = finiteNumber(spec.height || 0, `segment ${index} height`);
-  const sweep = endAngle - startAngle;
+  const { radius, startAngle, endAngle, sweep } = radialSweep(spec, index);
+  const height = requiredFiniteNumber(spec.height || 0, `segment ${index} height`);
   if (Math.abs(sweep) <= EPSILON && Math.abs(height) <= EPSILON) fail(`segment ${index} helix cannot have zero length`);
   const length = Math.hypot(Math.abs(sweep) * radius, height);
   const directionSign = Math.sign(sweep || 1);
@@ -144,17 +144,22 @@ function helixSegment(spec, index = 0) {
     type: spec.type === "spiral" ? "spiral" : "helix",
     center,
     radius,
+    axisX,
+    axisY,
+    axisZ,
     startAngle,
     endAngle,
+    sweep,
+    directionSign,
     height,
     length,
     pointAt: (distance) => {
-      const t = clamp(distance / length, 0, 1);
+      const t = segmentParameter(distance, length);
       const angle = startAngle + sweep * t;
       return arcPoint(center, axisX, axisY, radius, angle, v.mul(axisZ, height * t));
     },
     tangentAt: (distance) => {
-      const t = clamp(distance / length, 0, 1);
+      const t = segmentParameter(distance, length);
       const angle = startAngle + sweep * t;
       const angular = v.mul(arcTangent(axisX, axisY, angle, directionSign), Math.abs(sweep) * radius);
       return v.norm(v.add(angular, v.mul(axisZ, height)));
@@ -196,9 +201,13 @@ export function normalizePath(spec = {}) {
 }
 
 function segmentAtStation(path, station) {
-  const normalized = path.segments ? path : normalizePath(path);
+  const normalized = normalizedPath(path);
   const clampedStation = clamp(station, 0, normalized.length);
   return normalized.segments.find((segment) => clampedStation <= segment.stationEnd + EPSILON) || normalized.segments[normalized.segments.length - 1];
+}
+
+function normalizedPath(spec) {
+  return spec.segments ? spec : normalizePath(spec);
 }
 
 export function pathLength(spec) {
@@ -206,25 +215,22 @@ export function pathLength(spec) {
 }
 
 export function pointAtStation(spec, station) {
-  const path = spec.segments ? spec : normalizePath(spec);
+  const path = normalizedPath(spec);
   const segment = segmentAtStation(path, station);
   return segment.pointAt(clamp(station, segment.stationStart, segment.stationEnd) - segment.stationStart);
 }
 
-export function tangentAtStation(spec, station) {
-  const path = spec.segments ? spec : normalizePath(spec);
-  const segment = segmentAtStation(path, station);
-  return segment.tangentAt(clamp(station, segment.stationStart, segment.stationEnd) - segment.stationStart);
-}
-
 export function frameAtStation(spec, station, options = {}) {
-  const origin = pointAtStation(spec, station);
-  const tangent = tangentAtStation(spec, station);
-  return { origin, ...chooseFrameAxes(tangent, options.up || DEFAULT_UP), station: clamp(station, 0, (spec.segments ? spec : normalizePath(spec)).length) };
+  const path = normalizedPath(spec);
+  const segment = segmentAtStation(path, station);
+  const localStation = clamp(station, segment.stationStart, segment.stationEnd) - segment.stationStart;
+  const origin = segment.pointAt(localStation);
+  const tangent = segment.tangentAt(localStation);
+  return { origin, ...chooseFrameAxes(tangent, options.up || DEFAULT_UP), station: clamp(station, 0, path.length) };
 }
 
 export function samplePath(spec, options = {}) {
-  const path = spec.segments ? spec : normalizePath(spec);
+  const path = normalizedPath(spec);
   const count = Math.max(2, Math.floor(options.count || 16));
   return Array.from({ length: count }, (_, index) => {
     const station = path.length * index / (count - 1);
@@ -233,7 +239,7 @@ export function samplePath(spec, options = {}) {
 }
 
 export function offsetPath(spec, offset, options = {}) {
-  const distance = finiteNumber(offset, "offset");
+  const distance = requiredFiniteNumber(offset, "offset");
   const samples = samplePath(spec, { count: options.count || 24, up: options.up || DEFAULT_UP });
   return {
     id: options.id || `${spec.id || "path"}_offset`,

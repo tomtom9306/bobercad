@@ -1,4 +1,6 @@
-import { v } from "../../engine/core/math.mjs";
+import { clamp, finiteNumber, finiteNumberOr, finitePositiveInteger } from "../../engine/core/math.mjs?v=integer-number-dry-1";
+import { arrayValues } from "../../engine/core/model.mjs?v=webgl-array-values-dry-1";
+import { labelRotation } from "./label-rotation.mjs?v=label-rotation-dry-1";
 
 const HOVER_COLOR = "#2563eb";
 
@@ -38,10 +40,10 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
 
   function dimensionHoverText(id) {
     if (!id) return "";
-    const label = (overlay.labels || []).find((item) => item.dimensionId === id);
+    const label = arrayValues(overlay.labels).find((item) => item.dimensionId === id);
     if (label?.title) return label.title;
     if (label?.text) return label.text;
-    const line = (overlay.lines || []).find((item) => item.dimensionId === id);
+    const line = arrayValues(overlay.lines).find((item) => item.dimensionId === id);
     return line?.issueMessage || "";
   }
 
@@ -117,7 +119,7 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
     if (label.editing && label.editKind === "positiveIntegerPair") return null;
     const match = label.editing ? text.match(/-?\d+(?:\.\d+)?/) : null;
     if (!match || text[match.index + match[0].length] === "x") return null;
-    if (!Number.isFinite(Number(match[0]))) return null;
+    if (!finiteNumber(Number(match[0]))) return null;
     return {
       before: text.slice(0, match.index),
       value: match[0],
@@ -125,17 +127,48 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
     };
   }
 
+  function positiveIntegerPairValue(value) {
+    const match = String(value || "").trim().match(/^(\d+)\s*[xX\u00d7]\s*(\d+)$/);
+    if (!match) return null;
+    const first = Number(match[1]);
+    const second = Number(match[2]);
+    return finitePositiveInteger(first) && finitePositiveInteger(second)
+      ? { first, second }
+      : null;
+  }
+
+  function positiveIntegerInputValue(input) {
+    const value = Number(input.value);
+    return finitePositiveInteger(value) ? value : null;
+  }
+
   function parsedLabelInput(label, value) {
     if (label.editKind === "positiveIntegerPair") {
-      const match = String(value).trim().match(/^(\d+)\s*[xX\u00d7]\s*(\d+)$/);
-      if (!match) return null;
-      const first = Number(match[1]);
-      const second = Number(match[2]);
-      if (!Number.isInteger(first) || first <= 0 || !Number.isInteger(second) || second <= 0) return null;
-      return { first, second };
+      return positiveIntegerPairValue(value);
     }
     const number = Number(value);
-    return Number.isFinite(number) ? number : null;
+    return finiteNumberOr(number, null);
+  }
+
+  function stopUiEvent(event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function stopUiEventHandlers(element) {
+    element.addEventListener("pointerdown", stopUiEvent);
+    element.addEventListener("click", stopUiEvent);
+  }
+
+  function buttonControl({ className, text, ariaLabel, title, pressed } = {}) {
+    const button = document.createElement("button");
+    button.type = "button";
+    if (className) button.className = className;
+    if (text !== undefined) button.textContent = text;
+    if (ariaLabel) button.setAttribute("aria-label", ariaLabel);
+    if (title) button.title = title;
+    if (pressed !== undefined) button.setAttribute("aria-pressed", pressed ? "true" : "false");
+    return button;
   }
 
   function commitLabelInput(input, label) {
@@ -150,7 +183,7 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
   function caretIndexFromPointer(input, event) {
     const rect = input.getBoundingClientRect();
     const ratio = rect.width > 0 ? (event.clientX - rect.left) / rect.width : 1;
-    return Math.max(0, Math.min(input.value.length, Math.round(ratio * input.value.length)));
+    return clamp(Math.round(ratio * input.value.length), 0, input.value.length);
   }
 
   function appendLabelText(button, label) {
@@ -232,18 +265,8 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
     return input;
   }
 
-  function integerPairValue(value) {
-    const match = String(value || "").trim().match(/^(\d+)\s*[xX]\s*(\d+)$/);
-    if (!match) return null;
-    const first = Number(match[1]);
-    const second = Number(match[2]);
-    return Number.isInteger(first) && first > 0 && Number.isInteger(second) && second > 0
-      ? { first, second }
-      : null;
-  }
-
   function appendPositiveIntegerPairEditor(menu, label) {
-    const committed = integerPairValue(label.editValue || label.displayText || label.text);
+    const committed = positiveIntegerPairValue(label.editValue || label.displayText || label.text);
     if (!committed) return null;
     menu.classList.add("pair-editor");
     const draftKey = label.dimensionId;
@@ -260,15 +283,15 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
       pairDrafts.set(draftKey, { first: firstInput.value, second: secondInput.value });
     };
     const markValid = () => {
-      const firstValid = Number.isInteger(Number(firstInput.value)) && Number(firstInput.value) > 0;
-      const secondValid = Number.isInteger(Number(secondInput.value)) && Number(secondInput.value) > 0;
+      const firstValid = positiveIntegerInputValue(firstInput) !== null;
+      const secondValid = positiveIntegerInputValue(secondInput) !== null;
       firstInput.classList.toggle("invalid", !firstValid);
       secondInput.classList.toggle("invalid", !secondValid);
       return firstValid && secondValid;
     };
     const commit = () => {
       if (!markValid()) return false;
-      const value = { first: Number(firstInput.value), second: Number(secondInput.value) };
+      const value = { first: positiveIntegerInputValue(firstInput), second: positiveIntegerInputValue(secondInput) };
       if (value.first === committed.first && value.second === committed.second) {
         pairDrafts.delete(draftKey);
         return true;
@@ -286,15 +309,15 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
       secondInput.classList.remove("invalid");
     };
     const step = (input, delta) => {
-      const current = Number(input.value);
-      input.value = String(Math.max(1, Number.isInteger(current) && current > 0 ? current + delta : 1));
+      const current = positiveIntegerInputValue(input);
+      input.value = String(Math.max(1, current !== null ? current + delta : 1));
       storeDraft();
       markValid();
     };
     const makeRow = (key, labelText, input) => {
       const row = document.createElement("label");
-      const minus = document.createElement("button");
-      const plus = document.createElement("button");
+      const minus = buttonControl({ className: "dimension-pair-step", text: "-" });
+      const plus = buttonControl({ className: "dimension-pair-step", text: "+" });
       const text = document.createElement("span");
       row.className = "dimension-pair-row";
       text.className = "dimension-pair-label";
@@ -304,22 +327,7 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
       input.inputMode = "numeric";
       input.value = draft[key];
       input.setAttribute("aria-label", labelText);
-      minus.type = "button";
-      plus.type = "button";
-      minus.className = "dimension-pair-step";
-      plus.className = "dimension-pair-step";
-      minus.textContent = "-";
-      plus.textContent = "+";
-      for (const button of [minus, plus]) {
-        button.addEventListener("pointerdown", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        });
-        button.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        });
-      }
+      for (const button of [minus, plus]) stopUiEventHandlers(button);
       minus.addEventListener("click", () => step(input, -1));
       plus.addEventListener("click", () => step(input, 1));
       input.addEventListener("pointerdown", (event) => event.stopPropagation());
@@ -358,34 +366,17 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
 
   function appendDimensionEditActions(menu, label, editor) {
     if (!editor && !label.issueResolvable) return;
-    const approve = document.createElement("button");
-    approve.type = "button";
-    approve.className = "dimension-label-action approve";
-    approve.setAttribute("aria-label", "Apply dimension value");
-    approve.textContent = "\u2713";
-    const reject = document.createElement("button");
-    reject.type = "button";
-    reject.className = "dimension-label-action reject";
-    reject.setAttribute("aria-label", "Cancel dimension edit");
-    reject.textContent = "\u00d7";
-    const repair = document.createElement("button");
-    repair.type = "button";
-    repair.className = "dimension-label-action repair";
-    repair.setAttribute("aria-label", "Auto fix dimension issue");
-    repair.title = label.issueMessage || "Auto fix dimension issue";
-    repair.textContent = "\u2692";
+    const approve = buttonControl({ className: "dimension-label-action approve", ariaLabel: "Apply dimension value", text: "\u2713" });
+    const reject = buttonControl({ className: "dimension-label-action reject", ariaLabel: "Cancel dimension edit", text: "\u00d7" });
+    const repair = buttonControl({
+      className: "dimension-label-action repair",
+      ariaLabel: "Auto fix dimension issue",
+      title: label.issueMessage || "Auto fix dimension issue",
+      text: "\u2692"
+    });
     const actions = editor ? [approve, reject] : [];
     if (label.issueResolvable) actions.push(repair);
-    for (const action of actions) {
-      action.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-      action.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-    }
+    for (const action of actions) stopUiEventHandlers(action);
     if (editor) {
       approve.addEventListener("click", () => {
         if (editor.dimensionCommit?.()) handlers.cancel?.(label);
@@ -427,23 +418,6 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
     button.replaceChildren(document.createTextNode(before), value, document.createTextNode(after));
   }
 
-  function labelRotation(label) {
-    const axis = Array.isArray(label.labelLine) && label.labelLine.length === 2
-      ? v.sub(label.labelLine[1], label.labelLine[0])
-      : label.labelAxis;
-    if (!Array.isArray(axis)) return 0;
-    const a = projectPoint(label.point);
-    const b = projectPoint(v.add(label.point, axis));
-    if (!a || !b) return 0;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    if (Math.hypot(dx, dy) < 1) return 0;
-    let angle = Math.atan2(dy, dx);
-    if (angle > Math.PI / 2) angle -= Math.PI;
-    if (angle < -Math.PI / 2) angle += Math.PI;
-    return angle;
-  }
-
   function labelScreenFontSize(label) {
     return (label.textHeight || settings.render.dimensions?.textHeight || 10) * screenScale();
   }
@@ -481,12 +455,12 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
       title.textContent = control.label || "Mode";
       menu.append(title);
       for (const option of control.options) {
-        const button = document.createElement("button");
         const selected = option.value === control.value;
-        button.type = "button";
-        button.className = `dimension-mode-option${selected ? " selected" : ""}`;
-        button.textContent = option.label || String(option.value);
-        button.setAttribute("aria-pressed", selected ? "true" : "false");
+        const button = buttonControl({
+          className: `dimension-mode-option${selected ? " selected" : ""}`,
+          text: option.label || String(option.value),
+          pressed: selected
+        });
         button.addEventListener("click", () => {
           handlers.mode?.(label, control.path, option.value);
         });
@@ -497,7 +471,7 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
   }
 
   function renderLabels() {
-    const visibleLabels = (overlay.labels || [])
+    const visibleLabels = arrayValues(overlay.labels)
       .filter((label) => label.active || label.editing);
     if (!visibleLabels.length) {
       labels.replaceChildren();
@@ -520,7 +494,7 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
       button.setAttribute("aria-label", label.title || label.text);
       button.style.left = `${projected.x}px`;
       button.style.top = `${projected.y}px`;
-      button.style.transform = `translate(-50%, -50%) rotate(${labelRotation(label)}rad)`;
+      button.style.transform = `translate(-50%, -50%) rotate(${labelRotation(label, projectPoint)}rad)`;
       button.style.fontSize = `${Math.max(label.editing ? 12 : 1, labelScreenFontSize(label))}px`;
       button.style.fontFamily = dimensionFontSettings(label).family;
       button.style.fontWeight = dimensionFontSettings(label).weight;
@@ -557,7 +531,7 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
 
   function setOverlay(nextOverlay = { lines: [], labels: [] }) {
     overlay = nextOverlay || { lines: [], labels: [] };
-    const editingDimensionIds = new Set((overlay.labels || [])
+    const editingDimensionIds = new Set(arrayValues(overlay.labels)
       .filter((label) => label.editing)
       .map((label) => label.dimensionId));
     for (const dimensionId of inputDrafts.keys()) {
@@ -567,8 +541,8 @@ export function createDimensionOverlayUi({ canvas, settings, projectPoint, scree
       if (!editingDimensionIds.has(dimensionId)) pairDrafts.delete(dimensionId);
     }
     const dimensionStillExists = hoveredId && (
-      overlay.lines?.some((line) => line.dimensionId === hoveredId)
-      || overlay.labels?.some((label) => label.dimensionId === hoveredId)
+      arrayValues(overlay.lines).some((line) => line.dimensionId === hoveredId)
+      || arrayValues(overlay.labels).some((label) => label.dimensionId === hoveredId)
     );
     if (hoveredId && !dimensionStillExists) {
       hoveredId = null;

@@ -1,6 +1,7 @@
-import { defineSmartComponent } from "./parameters.mjs?v=stair-route-ui-fit-2";
+import { arrayValues } from "../../core/model.mjs?v=smart-config-array-values-dry-1";
+import { defineSmartComponent } from "./parameters.mjs?v=smart-config-array-values-dry-1";
 import { buildSmartComponentRecipe } from "./smart-component-recipe.mjs";
-import { mountParameterSmartComponentUi } from "../../../../data/libraries/smart-components/smart-component-ui.mjs?v=stair-geometry-readouts-1";
+import { mountParameterSmartComponentUi } from "../../../../data/libraries/smart-components/smart-component-ui.mjs?v=unique-dry-1";
 
 const definitions = new Map();
 const presets = new Map();
@@ -29,7 +30,7 @@ function moduleImportUrl(url) {
   return next.href;
 }
 
-export function registerSmartComponentDefinition(definition) {
+function registerSmartComponentDefinition(definition) {
   if (definitions.has(definition.type)) throw new Error(`smart component registry: duplicate definition ${definition.type}`);
   definitions.set(definition.type, definition);
   for (const preset of Object.values(definition.presets || {})) {
@@ -48,7 +49,7 @@ export async function loadSmartComponentDefinitions() {
   const register = await loadJson(registerUrl);
   if (typeof register.libraryUi !== "string") throw new Error("smart component register missing libraryUi");
   libraryUi = await import(new URL(register.libraryUi, registerUrl).href);
-  const nextDefinitions = await Promise.all((register.components || []).map(async (componentPath) => {
+  const nextDefinitions = await Promise.all(arrayValues(register.components).map(async (componentPath) => {
     if (typeof componentPath !== "string") throw new Error("smart component register entries must be folder paths");
     const base = new URL(componentPath.endsWith("/") ? componentPath : `${componentPath}/`, registerUrl);
     const config = await loadJson(new URL("config.json", base));

@@ -1,3 +1,5 @@
+import { truthyValues } from "../../engine/core/model.mjs?v=truthy-values-dry-1";
+
 function bindingList(binding) {
   if (Array.isArray(binding)) return binding;
   return [binding];
@@ -9,7 +11,7 @@ function normalizedKey(value) {
 
 function parseBinding(binding) {
   if (typeof binding !== "string") return null;
-  const parts = binding.split("+").map((part) => part.trim()).filter(Boolean);
+  const parts = truthyValues(binding.split("+").map((part) => part.trim()));
   if (!parts.length) return null;
   const key = parts.pop();
   const modifiers = {
@@ -50,8 +52,27 @@ function matchesOne(event, binding) {
   return eventKey(event) === parsed.key && modifiersMatch(event, parsed.modifiers);
 }
 
+export function isTextInput(target) {
+  const tag = target?.tagName?.toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || target?.isContentEditable;
+}
+
 export function matchesShortcut(event, binding) {
   return bindingList(binding).some((item) => matchesOne(event, item));
+}
+
+export function handleEscapeReset(event, reset) {
+  if (event?.key !== "Escape") return false;
+  reset();
+  return true;
+}
+
+export function handleBackspaceOrEscape(event, onBackspace, reset) {
+  if (event?.key === "Backspace") {
+    onBackspace?.();
+    return true;
+  }
+  return handleEscapeReset(event, reset);
 }
 
 export function shortcutSetting(scope, key, fallback = "") {

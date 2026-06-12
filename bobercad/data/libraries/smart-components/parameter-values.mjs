@@ -1,4 +1,5 @@
-import { clone, optionalPath, requiredPath } from "../../../app/engine/modules/smart-components/parameters.mjs?v=stair-route-ui-fit-2";
+import { jsonClone as clone } from "../../../app/engine/core/model.mjs?v=json-clone-dry-1";
+import { optionalPath, requiredPath } from "../../../app/engine/modules/smart-components/parameters.mjs?v=smart-config-array-values-dry-1";
 
 function fastenerHoleDiameter(api, parameters, derive = {}) {
   const fastenerRef = optionalPath(parameters, derive.fastenerRef || "bolts.fastenerRef");

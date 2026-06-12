@@ -1,6 +1,9 @@
+import { arrayValues, uniqueTruthy } from "../../core/model.mjs?v=array-values-dry-1";
+
 const MODEL_COLLECTIONS = new Set([
   "members",
   "plates",
+  "sketches",
   "features",
   "holePatterns",
   "fastenerGroups",
@@ -13,7 +16,6 @@ const MODEL_COLLECTIONS = new Set([
   "trimJoints",
   "groups",
   "objectPatterns",
-  "connections",
   "relations"
 ]);
 
@@ -21,7 +23,7 @@ function fail(message) {
   throw new Error(`object api: ${message}`);
 }
 
-function cleanId(value) {
+export function cleanId(value) {
   return String(value || "")
     .trim()
     .replace(/[^A-Za-z0-9_:-]+/g, "_")
@@ -29,7 +31,7 @@ function cleanId(value) {
 }
 
 export function appendUniqueId(values = [], id) {
-  return [...new Set([...(Array.isArray(values) ? values : []), id].filter(Boolean))];
+  return uniqueTruthy([...arrayValues(values), id]);
 }
 
 export function objectCollection(project, objectId) {
@@ -68,4 +70,29 @@ export function removeIndexedObject(project, objectId) {
   const collection = objectCollection(project, objectId);
   if (collection) delete project.model[collection][objectId];
   if (project.objectIndex) delete project.objectIndex[objectId];
+}
+
+function removeObjectReferences(value, deletedIds, options = {}) {
+  const deleted = deletedIds instanceof Set ? deletedIds : new Set(uniqueTruthy(deletedIds));
+  const shouldPruneArray = typeof options.shouldPruneArray === "function"
+    ? options.shouldPruneArray
+    : (key) => key.endsWith("Ids");
+  if (Array.isArray(value)) return value.filter((item) => !deleted.has(item)).map((item) => removeObjectReferences(item, deleted, options));
+  if (!value || typeof value !== "object") return value;
+  for (const [key, child] of Object.entries(value)) {
+    if (Array.isArray(child) && shouldPruneArray(key, child)) {
+      value[key] = child.filter((id) => !deleted.has(id));
+    } else {
+      removeObjectReferences(child, deleted, options);
+    }
+  }
+  return value;
+}
+
+export function removeProjectObjects(project, objectIds, options = {}) {
+  const deletedIds = new Set(uniqueTruthy(objectIds));
+  if (!deletedIds.size) return project;
+  for (const objectId of deletedIds) removeIndexedObject(project, objectId);
+  removeObjectReferences(project.model, deletedIds, options);
+  return project;
 }

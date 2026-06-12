@@ -1,4 +1,4 @@
-import { basisAxis, dimensionOffset, interfaceByRole, makeDimension, plateBasis, pointToPlane, roleObject, v } from "../dimension-context.mjs";
+import { basisAxis, dimensionOffset, interfaceByRole, makeDimension, plateBasis, pointToPlane, roleObject, v } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
 export function plateReferencePlaneOffsetDimension(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);

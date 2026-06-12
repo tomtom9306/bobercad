@@ -1,6 +1,4 @@
-function memberEndPoint(member, iface) {
-  return iface.memberEnd === "end" ? member.end : member.start;
-}
+import { memberPointAtEnd } from "../../../project/members.mjs?v=member-end-point-dry-1";
 
 export function secondaryWebConnectionContext(ctx, input = {}) {
   const existing = input.connectionContext || input.recipeContext?.connectionContext;
@@ -27,7 +25,7 @@ export function secondaryWebConnectionContext(ctx, input = {}) {
   const supportNormal = input.supportNormal || (ctx.geometry.v.dot(supportInterface.normal, beamDirection) < 0
     ? ctx.geometry.v.mul(supportInterface.normal, -1)
     : supportInterface.normal);
-  const beamEndPoint = memberEndPoint(supportedBeam, beamInterface);
+  const beamEndPoint = memberPointAtEnd(supportedBeam, beamInterface.memberEnd, supportedBeam.start);
   const supportPlane = ctx.geometry.v.add(supportInterface.origin, ctx.geometry.v.mul(supportNormal, plate.edgeOffset));
   const supportEdge = ctx.geometry.linePlaneIntersection(beamEndPoint, ctx.geometry.v.mul(beamDirection, -1), supportPlane, supportNormal)
     || ctx.geometry.projectPointToPlane(beamEndPoint, supportPlane, supportNormal);

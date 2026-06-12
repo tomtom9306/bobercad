@@ -1,94 +1,13 @@
-import { TRIM_OPERATION_TYPES, trimOperationIconMarkup, trimOperationLabel, trimOperationSpec, trimOperationSupportsGap } from "../../../rendering/trim-operation-icons.mjs?v=plane-region-hard-1";
+import { finiteNumberOr, v } from "../../../engine/core/math.mjs?v=panel-number-or-dry-1";
+import { arrayValues, uniqueTruthy } from "../../../engine/core/model.mjs?v=ui-array-values-dry-1";
+import { defaultPlaneTrimRemovedRegionKeys, planeTrimRegionKeys, reconcilePlaneTrimRemovedRegionKeys } from "../../../engine/api/model/trim-region-keys.mjs?v=geometry-api-array-values-dry-1";
+import { libraryProfileById } from "../../../engine/api/project/profiles.mjs?v=profile-api-dry-1";
+import { trimJointOperations, trimJointParticipants, trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd, trimPlaneOperationsForMember } from "../../../engine/api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
+import { TRIM_OPERATION_TYPES, trimOperationIconMarkup, trimOperationLabel, trimOperationSupportsGap } from "../../../rendering/trim-operation-icons.mjs?v=color-helpers-dry-1";
+import { button, checkboxControl, createPanelMessageState, field, hidePanel, numericControl, readout, renderEditorPanel, text } from "./panel-elements.mjs?v=panel-controls-dry-1";
 
-function text(tag, className, value) {
-  const element = document.createElement(tag);
-  element.className = className;
-  element.textContent = value;
-  return element;
-}
-
-function button(label, className, onClick) {
-  const element = document.createElement("button");
-  element.type = "button";
-  element.className = className;
-  element.textContent = label;
-  element.addEventListener("click", onClick);
-  return element;
-}
-
-function compactNumericInput(value, ariaLabel, onChange) {
-  const input = document.createElement("input");
-  input.type = "text";
-  input.inputMode = "decimal";
-  input.value = Number.isFinite(value) ? String(Number(value.toFixed(6))) : "";
-  input.setAttribute("aria-label", ariaLabel);
-  input.addEventListener("change", () => {
-    const next = Number(input.value);
-    input.classList.toggle("invalid", !Number.isFinite(next));
-    if (Number.isFinite(next)) onChange(next);
-  });
-  return input;
-}
-
-function compactCheckboxInput(value, ariaLabel, onChange) {
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.checked = Boolean(value);
-  input.setAttribute("aria-label", ariaLabel);
-  input.addEventListener("change", () => onChange(input.checked));
-  return input;
-}
-
-function compactSelectInput(options, value, ariaLabel, onChange) {
-  const input = document.createElement("select");
-  input.className = "editor-select";
-  input.setAttribute("aria-label", ariaLabel);
-  for (const option of options) {
-    const item = document.createElement("option");
-    item.value = option.id;
-    item.textContent = option.label;
-    input.append(item);
-  }
-  input.value = value || options[0]?.id || "";
-  input.disabled = !options.length;
-  input.addEventListener("change", () => onChange(input.value));
-  return input;
-}
-
-function add(a, b) {
-  return a.map((value, index) => value + b[index]);
-}
-
-function sub(a, b) {
-  return a.map((value, index) => value - b[index]);
-}
-
-function mul(a, scalar) {
-  return a.map((value) => value * scalar);
-}
-
-function dot(a, b) {
-  return a.reduce((sum, value, index) => sum + value * b[index], 0);
-}
-
-function norm(a) {
-  const length = Math.hypot(...a);
-  return length > 1e-9 ? mul(a, 1 / length) : [0, 0, 1];
-}
-
-function readout(label, value) {
-  const row = document.createElement("div");
-  row.className = "editor-readout";
-  row.append(text("span", "editor-label", label), text("span", "editor-value", value));
-  return row;
-}
-
-function field(label, ...children) {
-  const row = document.createElement("div");
-  row.className = "editor-field";
-  row.append(text("span", "editor-label", label), ...children);
-  return row;
-}
+const { add, sub, mul, dot } = v;
+const norm = (point) => v.safeNorm(point, [0, 0, 1]);
 
 const MEMBER_END_OPTIONS = [
   { id: "start", label: "Start" },
@@ -101,39 +20,8 @@ const MITER_MODE_OPTIONS = [
 ];
 
 function profileLabel(profiles, member) {
-  const profile = profiles?.[member.profile];
+  const profile = libraryProfileById(profiles, member.profile);
   return profile?.designation || member.profile || "-";
-}
-
-function operationTypeSpec(type) {
-  return trimOperationSpec(type);
-}
-
-function operationLabel(type) {
-  return trimOperationLabel(type);
-}
-
-function operationSupportsGap(type) {
-  return trimOperationSupportsGap(type);
-}
-
-function operationType(operation) {
-  return operation.type || "end-butt-1";
-}
-
-function operationUsesMemberEnd(type, role) {
-  if (type === "end-butt-1") return role === "memberA";
-  if (type === "end-butt-2") return role === "memberB";
-  if (type === "end-butt-both" || type === "end-miter") return true;
-  return false;
-}
-
-function operationUsesMemberB(type) {
-  return type !== "plane-trim";
-}
-
-function iconType(type) {
-  return type;
 }
 
 function memberName(api, memberId) {
@@ -163,6 +51,24 @@ function memberButton(label, color, className, onClick) {
   return element;
 }
 
+function trimOptionGroup({ options, value, ariaLabel, role, itemRole = null, ariaSelected, onChange }) {
+  const group = document.createElement("div");
+  group.className = "trim-member-end-toggle";
+  group.setAttribute("role", role);
+  group.setAttribute("aria-label", ariaLabel);
+  for (const option of options) {
+    const selected = option.id === value;
+    const item = button(option.label, "trim-end-option", () => {
+      if (!selected) onChange(option.id, option.label);
+    });
+    item.dataset.selected = selected ? "true" : "false";
+    if (itemRole) item.setAttribute("role", itemRole);
+    item.setAttribute(ariaSelected, selected ? "true" : "false");
+    group.append(item);
+  }
+  return group;
+}
+
 function trimTypeIcon(type, colors = {}) {
   const template = document.createElement("template");
   template.innerHTML = trimOperationIconMarkup(type, colors).trim();
@@ -174,20 +80,15 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
   let activeOperationId = null;
   let activeRegionKey = null;
   let activeMemberId = null;
-  let messageText = "";
-  let messageState = "";
-
-  const setMessage = (message, state = "") => {
-    messageText = message;
-    messageState = state;
-    render();
-  };
+  const panelMessage = createPanelMessageState(() => render());
+  const setMessage = panelMessage.set;
 
   const selectedTrimJoint = () => selectedTrimJointId ? api.project().model.trimJoints?.[selectedTrimJointId] || null : null;
+  const selectedTrimJointParticipants = () => trimJointParticipants(selectedTrimJoint());
 
   const activeOperation = () => {
     const trimJoint = selectedTrimJoint();
-    return activeOperationId ? (trimJoint?.operations || []).find((operation) => operation.id === activeOperationId) || null : null;
+    return trimOperationById(trimJoint, activeOperationId);
   };
 
   const trimObjectIds = () => {
@@ -216,7 +117,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     try {
       const beforeObjectIds = trimObjectIds();
       const nextProject = operation(selectedTrimJointId);
-      const affectedObjectIds = [...new Set([...beforeObjectIds, ...trimObjectIds()])];
+      const affectedObjectIds = uniqueTruthy([...beforeObjectIds, ...trimObjectIds()]);
       applyProjectChange(nextProject, affectedObjectIds);
       if (highlightMemberId && nextProject.model.members?.[highlightMemberId]) selection.select([highlightMemberId]);
       else selection.select(affectedObjectIds);
@@ -238,8 +139,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       count: 1,
       onComplete: ([memberId]) => {
         activeMemberId = memberId;
-        const trimJoint = selectedTrimJoint();
-        if ((trimJoint.participants || []).some((participant) => participant.memberId === memberId)) {
+        if (selectedTrimJointParticipants().some((participant) => participant.memberId === memberId)) {
           selection.select([memberId]);
           setMessage(`${memberId} is already in this trim.`, "ok");
           return;
@@ -258,75 +158,20 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
   };
 
   const addOperation = (type = "end-butt-1") => {
-    const trimJoint = selectedTrimJoint();
-    const participants = trimJoint?.participants || [];
+    const participants = selectedTrimJointParticipants();
     const patch = { type, gap: 0 };
     if (participants.length < 2) {
       setMessage("Add plane trim by picking at least one plane from the model.", "error");
       return;
     }
-    updateTrimJoint((trimJointId) => api.addTrimJointOperation(trimJointId, patch), `Added ${operationLabel(patch.type)}.`);
-  };
-
-  const planeIds = (operation) => Array.isArray(operation.referencePlaneIds) ? operation.referencePlaneIds : [];
-
-  const regionKey = (items) => items.map((item) => `${item.planeId}:${item.side}`).join("|");
-
-  const regionKeysForPlaneIds = (referencePlaneIds) => {
-    const ids = [...new Set(referencePlaneIds)];
-    const keys = [];
-    const walk = (index, items) => {
-      if (index >= ids.length) {
-        keys.push(regionKey(items));
-        return;
-      }
-      walk(index + 1, [...items, { planeId: ids[index], side: "-" }]);
-      walk(index + 1, [...items, { planeId: ids[index], side: "+" }]);
-    };
-    walk(0, []);
-    return keys;
-  };
-
-  const regionSelectorMap = (regionKeyValue) => {
-    const map = new Map();
-    if (typeof regionKeyValue !== "string" || !regionKeyValue) return map;
-    for (const part of regionKeyValue.split("|")) {
-      const index = part.lastIndexOf(":");
-      if (index <= 0) continue;
-      const planeId = part.slice(0, index);
-      const side = part.slice(index + 1);
-      if (side === "+" || side === "-") map.set(planeId, side);
-    }
-    return map;
-  };
-
-  const regionMatchesSelector = (regionKeyValue, selector) => {
-    const map = regionSelectorMap(regionKeyValue);
-    for (const [planeId, side] of selector) {
-      if (map.get(planeId) !== side) return false;
-    }
-    return true;
-  };
-
-  const ensurePlaneTrimRegionKeys = (operation, referencePlaneIds) => {
-    const ids = new Set(referencePlaneIds);
-    const keys = regionKeysForPlaneIds(referencePlaneIds);
-    const removed = new Set();
-    for (const regionKeyValue of operation.removedRegionKeys || []) {
-      const selector = new Map([...regionSelectorMap(regionKeyValue)].filter(([planeId]) => ids.has(planeId)));
-      if (!selector.size) continue;
-      for (const key of keys) {
-        if (regionMatchesSelector(key, selector)) removed.add(key);
-      }
-    }
-    return [...removed];
+    updateTrimJoint((trimJointId) => api.addTrimJointOperation(trimJointId, patch), `Added ${trimOperationLabel(patch.type)}.`);
   };
 
   const regionKeyForPoint = (operation, point) => {
-    if (!Array.isArray(point) || point.length !== 3 || point.some((value) => typeof value !== "number" || !Number.isFinite(value))) return null;
-    const gap = typeof operation.gap === "number" && Number.isFinite(operation.gap) ? operation.gap : 0;
+    if (!v.isVec3(point)) return null;
+    const gap = finiteNumberOr(operation.gap, 0);
     const items = [];
-    for (const referencePlaneId of planeIds(operation)) {
+    for (const referencePlaneId of trimOperationReferencePlaneIds(operation)) {
       const plane = api.project().model.referencePlanes?.[referencePlaneId];
       if (!plane?.origin || !plane?.normal) return null;
       const normal = norm(plane.normal);
@@ -338,41 +183,47 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
 
   const activePlaneTrimOperationForMember = (memberId) => {
     const trimJoint = selectedTrimJoint();
-    const operations = (trimJoint?.operations || []).filter((operation) => operation.type === "plane-trim" && operation.memberAId === memberId);
+    const operations = trimPlaneOperationsForMember(trimJoint, memberId);
     if (activeOperationId) return operations.find((operation) => operation.id === activeOperationId) || null;
     return operations.length === 1 ? operations[0] : null;
   };
 
-  const beginPickOperationPlane = (operation) => {
+  const referencePlaneIdFromFace = (face) => face?.referencePlaneId || (face?.collection === "referencePlanes" ? face.objectId : null);
+
+  const beginReferencePlanePick = (onComplete, prompt) => {
     selection.beginObjectPick({
       count: 1,
-      objectIdFromFace: (face) => face?.referencePlaneId || (face?.collection === "referencePlanes" ? face.objectId : null),
-      onComplete: ([referencePlaneId]) => {
-        const nextPlaneIds = [...new Set([...planeIds(operation), referencePlaneId])];
-        updateOperation(operation.id, {
-          referencePlaneIds: nextPlaneIds,
-          removedRegionKeys: ensurePlaneTrimRegionKeys(operation, nextPlaneIds)
-        }, `Added plane ${referencePlaneId}.`);
-      },
+      objectIdFromFace: referencePlaneIdFromFace,
+      onComplete: ([referencePlaneId]) => onComplete(referencePlaneId),
       onError: () => setMessage("Pick a reference plane in the model.", "error")
     });
-    setMessage("Pick a reference plane in the model.", "ok");
+    setMessage(prompt, "ok");
+  };
+
+  const beginPickOperationPlane = (operation) => {
+    beginReferencePlanePick((referencePlaneId) => {
+      const nextPlaneIds = uniqueTruthy([...trimOperationReferencePlaneIds(operation), referencePlaneId]);
+      updateOperation(operation.id, {
+        referencePlaneIds: nextPlaneIds,
+        removedRegionKeys: reconcilePlaneTrimRemovedRegionKeys(operation, nextPlaneIds)
+      }, `Added plane ${referencePlaneId}.`);
+    }, "Pick a reference plane in the model.");
   };
 
   const removeOperationPlane = (operation, referencePlaneId) => {
-    const nextPlaneIds = planeIds(operation).filter((id) => id !== referencePlaneId);
+    const nextPlaneIds = trimOperationReferencePlaneIds(operation).filter((id) => id !== referencePlaneId);
     if (!nextPlaneIds.length) {
       setMessage("Plane trim requires at least one plane.", "error");
       return;
     }
     updateOperation(operation.id, {
       referencePlaneIds: nextPlaneIds,
-      removedRegionKeys: ensurePlaneTrimRegionKeys(operation, nextPlaneIds)
+      removedRegionKeys: reconcilePlaneTrimRemovedRegionKeys(operation, nextPlaneIds)
     }, `Removed plane ${referencePlaneId}.`);
   };
 
   const toggleRegionRemoved = (operation, regionKeyValue) => {
-    const removed = new Set(operation.removedRegionKeys || []);
+    const removed = new Set(arrayValues(operation.removedRegionKeys));
     if (removed.has(regionKeyValue)) removed.delete(regionKeyValue);
     else removed.add(regionKeyValue);
     activeRegionKey = regionKeyValue;
@@ -380,33 +231,25 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
   };
 
   const addPlaneTrimOperation = () => {
-    const trimJoint = selectedTrimJoint();
-    const memberId = trimJoint?.participants?.[0]?.memberId;
+    const memberId = selectedTrimJointParticipants()[0]?.memberId;
     if (!memberId) {
       setMessage("Plane trim requires a member.", "error");
       return;
     }
-    selection.beginObjectPick({
-      count: 1,
-      objectIdFromFace: (face) => face?.referencePlaneId || (face?.collection === "referencePlanes" ? face.objectId : null),
-      onComplete: ([referencePlaneId]) => {
-        const patch = {
-          type: "plane-trim",
-          memberAId: memberId,
-          referencePlaneIds: [referencePlaneId],
-          removedRegionKeys: [`${referencePlaneId}:-`],
-          gap: 0
-        };
-        updateTrimJoint((trimJointId) => api.addTrimJointOperation(trimJointId, patch), "Added plane trim.");
-      },
-      onError: () => setMessage("Pick a reference plane in the model.", "error")
-    });
-    setMessage("Pick first plane for the new trim.", "ok");
+    beginReferencePlanePick((referencePlaneId) => {
+      const patch = {
+        type: "plane-trim",
+        memberAId: memberId,
+        referencePlaneIds: [referencePlaneId],
+        removedRegionKeys: defaultPlaneTrimRemovedRegionKeys([referencePlaneId]),
+        gap: 0
+      };
+      updateTrimJoint((trimJointId) => api.addTrimJointOperation(trimJointId, patch), "Added plane trim.");
+    }, "Pick first plane for the new trim.");
   };
 
   const addOperationFromToolbar = () => {
-    const trimJoint = selectedTrimJoint();
-    const participants = trimJoint?.participants || [];
+    const participants = selectedTrimJointParticipants();
     if (participants.length < 2) {
       addPlaneTrimOperation();
       return;
@@ -424,25 +267,24 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
   };
 
   const updateOperationType = (operation, type) => {
-    const patch = operationSupportsGap(type) ? { type } : { type, gap: 0 };
+    const patch = trimOperationSupportsGap(type) ? { type } : { type, gap: 0 };
     if (type === "plane-trim") {
-      const referencePlaneIds = planeIds(operation);
+      const referencePlaneIds = trimOperationReferencePlaneIds(operation);
       if (!referencePlaneIds.length) {
         setMessage("Plane trim requires planes picked from the model.", "error");
         return;
       }
       patch.referencePlaneIds = referencePlaneIds;
-      patch.removedRegionKeys = ensurePlaneTrimRegionKeys(operation, referencePlaneIds);
-    } else if (operationUsesMemberB(type)) {
-      const trimJoint = selectedTrimJoint();
-      const memberBId = operation.memberBId || (trimJoint.participants || []).find((participant) => participant.memberId !== operation.memberAId)?.memberId;
+      patch.removedRegionKeys = reconcilePlaneTrimRemovedRegionKeys(operation, referencePlaneIds);
+    } else if (trimOperationUsesMemberB(type)) {
+      const memberBId = operation.memberBId || selectedTrimJointParticipants().find((participant) => participant.memberId !== operation.memberAId)?.memberId;
       if (!memberBId) {
-        setMessage(`${operationLabel(type)} requires a second member.`, "error");
+        setMessage(`${trimOperationLabel(type)} requires a second member.`, "error");
         return;
       }
       patch.memberBId = memberBId;
     }
-    updateOperation(operation.id, patch, `${operationLabel(type)} selected.`);
+    updateOperation(operation.id, patch, `${trimOperationLabel(type)} selected.`);
   };
 
   const swapOperation = (operation) => {
@@ -471,23 +313,14 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
   };
 
   const endToggle = (value, ariaLabel, onChange) => {
-    const wrap = document.createElement("div");
-    wrap.className = "trim-member-end-toggle";
-    wrap.setAttribute("role", "group");
-    wrap.setAttribute("aria-label", ariaLabel);
-    for (const option of MEMBER_END_OPTIONS) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "trim-end-option";
-      item.dataset.selected = option.id === value ? "true" : "false";
-      item.textContent = option.label;
-      item.setAttribute("aria-pressed", option.id === value ? "true" : "false");
-      item.addEventListener("click", () => {
-        if (option.id !== value) onChange(option.id, option.label);
-      });
-      wrap.append(item);
-    }
-    return wrap;
+    return trimOptionGroup({
+      options: MEMBER_END_OPTIONS,
+      value,
+      ariaLabel,
+      role: "group",
+      ariaSelected: "aria-pressed",
+      onChange
+    });
   };
 
   const memberPicker = (operation, member) => {
@@ -517,7 +350,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       item.setAttribute("role", "radio");
       item.setAttribute("aria-checked", option.id === operation.type ? "true" : "false");
       item.setAttribute("aria-label", option.label);
-      item.append(trimTypeIcon(iconType(option.id), colors), text("span", "trim-type-label", option.label));
+      item.append(trimTypeIcon(option.id, colors), text("span", "trim-type-label", option.label));
       item.addEventListener("click", () => {
         if (option.id !== operation.type) operation.onTypeChange(option.id);
       });
@@ -527,24 +360,15 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
   };
 
   const miterModePicker = (operation) => {
-    const group = document.createElement("div");
-    group.className = "trim-member-end-toggle";
-    group.setAttribute("role", "radiogroup");
-    group.setAttribute("aria-label", `${operation.id} miter mode`);
-    for (const option of operation.miterModeOptions) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "trim-end-option";
-      item.dataset.selected = option.id === operation.miterMode ? "true" : "false";
-      item.setAttribute("role", "radio");
-      item.setAttribute("aria-checked", option.id === operation.miterMode ? "true" : "false");
-      item.textContent = option.label;
-      item.addEventListener("click", () => {
-        if (option.id !== operation.miterMode) operation.onMiterModeChange(option.id);
-      });
-      group.append(item);
-    }
-    return group;
+    return trimOptionGroup({
+      options: operation.miterModeOptions,
+      value: operation.miterMode,
+      ariaLabel: `${operation.id} miter mode`,
+      role: "radiogroup",
+      itemRole: "radio",
+      ariaSelected: "aria-checked",
+      onChange: operation.onMiterModeChange
+    });
   };
 
   const planeLabel = (referencePlaneId) => api.project().model.referencePlanes?.[referencePlaneId]?.name || referencePlaneId;
@@ -601,8 +425,8 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     const header = document.createElement("div");
     header.className = "trim-cut-header";
     header.append(
-      text("div", "editor-section-title", `Cut ${operation.cutNumber || index + 1}: ${operationLabel(operation.type)}`),
-      compactCheckboxInput(operation.enabled !== false, `${operation.id} enabled`, operation.onEnabledChange)
+      text("div", "editor-section-title", `Cut ${operation.cutNumber || index + 1}: ${trimOperationLabel(operation.type)}`),
+      checkboxControl(`${operation.id} enabled`, operation.enabled !== false, operation.onEnabledChange)
     );
     if (operation.onSwap) header.append(button("Swap", "editor-button", operation.onSwap));
     if (operation.onRemove) header.append(button("Remove", "editor-button danger", operation.onRemove));
@@ -614,44 +438,39 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       rows.push(planeTrimPlanesRow(operation), planeTrimRegionsRow(operation));
     }
     if (operation.showGap) {
-      rows.push(field("Gap", compactNumericInput(Number.isFinite(operation.gap) ? operation.gap : 0, `${operation.id} gap`, operation.onGapChange)));
+      rows.push(field("Gap", numericControl(`${operation.id} gap`, finiteNumberOr(operation.gap, 0), operation.onGapChange)));
     }
     if (operation.miterModeOptions) rows.push(field("Miter", miterModePicker(operation)));
-    rows.push(...(operation.extraRows || []));
+    rows.push(...arrayValues(operation.extraRows));
     card.append(header, ...rows);
     return card;
   };
 
+  const operationMemberRoleModel = (operation, type, role, label, messageLabel = label) => ({
+    label,
+    id: operation[`${role}Id`],
+    showEnd: trimOperationUsesMemberEnd(type, role),
+    end: operation[`${role}End`] || "end",
+    onEndChange: (end, optionLabel) => updateOperation(operation.id, { [`${role}End`]: end }, `${messageLabel} ${optionLabel.toLowerCase()} end selected.`),
+    onPick: () => pickOperationMember(operation, role)
+  });
+
   const trimJointOperationModel = (operation, index) => {
-    const type = operationType(operation);
-    const usesMemberB = operationUsesMemberB(type);
+    const type = operation.type || "end-butt-1";
+    const usesMemberB = trimOperationUsesMemberB(type);
     return {
       id: operation.id,
       cutNumber: index + 1,
       type,
       typeOptions: TRIM_OPERATION_TYPES,
       enabled: operation.enabled !== false,
-      memberA: {
-        label: type === "plane-trim" ? "Cut member" : "Member A",
-        id: operation.memberAId,
-        showEnd: operationUsesMemberEnd(type, "memberA"),
-        end: operation.memberAEnd || "end",
-        onEndChange: (end, label) => updateOperation(operation.id, { memberAEnd: end }, `Member A ${label.toLowerCase()} end selected.`),
-        onPick: () => pickOperationMember(operation, "memberA")
-      },
-      memberB: usesMemberB ? {
-        label: "Member B",
-        id: operation.memberBId,
-        showEnd: operationUsesMemberEnd(type, "memberB"),
-        end: operation.memberBEnd || "end",
-        onEndChange: (end, label) => updateOperation(operation.id, { memberBEnd: end }, `Member B ${label.toLowerCase()} end selected.`),
-        onPick: () => pickOperationMember(operation, "memberB")
-      } : null,
+      memberA: operationMemberRoleModel(operation, type, "memberA", type === "plane-trim" ? "Cut member" : "Member A", "Member A"),
+      memberB: usesMemberB ? operationMemberRoleModel(operation, type, "memberB", "Member B") : null,
       referencePlane: type === "plane-trim",
-      referencePlaneIds: planeIds(operation),
-      removedRegionKeys: operation.removedRegionKeys || [],
-      regionKeys: type === "plane-trim" ? regionKeysForPlaneIds(planeIds(operation)) : [],
-      showGap: operationSupportsGap(type),
+      referencePlaneIds: trimOperationReferencePlaneIds(operation),
+      removedRegionKeys: arrayValues(operation.removedRegionKeys),
+      regionKeys: type === "plane-trim" ? planeTrimRegionKeys(uniqueTruthy(trimOperationReferencePlaneIds(operation))) : [],
+      showGap: trimOperationSupportsGap(type),
       gap: operation.gap,
       miterModeOptions: type === "end-miter" ? MITER_MODE_OPTIONS : null,
       miterMode: operation.miterMode || "equal-angle",
@@ -712,7 +531,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
   };
 
   const trimJointEditorModel = (trimJoint) => {
-    const sourceOperations = trimJoint.operations || [];
+    const sourceOperations = trimJointOperations(trimJoint);
     const activeIndex = activeOperationId ? sourceOperations.findIndex((operation) => operation.id === activeOperationId) : -1;
     if (activeOperationId && activeIndex < 0) activeOperationId = null;
     const visibleOperations = activeOperationId ? [sourceOperations[activeIndex]] : sourceOperations;
@@ -721,7 +540,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       operations: visibleOperations.map((operation) => trimJointOperationModel(operation, sourceOperations.indexOf(operation))),
       totalOperations: sourceOperations.length,
       activeCutNumber: activeOperationId ? activeIndex + 1 : null,
-      participants: (trimJoint.participants || []).map((participant) => ({ ...participant, canRemove: true })),
+      participants: trimJointParticipants(trimJoint).map((participant) => ({ ...participant, canRemove: true })),
       canAddOperations: true,
       canAddParticipants: true
     };
@@ -744,8 +563,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     activeOperationId = null;
     activeRegionKey = null;
     activeMemberId = null;
-    messageText = "";
-    messageState = "";
+    panelMessage.clear({ render: false });
     render();
     if (hadFocus) notifyFocusChange();
   }
@@ -754,24 +572,11 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     const trimJoint = selectedTrimJoint();
     const model = trimJoint ? trimJointEditorModel(trimJoint) : null;
     if (!model) {
-      panel.hidden = true;
-      panel.replaceChildren();
+      hidePanel(panel);
       return;
     }
 
-    const header = document.createElement("div");
-    header.className = "feature-editor-header";
-    header.append(text("div", "editor-title", "Trim Editor"), button("Close", "editor-button", () => clear()));
-
-    const body = document.createElement("section");
-    body.className = "editor-section";
-    body.append(...editorRows(model));
-
-    const message = text("div", "editor-message", messageText);
-    message.dataset.state = messageState;
-
-    panel.hidden = false;
-    panel.replaceChildren(header, body, message);
+    renderEditorPanel(panel, "Trim Editor", clear, editorRows(model), panelMessage.element());
   }
 
   api.subscribe(() => {
@@ -788,12 +593,11 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
         return;
       }
       selectedTrimJointId = trimJointId;
-      activeOperationId = (trimJoint.operations || []).some((operation) => operation.id === options.operationId) ? options.operationId : null;
+      activeOperationId = trimOperationById(trimJoint, options.operationId) ? options.operationId : null;
       activeRegionKey = activeOperationId && typeof options.regionKey === "string" ? options.regionKey : null;
       activeMemberId = null;
       const operation = activeOperation();
-      messageText = activeRegionKey ? `Selected region ${activeRegionKey}.` : operation ? `Selected ${operationLabel(operation.type)}.` : "";
-      messageState = operation ? "ok" : "";
+      panelMessage.set(activeRegionKey ? `Selected region ${activeRegionKey}.` : operation ? `Selected ${trimOperationLabel(operation.type)}.` : "", operation ? "ok" : "", { render: false });
       selection.select(trimObjectIds());
       render();
       notifyFocusChange();
@@ -804,7 +608,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       let regionKeyValue = null;
       if (face?.collection === "trimJoints" && face.componentKind === "trim-region" && face.objectId && face.operationId && face.regionKey) {
         trimJoint = api.project().model.trimJoints?.[face.objectId] || null;
-        operation = (trimJoint?.operations || []).find((item) => item.id === face.operationId) || null;
+        operation = trimOperationById(trimJoint, face.operationId);
         regionKeyValue = face.regionKey;
       } else if (face?.collection === "members" && selectedTrimJointId && Array.isArray(face.hitPoint)) {
         trimJoint = selectedTrimJoint();
@@ -812,7 +616,7 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
         regionKeyValue = operation ? regionKeyForPoint(operation, face.hitPoint) : null;
       }
       if (!operation || operation.type !== "plane-trim") return false;
-      const validRegions = regionKeysForPlaneIds(planeIds(operation));
+      const validRegions = planeTrimRegionKeys(uniqueTruthy(trimOperationReferencePlaneIds(operation)));
       if (!regionKeyValue || !validRegions.includes(regionKeyValue)) return false;
       selectedTrimJointId = trimJoint.id;
       activeOperationId = operation.id;

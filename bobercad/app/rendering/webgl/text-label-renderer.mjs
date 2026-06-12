@@ -1,37 +1,11 @@
-import { v } from "../../engine/core/math.mjs";
+import { clamp } from "../../engine/core/math.mjs?v=render-clamp-dry-1";
+import { arrayValues } from "../../engine/core/model.mjs?v=webgl-array-values-dry-1";
+import { labelRotation } from "./label-rotation.mjs?v=label-rotation-dry-1";
 
 const MAX_ATLAS_WIDTH = 2048;
 
-function hexToRgb(hex, fallback = [51, 65, 85]) {
-  if (typeof hex !== "string" || !hex.startsWith("#")) return fallback;
-  const value = hex.replace("#", "");
-  if (value.length !== 6) return fallback;
-  return [
-    parseInt(value.slice(0, 2), 16),
-    parseInt(value.slice(2, 4), 16),
-    parseInt(value.slice(4, 6), 16)
-  ];
-}
-
 function labelText(label) {
   return String(label.displayText || label.text || "");
-}
-
-function labelRotation(label, projectPoint) {
-  const axis = Array.isArray(label.labelLine) && label.labelLine.length === 2
-    ? v.sub(label.labelLine[1], label.labelLine[0])
-    : label.labelAxis;
-  if (!Array.isArray(axis)) return 0;
-  const a = projectPoint(label.point);
-  const b = projectPoint(v.add(label.point, axis));
-  if (!a || !b) return 0;
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  if (Math.hypot(dx, dy) < 1) return 0;
-  let angle = Math.atan2(dy, dx);
-  if (angle > Math.PI / 2) angle -= Math.PI;
-  if (angle < -Math.PI / 2) angle += Math.PI;
-  return angle;
 }
 
 function textSettings(settings, label, scale, hovered) {
@@ -115,7 +89,7 @@ export function createTextLabelRenderer(gl, canvas, settings) {
   };
 
   function createAtlas(records) {
-    const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const scale = clamp(window.devicePixelRatio || 1, 1, 2);
     const measure = document.createElement("canvas").getContext("2d");
     const items = records.map((record, index) => {
       const textureFontPx = Math.max(1, record.fontPx * scale);
@@ -228,7 +202,7 @@ export function createTextLabelRenderer(gl, canvas, settings) {
   function draw({ labels, projectPoint, screenScale, isHovered, hideBehindGeometry }) {
     state.hitboxes = [];
     const scale = screenScale();
-    const records = (labels || [])
+    const records = arrayValues(labels)
       .filter((label) => shouldDrawLabel(settings, label, scale, isHovered(label)))
       .map((label) => {
         const font = textSettings(settings, label, scale, isHovered(label));

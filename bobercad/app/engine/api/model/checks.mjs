@@ -1,3 +1,6 @@
+import { finitePositiveNumber } from "../../core/math.mjs?v=positive-number-dry-1";
+import { uniqueTruthy } from "../../core/model.mjs?v=unique-truthy-dry-1";
+
 function gridEnvelope(pattern) {
   return {
     radius: pattern.holeDiameter / 2,
@@ -7,14 +10,14 @@ function gridEnvelope(pattern) {
 }
 
 function positiveHint(hint) {
-  return hint?.path && typeof hint.value === "number" && Number.isFinite(hint.value) && hint.value > 0 ? hint : null;
+  return hint?.path && finitePositiveNumber(hint.value) ? hint : null;
 }
 
 function gridPlateResolve(diagnostic, envelope) {
-  return [
+  return uniqueTruthy([
     positiveHint({ path: diagnostic.widthParameter, mode: "min", value: 2 * (envelope.maxY + envelope.radius) + 1 }),
     positiveHint({ path: diagnostic.heightParameter, mode: "min", value: 2 * (envelope.maxZ + envelope.radius) + 1 })
-  ].filter(Boolean);
+  ]);
 }
 
 function report(ctx, diagnostic) {
@@ -35,8 +38,9 @@ export function createCheckApi(ctx) {
       const diagnostic = maybeDiagnostic || heightOrDiagnostic;
       const envelope = gridEnvelope(pattern);
       const { radius, maxY, maxZ } = envelope;
-      if (typeof plateOrWidth === "object" && Array.isArray(plateOrWidth.outline)) {
-        const outsideOutline = pattern.positions.some((point) => !ctx.geometry.circleFitsPolygon(point, radius, plateOrWidth.outline));
+      if (typeof plateOrWidth === "object") {
+        const outline = ctx.geometry.plateOutline(plateOrWidth);
+        const outsideOutline = pattern.positions.some((point) => !ctx.geometry.circleFitsPolygon(point, radius, outline));
         if (outsideOutline) report(ctx, { ...diagnostic, resolve: diagnostic.resolve || gridPlateResolve(diagnostic, envelope) });
         return;
       }
@@ -95,7 +99,7 @@ export function createCheckApi(ctx) {
       });
       const outsideHeight = ctx.geometry.finitePositive(allowedHeight) && pattern.positions.some((point) => Math.abs(point[1]) + radius >= allowedHeight / 2);
       if (outsideLength || outsideHeight) {
-        const resolve = [
+        const resolve = uniqueTruthy([
           outsideLength && positiveHint({
             path: options.centerParameter,
             mode: "max",
@@ -106,7 +110,7 @@ export function createCheckApi(ctx) {
             mode: "max",
             value: options.pitchDivisions > 0 ? (allowedHeight - 2 * radius - 1) / options.pitchDivisions : null
           })
-        ].filter(Boolean);
+        ]);
         report(ctx, { ...options, resolve: options.resolve || resolve });
       }
     },

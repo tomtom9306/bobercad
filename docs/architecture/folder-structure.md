@@ -56,25 +56,21 @@ bobercad
     |   |   |-- profile-library.schema.json
     |   |   |-- fastener-library.schema.json
     |   |   |-- model-library.schema.json
-    |   |   |-- connection.schema.json
-    |   |   |-- connection-register.schema.json
-    |   |   |-- connection-component.schema.json
-    |   |   `-- connection-component-register.schema.json
+    |   |   |-- smart-component.schema.json
+    |   |   `-- smart-component-register.schema.json
     |   |
     |   |-- engine
     |   |   |-- api
     |   |   |   |-- api-register.json
     |   |   |   |
     |   |   |   |-- project
-    |   |   |   |   |-- project-api.mjs
     |   |   |   |   |-- members.mjs
     |   |   |   |   |-- objects.mjs
-    |   |   |   |   `-- snapping.mjs
+    |   |   |   |   |-- plates.mjs
+    |   |   |   |   `-- snap-solver.mjs
     |   |   |   |
     |   |   |   |-- geometry
-    |   |   |   |   |-- geometry-api.mjs
-    |   |   |   |   |-- vectors.mjs
-    |   |   |   |   `-- planes.mjs
+    |   |   |   |   `-- paths.mjs
     |   |   |   |
     |   |   |   `-- connections
     |   |   |       |-- connection-api.mjs
@@ -96,32 +92,27 @@ bobercad
     |   |   |   `-- project-store.mjs
     |   |   |
     |   |   `-- modules
-    |   |       |-- connections
-    |   |       |   |-- connection-registry.mjs
-    |   |       |   |-- component-registry.mjs
-    |   |       |   |-- component-config-groups.mjs
-    |   |       |   |-- connection-generator.mjs
-    |   |       |   |-- connection-recipe.mjs
-    |   |       |   |-- connection-schema.mjs
-    |   |       |   `-- README.md
-    |   |       |
-    |   |       |-- drawings
-    |   |       |   `-- drawing-generator.mjs
-    |   |       |
-    |   |       `-- reports
-    |   |           `-- report-generator.mjs
+    |   |       `-- smart-components
+    |   |           |-- parameters.mjs
+    |   |           |-- smart-component-generator.mjs
+    |   |           |-- smart-component-recipe.mjs
+    |   |           `-- smart-component-registry.mjs
     |   |
     |   |-- rendering
     |   |   |-- annotations
     |   |   |   `-- README.md
     |   |   |
     |   |   |-- scene
-    |   |   |   |-- build-authoring-overlays.mjs
-    |   |   |   `-- build-scene.mjs
+    |   |   |   |-- build-scene.mjs
+    |   |   |   `-- plate-bend-geometry.mjs
     |   |   |
     |   |   |-- interaction
     |   |   |   |-- member-edit-controller.mjs
-    |   |   |   `-- selection-controller.mjs
+    |   |   |   |-- selection-controller.mjs
+    |   |   |   |-- snap-manager.mjs
+    |   |   |   |-- snap-profiles.mjs
+    |   |   |   |-- snap-providers.mjs
+    |   |   |   `-- snap-selection-manager.mjs
     |   |   |
     |   |   `-- webgl
     |   |       |-- camera.mjs
@@ -134,28 +125,8 @@ bobercad
     |           |-- style.css
     |           |-- viewer-settings.json
     |           |-- main.mjs
-    |           |
-    |           |-- workbench
-    |           |   |-- workbench.mjs
-    |           |   |-- layout-store.mjs
-    |           |   `-- command-registry.mjs
-    |           |
-    |           |-- navigation
-    |           |   |-- navigation-ui.mjs
-    |           |   `-- toolbar-ui.mjs
-    |           |
     |           |-- panels
-    |           |   |-- panel-host.mjs
-    |           |   |-- panel-registry.mjs
-    |           |   |-- property-panel.mjs
-    |           |   `-- viewport-panel.mjs
-    |           |
-    |           |-- controls
-    |           |   |-- form-controls.mjs
-    |           |   `-- menu-controls.mjs
-    |           |
-    |           `-- themes
-    |               `-- theme.mjs
+    |           |   `-- property-panel.mjs
     |
     `-- data
         |-- libraries
@@ -248,19 +219,17 @@ bobercad/bobercad/app/engine/api         one public API root, grouped by topic
 bobercad/bobercad/app/engine/store       runtime app state and mutations
 bobercad/bobercad/app/engine/modules     engine feature implementations
 bobercad/bobercad/app/rendering          visual scene and WebGL rendering
-bobercad/bobercad/app/ui/viewer          browser workbench: panels, navigation, layout
+bobercad/bobercad/app/ui/viewer          browser viewer entry, toolbar, panels, dimensions
 ```
 
-The app should be grouped by responsibility. `engine` should be usable without the browser UI. `rendering` should turn engine data into visual output. `ui` should be buttons, navigation, layouts, panels, and workbench customization; it should call the engine and rendering layers rather than owning project rules, generation logic, or WebGL internals. Saved project files live in `data/projects`; runtime project state lives in `engine/store`.
+The app should be grouped by responsibility. `engine` should be usable without the browser UI. `rendering` should turn engine data into visual output. `ui` should be viewer entry wiring, toolbar commands, panels, and dimension editing; it should call the engine and rendering layers rather than owning project rules, generation logic, or WebGL internals. Saved project files live in `data/projects`; runtime project state lives in `engine/store`.
 
 UI rule:
 
 ```text
-ui/workbench   panel layout, docking, commands, workspace state
-ui/navigation  menus, toolbar, tree/sidebar navigation
-ui/panels      generic panel host and reusable panel shells
-ui/controls    reusable inputs, buttons, menus, form controls
-ui/themes      visual styling tokens and theme switching
+ui/toolbar     modeling command controls
+ui/panels      generic project/property panels
+ui/dimensions  dimension edit state and commits
 ```
 
 Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The Smart Component register points to `data/libraries/smart-components/smart-component-library-ui.mjs` for library-level tools. Component-specific fields come from Smart Component config, not custom viewer files.

@@ -1,7 +1,8 @@
 import { v } from "../../../engine/core/math.mjs";
-import { memberFrameAt } from "../../../engine/geometry/member-evaluator.mjs";
+import { memberAxisData } from "../../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
+import { memberFrameAt } from "../../../engine/geometry/member-evaluator.mjs?v=geometry-api-array-values-dry-1";
 
-export const AXIS_IDS = ["x", "y", "z"];
+const AXIS_IDS = ["x", "y", "z"];
 
 const WORLD_AXES = {
   x: [1, 0, 0],
@@ -18,7 +19,7 @@ export function coordinateSpaceLabel(value) {
 }
 
 function stationForTarget(member, target) {
-  const length = v.len(v.sub(member.end, member.start));
+  const length = memberAxisData(member)?.length || 0;
   if (target === "start") return 0;
   if (target === "end") return length;
   return length / 2;

@@ -1,12 +1,15 @@
-import { createSemanticBuilders } from "../../api/model/builders.mjs";
+import { createSemanticBuilders } from "../../api/model/builders.mjs?v=placement-metadata-dry-1";
 import { createCheckApi } from "../../api/model/checks.mjs";
-import { createGeometryApi } from "../../api/model/geometry.mjs";
-import { modelOperationBuilder } from "../../api/model/connection-primitives.mjs";
-import { createMemberObject } from "../../api/project/member-factory.mjs?v=smart-components-1";
-import { v } from "../../core/math.mjs";
-import { objectById } from "../../core/model.mjs";
-import { resolveInterface } from "../../geometry/member-geometry.mjs";
-import { clone, optionalPath, requiredPath, validateSmartComponentParameters } from "./parameters.mjs?v=stair-route-ui-fit-2";
+import { createGeometryApi } from "../../api/model/geometry.mjs?v=plate-placement-vertex-dry-1";
+import { modelOperationBuilder } from "../../api/model/connection-primitives.mjs?v=member-end-point-dry-1";
+import { createMemberObject } from "../../api/project/member-factory.mjs?v=member-snap-ref-defined-object-dry-1";
+import { removeProjectObjects } from "../../api/project/objects.mjs?v=array-values-dry-1";
+import { smartComponentDetachedObjectIds, smartComponentOwnedObjectIds } from "../../api/project/dependencies.mjs?v=array-values-dry-1";
+import { libraryProfileById } from "../../api/project/profiles.mjs?v=profile-lookup-dry-1";
+import { closestAxisSegmentPoints, finiteVec3, v } from "../../core/math.mjs?v=smart-axis-closest-dry-1";
+import { arrayValues, flattenIds, isPlainObject as plainObject, jsonClone as clone, mergeObjectPatch, normalizedIndexList, objectById, truthyValues, uniqueTruthy as unique } from "../../core/model.mjs?v=array-values-dry-1";
+import { resolveInterface } from "../../geometry/member-geometry.mjs?v=geometry-api-array-values-dry-1";
+import { optionalPath, requiredPath, validateSmartComponentParameters } from "./parameters.mjs?v=smart-config-array-values-dry-1";
 
 const MODEL_COLLECTIONS = ["groups", "interfaces", "connectionZones", "assemblies", "members", "plates", "holePatterns", "objectPatterns", "workPoints", "referencePlanes", "features", "trimJoints", "fastenerGroups", "welds", "smartComponentInstances"];
 const AXIS_EPSILON = 1e-9;
@@ -22,24 +25,11 @@ function fail(message) {
   throw new Error(`smart component engine: ${message}`);
 }
 
-function unique(values) {
-  return [...new Set(values.filter(Boolean))];
-}
-
-function plainObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function safeId(value) {
   return String(value).replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "");
 }
 
-function vec3(value, label) {
-  if (!Array.isArray(value) || value.length !== 3 || value.some((item) => typeof item !== "number" || !Number.isFinite(item))) {
-    fail(`${label} must be a finite [x, y, z] point`);
-  }
-  return [...value];
-}
+const vec3 = (value, label) => finiteVec3(value, label, fail);
 
 function nextId(project, base, collections = MODEL_COLLECTIONS) {
   const cleanBase = safeId(base);
@@ -52,23 +42,16 @@ function nextId(project, base, collections = MODEL_COLLECTIONS) {
   return id;
 }
 
-function flattenIds(value) {
-  if (!value) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap(flattenIds);
-  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
-  fail(`unsupported role id value ${value}`);
-}
-
-function setId(list = [], id, included) {
-  return included ? unique([...list, id]) : list.filter((value) => value !== id);
+function setId(list, id, included) {
+  const values = arrayValues(list);
+  return included ? unique([...values, id]) : values.filter((value) => value !== id);
 }
 
 function setAssemblyPlateIncluded(assembly, plateId, included) {
   return {
     ...assembly,
-    partIds: setId(assembly.partIds || [], plateId, included),
-    plateIds: setId(assembly.plateIds || [], plateId, included)
+    partIds: setId(assembly.partIds, plateId, included),
+    plateIds: setId(assembly.plateIds, plateId, included)
   };
 }
 
@@ -83,24 +66,6 @@ function objectIndexFor(model) {
     }
   }
   return objectIndex;
-}
-
-function generatedManualParts(model) {
-  return {
-    plateIds: Object.keys(model.plates || {}),
-    featureIds: Object.keys(model.features || {}),
-    fastenerGroupIds: Object.keys(model.fastenerGroups || {}),
-    weldIds: Object.keys(model.welds || {})
-  };
-}
-
-function mergeManualParts(existing = {}, generated = {}) {
-  return {
-    plateIds: unique([...(generated.plateIds || []), ...(existing.plateIds || [])]),
-    featureIds: unique([...(generated.featureIds || []), ...(existing.featureIds || [])]),
-    fastenerGroupIds: unique([...(generated.fastenerGroupIds || []), ...(existing.fastenerGroupIds || [])]),
-    weldIds: unique([...(generated.weldIds || []), ...(existing.weldIds || [])])
-  };
 }
 
 function projectObject(project, collection, id) {
@@ -169,14 +134,6 @@ function connectionTolerance(project) {
   ) || DEFAULT_CONNECTION_TOLERANCE;
 }
 
-function layoutAxis(member) {
-  const axis = member.layoutAxis || {};
-  return {
-    start: vec3(axis.start || member.start, `${member.id}.layoutAxis.start`),
-    end: vec3(axis.end || member.end, `${member.id}.layoutAxis.end`)
-  };
-}
-
 function memberLine(member) {
   return {
     start: vec3(member.start, `${member.id}.start`),
@@ -191,37 +148,31 @@ function stationOnLine(point, line) {
   return v.dot(v.sub(point, line.start), v.mul(axis, 1 / length));
 }
 
+function lineAxisSegment(line, label) {
+  const axis = v.sub(line.end, line.start);
+  const length = v.len(axis);
+  if (length <= AXIS_EPSILON) fail(`${label}: zero-length layout axis`);
+  return {
+    start: line.start,
+    end: line.end,
+    direction: v.mul(axis, 1 / length),
+    length
+  };
+}
+
 function closestLayoutAxisPoints(main, secondary) {
-  const a = layoutAxis(main);
-  const b = layoutAxis(secondary);
-  const u = v.sub(a.end, a.start);
-  const w = v.sub(b.end, b.start);
-  const aLength = v.len(u);
-  const bLength = v.len(w);
-  if (aLength <= AXIS_EPSILON) fail(`${main.id}: zero-length layout axis`);
-  if (bLength <= AXIS_EPSILON) fail(`${secondary.id}: zero-length layout axis`);
-
-  const d1 = v.mul(u, 1 / aLength);
-  const d2 = v.mul(w, 1 / bLength);
-  const r = v.sub(a.start, b.start);
-  const dot = v.dot(d1, d2);
-  const denom = 1 - dot * dot;
-  let stationA;
-  let stationB;
-
-  if (Math.abs(denom) <= AXIS_EPSILON) {
-    stationA = stationOnLine(b.start, a);
-    stationB = 0;
-  } else {
-    stationA = (dot * v.dot(d2, r) - v.dot(d1, r)) / denom;
-    stationB = (v.dot(d2, r) - dot * v.dot(d1, r)) / denom;
-  }
-
-  stationA = Math.min(aLength, Math.max(0, stationA));
-  stationB = Math.min(bLength, Math.max(0, stationB));
-  const pointA = v.add(a.start, v.mul(d1, stationA));
-  const pointB = v.add(b.start, v.mul(d2, stationB));
-  return { pointA, pointB, stationA, stationB, lengthA: aLength, lengthB: bLength };
+  const a = lineAxisSegment(memberLine({ ...main, start: main.layoutAxis?.start || main.start, end: main.layoutAxis?.end || main.end }), main.id);
+  const b = lineAxisSegment(memberLine({ ...secondary, start: secondary.layoutAxis?.start || secondary.start, end: secondary.layoutAxis?.end || secondary.end }), secondary.id);
+  const closest = closestAxisSegmentPoints(a, b, AXIS_EPSILON);
+  if (!closest) fail("could not resolve closest layout axis points");
+  return {
+    pointA: closest.pointA,
+    pointB: closest.pointB,
+    stationA: stationOnLine(closest.pointA, a),
+    stationB: stationOnLine(closest.pointB, b),
+    lengthA: a.length,
+    lengthB: b.length
+  };
 }
 
 function memberEndAtStation(station, length, tolerance) {
@@ -268,22 +219,19 @@ function autoConnectionRoles(project, memberIds) {
   fail(`selected member layout axes intersect away from a member end: ${memberIds.join(", ")}`);
 }
 
-function collectionForObject(project, objectId) {
+function indexedCollectionForObject(project, objectId) {
   const indexed = project.objectIndex?.[objectId]?.collection;
-  if (indexed && project.model[indexed]?.[objectId]) return indexed;
-  for (const collection of MODEL_COLLECTIONS) {
-    if (project.model[collection]?.[objectId]) return collection;
-  }
-  fail(`object not found: ${objectId}`);
+  return indexed && project.model[indexed]?.[objectId] ? indexed : null;
 }
 
 function optionalCollectionForObject(project, objectId) {
-  const indexed = project.objectIndex?.[objectId]?.collection;
-  if (indexed && project.model[indexed]?.[objectId]) return indexed;
-  for (const collection of MODEL_COLLECTIONS) {
-    if (project.model[collection]?.[objectId]) return collection;
-  }
-  return null;
+  return indexedCollectionForObject(project, objectId) || collectionObjectById(project.model, objectId)?.collection || null;
+}
+
+function collectionForObject(project, objectId) {
+  const collection = optionalCollectionForObject(project, objectId);
+  if (collection) return collection;
+  fail(`object not found: ${objectId}`);
 }
 
 function hasDiagnosticErrors(diagnostics) {
@@ -295,7 +243,7 @@ function prefixedChildDiagnostics(ctx) {
   const childIds = unique(Object.values(parentPatch?.childComponentRoles || {}));
   return childIds.flatMap((childId) => {
     const child = ctx.model.smartComponentInstances?.[childId];
-    return (child?.diagnostics || []).map((diagnostic) => ({
+    return arrayValues(child?.diagnostics).map((diagnostic) => ({
       ...clone(diagnostic),
       source: {
         ...(diagnostic.source || {}),
@@ -315,14 +263,6 @@ function addDiagnosticDisplay(model, objectIds, diagnostics) {
       if (object) object.display = { ...(object.display || {}), ...DIAGNOSTIC_DISPLAY };
     }
   }
-}
-
-function normalizedIndexList(values) {
-  if (!Array.isArray(values)) return [];
-  return [...new Set(values
-    .filter((value) => Number.isInteger(value) && value >= 0)
-    .map((value) => Number(value)))]
-    .sort((a, b) => a - b);
 }
 
 function collectionObjectById(model, id) {
@@ -345,19 +285,19 @@ function suppressObject(object) {
 function suppressHolePatternPositions(model, patternId, indices) {
   const pattern = typeof patternId === "string" ? model.holePatterns?.[patternId] : null;
   if (!pattern) return;
-  const existing = pattern.suppressedPositionIndices || [];
-  pattern.suppressedPositionIndices = normalizedIndexList([...existing, ...indices]).filter((index) => index < (pattern.positions || []).length);
+  const existing = arrayValues(pattern.suppressedPositionIndices);
+  pattern.suppressedPositionIndices = normalizedIndexList([...existing, ...indices]).filter((index) => index < arrayValues(pattern.positions).length);
 }
 
 function suppressFastenerHoles(model, fastenerGroup) {
   const pattern = fastenerGroup?.holePatternRef ? model.holePatterns?.[fastenerGroup.holePatternRef] : null;
   if (!pattern) return;
-  suppressHolePatternPositions(model, pattern.id, (pattern.positions || []).map((_, index) => index));
+  suppressHolePatternPositions(model, pattern.id, arrayValues(pattern.positions).map((_, index) => index));
 }
 
 function suppressParticipantWelds(model, objectIds) {
   for (const weld of Object.values(model.welds || {})) {
-    if ((weld.participants || []).some((id) => objectIds.has(id))) suppressObject(weld);
+    if (arrayValues(weld.participants).some((id) => objectIds.has(id))) suppressObject(weld);
   }
 }
 
@@ -369,7 +309,7 @@ function applyComponentOverrides(model, roles, overrides = {}) {
   }
 
   const objectRoles = new Set([
-    ...(overrides.suppressedRoles || []).filter((role) => typeof role === "string")
+    ...arrayValues(overrides.suppressedRoles).filter((role) => typeof role === "string")
   ]);
   const suppressedObjectIds = new Set();
   for (const role of objectRoles) {
@@ -383,16 +323,6 @@ function applyComponentOverrides(model, roles, overrides = {}) {
     }
   }
   suppressParticipantWelds(model, suppressedObjectIds);
-}
-
-function mergeObjectPatch(target, patch) {
-  if (!plainObject(patch)) return clone(patch);
-  const next = plainObject(target) ? { ...target } : {};
-  for (const [key, value] of Object.entries(patch)) {
-    if (key === "id" || key === "type") continue;
-    next[key] = plainObject(value) && plainObject(next[key]) ? mergeObjectPatch(next[key], value) : clone(value);
-  }
-  return next;
 }
 
 function setNestedOutput(target, path, value) {
@@ -427,7 +357,7 @@ function applyFieldOverrides(model, fieldOverrides = {}) {
     const entry = collectionObjectById(model, objectId);
     if (!entry || !plainObject(patch)) continue;
     const authoring = entry.object.authoring;
-    const next = mergeObjectPatch(entry.object, patch);
+    const next = mergeObjectPatch(entry.object, patch, { skipKeys: ["id", "type"] });
     entry.object = {
       ...next,
       id: entry.object.id,
@@ -452,8 +382,8 @@ function fieldOverrideDiagnostics(model, fieldOverrides = {}) {
       severity: "warning",
       code: "component-driven-fastener-overridden",
       message: `${objectId}: direct fastener override masks component-driven values.`,
-      objectRoles: [entry.object.authoring?.componentRole].filter(Boolean),
-      parameterPaths: Object.values(controls.parameterPaths || controls.valueBindings || {}).filter(Boolean),
+      objectRoles: truthyValues([entry.object.authoring?.componentRole]),
+      parameterPaths: truthyValues(Object.values(controls.parameterPaths || controls.valueBindings || {})),
       resolve: "Reset the direct fastener override or edit the parent component parameter that drives this fastener value.",
       measured: clone(patch)
     }];
@@ -461,12 +391,10 @@ function fieldOverrideDiagnostics(model, fieldOverrides = {}) {
 }
 
 function defaultGhostComponentRoles(definition) {
-  return (definition.components || [])
+  return arrayValues(definition.components)
     .filter((component) => component?.role && component.default === "ghost")
     .map((component) => component.role);
 }
-
-export { clone };
 
 export function smartComponentById(project, instanceId) {
   const instance = project.model.smartComponentInstances?.[instanceId];
@@ -494,16 +422,9 @@ function instanceAssemblyId(instance) {
   return instance.inputs?.assemblyId || instance.assemblyId;
 }
 
-export function smartComponentDetachedObjectIds(instance) {
-  const ids = instance.detachedObjectIds;
-  if (ids === undefined) return [];
-  if (!Array.isArray(ids)) fail(`${instance.id}: detachedObjectIds must be an array`);
-  return ids;
-}
-
 function matchingConnectionZones(project, memberIds) {
   return Object.values(project.model.connectionZones || {}).flatMap((zone) => {
-    const secondaryIds = zone.secondaryObjectIds || [];
+    const secondaryIds = arrayValues(zone.secondaryObjectIds);
     if (zone.mainObjectId === memberIds[0] && secondaryIds.includes(memberIds[1])) {
       return [{ zone, mainMemberId: memberIds[0], secondaryMemberId: memberIds[1] }];
     }
@@ -634,7 +555,7 @@ function markAutoConnectionObjects(project, auto, instanceId) {
 }
 
 function zoneAssemblyId(project, zone) {
-  const matches = Object.values(project.model.assemblies || {}).filter((assembly) => (assembly.connectionZoneIds || []).includes(zone.id));
+  const matches = Object.values(project.model.assemblies || {}).filter((assembly) => arrayValues(assembly.connectionZoneIds).includes(zone.id));
   if (matches.length > 1) fail(`${zone.id}: multiple assemblies reference the connection zone`);
   if (matches.length === 1) return matches[0].id;
   fail(`${zone.id}: no assembly references the connection zone`);
@@ -652,42 +573,83 @@ function nextSmartComponentId(project, zone, preset) {
   return id;
 }
 
+function smartComponentSourceComponent(preset, version = preset.version) {
+  return { library: "smart-components", id: preset.id, version };
+}
+
+function addSmartComponentInstance(project, instanceId, preset, instance) {
+  project.model.smartComponentInstances ||= {};
+  project.model.smartComponentInstances[instanceId] = instance;
+  project.objectIndex ||= {};
+  project.objectIndex[instanceId] = { collection: "smartComponentInstances", type: preset.type };
+  return instance;
+}
+
+function smartComponentInstanceRecord({
+  id,
+  type,
+  kind,
+  sourceComponent,
+  inputs,
+  parameters,
+  parentInstanceId = null,
+  parentRole = null,
+  objectRoles = {},
+  ownedObjectIds = [],
+  managedFields = {},
+  fieldOverrides = {},
+  detachedObjectIds = [],
+  suppressedRoles = []
+}) {
+  return {
+    id,
+    type,
+    kind,
+    sourceComponent,
+    inputs,
+    referenceParameters: clone(parameters || {}),
+    parameters: clone(parameters || {}),
+    parentInstanceId,
+    parentRole,
+    childComponentRoles: {},
+    objectRoles,
+    outputs: {},
+    ownedObjectIds,
+    managedFields,
+    fieldOverrides,
+    detachedObjectIds,
+    suppressedRoles,
+    status: "generated",
+    health: "ok",
+    diagnostics: []
+  };
+}
+
 export function createProjectSmartComponentFromPreset(project, catalog, presetId, memberIds = [], options = {}) {
   const preset = smartComponentPresetById(catalog, presetId, "new smart component");
   const initialSuppressedRoles = options.definition ? defaultGhostComponentRoles(options.definition) : [];
   if (preset.kind !== "connection") {
     const next = clone(project);
     const instanceId = nextId(next, `sc_${safeId(preset.type)}`);
-    next.model.smartComponentInstances ||= {};
-    next.model.smartComponentInstances[instanceId] = {
-      id: instanceId,
-      type: preset.type,
-      kind: preset.kind,
-      sourceComponent: { library: "smart-components", id: preset.id, version: preset.version },
-      inputs: clone(options.inputs || preset.inputs || {}),
-      referenceParameters: clone(preset.parameters || {}),
-      parameters: clone(preset.parameters || {}),
-      parentInstanceId: options.parentInstanceId || null,
-      parentRole: options.parentRole || null,
-      childComponentRoles: {},
-      objectRoles: {},
-      outputs: {},
-      ownedObjectIds: [],
-      managedFields: {},
-      fieldOverrides: {},
-      detachedObjectIds: [],
-      suppressedRoles: initialSuppressedRoles,
-      status: "generated",
-      health: "ok",
-      diagnostics: [],
+    const sourceComponent = smartComponentSourceComponent(preset);
+    addSmartComponentInstance(next, instanceId, preset, {
+      ...smartComponentInstanceRecord({
+        id: instanceId,
+        type: preset.type,
+        kind: preset.kind,
+        sourceComponent,
+        inputs: clone(options.inputs || preset.inputs || {}),
+        parameters: preset.parameters || {},
+        parentInstanceId: options.parentInstanceId || null,
+        parentRole: options.parentRole || null,
+        suppressedRoles: initialSuppressedRoles
+      }),
       authoring: {
         source: "smart-component-library",
-        sourceComponent: { library: "smart-components", id: preset.id, version: preset.version }
+        sourceComponent
       },
       bim: { name: preset.name || preset.type }
-    };
-    next.objectIndex ||= {};
-    next.objectIndex[instanceId] = { collection: "smartComponentInstances", type: preset.type };
+    });
     return { project: next, smartComponentId: instanceId, instanceId };
   }
 
@@ -704,40 +666,30 @@ export function createProjectSmartComponentFromPreset(project, catalog, presetId
     mainMemberId: auto.roles.mainMember.id,
     secondaryMemberId: auto.roles.secondaryMember.id
   };
-  if ((zone.smartComponentInstanceIds || []).length) fail(`${zone.id}: smart component already exists`);
+  if (arrayValues(zone.smartComponentInstanceIds).length) fail(`${zone.id}: smart component already exists`);
 
   const next = clone(project);
   if (auto) addAutoConnectionObjects(next, auto);
   const instanceId = nextSmartComponentId(next, zone, preset);
-  const sourceComponent = { library: "smart-components", id: preset.id, version: preset.version };
-  next.model.smartComponentInstances ||= {};
-  next.model.smartComponentInstances[instanceId] = {
-    id: instanceId,
-    type: preset.type,
-    kind: "connection",
-    sourceComponent,
+  const sourceComponent = smartComponentSourceComponent(preset);
+  addSmartComponentInstance(next, instanceId, preset, {
+    ...smartComponentInstanceRecord({
+      id: instanceId,
+      type: preset.type,
+      kind: "connection",
+      sourceComponent,
       inputs: {
         ...(preset.inputs || {}),
         main: { memberId: mainMemberId },
-      secondary: { memberId: secondaryMemberId },
-      connectionZoneId: zone.id,
-      assemblyId: zoneAssemblyId(next, zone)
-    },
-    referenceParameters: clone(preset.parameters),
-    parameters: clone(preset.parameters),
-    parentInstanceId: options.parentInstanceId || null,
-    parentRole: options.parentRole || null,
-    childComponentRoles: {},
-    objectRoles: {},
-    outputs: {},
-    ownedObjectIds: [],
-    managedFields: {},
-    fieldOverrides: {},
-    detachedObjectIds: [],
-    suppressedRoles: initialSuppressedRoles,
-    status: "generated",
-    health: "ok",
-    diagnostics: [],
+        secondary: { memberId: secondaryMemberId },
+        connectionZoneId: zone.id,
+        assemblyId: zoneAssemblyId(next, zone)
+      },
+      parameters: preset.parameters,
+      parentInstanceId: options.parentInstanceId || null,
+      parentRole: options.parentRole || null,
+      suppressedRoles: initialSuppressedRoles
+    }),
     authoring: {
       source: "smart-component-library",
       sourceComponent,
@@ -748,17 +700,16 @@ export function createProjectSmartComponentFromPreset(project, catalog, presetId
     bim: {
       name: preset.name
     }
-  };
+  });
 
   if (auto) markAutoConnectionObjects(next, auto, instanceId);
-  next.objectIndex[instanceId] = { collection: "smartComponentInstances", type: preset.type };
   next.model.connectionZones[zone.id] = {
     ...next.model.connectionZones[zone.id],
-    smartComponentInstanceIds: unique([...(next.model.connectionZones[zone.id].smartComponentInstanceIds || []), instanceId])
+    smartComponentInstanceIds: unique([...arrayValues(next.model.connectionZones[zone.id].smartComponentInstanceIds), instanceId])
   };
 
   const assembly = next.model.assemblies[next.model.smartComponentInstances[instanceId].inputs.assemblyId];
-  assembly.smartComponentInstanceIds = unique([...(assembly.smartComponentInstanceIds || []), instanceId]);
+  assembly.smartComponentInstanceIds = unique([...arrayValues(assembly.smartComponentInstanceIds), instanceId]);
   return { project: next, smartComponentId: instanceId, instanceId };
 }
 
@@ -902,26 +853,22 @@ class SmartComponentBuildContext {
       : clone(config.inputs || {});
     this.roles[role] = childId;
     this.model.smartComponentInstances[childId] = {
-      id: childId,
-      type: preset.type,
-      kind,
-      sourceComponent: { library: "smart-components", id: preset.id, version: config.version || preset.version },
-      inputs,
-      referenceParameters: clone(config.parameters || {}),
-      parameters: clone(config.parameters || {}),
-      parentInstanceId: this.instanceId,
-      parentRole: role,
-      childComponentRoles: {},
-      objectRoles: sameComponent ? clone(previous.objectRoles || {}) : {},
-      outputs: {},
-      ownedObjectIds: sameComponent ? clone(previous.ownedObjectIds || []) : [],
-      managedFields: sameComponent ? clone(previous.managedFields || {}) : {},
-      fieldOverrides: sameComponent ? clone(previous.fieldOverrides || {}) : {},
-      detachedObjectIds: sameComponent ? clone(previous.detachedObjectIds || []) : [],
-      suppressedRoles: sameComponent ? clone(previous.suppressedRoles || []) : definition ? defaultGhostComponentRoles(definition) : [],
-      status: "generated",
-      health: "ok",
-      diagnostics: []
+      ...smartComponentInstanceRecord({
+        id: childId,
+        type: preset.type,
+        kind,
+        sourceComponent: smartComponentSourceComponent(preset, config.version || preset.version),
+        inputs,
+        parameters: config.parameters || {},
+        parentInstanceId: this.instanceId,
+        parentRole: role,
+        objectRoles: sameComponent ? clone(previous.objectRoles || {}) : {},
+        ownedObjectIds: sameComponent ? clone(arrayValues(previous.ownedObjectIds)) : [],
+        managedFields: sameComponent ? clone(previous.managedFields || {}) : {},
+        fieldOverrides: sameComponent ? clone(previous.fieldOverrides || {}) : {},
+        detachedObjectIds: sameComponent ? clone(arrayValues(previous.detachedObjectIds)) : [],
+        suppressedRoles: sameComponent ? clone(arrayValues(previous.suppressedRoles)) : definition ? defaultGhostComponentRoles(definition) : []
+      })
     };
     this.childComponentRoles[role] = childId;
     const parent = this.model.smartComponentInstances[this.instanceId] || clone(this.instance);
@@ -938,8 +885,8 @@ class SmartComponentBuildContext {
     const componentObjectIds = flattenIds(inputs.components || {});
     const objectIds = unique([
       connection.mainObjectId,
-      ...(connection.secondaryObjectIds || []),
-      ...flattenIds(connection.objectIds || []),
+      ...arrayValues(connection.secondaryObjectIds),
+      ...flattenIds(connection.objectIds),
       ...componentObjectIds
     ]);
     const mainObjectId = connection.mainObjectId || objectIds[0] || this.instanceId;
@@ -982,7 +929,7 @@ class SmartComponentBuildContext {
       type: connection.assemblyType || "connection-assembly",
       name: connection.assemblyName || `${preset.name || preset.type} assembly`,
       parentAssemblyId: connection.parentAssemblyId || null,
-      childAssemblyIds: connection.childAssemblyIds || [],
+      childAssemblyIds: arrayValues(connection.childAssemblyIds),
       connectionZoneIds: [zoneId],
       smartComponentInstanceIds: [childId],
       authoring: generatedSmartComponentHelperAuthoring(childId)
@@ -996,7 +943,7 @@ class SmartComponentBuildContext {
 
   roleActive(role) {
     const overrides = this.instance || {};
-    if ((overrides.suppressedRoles || []).includes(role)) return false;
+    if (arrayValues(overrides.suppressedRoles).includes(role)) return false;
     return true;
   }
 
@@ -1012,7 +959,7 @@ class SmartComponentBuildContext {
 
   profile(role) {
     const member = this.member(role);
-    const profile = this.profiles?.[member.profile] || this.profiles?.profiles?.[member.profile];
+    const profile = libraryProfileById(this.profiles, member.profile);
     if (!profile) this.fail(`${member.id}: profile not found: ${member.profile}`);
     return profile;
   }
@@ -1115,7 +1062,7 @@ class SmartComponentBuildContext {
     const collection = this.model.plates[ownerId] ? "plates" : collectionForObject(this.project, ownerId);
     if (!["members", "plates"].includes(collection)) this.fail(`${ownerId}: features can only attach to members or plates`);
     const owner = this.model[collection][ownerId] || clone(projectObject(this.project, collection, ownerId));
-    owner.featureIds = unique([...(owner.featureIds || []), featureId]);
+    owner.featureIds = unique([...arrayValues(owner.featureIds), featureId]);
     this.model[collection][ownerId] = owner;
   }
 }
@@ -1148,7 +1095,7 @@ function buildSmartComponentPatch({ project, profiles, definition, catalog, fast
   definition.build(ctx);
   buildChildSmartComponents(ctx);
   applyComponentOverrides(ctx.model, ctx.roles, {
-    suppressedRoles: ctx.instance.suppressedRoles || [],
+    suppressedRoles: arrayValues(ctx.instance.suppressedRoles),
     suppressedPatternPositions: ctx.instance.suppressedPatternPositions || {}
   });
 
@@ -1160,7 +1107,7 @@ function buildSmartComponentPatch({ project, profiles, definition, catalog, fast
   addDiagnosticDisplay(ctx.model, ownedObjectIds, diagnostics);
   if (ctx.zone) {
     const zone = ctx.model.connectionZones[ctx.zone.id];
-    zone.objectIds = unique([...(ctx.zone.objectIds || []), ...ownedObjectIds]);
+    zone.objectIds = unique([...arrayValues(ctx.zone.objectIds), ...ownedObjectIds]);
   }
 
   const existingParentPatch = ctx.model.smartComponentInstances[instanceId] || {};
@@ -1185,11 +1132,6 @@ function buildSmartComponentPatch({ project, profiles, definition, catalog, fast
   };
 
   return { objectIndex: objectIndexFor(ctx.model), model: ctx.model };
-}
-
-function smartComponentOwnedObjectIds(instance) {
-  const owned = Array.isArray(instance?.ownedObjectIds) ? instance.ownedObjectIds : [];
-  return unique([...owned, ...flattenIds(instance?.objectRoles)]);
 }
 
 function smartComponentOwnedTreeObjectIds(project, instanceId, visited = new Set()) {
@@ -1233,32 +1175,7 @@ function removedManagedObjectIds(project, patch) {
   return unique(removed);
 }
 
-function removeReferences(value, deletedIds) {
-  if (Array.isArray(value)) return value.filter((item) => !deletedIds.has(item)).map((item) => removeReferences(item, deletedIds));
-  if (!value || typeof value !== "object") return value;
-  for (const [key, child] of Object.entries(value)) {
-    if (Array.isArray(child) && key.endsWith("Ids")) {
-      value[key] = child.filter((id) => !deletedIds.has(id));
-    } else {
-      removeReferences(child, deletedIds);
-    }
-  }
-  return value;
-}
-
-function removeObjects(project, objectIds) {
-  const deletedIds = new Set(unique(objectIds));
-  if (!deletedIds.size) return project;
-  for (const objectId of deletedIds) {
-    const collection = optionalCollectionForObject(project, objectId);
-    if (collection) delete project.model[collection][objectId];
-    delete project.objectIndex[objectId];
-  }
-  removeReferences(project.model, deletedIds);
-  return project;
-}
-
-export function applySmartComponentPatch(project, patch) {
+function applySmartComponentPatch(project, patch) {
   const removedIds = removedManagedObjectIds(project, patch);
   const next = removedIds.length ? clone(project) : {
     ...project,
@@ -1272,7 +1189,7 @@ export function applySmartComponentPatch(project, patch) {
       ...objects
     };
   }
-  removeObjects(next, removedIds);
+  removeProjectObjects(next, removedIds);
   return next;
 }
 
@@ -1290,7 +1207,7 @@ function applySmartComponentPatchInPlace(project, patch) {
   for (const [collection, objects] of Object.entries(patch.model)) {
     Object.assign(project.model[collection], objects);
   }
-  removeObjects(project, removedIds);
+  removeProjectObjects(project, removedIds);
   return project;
 }
 
@@ -1322,9 +1239,9 @@ function partLabel(part) {
 export function smartComponentPlateOptions(project, definition, instanceId) {
   const instance = smartComponentById(project, instanceId);
   const roles = instance.objectRoles || {};
-  const requiredPlateIds = unique((definition.requiredPlateRoles || []).flatMap((role) => flattenIds(roles[role]))).filter((id) => project.model.plates?.[id]);
+  const requiredPlateIds = unique(arrayValues(definition.requiredPlateRoles).flatMap((role) => flattenIds(roles[role]))).filter((id) => project.model.plates?.[id]);
   const plateIds = unique([...requiredPlateIds, ...flattenIds(roles)]).filter((id) => project.model.plates?.[id]);
-  const suppressedRoles = new Set(instance.suppressedRoles || []);
+  const suppressedRoles = new Set(arrayValues(instance.suppressedRoles));
   return plateIds.map((id) => {
     const plate = project.model.plates[id];
     const role = Object.entries(roles).find(([, value]) => flattenIds(value).includes(id))?.[0] || plate.placementIntent?.role;
@@ -1341,8 +1258,8 @@ export function smartComponentPlateOptions(project, definition, instanceId) {
 export function smartComponentRoleOptions(project, definition, instanceId) {
   const instance = smartComponentById(project, instanceId);
   const roles = instance.objectRoles || {};
-  const suppressedRoles = new Set(instance.suppressedRoles || []);
-  return (definition.components || []).map((component) => {
+  const suppressedRoles = new Set(arrayValues(instance.suppressedRoles));
+  return arrayValues(definition.components).map((component) => {
     const objectIds = unique(flattenIds((component.objectRoles || [component.role]).map((role) => roles[role]))).filter((id) => project.objectIndex?.[id]);
     return {
       role: component.role,
@@ -1366,10 +1283,10 @@ export function setSmartComponentPlateIncluded(project, definition, instanceId, 
   const plate = next.model.plates?.[plateId];
   if (!plate) fail(`plate not found: ${plateId}`);
 
-  instance.suppressedRoles = setId(instance.suppressedRoles || [], option.role, !included);
+  instance.suppressedRoles = setId(instance.suppressedRoles, option.role, !included);
 
   const zone = next.model.connectionZones?.[instanceConnectionZoneId(instance)];
-  if (zone) zone.objectIds = setId(zone.objectIds || [], plateId, included);
+  if (zone) zone.objectIds = setId(zone.objectIds, plateId, included);
 
   plate.display = { ...(plate.display || {}), visible: included };
 
@@ -1384,6 +1301,6 @@ export function setSmartComponentPlateIncluded(project, definition, instanceId, 
 export function setSmartComponentRoleActive(project, instanceId, role, active) {
   const next = clone(project);
   const instance = smartComponentById(next, instanceId);
-  instance.suppressedRoles = setId(instance.suppressedRoles || [], role, !active);
+  instance.suppressedRoles = setId(instance.suppressedRoles, role, !active);
   return next;
 }

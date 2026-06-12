@@ -311,6 +311,12 @@
         },
         "numberingStatus": {
           "type": "string"
+        },
+        "bends": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/plateBend"
+          }
         }
       },
       "additionalProperties": true
@@ -752,6 +758,18 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/plate"
+          }
+        },
+        "sketches": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/sketchObject"
+          }
+        },
+        "profiles": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/profile"
           }
         },
         "holePatterns": {
@@ -1229,7 +1247,9 @@
       "type": "object",
       "required": [
         "id",
-        "type"
+        "type",
+        "sketch",
+        "center"
       ],
       "properties": {
         "id": {
@@ -1244,18 +1264,8 @@
         "thickness": {
           "type": "number"
         },
-        "width": {
-          "type": "number"
-        },
-        "height": {
-          "type": "number"
-        },
-        "outline": {
-          "type": "array",
-          "minItems": 3,
-          "items": {
-            "$ref": "#/$defs/vec2"
-          }
+        "sketch": {
+          "$ref": "#/$defs/plateSketch"
         },
         "center": {
           "$ref": "#/$defs/vec3"
@@ -1278,9 +1288,6 @@
             "$ref": "#/$defs/id"
           }
         },
-        "flatPattern": {
-          "$ref": "#/$defs/flatPattern"
-        },
         "placementIntent": {
           "$ref": "#/$defs/placementIntent"
         },
@@ -1289,6 +1296,57 @@
         },
         "fabrication": {
           "$ref": "#/$defs/fabrication"
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
+        }
+      },
+      "additionalProperties": true
+    },
+    "sketchObject": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "sketch",
+        "center",
+        "normal",
+        "localAxisY",
+        "localAxisZ"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "const": "plate-sketch"
+        },
+        "sketch": {
+          "$ref": "#/$defs/plateSketch"
+        },
+        "center": {
+          "$ref": "#/$defs/vec3"
+        },
+        "normal": {
+          "$ref": "#/$defs/vec3"
+        },
+        "localAxisY": {
+          "$ref": "#/$defs/vec3"
+        },
+        "localAxisZ": {
+          "$ref": "#/$defs/vec3"
+        },
+        "placementIntent": {
+          "$ref": "#/$defs/placementIntent"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
         },
         "display": {
           "$ref": "#/$defs/display"
@@ -2157,47 +2215,175 @@
       },
       "additionalProperties": true
     },
-    "flatPattern": {
+    "plateSketch": {
       "type": "object",
       "required": [
-        "outline"
+        "vertices",
+        "edges"
       ],
       "properties": {
-        "outline": {
+        "type": {
+          "const": "plate-sketch"
+        },
+        "vertices": {
           "type": "array",
           "minItems": 3,
           "items": {
-            "$ref": "#/$defs/vec2"
+            "$ref": "#/$defs/plateSketchVertex"
           }
         },
-        "bendLines": {
+        "edges": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/plateSketchEdge"
+          }
+        },
+        "constructionVertices": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/bendLine"
+            "$ref": "#/$defs/plateSketchVertex"
+          }
+        },
+        "constructionEdges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/plateSketchEdge"
+          }
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/plateSketchRelation"
           }
         }
       },
       "additionalProperties": true
     },
-    "bendLine": {
+    "plateSketchVertex": {
       "type": "object",
       "required": [
         "id",
-        "start",
-        "end",
-        "angle",
-        "radius",
-        "direction"
+        "point"
       ],
       "properties": {
         "id": {
           "$ref": "#/$defs/id"
         },
-        "start": {
+        "point": {
           "$ref": "#/$defs/vec2"
+        }
+      },
+      "additionalProperties": true
+    },
+    "plateSketchEdge": {
+      "type": "object",
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
         },
-        "end": {
-          "$ref": "#/$defs/vec2"
+        "from": {
+          "$ref": "#/$defs/id"
+        },
+        "to": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "additionalProperties": true
+    },
+    "plateSketchRelation": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "horizontal",
+            "vertical",
+            "horizontal-points",
+            "vertical-points",
+            "coincident",
+            "point-on-line",
+            "midpoint",
+            "symmetric",
+            "perpendicular",
+            "parallel",
+            "collinear",
+            "equal-length",
+            "fixed",
+            "length",
+            "angle",
+            "distance"
+          ]
+        },
+        "vertexId": {
+          "$ref": "#/$defs/id"
+        },
+        "edgeId": {
+          "$ref": "#/$defs/id"
+        },
+        "edgeIds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "vertexIds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "value": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "mode": {
+          "enum": [
+            "driving",
+            "driven"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "plateBend": {
+      "type": "object",
+      "required": [
+        "id",
+        "angle",
+        "radius",
+        "direction",
+        "flangeLength"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "edgeId": {
+          "$ref": "#/$defs/id"
+        },
+        "parentBendId": {
+          "$ref": "#/$defs/id"
+        },
+        "parentEdge": {
+          "enum": [
+            "outer"
+          ]
         },
         "angle": {
           "type": "number"
@@ -2206,7 +2392,139 @@
           "type": "number"
         },
         "direction": {
+          "enum": [
+            "up",
+            "down"
+          ]
+        },
+        "flangeLength": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "relief": {
+          "$ref": "#/$defs/plateBendRelief"
+        }
+      },
+      "additionalProperties": true
+    },
+    "plateBendRelief": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "auto",
+            "manual"
+          ]
+        },
+        "type": {
+          "enum": [
+            "none",
+            "round",
+            "rect",
+            "obround",
+            "v-notch"
+          ]
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "profile": {
+      "type": "object",
+      "required": [
+        "id",
+        "designation",
+        "profileType",
+        "section"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "designation": {
           "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "section": {
+          "$ref": "#/$defs/profileSection"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "profileSection": {
+      "type": "object",
+      "required": [
+        "type",
+        "origin",
+        "contours"
+      ],
+      "properties": {
+        "type": {
+          "const": "polygonal-section"
+        },
+        "origin": {
+          "type": "string"
+        },
+        "contours": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/profileContour"
+          }
+        },
+        "referencePoints": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/vec2"
+          }
+        },
+        "semanticRefs": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "profileContour": {
+      "type": "object",
+      "required": [
+        "id",
+        "role",
+        "points"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "enum": [
+            "solid",
+            "void"
+          ]
+        },
+        "points": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/vec2"
+          }
         }
       },
       "additionalProperties": true

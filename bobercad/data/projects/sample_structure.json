@@ -779,8 +779,6 @@
         "id": "end_plate_1",
         "type": "rectangular-plate",
         "thickness": 12,
-        "width": 170,
-        "height": 390,
         "center": [
           156,
           0,
@@ -846,14 +844,67 @@
           "componentInstanceId": "connection_1",
           "componentStatus": "managed",
           "componentRole": "endPlate"
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "end_plate_1_v1",
+              "point": [
+                -85,
+                -195
+              ]
+            },
+            {
+              "id": "end_plate_1_v2",
+              "point": [
+                85,
+                -195
+              ]
+            },
+            {
+              "id": "end_plate_1_v3",
+              "point": [
+                85,
+                195
+              ]
+            },
+            {
+              "id": "end_plate_1_v4",
+              "point": [
+                -85,
+                195
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "end_plate_1_e1",
+              "from": "end_plate_1_v1",
+              "to": "end_plate_1_v2"
+            },
+            {
+              "id": "end_plate_1_e2",
+              "from": "end_plate_1_v2",
+              "to": "end_plate_1_v3"
+            },
+            {
+              "id": "end_plate_1_e3",
+              "from": "end_plate_1_v3",
+              "to": "end_plate_1_v4"
+            },
+            {
+              "id": "end_plate_1_e4",
+              "from": "end_plate_1_v4",
+              "to": "end_plate_1_v1"
+            }
+          ]
         }
       },
       "top_stiffener_front_1": {
         "id": "top_stiffener_front_1",
         "type": "rectangular-plate",
         "thickness": 10,
-        "width": 276,
-        "height": 69,
         "center": [
           0,
           -40.5,
@@ -907,14 +958,67 @@
               "mark": "P2A"
             }
           }
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "top_stiffener_front_1_v1",
+              "point": [
+                -138,
+                -34.5
+              ]
+            },
+            {
+              "id": "top_stiffener_front_1_v2",
+              "point": [
+                138,
+                -34.5
+              ]
+            },
+            {
+              "id": "top_stiffener_front_1_v3",
+              "point": [
+                138,
+                34.5
+              ]
+            },
+            {
+              "id": "top_stiffener_front_1_v4",
+              "point": [
+                -138,
+                34.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "top_stiffener_front_1_e1",
+              "from": "top_stiffener_front_1_v1",
+              "to": "top_stiffener_front_1_v2"
+            },
+            {
+              "id": "top_stiffener_front_1_e2",
+              "from": "top_stiffener_front_1_v2",
+              "to": "top_stiffener_front_1_v3"
+            },
+            {
+              "id": "top_stiffener_front_1_e3",
+              "from": "top_stiffener_front_1_v3",
+              "to": "top_stiffener_front_1_v4"
+            },
+            {
+              "id": "top_stiffener_front_1_e4",
+              "from": "top_stiffener_front_1_v4",
+              "to": "top_stiffener_front_1_v1"
+            }
+          ]
         }
       },
       "top_stiffener_back_1": {
         "id": "top_stiffener_back_1",
         "type": "rectangular-plate",
         "thickness": 10,
-        "width": 276,
-        "height": 69,
         "center": [
           0,
           40.5,
@@ -968,14 +1072,67 @@
               "mark": "P2B"
             }
           }
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "top_stiffener_back_1_v1",
+              "point": [
+                -138,
+                -34.5
+              ]
+            },
+            {
+              "id": "top_stiffener_back_1_v2",
+              "point": [
+                138,
+                -34.5
+              ]
+            },
+            {
+              "id": "top_stiffener_back_1_v3",
+              "point": [
+                138,
+                34.5
+              ]
+            },
+            {
+              "id": "top_stiffener_back_1_v4",
+              "point": [
+                -138,
+                34.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "top_stiffener_back_1_e1",
+              "from": "top_stiffener_back_1_v1",
+              "to": "top_stiffener_back_1_v2"
+            },
+            {
+              "id": "top_stiffener_back_1_e2",
+              "from": "top_stiffener_back_1_v2",
+              "to": "top_stiffener_back_1_v3"
+            },
+            {
+              "id": "top_stiffener_back_1_e3",
+              "from": "top_stiffener_back_1_v3",
+              "to": "top_stiffener_back_1_v4"
+            },
+            {
+              "id": "top_stiffener_back_1_e4",
+              "from": "top_stiffener_back_1_v4",
+              "to": "top_stiffener_back_1_v1"
+            }
+          ]
         }
       },
       "bottom_stiffener_front_1": {
         "id": "bottom_stiffener_front_1",
         "type": "rectangular-plate",
         "thickness": 10,
-        "width": 276,
-        "height": 69,
         "center": [
           0,
           -40.5,
@@ -1029,14 +1186,67 @@
               "mark": "P3A"
             }
           }
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "bottom_stiffener_front_1_v1",
+              "point": [
+                -138,
+                -34.5
+              ]
+            },
+            {
+              "id": "bottom_stiffener_front_1_v2",
+              "point": [
+                138,
+                -34.5
+              ]
+            },
+            {
+              "id": "bottom_stiffener_front_1_v3",
+              "point": [
+                138,
+                34.5
+              ]
+            },
+            {
+              "id": "bottom_stiffener_front_1_v4",
+              "point": [
+                -138,
+                34.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "bottom_stiffener_front_1_e1",
+              "from": "bottom_stiffener_front_1_v1",
+              "to": "bottom_stiffener_front_1_v2"
+            },
+            {
+              "id": "bottom_stiffener_front_1_e2",
+              "from": "bottom_stiffener_front_1_v2",
+              "to": "bottom_stiffener_front_1_v3"
+            },
+            {
+              "id": "bottom_stiffener_front_1_e3",
+              "from": "bottom_stiffener_front_1_v3",
+              "to": "bottom_stiffener_front_1_v4"
+            },
+            {
+              "id": "bottom_stiffener_front_1_e4",
+              "from": "bottom_stiffener_front_1_v4",
+              "to": "bottom_stiffener_front_1_v1"
+            }
+          ]
         }
       },
       "bottom_stiffener_back_1": {
         "id": "bottom_stiffener_back_1",
         "type": "rectangular-plate",
         "thickness": 10,
-        "width": 276,
-        "height": 69,
         "center": [
           0,
           40.5,
@@ -1090,26 +1300,67 @@
               "mark": "P3B"
             }
           }
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "bottom_stiffener_back_1_v1",
+              "point": [
+                -138,
+                -34.5
+              ]
+            },
+            {
+              "id": "bottom_stiffener_back_1_v2",
+              "point": [
+                138,
+                -34.5
+              ]
+            },
+            {
+              "id": "bottom_stiffener_back_1_v3",
+              "point": [
+                138,
+                34.5
+              ]
+            },
+            {
+              "id": "bottom_stiffener_back_1_v4",
+              "point": [
+                -138,
+                34.5
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "bottom_stiffener_back_1_e1",
+              "from": "bottom_stiffener_back_1_v1",
+              "to": "bottom_stiffener_back_1_v2"
+            },
+            {
+              "id": "bottom_stiffener_back_1_e2",
+              "from": "bottom_stiffener_back_1_v2",
+              "to": "bottom_stiffener_back_1_v3"
+            },
+            {
+              "id": "bottom_stiffener_back_1_e3",
+              "from": "bottom_stiffener_back_1_v3",
+              "to": "bottom_stiffener_back_1_v4"
+            },
+            {
+              "id": "bottom_stiffener_back_1_e4",
+              "from": "bottom_stiffener_back_1_v4",
+              "to": "bottom_stiffener_back_1_v1"
+            }
+          ]
         }
       },
       "haunch_plate_1": {
         "id": "haunch_plate_1",
         "type": "polygonal-plate",
         "thickness": 12,
-        "outline": [
-          [
-            -1058,
-            45
-          ],
-          [
-            1058,
-            45
-          ],
-          [
-            -1058,
-            -45
-          ]
-        ],
         "center": [
           1220,
           0,
@@ -1168,14 +1419,55 @@
               "mark": "P4"
             }
           }
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "haunch_plate_1_v1",
+              "point": [
+                -1058,
+                45
+              ]
+            },
+            {
+              "id": "haunch_plate_1_v2",
+              "point": [
+                1058,
+                45
+              ]
+            },
+            {
+              "id": "haunch_plate_1_v3",
+              "point": [
+                -1058,
+                -45
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "haunch_plate_1_e1",
+              "from": "haunch_plate_1_v1",
+              "to": "haunch_plate_1_v2"
+            },
+            {
+              "id": "haunch_plate_1_e2",
+              "from": "haunch_plate_1_v2",
+              "to": "haunch_plate_1_v3"
+            },
+            {
+              "id": "haunch_plate_1_e3",
+              "from": "haunch_plate_1_v3",
+              "to": "haunch_plate_1_v1"
+            }
+          ]
         }
       },
       "beam_end_stiffener_left_1": {
         "id": "beam_end_stiffener_left_1",
         "type": "rectangular-plate",
         "thickness": 12,
-        "width": 46,
-        "height": 176,
         "center": [
           2294,
           -27,
@@ -1234,14 +1526,67 @@
               "mark": "P5A"
             }
           }
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "beam_end_stiffener_left_1_v1",
+              "point": [
+                -23,
+                -88
+              ]
+            },
+            {
+              "id": "beam_end_stiffener_left_1_v2",
+              "point": [
+                23,
+                -88
+              ]
+            },
+            {
+              "id": "beam_end_stiffener_left_1_v3",
+              "point": [
+                23,
+                88
+              ]
+            },
+            {
+              "id": "beam_end_stiffener_left_1_v4",
+              "point": [
+                -23,
+                88
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "beam_end_stiffener_left_1_e1",
+              "from": "beam_end_stiffener_left_1_v1",
+              "to": "beam_end_stiffener_left_1_v2"
+            },
+            {
+              "id": "beam_end_stiffener_left_1_e2",
+              "from": "beam_end_stiffener_left_1_v2",
+              "to": "beam_end_stiffener_left_1_v3"
+            },
+            {
+              "id": "beam_end_stiffener_left_1_e3",
+              "from": "beam_end_stiffener_left_1_v3",
+              "to": "beam_end_stiffener_left_1_v4"
+            },
+            {
+              "id": "beam_end_stiffener_left_1_e4",
+              "from": "beam_end_stiffener_left_1_v4",
+              "to": "beam_end_stiffener_left_1_v1"
+            }
+          ]
         }
       },
       "beam_end_stiffener_right_1": {
         "id": "beam_end_stiffener_right_1",
         "type": "rectangular-plate",
         "thickness": 12,
-        "width": 46,
-        "height": 176,
         "center": [
           2294,
           27,
@@ -1300,6 +1645,61 @@
               "mark": "P5B"
             }
           }
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "beam_end_stiffener_right_1_v1",
+              "point": [
+                -23,
+                -88
+              ]
+            },
+            {
+              "id": "beam_end_stiffener_right_1_v2",
+              "point": [
+                23,
+                -88
+              ]
+            },
+            {
+              "id": "beam_end_stiffener_right_1_v3",
+              "point": [
+                23,
+                88
+              ]
+            },
+            {
+              "id": "beam_end_stiffener_right_1_v4",
+              "point": [
+                -23,
+                88
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "beam_end_stiffener_right_1_e1",
+              "from": "beam_end_stiffener_right_1_v1",
+              "to": "beam_end_stiffener_right_1_v2"
+            },
+            {
+              "id": "beam_end_stiffener_right_1_e2",
+              "from": "beam_end_stiffener_right_1_v2",
+              "to": "beam_end_stiffener_right_1_v3"
+            },
+            {
+              "id": "beam_end_stiffener_right_1_e3",
+              "from": "beam_end_stiffener_right_1_v3",
+              "to": "beam_end_stiffener_right_1_v4"
+            },
+            {
+              "id": "beam_end_stiffener_right_1_e4",
+              "from": "beam_end_stiffener_right_1_v4",
+              "to": "beam_end_stiffener_right_1_v1"
+            }
+          ]
         }
       }
     },

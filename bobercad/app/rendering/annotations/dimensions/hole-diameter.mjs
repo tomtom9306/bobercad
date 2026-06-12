@@ -1,4 +1,4 @@
-import { basisAxis, closestHole, dimensionOffset, featureBasis, finite, makeDimension, positionPoint, roleObject, v } from "../dimension-context.mjs";
+import { basisAxis, closestHole, dimensionOffset, featureBasis, finite, makeDimension, positionPoint, roleObject, v } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
 export function holeDiameterDimension(ctx, spec) {
   const pattern = roleObject(ctx.project, ctx.smartComponent, spec.reference.holePatternRole);

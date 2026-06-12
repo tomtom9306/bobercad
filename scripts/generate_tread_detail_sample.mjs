@@ -155,7 +155,6 @@ const variants = [
         closedRisers: false,
         finish: "powder-coated",
         woodThickness: 32,
-        woodInset: 35,
         woodNosing: 25,
         woodMaterial: "OAK_TIMBER",
         woodFinish: "clear-sealed-oak"

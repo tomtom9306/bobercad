@@ -1,104 +1,5 @@
-function text(tag, className, value) {
-  const element = document.createElement(tag);
-  element.className = className;
-  element.textContent = value;
-  return element;
-}
-
-function button(label, className, onClick) {
-  const element = document.createElement("button");
-  element.type = "button";
-  element.className = className;
-  element.textContent = label;
-  element.addEventListener("click", onClick);
-  return element;
-}
-
-function numericInput(label, value, onChange) {
-  const row = document.createElement("label");
-  const input = document.createElement("input");
-  row.className = "editor-field";
-  input.type = "text";
-  input.inputMode = "decimal";
-  input.value = Number.isFinite(value) ? String(Number(value.toFixed(6))) : "";
-  input.setAttribute("aria-label", label);
-  input.addEventListener("change", () => {
-    const next = Number(input.value);
-    input.classList.toggle("invalid", !Number.isFinite(next));
-    if (Number.isFinite(next)) onChange(next);
-  });
-  row.append(text("span", "editor-label", label), input);
-  return row;
-}
-
-function selectInput(label, options, value, onChange) {
-  const row = document.createElement("label");
-  const select = document.createElement("select");
-  row.className = "editor-field";
-  select.setAttribute("aria-label", label);
-  for (const option of options) {
-    const item = document.createElement("option");
-    item.value = option.id;
-    item.textContent = option.label;
-    select.append(item);
-  }
-  select.value = value;
-  select.addEventListener("change", () => onChange(select.value));
-  row.append(text("span", "editor-label", label), select);
-  return row;
-}
-
-function textInput(label, value, onChange) {
-  const row = document.createElement("label");
-  const input = document.createElement("input");
-  row.className = "editor-field";
-  input.type = "text";
-  input.value = value || "";
-  input.setAttribute("aria-label", label);
-  input.addEventListener("change", () => onChange(input.value));
-  row.append(text("span", "editor-label", label), input);
-  return row;
-}
-
-function checkboxInput(label, value, onChange) {
-  const row = document.createElement("label");
-  const input = document.createElement("input");
-  row.className = "editor-field";
-  input.type = "checkbox";
-  input.checked = Boolean(value);
-  input.setAttribute("aria-label", label);
-  input.addEventListener("change", () => onChange(input.checked));
-  row.append(text("span", "editor-label", label), input);
-  return row;
-}
-
-function readout(label, value) {
-  const row = document.createElement("div");
-  row.className = "editor-readout";
-  row.append(text("span", "editor-label", label), text("span", "editor-value", value));
-  return row;
-}
-
-function arrayInput(label, labels, value, onChange) {
-  const rows = [text("div", "editor-subtitle", label)];
-  const current = labels.map((_, index) => Array.isArray(value) && Number.isFinite(value[index]) ? value[index] : NaN);
-  labels.forEach((item, index) => {
-    rows.push(numericInput(item, current[index], (nextValue) => {
-      const next = [...current];
-      next[index] = nextValue;
-      if (next.every(Number.isFinite)) onChange(next);
-    }));
-  });
-  return rows;
-}
-
-function vectorInput(label, value, onChange) {
-  return arrayInput(label, ["X", "Y", "Z"], value, onChange);
-}
-
-function vector2Input(label, value, onChange) {
-  return arrayInput(label, ["Y", "Z"], value, onChange);
-}
+import { arrayInput, checkboxInput, createPanelMessageState, hidePanel, numericInput, readout, renderEditorPanel, selectInput, text, textInput, vectorInput } from "./panel-elements.mjs?v=panel-controls-dry-1";
+import { arrayValues } from "../../../engine/core/model.mjs?v=ui-array-values-dry-1";
 
 const BOOLEAN_TYPE_OPTIONS = [
   { id: "BOOLEAN_CUT", label: "Cut" },
@@ -109,17 +10,12 @@ const BOOLEAN_TYPE_OPTIONS = [
 const SOURCE_KIND_OPTIONS = [
   { id: "member-profile", label: "Member profile" }
 ];
+const BODY_AXIS_TYPES = new Set(["box", "cylinder", "polygonal-prism"]);
 
 export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectProjectChange }) {
   let selectedFeatureId = null;
-  let messageText = "";
-  let messageState = "";
-
-  const setMessage = (message, state = "") => {
-    messageText = message;
-    messageState = state;
-    render();
-  };
+  const panelMessage = createPanelMessageState(() => render());
+  const setMessage = panelMessage.set;
 
   const selectedFeature = () => selectedFeatureId ? api.project().model.features?.[selectedFeatureId] || null : null;
 
@@ -143,11 +39,6 @@ export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectPr
     }
   };
 
-  const commonEditor = (feature) => [
-    text("div", "editor-subtitle", "Feature"),
-    checkboxInput("Enabled", feature.operationEnabled !== false, (enabled) => updateFeature((featureId) => api.setFeatureOperationEnabled(featureId, enabled)))
-  ];
-
   const bodyAxesEditor = (body) => [
     ...vectorInput("Axis X", body.axisX, (axisX) => updateFeature((featureId) => api.setFeatureBody(featureId, { axisX }))),
     ...vectorInput("Axis Y", body.axisY, (axisY) => updateFeature((featureId) => api.setFeatureBody(featureId, { axisY }))),
@@ -167,17 +58,17 @@ export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectPr
     }
     if (body.type === "box") {
       rows.push(...vectorInput("Size", body.size, (size) => updateFeature((featureId) => api.setFeatureBody(featureId, { size }))));
-      rows.push(...bodyAxesEditor(body));
     } else if (body.type === "cylinder") {
       rows.push(numericInput("Radius", body.radius, (radius) => updateFeature((featureId) => api.setFeatureBody(featureId, { radius }))));
       rows.push(numericInput("Depth", body.depth, (depth) => updateFeature((featureId) => api.setFeatureBody(featureId, { depth }))));
-      rows.push(...bodyAxesEditor(body));
     } else if (body.type === "polygonal-prism") {
       rows.push(numericInput("Depth", body.depth, (depth) => updateFeature((featureId) => api.setFeatureBody(featureId, { depth }))));
-      rows.push(...bodyAxesEditor(body));
-      (body.outline || []).forEach((point, index) => {
-        rows.push(...vector2Input(`Point ${index + 1}`, point, (nextPoint) => {
-          const outline = [...(body.outline || [])];
+    }
+    if (BODY_AXIS_TYPES.has(body.type)) rows.push(...bodyAxesEditor(body));
+    if (body.type === "polygonal-prism") {
+      arrayValues(body.outline).forEach((point, index) => {
+        rows.push(...arrayInput(`Point ${index + 1}`, ["Y", "Z"], point, (nextPoint) => {
+          const outline = [...arrayValues(body.outline)];
           outline[index] = nextPoint;
           updateFeature((featureId) => api.setFeatureBody(featureId, { outline }));
         }));
@@ -207,7 +98,8 @@ export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectPr
       readout("Feature", feature.id),
       readout("Type", feature.type),
       readout("Owner", feature.ownerId || "-"),
-      ...commonEditor(feature)
+      text("div", "editor-subtitle", "Feature"),
+      checkboxInput("Enabled", feature.operationEnabled !== false, (enabled) => updateFeature((featureId) => api.setFeatureOperationEnabled(featureId, enabled)))
     ];
     rows.push(...sourceEditor(feature));
     if (feature.type === "boolean-part" || feature.body) rows.push(...bodyEditor(feature));
@@ -217,30 +109,16 @@ export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectPr
   function render() {
     const feature = selectedFeature();
     if (!feature) {
-      panel.hidden = true;
-      panel.replaceChildren();
+      hidePanel(panel);
       return;
     }
 
-    const header = document.createElement("div");
-    header.className = "feature-editor-header";
-    header.append(text("div", "editor-title", "Feature Editor"), button("Close", "editor-button", () => clear()));
-
-    const body = document.createElement("section");
-    body.className = "editor-section";
-    body.append(...editorRows(feature));
-
-    const message = text("div", "editor-message", messageText);
-    message.dataset.state = messageState;
-
-    panel.hidden = false;
-    panel.replaceChildren(header, body, message);
+    renderEditorPanel(panel, "Feature Editor", clear, editorRows(feature), panelMessage.element());
   }
 
   function clear() {
     selectedFeatureId = null;
-    messageText = "";
-    messageState = "";
+    panelMessage.clear({ render: false });
     render();
   }
 
@@ -258,8 +136,7 @@ export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectPr
         return;
       }
       selectedFeatureId = featureId;
-      messageText = "";
-      messageState = "";
+      panelMessage.clear({ render: false });
       selection.select([featureId]);
       render();
     },

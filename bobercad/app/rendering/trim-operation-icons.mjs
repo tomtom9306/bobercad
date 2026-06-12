@@ -1,3 +1,5 @@
+import { safeHexColor as safeColor } from "./webgl/colors.mjs?v=hex-color-regex-dry-1";
+
 export const TRIM_OPERATION_TYPES = [
   { id: "end-butt-1", label: "Butt A to B", gap: true },
   { id: "end-butt-2", label: "Butt B to A", gap: true },
@@ -7,11 +9,7 @@ export const TRIM_OPERATION_TYPES = [
   { id: "plane-trim", label: "Plane trim", gap: true }
 ];
 
-function safeColor(value, fallback) {
-  return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
-}
-
-export function trimOperationSpec(type) {
+function trimOperationSpec(type) {
   return TRIM_OPERATION_TYPES.find((option) => option.id === type) || TRIM_OPERATION_TYPES[0];
 }
 

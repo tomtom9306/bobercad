@@ -384,7 +384,7 @@ async function main() {
     await load;
     await waitForQa(client);
 
-    const summaries = await evaluate(client, "window.__boberCadQa.connectionSummaries()", 10000);
+    const summaries = await evaluate(client, "window.__boberCadQa.smartComponentSummaries()", 10000);
     const targets = selectConnections(summaries, args);
     console.log(`Capturing ${targets.length} connection(s), ${args.views.length} view(s) each.`);
 
@@ -395,8 +395,8 @@ async function main() {
       for (const view of args.views) {
         const capture = await evaluate(
           client,
-          `window.__boberCadQa.captureConnectionView(${JSON.stringify({
-            connectionId: connection.id,
+          `window.__boberCadQa.captureSmartComponentView(${JSON.stringify({
+            smartComponentId: connection.id,
             view,
             highlight: args.highlight,
             memberContext: args.memberContext ?? undefined

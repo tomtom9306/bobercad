@@ -1,5 +1,7 @@
-import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs";
+import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs?v=geometry-api-array-values-dry-1";
+import { arrayValues } from "../../../engine/core/model.mjs?v=smart-config-array-values-dry-1";
 import { requiredReferencePlane } from "../../../engine/geometry/feature-plane.mjs";
+import { trimOperationFirstReferencePlaneId, trimPlaneOperation } from "../../../engine/api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
 import {
   clearanceAnnotationBasis,
   dimensionOffset,
@@ -10,7 +12,7 @@ import {
   rangeMid,
   roleObject,
   v
-} from "../dimension-context.mjs";
+} from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
 const EPSILON = 1e-9;
 
@@ -18,7 +20,7 @@ function optionLabel(spec, value) {
   const stringValue = String(value);
   const valueLabels = spec.reference?.valueLabels || {};
   if (valueLabels[stringValue]) return valueLabels[stringValue];
-  const option = (spec.reference?.modeControl?.options || [])
+  const option = arrayValues(spec.reference?.modeControl?.options)
     .find((item) => String(item.value) === stringValue);
   return option?.label || stringValue;
 }
@@ -38,10 +40,6 @@ function planePlacement(plane) {
     },
     anchor: plane.origin
   };
-}
-
-function trimPlaneOperation(trimJoint) {
-  return (trimJoint?.operations || []).find((operation) => operation.type === "plane-trim" && operation.referencePlaneIds?.length) || null;
 }
 
 function clearanceFeaturePlacement(ctx, feature) {
@@ -95,6 +93,6 @@ export function featureOptionCalloutDimension(ctx, spec) {
 export function trimOptionCalloutDimension(ctx, spec) {
   const trimJoint = roleObject(ctx.project, ctx.smartComponent, spec.reference.trimRole);
   const operation = trimPlaneOperation(trimJoint);
-  const plane = operation ? requiredReferencePlane(ctx.project, operation.referencePlaneIds[0], trimJoint.id, () => null) : null;
+  const plane = operation ? requiredReferencePlane(ctx.project, trimOperationFirstReferencePlaneId(operation), trimJoint.id, () => null) : null;
   return optionCalloutDimension(ctx, spec, planePlacement(plane));
 }

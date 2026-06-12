@@ -1,4 +1,4 @@
-import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs";
+import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs?v=member-end-point-dry-1";
 
 export function build(ctx, input = {}) {
   const {

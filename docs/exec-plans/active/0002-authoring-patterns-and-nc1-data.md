@@ -12,7 +12,7 @@ Implemented in schema/model baseline `0.5.0`:
 - `model.objectPatterns`
 - object-level `authoring`
 - `holePatternRef` on features and fastener groups
-- `flatPattern` and `bendLines` for bent plates
+- plate `sketch` and `fabrication.bends` for bent plates
 - `sourceComponent` for Smart Component provenance
 - `sourceTemplate` for frame/template provenance
 - `settings.tolerances`
@@ -180,17 +180,17 @@ This is the layer that makes NC1 export straightforward.
 
 ## 5. Make Plates And Bent Plates Fabrication-Ready
 
-Flat plates can keep the current structure:
+Flat plates use the shared sketch structure:
 
 - `center`
 - `normal`
 - `localAxisY`
 - `localAxisZ`
 - `thickness`
-- `width` and `height`, or `outline`
+- `sketch.vertices` and `sketch.edges`
 - `features`
 
-Bent plates need stored flat-pattern information:
+Bent plates add stored bend operations:
 
 ```json
 {
@@ -198,16 +198,31 @@ Bent plates need stored flat-pattern information:
   "type": "bent-plate",
   "material": "S355",
   "thickness": 8,
-  "flatPattern": {
-    "outline": [[0, 0], [600, 0], [600, 300], [0, 300]],
-    "bendLines": [
+  "sketch": {
+    "type": "plate-sketch",
+    "vertices": [
+      { "id": "v1", "point": [0, 0] },
+      { "id": "v2", "point": [600, 0] },
+      { "id": "v3", "point": [600, 300] },
+      { "id": "v4", "point": [0, 300] }
+    ],
+    "edges": [
+      { "id": "e1", "from": "v1", "to": "v2" },
+      { "id": "e2", "from": "v2", "to": "v3" },
+      { "id": "e3", "from": "v3", "to": "v4" },
+      { "id": "e4", "from": "v4", "to": "v1" }
+    ]
+  },
+  "fabrication": {
+    "bends": [
       {
         "id": "bend_1",
-        "start": [200, 0],
-        "end": [200, 300],
+        "edgeId": "e2",
         "angle": 90,
         "radius": 12,
-        "direction": "up"
+        "direction": "up",
+        "flangeLength": 80,
+        "relief": { "mode": "auto", "type": "round", "radius": 8 }
       }
     ]
   }

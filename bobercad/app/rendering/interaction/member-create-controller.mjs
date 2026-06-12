@@ -1,58 +1,31 @@
-import { v } from "../../engine/core/math.mjs";
-import { createPreviewMember } from "../../engine/api/project/member-factory.mjs?v=axis-snap-1";
-import { memberLayoutAxis } from "../../engine/api/project/members.mjs";
-import { activeWorkPlane, rayPlaneIntersection } from "../../engine/api/project/work-plane.mjs";
-import { snapCandidates } from "../../engine/api/project/snap-candidates.mjs?v=trim-create-ui-1";
-import { composeSnapCandidates } from "../../engine/api/project/snap-composer.mjs?v=active-reference-guides-1";
-import { solveSnap } from "../../engine/api/project/snap-solver.mjs?v=snap-architecture-1";
-import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs";
-import { memberCreationOverlay } from "../scene/build-authoring-overlays.mjs?v=axis-guide-shortcuts-1";
-import { matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs?v=axis-guide-shortcuts-1";
+import { distance3, finiteNumber, finiteNumberOr, v } from "../../engine/core/math.mjs?v=world-axis-dry-1";
+import { arrayValues } from "../../engine/core/model.mjs?v=interaction-array-values-dry-1";
+import { createPreviewMember } from "../../engine/api/project/member-factory.mjs?v=member-snap-ref-defined-object-dry-1";
+import { memberAxisData, memberById, memberStationAtPoint } from "../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
+import { activeWorkPlane, rayPlaneIntersection } from "../../engine/api/project/work-plane.mjs?v=finite-point-api-dry-1";
+import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs?v=geometry-api-array-values-dry-1";
+import { memberCreationOverlay } from "../scene/authoring/member-overlays.mjs?v=unified-snap-manager-8";
+import { coordinateSpaceLabel as axisGuideModeLabel, normalizeCoordinateSpace as normalizeAxisGuideMode } from "../scene/authoring/member-axis-space.mjs?v=final-array-values-dry-1";
+import { matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs?v=truthy-values-dry-1";
+import { pointOnViewRay } from "./pointer-plane-point.mjs?v=view-ray-dry-1";
 
 const NUMBER_KEYS = new Set(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-", ",", "@"]);
 const MIN_MEMBER_LENGTH = 1e-6;
 
-function finitePoint(point) {
-  return Array.isArray(point) && point.length === 3 && point.every((value) => typeof value === "number" && Number.isFinite(value));
-}
-
 function distinctPoints(a, b) {
-  return finitePoint(a) && finitePoint(b) && v.len(v.sub(b, a)) > MIN_MEMBER_LENGTH;
+  return v.isVec3(a) && v.isVec3(b) && distance3(a, b) > MIN_MEMBER_LENGTH;
 }
 
 function commandName(type) {
   return type === "column" ? "Column" : "Beam";
 }
 
-function normalizeAxisGuideMode(value) {
-  return value === "local" ? "local" : "global";
-}
-
-function axisGuideModeLabel(value) {
-  return normalizeAxisGuideMode(value) === "local" ? "Local" : "Global";
-}
-
-function clamp01(value) {
-  return Math.max(0, Math.min(1, value));
-}
-
-function closestPointOnSegment(a, b, point) {
-  const axis = v.sub(b, a);
-  const lengthSq = v.dot(axis, axis);
-  if (lengthSq <= 1e-12) return { point: [...a], t: 0 };
-  const t = clamp01(v.dot(v.sub(point, a), axis) / lengthSq);
-  return { point: v.add(a, v.mul(axis, t)), t };
-}
-
-function memberById(project, memberId) {
-  return project.model?.members?.[memberId] || null;
-}
-
 function memberEndReference(member) {
-  if (!member?.id || !finitePoint(member.start) || !finitePoint(member.end)) return null;
+  const axis = memberAxisData(member);
+  if (!member?.id || !axis) return null;
   return {
     memberId: member.id,
-    station: v.len(v.sub(member.end, member.start))
+    station: axis.length
   };
 }
 
@@ -70,14 +43,14 @@ function statusFor(state, extra = "") {
 function parseRelativeInput(value) {
   if (!value.startsWith("@")) return null;
   const parts = value.slice(1).split(",").map((part) => Number(part.trim()));
-  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return null;
+  if (parts.length !== 3 || parts.some((part) => !finiteNumber(part))) return null;
   return parts;
 }
 
 function parseElevationInput(value) {
   if (!value.toLowerCase().startsWith("z")) return null;
   const elevation = Number(value.slice(1));
-  return Number.isFinite(elevation) ? elevation : null;
+  return finiteNumberOr(elevation, null);
 }
 
 function axisLockedPoint(start, point, plane) {
@@ -100,6 +73,7 @@ export function createMemberCreateController({
   api,
   profiles,
   settings,
+  snapManager,
   onPreviewChange,
   onOverlayChange,
   onProjectChange,
@@ -119,7 +93,6 @@ export function createMemberCreateController({
     snap: null,
     rawPoint: null,
     input: "",
-    cycleIndex: 0,
     lastPointer: null,
     elevationLock: null,
     axisGuideMode: normalizeAxisGuideMode(authoringSettings.axisGuideMode),
@@ -131,111 +104,9 @@ export function createMemberCreateController({
     return activeWorkPlane(api.project(), {});
   }
 
-  function faceAxisSnap(hit, screen, rawPoint) {
-    if (hit?.face?.collection !== "members" || !hit.face.objectId) return null;
-    const member = memberById(api.project(), hit.face.objectId);
-    if (!member) return null;
-    const axis = memberLayoutAxis(member);
-    const closest = closestPointOnSegment(axis.start, axis.end, rawPoint);
-    const projected = viewer.projectPoint(closest.point);
-    if (!projected) return null;
-    const screenDistance = Math.hypot(projected.x - screen.x, projected.y - screen.y);
-    if (screenDistance > (authoringSettings.faceAxisSnapTolerancePx || 42)) return null;
-    return {
-      kind: "line",
-      type: member.layoutAxis ? "layout-axis" : "member-axis",
-      objectId: member.id,
-      a: axis.start,
-      b: axis.end,
-      point: closest.point,
-      t: closest.t,
-      label: member.layoutAxis ? `Layout axis: ${member.id}` : `Axis: ${member.id}`,
-      priority: 220,
-      projected,
-      screenDistance
-    };
-  }
-
-  function isDirectPointSnap(snap) {
-    return snap?.kind === "point" && snap.type !== "axis-intersection";
-  }
-
-  function preferredDirectPointSnap(solvedSnap, hits) {
-    if (!Array.isArray(hits) || !hits.length) return solvedSnap;
-    const pointSnap = hits
-      .filter(isDirectPointSnap)
-      .sort((left, right) => left.screenDistance - right.screenDistance)[0] || null;
-    if (!pointSnap) return solvedSnap;
-    if (!solvedSnap) return pointSnap;
-    if (isDirectPointSnap(solvedSnap)) return solvedSnap;
-    const bias = authoringSettings.pointSnapBiasPx || 12;
-    return pointSnap.screenDistance <= solvedSnap.screenDistance + bias ? pointSnap : solvedSnap;
-  }
-
-  function preferredSnap(solvedSnap, hit, screen, rawPoint) {
-    if (isDirectPointSnap(solvedSnap)) return solvedSnap;
-    const axisSnap = faceAxisSnap(hit, screen, rawPoint);
-    if (!axisSnap) return solvedSnap;
-    if (!solvedSnap) return axisSnap;
-    const bias = authoringSettings.faceAxisSnapBiasPx || 10;
-    if (solvedSnap.objectId === axisSnap.objectId && axisSnap.screenDistance <= solvedSnap.screenDistance + bias) return axisSnap;
-    if (axisSnap.screenDistance <= solvedSnap.screenDistance + bias) return axisSnap;
-    return solvedSnap;
-  }
-
-  function usesStartAxis(snap) {
-    if (!snap) return false;
-    if (snap.type === "profile-axis") return true;
-    if (snap.type === "creation-axis") return true;
-    return Array.isArray(snap.sources) && snap.sources.some((source) => source.type === "profile-axis" || source.type === "creation-axis");
-  }
-
-  function usesGlobalAxis(snap) {
-    return snap?.type === "global-axis" || (Array.isArray(snap?.sources) && snap.sources.some((source) => source.type === "global-axis"));
-  }
-
-  function isStartAxisIntersection(snap) {
-    return snap?.type === "axis-intersection" && usesStartAxis(snap);
-  }
-
-  function preferredStartAxisSnap(solvedSnap, hits) {
-    if (!state.start || !Array.isArray(hits) || !hits.length) return solvedSnap;
-    const pointSnap = preferredDirectPointSnap(solvedSnap, hits);
-    if (isDirectPointSnap(pointSnap)) return pointSnap;
-    const intersectionSnap = hits
-      .filter(isStartAxisIntersection)
-      .sort((left, right) => left.screenDistance - right.screenDistance)[0] || null;
-    if (intersectionSnap) {
-      if (!solvedSnap || usesStartAxis(solvedSnap) || usesGlobalAxis(solvedSnap)) return intersectionSnap;
-      const intersectionBias = authoringSettings.startAxisIntersectionBiasPx || 28;
-      if (intersectionSnap.screenDistance <= solvedSnap.screenDistance + intersectionBias) return intersectionSnap;
-    }
-    const startAxisHits = hits
-      .filter(usesStartAxis)
-      .sort((left, right) => left.screenDistance - right.screenDistance);
-    const startAxisSnap = startAxisHits[0] || null;
-    if (!startAxisSnap) return pointSnap;
-    if (!pointSnap) return startAxisSnap;
-    if (usesStartAxis(pointSnap)) return pointSnap;
-    const bias = authoringSettings.startAxisSnapBiasPx || authoringSettings.profileAxisSnapBiasPx || 24;
-    return startAxisSnap.screenDistance <= pointSnap.screenDistance + bias ? startAxisSnap : pointSnap;
-  }
-
   function snapMemberSource(snap) {
     if (snap?.objectId && memberById(api.project(), snap.objectId)) return snap;
-    return (snap?.sources || []).find((source) => source?.objectId && memberById(api.project(), source.objectId)) || null;
-  }
-
-  function memberStationAtPoint(member, point, source = null) {
-    const referenceAxis = source?.type === "layout-axis" && member.layoutAxis
-      ? memberLayoutAxis(member)
-      : { start: member.start, end: member.end };
-    const axis = v.sub(referenceAxis.end, referenceAxis.start);
-    const referenceLength = v.len(axis);
-    const memberLength = v.len(v.sub(member.end, member.start));
-    if (referenceLength <= 1e-9 || memberLength <= 1e-9) return 0;
-    const ratio = clamp01(v.dot(v.sub(point, referenceAxis.start), axis) / (referenceLength * referenceLength));
-    return ratio * memberLength;
+    return arrayValues(snap?.sources).find((source) => source?.objectId && memberById(api.project(), source.objectId)) || null;
   }
 
   function memberReferenceFrom(hit, snap, point) {
@@ -246,7 +117,7 @@ export function createMemberCreateController({
       : null;
     const memberId = snapMemberId || hitMemberId;
     const member = memberId ? memberById(api.project(), memberId) : null;
-    if (!member || !finitePoint(point)) return null;
+    if (!member || !v.isVec3(point)) return null;
     return {
       memberId,
       station: memberStationAtPoint(member, point, snapMemberId ? snapSource : null)
@@ -271,52 +142,10 @@ export function createMemberCreateController({
     }
   }
 
-  function startProfileAxisCandidates() {
-    const span = authoringSettings.profileAxisSnapSpan || authoringSettings.globalAxisSnapSpan || 100000;
-    const tolerance = authoringSettings.profileAxisSnapTolerancePx || authoringSettings.globalAxisSnapTolerancePx || 34;
-    return startProfileAxes().map((axis) => ({
-      kind: "line",
-      type: "profile-axis",
-      objectId: axis.memberId,
-      axis: axis.axis,
-      a: v.sub(axis.point, v.mul(axis.direction, span)),
-      b: v.add(axis.point, v.mul(axis.direction, span)),
-      point: axis.point,
-      label: axis.label,
-      priority: 250,
-      screenTolerance: tolerance,
-      screenIntersectionMode: "self"
-    }));
-  }
-
-  function startCreationAxisCandidates() {
-    if (!state.start || state.type !== "beam") return [];
-    const span = authoringSettings.creationAxisSnapSpan || authoringSettings.globalAxisSnapSpan || 100000;
-    const tolerance = authoringSettings.creationAxisSnapTolerancePx || authoringSettings.globalAxisSnapTolerancePx || 34;
-    return Object.entries({ x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] }).map(([axis, direction]) => ({
-      kind: "line",
-      type: "creation-axis",
-      axis,
-      a: v.sub(state.start, v.mul(direction, span)),
-      b: v.add(state.start, v.mul(direction, span)),
-      point: state.start,
-      label: `Start ${axis.toUpperCase()} axis`,
-      priority: 250,
-      screenTolerance: tolerance,
-      screenIntersectionMode: "self"
-    }));
-  }
-
   function activeAxisGuideMode() {
     if (!state.start || state.type !== "beam") return normalizeAxisGuideMode(state.axisGuideMode);
     if (state.axisGuideMode === "local" && startProfileAxes().length) return "local";
     return "global";
-  }
-
-  function constructionAxisCandidates() {
-    return activeAxisGuideMode() === "local"
-      ? startProfileAxisCandidates()
-      : startCreationAxisCandidates();
   }
 
   function activateReferenceMemberFromHit(hit) {
@@ -329,76 +158,10 @@ export function createMemberCreateController({
     ].slice(0, limit);
   }
 
-  function activeReferenceAxisCandidates() {
-    const spanTolerance = authoringSettings.activeReferenceAxisSnapTolerancePx || authoringSettings.snapTolerancePx || 16;
-    const candidates = [];
-    for (const memberId of state.activeReferenceMemberIds) {
-      const member = memberById(api.project(), memberId);
-      if (!member) continue;
-      candidates.push({
-        kind: "line",
-        type: "member-axis",
-        objectId: member.id,
-        a: member.start,
-        b: member.end,
-        point: member.start,
-        label: `Axis: ${member.id}`,
-        priority: 90,
-        screenTolerance: spanTolerance
-      });
-      if (member.layoutAxis) {
-        const axis = memberLayoutAxis(member);
-        candidates.push({
-          kind: "line",
-          type: "layout-axis",
-          objectId: member.id,
-          a: axis.start,
-          b: axis.end,
-          point: axis.start,
-          label: `Layout axis: ${member.id}`,
-          priority: 95,
-          screenTolerance: spanTolerance
-        });
-      }
-    }
-    return candidates;
-  }
-
-  function commandSnapCandidates() {
-    const candidates = snapCandidates(api.project(), {
-      includeLines: false,
-      includeGlobalAxes: true,
-      globalAxisOrigin: [0, 0, 0],
-      globalAxisSpan: authoringSettings.globalAxisSnapSpan || 100000,
-      globalAxisSnapTolerancePx: authoringSettings.globalAxisSnapTolerancePx || 34
-    });
-    const constructionAxes = constructionAxisCandidates();
-    candidates.push(...constructionAxes);
-    candidates.push(...activeReferenceAxisCandidates());
-    if (state.start && state.type === "beam") {
-      candidates.push(...composeSnapCandidates(api.project(), {
-        constructionAxes,
-        activeMemberIds: state.activeReferenceMemberIds,
-        screenTolerance: authoringSettings.compositeSnapTolerancePx || authoringSettings.snapTolerancePx || 16
-      }));
-    }
-    return candidates;
-  }
-
-  function pointOnViewPlaneAtCursor(basePoint, screen) {
-    if (!finitePoint(basePoint) || !screen) return null;
-    const ray = viewer.screenRay(screen.x, screen.y);
-    const denominator = v.dot(ray.direction, ray.direction);
-    if (denominator <= 1e-12) return null;
-    const distance = v.dot(v.sub(basePoint, ray.origin), ray.direction) / denominator;
-    const point = v.add(ray.origin, v.mul(ray.direction, distance));
-    return finitePoint(point) ? point : null;
-  }
-
   function pointerRawPoint(screen, hit, activePlane) {
-    if (finitePoint(hit?.point)) return hit.point;
+    if (v.isVec3(hit?.point)) return hit.point;
     if (state.start && state.type === "beam") {
-      const viewPoint = pointOnViewPlaneAtCursor(state.start, screen);
+      const viewPoint = pointOnViewRay(viewer, state.start, screen);
       if (viewPoint) return viewPoint;
     }
     return rayPlaneIntersection(viewer.screenRay(screen.x, screen.y), activePlane);
@@ -407,21 +170,27 @@ export function createMemberCreateController({
   function pointerPoint({ screen, hit, event }) {
     const activePlane = plane();
     const raw = pointerRawPoint(screen, hit, activePlane);
-    if (!finitePoint(raw)) return { point: null, rawPoint: null, snap: null, plane: activePlane };
-    const solved = solveSnap({
-      candidates: commandSnapCandidates(),
-      viewer,
+    if (!v.isVec3(raw)) return { point: null, rawPoint: null, snap: null, plane: activePlane };
+    if (!snapManager) throw new Error("member create requires snap manager");
+    const snapResult = snapManager.resolve({
       screen,
       rawPoint: raw,
-      screenTolerance: authoringSettings.snapTolerancePx || 16,
-      intersectionTolerancePx: authoringSettings.multiSnapTolerancePx || 22,
-      pointPriorityBiasPx: authoringSettings.pointSnapBiasPx,
-      intersectionPriorityBiasPx: authoringSettings.intersectionSnapBiasPx,
-      cycleIndex: state.cycleIndex
+      event,
+      context: {
+        tool: "member-create",
+        phase: state.start ? "pick-end" : "pick-start",
+        memberType: state.type,
+        start: state.start,
+        startReference: state.startReference,
+        activeMemberIds: state.activeReferenceMemberIds,
+        axisGuideMode: activeAxisGuideMode(),
+        workPlane: activePlane,
+        projectToPlane: false,
+        includeLines: true
+      }
     });
-    const directPointSnap = preferredDirectPointSnap(solved.snap, solved.candidates);
-    const snap = preferredStartAxisSnap(preferredSnap(directPointSnap, hit, screen, raw), solved.candidates);
-    let point = snap?.point || raw;
+    const snap = snapResult.snap;
+    let point = snapResult.accepted ? snapResult.pointWorld : raw;
     if (state.elevationLock !== null) point = [point[0], point[1], state.elevationLock];
     if (state.start && event?.shiftKey && state.type === "beam") point = axisLockedPoint(state.start, point, activePlane);
     if (state.start && state.type === "column") point = [state.start[0], state.start[1], point[2]];
@@ -495,7 +264,7 @@ export function createMemberCreateController({
     state.endReference = null;
     state.snap = null;
     state.input = "";
-    state.cycleIndex = 0;
+    snapManager?.resetCycle?.();
     state.elevationLock = null;
     state.axisGuideMode = normalizeAxisGuideMode(authoringSettings.axisGuideMode);
     state.axisGuideModeLabel = state.axisGuideMode;
@@ -530,7 +299,7 @@ export function createMemberCreateController({
     state.endSnap = null;
     state.endReference = null;
     state.input = "";
-    state.cycleIndex = 0;
+    snapManager?.resetCycle?.();
     state.axisGuideModeLabel = state.axisGuideMode;
     renderOverlay();
   }
@@ -569,6 +338,7 @@ export function createMemberCreateController({
 
   function pointerMove(pointer) {
     if (!state.active) return false;
+    snapManager?.resetCycle?.();
     setPointerState(pointer);
     return true;
   }
@@ -608,7 +378,7 @@ export function createMemberCreateController({
       return commit(end, null, null);
     }
     const distance = Number(value);
-    if (!Number.isFinite(distance) || distance <= 0) return false;
+    if (!finiteNumber(distance) || distance <= 0) return false;
     let end;
     if (state.type === "column") {
       end = v.add(state.start, [0, 0, distance]);
@@ -622,7 +392,7 @@ export function createMemberCreateController({
 
   function cycleSnap() {
     if (!state.active) return false;
-    state.cycleIndex += 1;
+    snapManager?.cycle?.();
     if (state.lastPointer) setPointerState(state.lastPointer);
     return true;
   }
@@ -640,7 +410,7 @@ export function createMemberCreateController({
     } else {
       state.axisGuideMode = "global";
     }
-    state.cycleIndex = 0;
+    snapManager?.resetCycle?.();
     if (state.lastPointer) setPointerState(state.lastPointer);
     else renderOverlay();
     return true;
@@ -653,12 +423,12 @@ export function createMemberCreateController({
       else cancel();
       return true;
     }
-    if (matchesShortcut(event, shortcutSetting(shortcuts, "toggleAxisGuideMode", "Tab"))) {
-      toggleAxisGuideMode();
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "cycleSnap", authoringSettings.snap?.cycleKey || "Tab"))) {
+      cycleSnap();
       return true;
     }
-    if (matchesShortcut(event, shortcutSetting(shortcuts, "cycleSnap", ""))) {
-      cycleSnap();
+    if (matchesShortcut(event, shortcutSetting(shortcuts, "toggleAxisGuideMode", "Shift+Tab"))) {
+      toggleAxisGuideMode();
       return true;
     }
     if (matchesShortcut(event, shortcutSetting(shortcuts, "confirm", "Enter"))) {
@@ -689,6 +459,7 @@ export function createMemberCreateController({
     handleKey,
     pointerDown,
     pointerMove,
+    cycleSnap,
     start,
     status: () => statusFor(state)
   };

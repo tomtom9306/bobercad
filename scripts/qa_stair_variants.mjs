@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { normalizePath } from "../bobercad/app/engine/api/geometry/paths.mjs";
+import { plateOutline } from "../bobercad/app/engine/api/project/plates.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const VIEWER_DIR = path.join(ROOT, "bobercad", "app", "ui", "viewer");
@@ -185,10 +186,14 @@ function validatePlates(project, issues) {
       if (!finitePoint(plate[field])) addIssue(issues, "error", "plate-invalid-frame", `${plate.id}: plate ${field} is not finite`);
     }
     if (!finiteNumber(plate.thickness) || plate.thickness <= 0) addIssue(issues, "error", "plate-invalid-thickness", `${plate.id}: plate thickness must be positive`);
-    if (!plate.outline && (!finiteNumber(plate.width) || !finiteNumber(plate.height) || plate.width <= 0 || plate.height <= 0)) {
-      addIssue(issues, "error", "plate-invalid-shape", `${plate.id}: plate needs positive width/height or outline`);
+    const vertices = plate.sketch?.vertices || [];
+    const edges = plate.sketch?.edges || [];
+    if (!Array.isArray(vertices) || vertices.length < 3 || !Array.isArray(edges) || edges.length < 3) {
+      addIssue(issues, "error", "plate-invalid-sketch", `${plate.id}: plate sketch needs at least three vertices and edges`);
     }
-    if (plate.outline && (!Array.isArray(plate.outline) || plate.outline.length < 3)) addIssue(issues, "error", "plate-invalid-outline", `${plate.id}: outline has fewer than 3 points`);
+    for (const bend of plate.fabrication?.bends || []) {
+      if (!edges.some((edge) => edge.id === bend.edgeId)) addIssue(issues, "error", "plate-bend-invalid-edge", `${plate.id}/${bend.id}: bend edgeId does not exist in sketch`);
+    }
   }
 }
 
@@ -244,14 +249,31 @@ function unit2(axis) {
 
 function platePlanRect(plate) {
   if (!finitePoint(plate.center) || !finitePoint(plate.localAxisY) || !finitePoint(plate.localAxisZ)) return null;
-  if (!finiteNumber(plate.width) || !finiteNumber(plate.height)) return null;
+  let outline;
+  try {
+    outline = plateOutline(plate);
+  } catch {
+    return null;
+  }
+  const ys = outline.map((point) => point[0]).filter(finiteNumber);
+  const zs = outline.map((point) => point[1]).filter(finiteNumber);
+  if (ys.length < 3 || zs.length < 3) return null;
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const minZ = Math.min(...zs);
+  const maxZ = Math.max(...zs);
+  const centerY = (minY + maxY) / 2;
+  const centerZ = (minZ + maxZ) / 2;
   const yAxis = unit2(plate.localAxisY);
   const zAxis = unit2(plate.localAxisZ);
   if (!yAxis || !zAxis) return null;
   return {
-    center: [plate.center[0], plate.center[1]],
+    center: [
+      plate.center[0] + plate.localAxisY[0] * centerY + plate.localAxisZ[0] * centerZ,
+      plate.center[1] + plate.localAxisY[1] * centerY + plate.localAxisZ[1] * centerZ
+    ],
     axes: [yAxis, zAxis],
-    half: [plate.width / 2, plate.height / 2]
+    half: [(maxY - minY) / 2, (maxZ - minZ) / 2]
   };
 }
 

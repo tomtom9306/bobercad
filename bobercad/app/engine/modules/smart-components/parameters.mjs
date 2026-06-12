@@ -1,14 +1,13 @@
+import { arrayValues, jsonClone } from "../../core/model.mjs?v=smart-config-array-values-dry-1";
+import { finiteNonNegativeNumber, finiteNumber, finitePositiveInteger, finitePositiveNumber } from "../../core/math.mjs?v=integer-number-dry-1";
+
 const PARAMETER_KINDS = new Set(["number", "positiveNumber", "nonNegativeNumber", "positiveInteger", "numberList", "object", "boolean", "catalogRef", "enum", "text"]);
 
 function fail(scope, message) {
   throw new Error(`${scope}: ${message}`);
 }
 
-export function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
-export function pathKeys(path) {
+function pathKeys(path) {
   if (typeof path !== "string" || !path.includes(".")) fail("smart component path", `invalid parameter path ${path}`);
   return path.split(".");
 }
@@ -43,20 +42,20 @@ export function setPath(source, path, value, scope = "smart component parameters
   cursor[keys[keys.length - 1]] = value;
 }
 
-export function validateParameterValue(definition, path, value, libraries = {}) {
+function validateParameterValue(definition, path, value, libraries = {}) {
   const spec = definition.parameters[path];
   if (!spec) fail(definition.type, `unknown parameter ${path}`);
   if (spec.required !== false && (value === undefined || value === null)) fail(definition.type, `missing ${path}`);
   if (value === undefined || value === null) return value;
 
-  if (spec.kind === "number" && (typeof value !== "number" || !Number.isFinite(value))) fail(definition.type, `${path} must be a number`);
-  if (spec.kind === "positiveNumber" && (typeof value !== "number" || !Number.isFinite(value) || value <= 0)) fail(definition.type, `${path} must be a positive number`);
-  if (spec.kind === "nonNegativeNumber" && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) fail(definition.type, `${path} must be zero or positive`);
-  if (spec.kind === "positiveInteger" && (!Number.isInteger(value) || value <= 0)) fail(definition.type, `${path} must be a positive integer`);
+  if (spec.kind === "number" && !finiteNumber(value)) fail(definition.type, `${path} must be a number`);
+  if (spec.kind === "positiveNumber" && !finitePositiveNumber(value)) fail(definition.type, `${path} must be a positive number`);
+  if (spec.kind === "nonNegativeNumber" && !finiteNonNegativeNumber(value)) fail(definition.type, `${path} must be zero or positive`);
+  if (spec.kind === "positiveInteger" && !finitePositiveInteger(value)) fail(definition.type, `${path} must be a positive integer`);
   if (spec.kind === "numberList") {
     if (!Array.isArray(value)) fail(definition.type, `${path} must be a number list`);
     for (const item of value) {
-      if (typeof item !== "number" || !Number.isFinite(item)) fail(definition.type, `${path} must contain only numbers`);
+      if (!finiteNumber(item)) fail(definition.type, `${path} must contain only numbers`);
       if (spec.itemMinimum !== undefined && item < spec.itemMinimum) fail(definition.type, `${path} values must be at least ${spec.itemMinimum}`);
       if (spec.itemExclusiveMinimum !== undefined && item <= spec.itemExclusiveMinimum) fail(definition.type, `${path} values must be greater than ${spec.itemExclusiveMinimum}`);
     }
@@ -79,7 +78,7 @@ export function validateSmartComponentParameters(definition, parameters, librari
   for (const [path, spec] of Object.entries(definition.parameters)) {
     const value = optionalPath(parameters, path);
     if (value === undefined && spec.default !== undefined) {
-      validateParameterValue(definition, path, clone(spec.default), libraries);
+      validateParameterValue(definition, path, jsonClone(spec.default), libraries);
       continue;
     }
     if (value === undefined && spec.required === false) continue;
@@ -90,12 +89,12 @@ export function validateSmartComponentParameters(definition, parameters, librari
 function uiItemFields(item) {
   if (typeof item === "string") return [item];
   if (item?.kind === "parameter" && item.path) return [item.path];
-  if (item?.kind === "section") return (item.items || []).flatMap(uiItemFields);
+  if (item?.kind === "section") return arrayValues(item.items).flatMap(uiItemFields);
   return [];
 }
 
 function referencedUiFields(definition) {
-  return (definition.ui?.tabs || []).flatMap((tab) => tab.items || []).flatMap(uiItemFields);
+  return arrayValues(definition.ui?.tabs).flatMap((tab) => arrayValues(tab.items)).flatMap(uiItemFields);
 }
 
 function validateParameterSpec(definition, path, spec) {
@@ -125,7 +124,7 @@ export function defineSmartComponent(definition) {
   for (const path of referencedUiFields(definition)) {
     if (!definition.parameters[path]) fail(definition.type, `ui references unknown parameter ${path}`);
   }
-  for (const spec of definition.dimensions || []) validateDimensionSpec(definition, spec);
+  for (const spec of arrayValues(definition.dimensions)) validateDimensionSpec(definition, spec);
   return Object.freeze({
     requiredPlateRoles: ["endPlate"],
     interfaces: [{ role: "main" }, { role: "secondary" }],

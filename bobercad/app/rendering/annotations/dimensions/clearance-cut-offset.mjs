@@ -1,5 +1,5 @@
-import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs";
-import { clearanceAnnotationBasis, dimensionOffset, rangeMid, roleObject, spacingDimension } from "../dimension-context.mjs";
+import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs?v=geometry-api-array-values-dry-1";
+import { clearanceAnnotationBasis, dimensionOffset, rangeMid, roleObject, spacingDimension } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
 export function clearanceCutOffsetDimension(ctx, spec) {
   const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);

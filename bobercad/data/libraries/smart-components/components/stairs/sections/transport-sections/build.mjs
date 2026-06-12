@@ -1,8 +1,5 @@
+import { uniqueTruthy as unique } from "../../../../../../../app/engine/core/model.mjs?v=unique-dry-1";
 import { createSection, estimateObjects, splitByMaxWeight, sectionSchedule } from "../../../../../../../app/engine/api/model/sectioning.mjs";
-
-function unique(values) {
-  return [...new Set(values.filter(Boolean))];
-}
 
 function flattenIds(value) {
   if (!value) return [];

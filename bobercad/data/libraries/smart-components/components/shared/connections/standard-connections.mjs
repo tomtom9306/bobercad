@@ -40,6 +40,17 @@ function positive(value, fallback) {
   return number > 0 ? number : fallback;
 }
 
+function plateSketchBounds(plate) {
+  const points = (plate.sketch?.vertices || [])
+    .map((vertex) => vertex.point)
+    .filter((point) => Array.isArray(point) && point.length >= 2);
+  if (!points.length) return { width: 0, height: 0 };
+  return {
+    width: Math.max(...points.map((point) => point[0])) - Math.min(...points.map((point) => point[0])),
+    height: Math.max(...points.map((point) => point[1])) - Math.min(...points.map((point) => point[1]))
+  };
+}
+
 function connectionValue(ctx, path) {
   const inputValue = ctx.input(path);
   if (inputValue !== undefined) return inputValue;
@@ -266,7 +277,7 @@ function createTreadCleats(ctx, treads, supports, generatedIds) {
         width: cleatLength,
         height: cleatHeight,
         material: "S355",
-        center: add(add(tread.center, mul(lateral, sideSign * (tread.width / 2 - 35))), mul(up, -70)),
+        center: add(add(tread.center, mul(lateral, sideSign * (plateSketchBounds(tread).width / 2 - 35))), mul(up, -70)),
         normal: mul(lateral, sideSign),
         localAxisY: tangent,
         localAxisZ: up,
@@ -643,7 +654,7 @@ function createSpiralTreadColumnBrackets(ctx, treads, column, generatedIds) {
       width: bracketLength,
       height: bracketHeight,
       material: "S355",
-      center: add(add(tread.center, mul(inward, tread.width / 2 - 45)), mul(up, -62)),
+      center: add(add(tread.center, mul(inward, plateSketchBounds(tread).width / 2 - 45)), mul(up, -62)),
       normal: inward,
       localAxisY: tangent,
       localAxisZ: up,

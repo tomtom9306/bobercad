@@ -1,4 +1,4 @@
-import { dimensionOffset, featureBasis, finite, makeDimension, roleObject, v } from "../dimension-context.mjs";
+import { dimensionOffset, featureBasis, finite, makeDimension, roleObject, v } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
 
 export function featureDepthDimension(ctx, spec) {
   const feature = roleObject(ctx.project, ctx.smartComponent, spec.reference.featureRole);

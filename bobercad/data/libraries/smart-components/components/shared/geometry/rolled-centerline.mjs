@@ -1,4 +1,4 @@
-import { normalizePath } from "../../../../../../app/engine/api/geometry/paths.mjs";
+import { normalizePath } from "../../../../../../app/engine/api/geometry/paths.mjs?v=path-segment-parameter-dry-1";
 
 export function rolledCenterline(sourcePath, lateralOffset = 0, options = {}) {
   if (!sourcePath || !["arc", "helix", "spiral"].includes(sourcePath.type)) return null;

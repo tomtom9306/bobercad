@@ -1,26 +1,20 @@
-import { clone, optionalPath, setPath } from "../../../engine/modules/smart-components/parameters.mjs?v=stair-route-ui-fit-2";
-import { buildSmartComponentDimensions } from "../../../rendering/annotations/build-dimensions.mjs?v=reference-plane-1";
-
-function sameValue(a, b) {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
-
-function cloneIfObject(value) {
-  return value && typeof value === "object" ? clone(value) : value;
-}
+import { arrayValues, jsonClone as clone, truthyValues } from "../../../engine/core/model.mjs?v=array-values-dry-1";
+import { finiteNonNegativeInteger, finiteNumber, finitePositiveInteger } from "../../../engine/core/math.mjs?v=integer-number-dry-1";
+import { optionalPath, setPath } from "../../../engine/modules/smart-components/parameters.mjs?v=smart-config-array-values-dry-1";
+import { buildSmartComponentDimensions } from "../../../rendering/annotations/build-dimensions.mjs?v=unified-dimension-overlay-1";
 
 function writeParameter(parameters, definition, path, value) {
   const spec = definition.parameters[path];
   if (!spec) return false;
   const writePath = spec.writePath || path;
-  const nextValue = cloneIfObject(value);
-  const changed = !sameValue(optionalPath(parameters, writePath), nextValue);
+  const nextValue = value && typeof value === "object" ? clone(value) : value;
+  const changed = JSON.stringify(optionalPath(parameters, writePath)) !== JSON.stringify(nextValue);
   setPath(parameters, writePath, nextValue, definition.type);
   return changed;
 }
 
 function storedDimensionValue(dimension, value = dimension.dimensionValue) {
-  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  if (!finiteNumber(value)) return null;
   if (dimension.editKind === "offsetNumber") {
     return value * (dimension.editValueScale ?? 1) + (dimension.editValueOffset || 0);
   }
@@ -29,10 +23,10 @@ function storedDimensionValue(dimension, value = dimension.dimensionValue) {
 
 function seedModeValue(definition, parameters, dimension, modePath, modeValue) {
   let changed = false;
-  const seeds = [
+  const seeds = truthyValues([
     dimension.modeSeed,
-    ...(Array.isArray(dimension.modeSeeds) ? dimension.modeSeeds : [])
-  ].filter(Boolean);
+    ...arrayValues(dimension.modeSeeds)
+  ]);
   const appliedSeedPaths = new Set();
   for (const seed of seeds) {
     if (!seed?.path || (seed.when && seed.when !== modeValue)) continue;
@@ -64,26 +58,35 @@ function applyDimensionValue(parameters, definition, dimension, value) {
     const secondPath = dimension.editPaths?.second;
     const firstSpec = definition.parameters[firstPath];
     const secondSpec = definition.parameters[secondPath];
-    if (!firstSpec || !secondSpec || !Number.isInteger(value?.first) || !Number.isInteger(value?.second)) return false;
+    if (!firstSpec || !secondSpec || !finitePositiveInteger(value?.first) || !finitePositiveInteger(value?.second)) return false;
     setPath(parameters, firstSpec.writePath || firstPath, value.first, definition.type);
     setPath(parameters, secondSpec.writePath || secondPath, value.second, definition.type);
     return true;
   }
   if (dimension.editKind === "numberListItem") {
-    if (!dimension.editPath || !Number.isInteger(dimension.editIndex) || typeof value !== "number" || !Number.isFinite(value)) return false;
-    const nextValues = Array.isArray(dimension.editValues) ? [...dimension.editValues] : [];
+    if (!dimension.editPath || !finiteNonNegativeInteger(dimension.editIndex) || !finiteNumber(value)) return false;
+    const nextValues = [...arrayValues(dimension.editValues)];
     while (nextValues.length <= dimension.editIndex) nextValues.push(0);
     nextValues[dimension.editIndex] = value;
     setPath(parameters, dimension.editPath, nextValues, definition.type);
     return true;
   }
   if (dimension.editKind === "offsetNumber") {
-    if (typeof value !== "number" || !Number.isFinite(value)) return false;
+    if (!finiteNumber(value)) return false;
     setPath(parameters, spec.writePath || dimension.parameter, storedDimensionValue(dimension, value), definition.type);
     return true;
   }
   setPath(parameters, spec.writePath || dimension.parameter, value, definition.type);
   return true;
+}
+
+function safeDimensionHandler(action) {
+  try {
+    return action();
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 }
 
 export function createDimensionEditController({ viewer, api, profiles, settings, getEditorApi, onProjectChange, openSmartComponentEditor }) {
@@ -92,6 +95,7 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
   let dimensionId = null;
   let mode = null;
   let editingLabel = false;
+  const placementOffsets = new Map();
 
   function focus() {
     return { smartComponentId, path, dimensionId, mode, editingLabel };
@@ -145,7 +149,8 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
       activeDimensionId: dimensionId,
       activeParameterMode: mode,
       activeParameterEditing: editingLabel,
-      dimensionSettings: settings.render.dimensions
+      dimensionSettings: settings.render.dimensions,
+      dimensionPlacementOffsets: Object.fromEntries(placementOffsets)
     }));
   }
 
@@ -170,8 +175,7 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
       });
     });
 
-    viewer.setDimensionModeHandler((dimension, modePath, modeValue) => {
-      try {
+    viewer.setDimensionModeHandler((dimension, modePath, modeValue) => safeDimensionHandler(() => {
         const definition = api.definition(dimension.smartComponentId);
         if (!definition.parameters[modePath]) return false;
         const parameters = clone(api.smartComponent(dimension.smartComponentId).referenceParameters);
@@ -180,30 +184,30 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
         refocusDimension(dimension);
         if (changed) onProjectChange(api.updateSmartComponent(dimension.smartComponentId, parameters));
         return true;
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
-    });
+    }));
 
     viewer.setDimensionCancelHandler(() => {
       clearDimension();
     });
 
-    viewer.setDimensionRepairHandler((dimension) => {
-      try {
+    viewer.setDimensionRepairHandler((dimension) => safeDimensionHandler(() => {
         const nextProject = api.resolveSmartComponentDiagnostics(dimension.smartComponentId);
         openSmartComponentEditor(dimension.smartComponentId);
         onProjectChange(nextProject);
         return true;
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
-    });
+    }));
 
-    viewer.setDimensionValueHandler((dimension, value) => {
-      try {
+    viewer.setDimensionPlacementHandler((dimension, drag) => safeDimensionHandler(() => {
+        if (!dimension.dimensionId || !dimension.smartComponentId) return false;
+        const baseOffset = finiteNumber(dimension.placementOffset)
+          ? dimension.placementOffset
+          : placementOffsets.get(dimension.dimensionId) || 0;
+        placementOffsets.set(dimension.dimensionId, baseOffset + (drag.offsetDelta || 0));
+        renderDimensions();
+        return true;
+    }));
+
+    viewer.setDimensionValueHandler((dimension, value) => safeDimensionHandler(() => {
         const definition = api.definition(dimension.smartComponentId);
         const parameters = clone(api.smartComponent(dimension.smartComponentId).referenceParameters);
         if (!applyDimensionValue(parameters, definition, dimension, value)) return false;
@@ -211,11 +215,7 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
         openSmartComponentEditor(dimension.smartComponentId);
         onProjectChange(nextProject);
         return true;
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
-    });
+    }));
   }
 
   wireViewer();

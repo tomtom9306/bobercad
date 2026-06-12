@@ -17,10 +17,7 @@ This checks:
 - JSON files parse
 - `$schema` references point to existing local files
 - project JSON files validate against their local schemas
-- all connection folder `config.json` files validate against the shared connection schema
-- connection folders are recipe/config only and do not contain per-connection `build.mjs` or `ui.mjs`
-- connection folders do not own roles, parameters, dimensions, component toggles, or UI fragments
-- the connection component register and all component `config.json` files validate against their schemas
+- Smart Component register and component `config.json` files validate against their schemas
 - important docs exist
 - `AGENTS.md` points to current paths
 - sample project `objectIndex` entries point to existing model objects
@@ -32,7 +29,7 @@ Use:
 node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_structure.json
 ```
 
-This validates a JSON file against the schema referenced by its `$schema` field. With no arguments it validates sample projects, all connection `config.json` files, the connection component register, and all connection component `config.json` files. It has no third-party package requirement.
+This validates a JSON file against the schema referenced by its `$schema` field. With no arguments it validates sample projects, the Smart Component register, and Smart Component `config.json` files. It has no third-party package requirement.
 
 ## Validation Philosophy
 

@@ -1,31 +1,24 @@
-import { optionalPath } from "../../engine/modules/smart-components/parameters.mjs?v=stair-route-ui-fit-2";
-import { v } from "../../engine/core/math.mjs";
-import { objectById } from "../../engine/core/model.mjs";
-import { resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
+import { optionalPath } from "../../engine/modules/smart-components/parameters.mjs?v=smart-config-array-values-dry-1";
+import { averageVec3, boundsYz, distance2, distance3, finiteNumber, linePlaneIntersection, projectPointToPlane, v } from "../../engine/core/math.mjs?v=distance2-array-dry-1";
+import { formatNumber } from "../../engine/core/format.mjs?v=format-number-dry-1";
+import { arrayValues, objectById, truthyValues, uniqueValues } from "../../engine/core/model.mjs?v=array-values-dry-1";
+import { libraryProfileById } from "../../engine/api/project/profiles.mjs?v=profile-lookup-dry-1";
+import { resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs?v=geometry-api-array-values-dry-1";
+import { plateOutline as sketchPlateOutline } from "../../engine/api/project/plates.mjs?v=plate-outline-relation-safety-1";
+import { linearDraftingDimension, midpoint3 } from "./drafting-dimensions.mjs?v=unified-dimension-overlay-1";
 
-export { optionalPath, v };
+export { averageVec3, optionalPath, truthyValues, v };
 
 export const EPSILON = 1e-6;
-export const COLOR = "#334155";
-export const ACTIVE_COLOR = "#2563eb";
-export const ERROR_COLOR = "#b91c1c";
-export const WARNING_COLOR = "#b45309";
-export const ARROW_LENGTH = 7;
-export const ARROW_HALF_WIDTH = 2.6;
-export const OUTSIDE_ARROW_MAX_LENGTH = 34;
-export const EXTENSION_GAP = 2;
-export const EXTENSION_OVERRUN = 6;
-export const DEFAULT_SURFACE_LIFT = 4;
+const COLOR = "#334155";
+const ACTIVE_COLOR = "#2563eb";
+const ERROR_COLOR = "#b91c1c";
+const WARNING_COLOR = "#b45309";
+const DEFAULT_SURFACE_LIFT = 4;
 
-export function finite(value) {
-  return typeof value === "number" && Number.isFinite(value);
-}
+export const finite = finiteNumber;
 
-export function fmt(value) {
-  if (!finite(value)) return "";
-  const rounded = Math.round(value * 100) / 100;
-  return Number.isInteger(rounded) ? String(rounded) : String(rounded.toFixed(2)).replace(/0+$/, "").replace(/\.$/, "");
-}
+export const fmt = (value) => formatNumber(value, { trimTrailingZeros: true });
 
 export function roleId(smartComponent, role) {
   return smartComponent.objectRoles?.[role] || null;
@@ -36,9 +29,9 @@ export function roleObject(project, smartComponent, role) {
   return id && project.objectIndex?.[id] ? objectById(project, id) : null;
 }
 
-export function interfaceIdByRole(project, definition, smartComponent, role) {
+function interfaceIdByRole(project, definition, smartComponent, role) {
   const zone = project.model.connectionZones?.[smartComponent.inputs?.connectionZoneId];
-  const index = (definition.interfaces || []).findIndex((item) => item.role === role);
+  const index = arrayValues(definition.interfaces).findIndex((item) => item.role === role);
   return index >= 0 ? zone?.interfaceIds?.[index] : null;
 }
 
@@ -51,7 +44,7 @@ export function parameterLabel(definition, path) {
   return definition.parameters[path]?.label || path;
 }
 
-export function parameterUnit(definition, path) {
+function parameterUnit(definition, path) {
   return definition.parameters[path]?.unit || "";
 }
 
@@ -61,7 +54,7 @@ export function dimensionText(definition, spec, measured, smartComponent) {
   return `${spec.label || parameterLabel(definition, spec.parameter)} ${fmt(value)}${unit ? ` ${unit}` : ""}`;
 }
 
-export function draftingText(spec, value) {
+function draftingText(spec, value) {
   const text = fmt(value);
   if (spec.reference?.kind === "hole-diameter") return `Ø${text}`;
   return text;
@@ -73,45 +66,32 @@ export function fullDimensionText(definition, spec, measured, smartComponent) {
   return `${parameterLabel(definition, spec.parameter)} ${fmt(value)}${unit ? ` ${unit}` : ""}`;
 }
 
-export function referenceRoles(spec) {
-  return Object.entries(spec.reference || {})
-    .filter(([key, value]) => key.endsWith("Role") && typeof value === "string")
-    .map(([, value]) => value);
-}
-
-export function diagnosticPaths(spec) {
-  return [
+function issueForDimension(smartComponent, spec) {
+  const diagnostics = arrayValues(smartComponent.diagnostics)
+    .filter((entry) => entry.severity === "error" || entry.severity === "warning");
+  const paths = truthyValues([
     spec.parameter,
     spec.reference?.customParameter,
     spec.reference?.rowsParameter,
     spec.reference?.columnsParameter
-  ].filter(Boolean);
-}
-
-export function issueForDimension(smartComponent, spec) {
-  const diagnostics = (smartComponent.diagnostics || [])
-    .filter((entry) => entry.severity === "error" || entry.severity === "warning");
-  const paths = diagnosticPaths(spec);
-  const roles = referenceRoles(spec);
+  ]);
+  const roles = Object.entries(spec.reference || {})
+    .filter(([key, value]) => key.endsWith("Role") && typeof value === "string")
+    .map(([, value]) => value);
   const matches = diagnostics.filter((entry) => (
-    (entry.parameters || []).some((path) => paths.includes(path))
-    || (!(entry.parameters || []).length && (entry.objectRoles || []).some((role) => roles.includes(role)))
+    arrayValues(entry.parameters).some((path) => paths.includes(path))
+    || (!arrayValues(entry.parameters).length && arrayValues(entry.objectRoles).some((role) => roles.includes(role)))
   ));
   return matches.find((entry) => entry.severity === "error") || matches[0] || null;
 }
 
-export function issueColor(issue, active) {
+function issueColor(issue, active) {
   if (issue?.severity === "error") return ERROR_COLOR;
   if (issue?.severity === "warning") return WARNING_COLOR;
   return active ? ACTIVE_COLOR : COLOR;
 }
 
-export function dimensionTitle(definition, spec, measured, smartComponent, issue) {
-  const title = fullDimensionText(definition, spec, measured, smartComponent);
-  return issue?.message ? `${title}\n${issue.message}` : title;
-}
-
-export function dimensionModeControl(definition, smartComponent, spec) {
+function dimensionModeControl(definition, smartComponent, spec) {
   const control = spec.reference?.modeControl;
   if (!control?.path || !definition.parameters[control.path]) return null;
   const parameter = definition.parameters[control.path];
@@ -141,7 +121,7 @@ function hasInPlaneOffset(offset) {
   return ["localAxisY", "localAxisZ"].some((key) => finite(offset?.[key]) && Math.abs(offset[key]) > EPSILON);
 }
 
-export function offsetVector(basis, offset = {}, settings = {}) {
+function offsetVector(basis, offset = {}, settings = {}) {
   const lift = surfaceLift(settings);
   const keepPlaneOffsetFlat = settings.clampNormal !== false && hasInPlaneOffset(offset);
   return Object.entries(offset).reduce((sum, [key, value]) => {
@@ -164,11 +144,9 @@ export function midpoint(a, b) {
   return v.mul(v.add(a, b), 0.5);
 }
 
-export function distance(a, b) {
-  return v.len(v.sub(b, a));
-}
+export const distance = distance3;
 
-export function perpendicularAxis(axis) {
+function perpendicularAxis(axis) {
   const fromZ = v.cross(axis, [0, 0, 1]);
   if (v.len(fromZ) > EPSILON) return v.norm(fromZ);
   return v.norm(v.cross(axis, [0, 1, 0]));
@@ -186,14 +164,6 @@ export function pushLine(lines, base, a, b) {
   lines.push({ ...base, points: [a, b] });
 }
 
-export function pushArrow(lines, base, point, inward, side) {
-  const arrowLength = Math.min(ARROW_LENGTH, Math.max(4, distance(base.dimensionStart, base.dimensionEnd) * 0.28));
-  const back = v.mul(v.norm(inward), arrowLength);
-  const spread = v.mul(v.norm(side), ARROW_HALF_WIDTH);
-  pushLine(lines, base, point, v.add(point, v.add(back, spread)));
-  pushLine(lines, base, point, v.add(point, v.sub(back, spread)));
-}
-
 export function plateBasis(plate) {
   return {
     normal: v.norm(plate.normal),
@@ -203,19 +173,9 @@ export function plateBasis(plate) {
 }
 
 export function plateBounds(plate) {
-  const outline = Array.isArray(plate.outline) && plate.outline.length
-    ? plate.outline
-    : [
-      [-plate.width / 2, -plate.height / 2],
-      [plate.width / 2, -plate.height / 2],
-      [plate.width / 2, plate.height / 2],
-      [-plate.width / 2, plate.height / 2]
-    ];
+  const outline = sketchPlateOutline(plate);
   return {
-    minY: Math.min(...outline.map((point) => point[0])),
-    maxY: Math.max(...outline.map((point) => point[0])),
-    minZ: Math.min(...outline.map((point) => point[1])),
-    maxZ: Math.max(...outline.map((point) => point[1])),
+    ...boundsYz(outline),
     minN: -plate.thickness / 2,
     maxN: plate.thickness / 2
   };
@@ -232,20 +192,8 @@ export function platePoint(plate, basis, y, z, n = 0) {
   return v.add(plate.center, v.add(v.mul(basis.localAxisY, y), v.add(v.mul(basis.localAxisZ, z), v.mul(basis.normal, n))));
 }
 
-export function plateOutlineLocalPoints(plate) {
-  const bounds = plateBounds(plate);
-  return Array.isArray(plate.outline) && plate.outline.length >= 3
-    ? plate.outline
-    : [
-      [bounds.minY, bounds.minZ],
-      [bounds.maxY, bounds.minZ],
-      [bounds.maxY, bounds.maxZ],
-      [bounds.minY, bounds.maxZ]
-    ];
-}
-
 export function longestPlateEdge(plate, axis) {
-  const points = plateOutlineLocalPoints(plate);
+  const points = sketchPlateOutline(plate);
   const axisIndex = axis === "localAxisY" ? 0 : 1;
   const otherIndex = axisIndex === 0 ? 1 : 0;
   let best = null;
@@ -268,20 +216,21 @@ export function pickedEdgeOffset(axis, edge, basis, rawOffset, settings) {
   return offsetVector(basis, offset, settings);
 }
 
-export function makeDimension({ spec, definition, smartComponent, a, b, extensionA = null, extensionB = null, offset = [0, 0, 0], measured = null, editKind = null, editPath = null, editIndex = null, editValues = null, editValueOffset = null, editValueScale = null, modeSeed = null, modeSeeds = null, active = false, activeDimensionId = null, activeMode = null, activeEditing = false }) {
+export function makeDimension({ spec, definition, smartComponent, a, b, extensionA = null, extensionB = null, offset = [0, 0, 0], measured = null, editKind = null, editPath = null, editIndex = null, editValues = null, editValueOffset = null, editValueScale = null, modeSeed = null, modeSeeds = null, active = false, activeDimensionId = null, activeMode = null, activeEditing = false, placementOffset = 0 }) {
   const length = distance(a, b);
   const value = finite(measured) ? measured : length;
   if (value <= EPSILON) return null;
   const dimensionAxis = v.norm(v.sub(b, a));
-  const dimensionLineOffset = perpendicularDimensionOffset(dimensionAxis, offset);
+  const baseDimensionLineOffset = perpendicularDimensionOffset(dimensionAxis, offset);
+  const markerAxis = v.len(baseDimensionLineOffset) > EPSILON ? v.norm(baseDimensionLineOffset) : perpendicularAxis(dimensionAxis);
+  const dimensionLineOffset = v.add(baseDimensionLineOffset, v.mul(markerAxis, finite(placementOffset) ? placementOffset : 0));
   const start = v.add(a, dimensionLineOffset);
   const end = v.add(b, dimensionLineOffset);
-  const offsetLength = v.len(dimensionLineOffset);
-  const lines = [];
   const id = `${smartComponent.id}:${spec.id}`;
   const isActive = active && (!activeDimensionId || activeDimensionId === id);
   const issue = issueForDimension(smartComponent, spec);
   const color = issueColor(issue, isActive);
+  const title = fullDimensionText(definition, spec, value, smartComponent);
   const base = {
     dimensionId: id,
     smartComponentId: smartComponent.id,
@@ -307,33 +256,24 @@ export function makeDimension({ spec, definition, smartComponent, a, b, extensio
     dimensionStart: start,
     dimensionEnd: end
   };
-  const markerAxis = offsetLength > EPSILON ? v.norm(dimensionLineOffset) : perpendicularAxis(dimensionAxis);
-  const outsideArrows = distance(start, end) <= (spec.outsideArrowMaxLength || OUTSIDE_ARROW_MAX_LENGTH);
-  pushLine(lines, base, start, end);
-  pushArrow(lines, base, start, outsideArrows ? v.mul(dimensionAxis, -1) : dimensionAxis, markerAxis);
-  pushArrow(lines, base, end, outsideArrows ? dimensionAxis : v.mul(dimensionAxis, -1), markerAxis);
-  if (offsetLength > EPSILON) {
-    const extensionAxis = v.norm(dimensionLineOffset);
-    const gap = Math.min(EXTENSION_GAP, offsetLength * 0.3);
-    const firstAnchor = extensionA || a;
-    const secondAnchor = extensionB || b;
-    pushLine(lines, base, v.add(firstAnchor, v.mul(extensionAxis, gap)), v.add(start, v.mul(extensionAxis, EXTENSION_OVERRUN)));
-    pushLine(lines, base, v.add(secondAnchor, v.mul(extensionAxis, gap)), v.add(end, v.mul(extensionAxis, EXTENSION_OVERRUN)));
-  }
-  return {
-    lines,
-    labels: [{
-      ...base,
-      point: midpoint(start, end),
-      labelLine: [start, end],
-      labelAxis: dimensionAxis,
-      labelUpAxis: markerAxis,
-      textHeight: spec.textHeight,
-      text: dimensionText(definition, spec, value, smartComponent),
-      displayText: draftingText(spec, value),
-      title: dimensionTitle(definition, spec, value, smartComponent, issue)
-    }]
-  };
+  return linearDraftingDimension({
+    base,
+    a,
+    b,
+    start,
+    end,
+    extensionA,
+    extensionB,
+    dimensionAxis,
+    markerAxis,
+    color,
+    value,
+    text: dimensionText(definition, spec, value, smartComponent),
+    displayText: draftingText(spec, value),
+    title: issue?.message ? `${title}\n${issue.message}` : title,
+    textHeight: spec.textHeight,
+    labelPoint: midpoint3(start, end)
+  });
 }
 
 export function makeNote({ spec, definition, smartComponent, point, anchor = null, textValue, displayTextValue = null, titleValue = null, labelAxis = undefined, editKind = null, editValue = null, editTitle = null, editPath = null, editIndex = null, editValues = null, editValueOffset = null, editValueScale = null, editPaths = null, editLabels = null, dimensionValue = null, modeSeed = null, modeSeeds = null, active = false, activeDimensionId = null, activeMode = null, activeEditing = false }) {
@@ -393,8 +333,8 @@ export function makeNote({ spec, definition, smartComponent, point, anchor = nul
 
 export function combine(parts) {
   return {
-    lines: parts.flatMap((part) => part?.lines || []),
-    labels: parts.flatMap((part) => part?.labels || [])
+    lines: parts.flatMap((part) => arrayValues(part?.lines)),
+    labels: parts.flatMap((part) => arrayValues(part?.labels))
   };
 }
 
@@ -454,34 +394,27 @@ export function patternLayoutBasis(pattern, fallbackBasis) {
 }
 
 export function patternPositionsInBasis(pattern, sourceBasis, targetBasis) {
-  return (pattern.positions || []).map((position) => (
+  return arrayValues(pattern.positions).map((position) => (
     positionInBasis(positionPoint(sourceBasis, position), targetBasis.origin, targetBasis)
   ));
 }
 
 export function plateBoundsInBasis(plate, basis) {
-  const outline = Array.isArray(plate.outline) && plate.outline.length
-    ? plate.outline
-    : [
-      [-plate.width / 2, -plate.height / 2],
-      [plate.width / 2, -plate.height / 2],
-      [plate.width / 2, plate.height / 2],
-      [-plate.width / 2, plate.height / 2]
-    ];
+  const outline = sketchPlateOutline(plate);
   const coordinates = outline.map(([y, z]) => positionInBasis(platePoint(plate, plateBasis(plate), y, z), basis.origin, basis));
-  return {
-    minY: Math.min(...coordinates.map(([y]) => y)),
-    maxY: Math.max(...coordinates.map(([y]) => y)),
-    minZ: Math.min(...coordinates.map(([, z]) => z)),
-    maxZ: Math.max(...coordinates.map(([, z]) => z))
-  };
+  return boundsYz(coordinates);
 }
 
 export function holePair(pattern, axis) {
+  const group = nearestParallelHoleGroup(pattern, axis);
+  return group ? [group[0], group[1]] : null;
+}
+
+function nearestParallelHoleGroup(pattern, axis) {
   const axisIndex = axis === "localAxisY" ? 0 : 1;
   const otherIndex = axisIndex === 0 ? 1 : 0;
   const groups = new Map();
-  for (const position of pattern.positions || []) {
+  for (const position of arrayValues(pattern.positions)) {
     const key = Math.round(position[otherIndex] / 0.001);
     const group = groups.get(key) || [];
     group.push(position);
@@ -491,18 +424,13 @@ export function holePair(pattern, axis) {
     .sort((a, b) => Math.abs(a[0][otherIndex]) - Math.abs(b[0][otherIndex]));
   const group = candidates[0];
   if (!group) return null;
-  const sorted = [...group].sort((a, b) => a[axisIndex] - b[axisIndex]);
-  return [sorted[0], sorted[1]];
+  return [...group].sort((a, b) => a[axisIndex] - b[axisIndex]);
 }
 
 export function sortedCoordinateValues(positions, axis) {
   const axisIndex = axis === "localAxisY" ? 0 : 1;
-  return [...new Set((positions || []).map((position) => Math.round(position[axisIndex] / 0.001) * 0.001))]
+  return uniqueValues(arrayValues(positions).map((position) => Math.round(position[axisIndex] / 0.001) * 0.001))
     .sort((a, b) => a - b);
-}
-
-export function edgeDistanceSign(edge) {
-  return edge === "max" ? 1 : -1;
 }
 
 export function basisBoundsCoordinate(bounds, axis, edge) {
@@ -511,7 +439,7 @@ export function basisBoundsCoordinate(bounds, axis, edge) {
 }
 
 export function signedEdgeDistance(edgeCoordinate, pointCoordinate, edge) {
-  return edgeDistanceSign(edge) * (edgeCoordinate - pointCoordinate);
+  return (edge === "max" ? 1 : -1) * (edgeCoordinate - pointCoordinate);
 }
 
 export function edgeDistanceEditTransform({ basis, measureBasis, axis, edge, edgeCoordinate, parameterEdge, parameterCoordinate, values, holePoint, signedMeasured }) {
@@ -534,20 +462,8 @@ export function edgeDistanceEditTransform({ basis, measureBasis, axis, edge, edg
 }
 
 export function spacingPairs(pattern, axis) {
-  const axisIndex = axis === "localAxisY" ? 0 : 1;
-  const otherIndex = axisIndex === 0 ? 1 : 0;
-  const groups = new Map();
-  for (const position of pattern.positions || []) {
-    const key = Math.round(position[otherIndex] / 0.001);
-    const group = groups.get(key) || [];
-    group.push(position);
-    groups.set(key, group);
-  }
-  const group = [...groups.values()].filter((items) => items.length > 1)
-    .sort((a, b) => Math.abs(a[0][otherIndex]) - Math.abs(b[0][otherIndex]))[0];
-  if (!group) return [];
-  const sorted = [...group].sort((a, b) => a[axisIndex] - b[axisIndex]);
-  return sorted.slice(1).map((position, index) => [sorted[index], position]);
+  const group = nearestParallelHoleGroup(pattern, axis);
+  return group ? group.slice(1).map((position, index) => [group[index], position]) : [];
 }
 
 export function spacingDimension(ctx, options) {
@@ -588,11 +504,7 @@ export function spacingDimension(ctx, options) {
 }
 
 export function closestHole(pattern) {
-  return [...(pattern.positions || [])].sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]))[0] || null;
-}
-
-export function uniqueCount(values) {
-  return new Set(values.map((value) => Math.round(value / 0.001))).size;
+  return [...arrayValues(pattern.positions)].sort((a, b) => distance2(a, [0, 0]) - distance2(b, [0, 0]))[0] || null;
 }
 
 export function interfaceByRole(project, profiles, definition, smartComponent, role) {
@@ -605,16 +517,12 @@ export function rawInterfaceByRole(project, definition, smartComponent, role) {
   return interfaceId && project.objectIndex?.[interfaceId] ? objectById(project, interfaceId) : null;
 }
 
-export function profileById(profiles, profileId) {
-  return profiles?.[profileId] || profiles?.profiles?.[profileId] || null;
-}
-
-export function interfaceSectionEdgeValue(project, profiles, rawInterface, resolvedInterface, axis, edge) {
+function interfaceSectionEdgeValue(project, profiles, rawInterface, resolvedInterface, axis, edge) {
   const ownerId = rawInterface?.ownerId || resolvedInterface?.ownerId;
   const ownerEntry = ownerId ? project.objectIndex?.[ownerId] : null;
   if (ownerEntry?.collection === "members") {
     const member = objectById(project, ownerId);
-    const profile = profileById(profiles, member.profile);
+    const profile = libraryProfileById(profiles, member.profile);
     if (profile) {
       const bounds = sectionBounds(profile);
       if (axis === "localAxisZ") return edge === "max" ? bounds.maxZ : bounds.minZ;
@@ -642,14 +550,10 @@ export function interfaceEdgeOnBasis(project, profiles, rawInterface, resolvedIn
   };
 }
 
-export function pointToPlane(point, origin, normal) {
-  return v.sub(point, v.mul(normal, v.dot(v.sub(point, origin), normal)));
-}
+export const pointToPlane = projectPointToPlane;
 
 export function linePlane(point, direction, origin, normal) {
-  const denominator = v.dot(direction, normal);
-  if (Math.abs(denominator) <= EPSILON) return null;
-  return v.add(point, v.mul(direction, v.dot(v.sub(origin, point), normal) / denominator));
+  return linePlaneIntersection(point, direction, origin, normal, EPSILON);
 }
 
 export function interfaceAxis(iface, plate) {
@@ -667,23 +571,10 @@ export function interfaceAnnotationBasis(plate, iface) {
   };
 }
 
-export function plateOutlineWorldPoints(plate, basis) {
-  const bounds = plateBounds(plate);
-  const outline = Array.isArray(plate.outline) && plate.outline.length >= 3
-    ? plate.outline
-    : [
-      [bounds.minY, bounds.minZ],
-      [bounds.maxY, bounds.minZ],
-      [bounds.maxY, bounds.maxZ],
-      [bounds.minY, bounds.maxZ]
-    ];
-  return outline.map((point) => platePoint(plate, basis, point[0], point[1], 0));
-}
-
 export function plateSupportEdge(plate, iface, basis) {
   const supportNormal = v.norm(iface.normal);
-  const points = plateOutlineWorldPoints(plate, basis);
-  const centroid = v.mul(points.reduce((sum, point) => v.add(sum, point), [0, 0, 0]), 1 / points.length);
+  const points = sketchPlateOutline(plate).map((point) => platePoint(plate, basis, point[0], point[1], 0));
+  const centroid = averageVec3(points, plate.center);
   let best = null;
   for (let index = 0; index < points.length; index += 1) {
     const a = points[index];

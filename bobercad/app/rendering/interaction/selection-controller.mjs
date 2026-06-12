@@ -1,20 +1,32 @@
-function unique(values) {
-  return [...new Set(values.filter(Boolean))];
-}
+import { uniqueTruthy as unique } from "../../engine/core/model.mjs?v=unique-dry-1";
+import { createSnapSelectionManager } from "./snap-selection-manager.mjs?v=unified-snap-manager-10";
 
 function memberIdFromFace(face) {
   if (face?.collection === "members") return face.objectId;
   return face?.memberId || face?.ownerMemberId || null;
 }
 
-export function createSelectionController({ viewer }) {
-  let selectedIds = [];
+function objectIdsForCollections(project, collections = []) {
+  const wanted = new Set(collections.filter(Boolean));
+  if (!project || !wanted.size) return null;
+  return Object.entries(project.objectIndex || {})
+    .filter(([, entry]) => wanted.has(entry?.collection))
+    .map(([objectId]) => objectId);
+}
+
+function objectIdsForScope(project, scopeManager) {
+  if (!project?.objectIndex) return null;
+  return Object.entries(project.objectIndex)
+    .filter(([objectId, entry]) => scopeManager.objectAllowed(project, objectId, entry?.collection, { ignoreSelectedObjectsOnly: true }))
+    .map(([objectId]) => objectId);
+}
+
+export function createSelectionController({ viewer, settings = {}, project = null }) {
+  const scopeManager = createSnapSelectionManager({ viewer, settings });
   let pickMode = null;
 
   function select(objectIds = []) {
-    selectedIds = unique(objectIds);
-    viewer.setHighlightedObjects(selectedIds);
-    return selectedIds;
+    return scopeManager.setSelected(unique(objectIds));
   }
 
   function cancelPick({ clear = true } = {}) {
@@ -23,14 +35,22 @@ export function createSelectionController({ viewer }) {
     if (clear) select([]);
   }
 
-  function beginObjectPick({ count = 1, objectIdFromFace, onPick, onComplete, onError }) {
+  function beginObjectPick({ count = 1, objectIdFromFace, collection = null, collections = [], objectIds = null, componentKind = null, onPick, onComplete, onError }) {
     if (typeof objectIdFromFace !== "function") throw new Error("selection controller: objectIdFromFace is required");
     const picked = [];
+    const activeProject = typeof project === "function" ? project() : project;
+    const collectionFilter = collection ? [collection, ...collections] : collections;
+    const scopedObjectIds = objectIds || objectIdsForCollections(activeProject, collectionFilter) || objectIdsForScope(activeProject, scopeManager);
+    const pickOptions = scopeManager.pickOptions(activeProject, {
+      ...(scopedObjectIds ? { objectIds: scopedObjectIds } : {}),
+      ...(componentKind ? { componentKind } : {})
+    });
     pickMode = { count, picked };
     select([]);
     viewer.setPickHandler((face) => {
       const objectId = objectIdFromFace(face);
-      if (!objectId) {
+      const currentProject = typeof project === "function" ? project() : project;
+      if (!objectId || !scopeManager.objectAllowed(currentProject, objectId, face?.collection, { ignoreSelectedObjectsOnly: true })) {
         onError?.("Pick a valid object.");
         return;
       }
@@ -45,12 +65,12 @@ export function createSelectionController({ viewer }) {
         cancelPick({ clear: false });
         onComplete?.([...picked]);
       }
-    });
+    }, pickOptions);
   }
 
   return {
     selectedIds() {
-      return [...selectedIds];
+      return scopeManager.selectedIds();
     },
 
     select,
@@ -64,8 +84,18 @@ export function createSelectionController({ viewer }) {
     beginObjectPick,
 
     beginMemberPick(options = {}) {
-      beginObjectPick({ ...options, objectIdFromFace: options.objectIdFromFace || memberIdFromFace });
+      beginObjectPick({ ...options, collection: "members", objectIdFromFace: options.objectIdFromFace || memberIdFromFace });
     },
+
+    scope: scopeManager.scope,
+
+    setScope: scopeManager.setScope,
+
+    setActiveSmartComponent: scopeManager.setActiveSmartComponent,
+
+    objectAllowed: scopeManager.objectAllowed,
+
+    candidateAllowed: scopeManager.candidateAllowed,
 
     pickMode() {
       return pickMode ? { count: pickMode.count, picked: [...pickMode.picked] } : null;
