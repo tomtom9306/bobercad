@@ -4,7 +4,11 @@ export function build(ctx) {
   const apexRise = ctx.param("geometry.apexRise");
   const columnProfile = ctx.param("members.columnProfile");
   const rafterProfile = ctx.param("members.rafterProfile");
-  const origin = ctx.input("placement.origin", [0, 0, 0]);
+  const origin = ctx.requiredInput("placement.origin", {
+    code: "portal-frame-placement-missing",
+    message: "Placement origin is required to solve the portal frame."
+  });
+  if (!origin) return;
   const leftX = -span / 2;
   const rightX = span / 2;
   const point = (x, y, z) => [origin[0] + x, origin[1] + y, origin[2] + z];

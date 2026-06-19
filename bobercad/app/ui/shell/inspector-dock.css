@@ -1,0 +1,211 @@
+.bc-inspector-dock-shell {
+  display: grid;
+  grid-template-columns: var(--bc-side-dock-tab-rail-width) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  box-sizing: border-box;
+  background: var(--bc-color-surface-solid);
+  color: var(--bc-color-text);
+  box-shadow: none;
+  font-family: var(--bc-font-family);
+  pointer-events: none;
+}
+
+.bc-inspector-dock-shell[hidden] {
+  display: none;
+}
+
+.bc-inspector-dock-tabs {
+  flex: none;
+}
+
+.bc-inspector-dock-shell > .bc-dock-tabs {
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 1;
+  border-right-color: color-mix(in srgb, var(--bc-color-border) 62%, transparent);
+  border-left-color: color-mix(in srgb, var(--bc-color-border) 72%, transparent);
+  border-radius: var(--bc-radius-3) 0 0 var(--bc-radius-3);
+  pointer-events: auto;
+}
+
+.bc-inspector-dock-body {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid color-mix(in srgb, var(--bc-color-border) 82%, transparent);
+  background: var(--bc-color-surface-solid);
+  pointer-events: auto;
+}
+
+.bc-right-dock[data-workspace-panel-dock="left"] .bc-inspector-dock-shell {
+  grid-template-columns: minmax(0, 1fr) var(--bc-side-dock-tab-rail-width);
+}
+
+.bc-right-dock[data-workspace-panel-dock="left"] .bc-inspector-dock-shell > .bc-dock-tabs {
+  grid-column: 2;
+  border-right-color: color-mix(in srgb, var(--bc-color-border) 72%, transparent);
+  border-left-color: color-mix(in srgb, var(--bc-color-border) 62%, transparent);
+  border-radius: 0 var(--bc-radius-3) var(--bc-radius-3) 0;
+}
+
+.bc-right-dock[data-workspace-panel-dock="left"] .bc-inspector-dock-body {
+  grid-column: 1;
+  border-right: 1px solid color-mix(in srgb, var(--bc-color-border) 82%, transparent);
+  border-left: 0;
+}
+
+.bc-right-dock[data-workspace-panel-dock="right"] .bc-inspector-dock-shell > .bc-dock-tabs {
+  grid-column: 1;
+}
+
+.bc-right-dock[data-workspace-panel-dock="right"] .bc-inspector-dock-body {
+  grid-column: 2;
+  border-right: 0;
+  border-left: 1px solid color-mix(in srgb, var(--bc-color-border) 82%, transparent);
+}
+
+.bc-right-dock[data-workspace-panel-side-dock="false"] .bc-inspector-dock-shell {
+  grid-template-columns: var(--bc-side-dock-tab-rail-width) minmax(0, 1fr);
+}
+
+.bc-right-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-inspector-dock-shell > .bc-dock-tabs {
+  transform: translateX(calc(-1 * var(--bc-side-dock-tab-rail-width)));
+}
+
+.bc-right-dock[data-workspace-panel-dock="left"][data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-inspector-dock-shell > .bc-dock-tabs {
+  transform: translateX(var(--bc-side-dock-tab-rail-width));
+}
+
+.bc-right-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-inspector-dock-shell .bc-dock-tab-list {
+  display: none;
+}
+
+.bc-right-dock:has(.bc-inspector-dock-shell:not([hidden])) > .bc-dock-pin-toggle {
+  top: calc(var(--bc-space-3) + var(--bc-space-2));
+  left: calc(var(--bc-side-dock-tab-rail-width) + var(--bc-space-2));
+  right: auto;
+  width: 24px;
+  height: 24px;
+}
+
+.bc-right-dock[data-workspace-panel-dock="left"]:has(.bc-inspector-dock-shell:not([hidden])) > .bc-dock-pin-toggle {
+  right: calc(var(--bc-side-dock-tab-rail-width) + var(--bc-space-2));
+  left: auto;
+}
+
+.bc-inspector-dock-body .bc-inspector-context-panel {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100% !important;
+  max-height: none !important;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  box-sizing: border-box;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--bc-color-surface-solid) !important;
+  box-shadow: none !important;
+  padding: var(--bc-space-3) var(--bc-space-4);
+  pointer-events: auto;
+}
+
+.bc-inspector-dock-body .bc-inspector-context-panel[data-inspector-active="false"] {
+  display: none !important;
+}
+
+.bc-inspector-dock-body .bc-inspector-context-panel[hidden] {
+  display: none !important;
+}
+
+.bc-inspector-dock-body [data-inspector-context-panel="trim"] {
+  width: 100% !important;
+}
+
+.bc-inspector-dock-body .bc-properties-panel {
+  gap: var(--bc-space-3);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.bc-inspector-dock-body .bc-properties-header {
+  gap: var(--bc-space-2);
+  padding-bottom: var(--bc-space-3);
+  border-bottom: 1px solid color-mix(in srgb, var(--bc-color-border) 58%, transparent);
+}
+
+.bc-inspector-dock-body .bc-properties-header-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.bc-inspector-dock-body .bc-properties-kicker,
+.bc-inspector-dock-body .bc-properties-subtitle,
+.bc-inspector-dock-body .bc-properties-badge {
+  font-size: 10px;
+}
+
+.bc-inspector-dock-body .bc-properties-title {
+  font-size: var(--bc-font-size-12);
+}
+
+.bc-inspector-dock-body .bc-properties-body {
+  gap: var(--bc-space-2);
+}
+
+.bc-inspector-dock-body .bc-disclosure,
+.bc-inspector-dock-body .bc-disclosure-nested {
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.bc-inspector-dock-body .bc-disclosure-summary {
+  min-height: 28px;
+  gap: var(--bc-space-2);
+}
+
+.bc-inspector-dock-body .bc-disclosure-title {
+  font-size: var(--bc-font-size-11);
+}
+
+.bc-inspector-dock-body .bc-disclosure-body {
+  gap: var(--bc-space-3);
+  padding: var(--bc-space-1) 0 var(--bc-space-4) calc(14px + var(--bc-space-2));
+}
+
+.bc-inspector-dock-body .bc-field,
+.bc-inspector-dock-body .bc-readout {
+  grid-template-columns: minmax(68px, 0.38fr) minmax(0, 1fr);
+  gap: var(--bc-space-3);
+  font-size: var(--bc-font-size-11);
+}
+
+.bc-inspector-dock-body .bc-object-ref-field {
+  grid-template-columns: minmax(68px, 0.34fr) minmax(0, 1fr) auto;
+  gap: var(--bc-space-3);
+  font-size: var(--bc-font-size-11);
+}
+
+.bc-inspector-dock-body .bc-input,
+.bc-inspector-dock-body .bc-select {
+  height: 26px;
+  padding: 0 var(--bc-space-3);
+}

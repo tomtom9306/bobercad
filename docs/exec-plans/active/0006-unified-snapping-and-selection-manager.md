@@ -22,19 +22,19 @@ Snapping currently has a shared low-level core, but controllers still make their
 
 | Area | Current file | Problem |
 |---|---|---|
-| Project snap targets | `bobercad/app/rendering/interaction/snap-providers.mjs` | Collects members, grids, reference planes, work points, global axes, and member profile surface targets through one provider path. |
-| Snap solving | `bobercad/app/engine/api/project/snap-solver.mjs` | Picks nearest point, line, or line intersection, but receives already-decided candidates and tolerances. It cannot know why a target is allowed. |
-| Composite member snapping | `bobercad/app/rendering/interaction/snap-providers.mjs` | Adds member/axis projection snaps through the construction provider, not a member-create-only branch. |
+| Project snap targets | `bobercad/app/rendering/interaction/snap-candidate-providers.mjs` | Collects members, grids, reference planes, work points, global axes, and member profile surface targets through one provider path. |
+| Snap solving | `bobercad/app/engine/api/interaction/snap-solver.mjs` | Picks nearest point, line, or line intersection, but receives already-decided candidates and tolerances. It cannot know why a target is allowed. |
+| Composite member snapping | `bobercad/app/rendering/interaction/snap-candidate-providers.mjs` | Adds member/axis projection snaps through the construction provider, not a member-create-only branch. |
 | Member creation | `bobercad/app/rendering/interaction/member-create-controller.mjs` | Builds construction axes, profile axes, face-axis snaps, active reference axes, direct-point preference, and biases locally. |
-| Member editing | `bobercad/app/rendering/interaction/member-edit-controller.mjs` | Builds drag guide axes, large-scene local snap options, axis snaps, quantized translation, and auto axis relation behavior locally. |
+| Member editing | `bobercad/app/rendering/interaction/member-transform-edit-controller.mjs` | Builds drag guide axes, large-scene local snap options, axis snaps, quantized translation, and auto axis relation behavior locally. |
 | Plate creation | `bobercad/app/rendering/interaction/plate-create-controller.mjs` | Uses plate-only adaptive grid and model-plane projection helpers. |
-| Plate sketch editing | `bobercad/app/rendering/interaction/plate-sketch-edit-controller.mjs` | Has separate edge, vertex, relation, equal-length, 90-degree, grid, and model snap logic. |
+| Plate sketch editing | `bobercad/app/rendering/interaction/plate-sketch-drag-edit-controller.mjs` | Has separate edge, vertex, relation, equal-length, 90-degree, grid, and model snap logic. |
 | Precision grid | `bobercad/app/rendering/interaction/snap-profiles.mjs` | Adaptive grid steps are profile-driven and shared by plate creation, plate sketch editing, and future tools. |
 | Model-to-plane snapping | `bobercad/app/rendering/interaction/snap-manager.mjs` | Projects accepted model snaps onto an active workplane or plate sketch plane when the context asks for projection. |
 | Sketch creation | `bobercad/app/rendering/interaction/sketch-create-controller.mjs` | Resolves only a raw workplane point; it does not use model snapping. |
 | Workplane creation | `bobercad/app/rendering/interaction/work-plane-controller.mjs` | Resolves only raw points; it does not use the shared snap route. |
 | Selection | `bobercad/app/rendering/interaction/selection-controller.mjs` | Stores highlighted ids and pick mode only. It has no object/category filter state. |
-| Viewer picking | `bobercad/app/rendering/webgl/webgl-renderer.mjs` | Internal picking already supports `objectIds` and `componentKind`, but that capability is not exposed as a reusable selection/snap scope. |
+| Viewer picking | `bobercad/app/rendering/webgl/webgl-viewer-runtime.mjs` | Internal picking already supports `objectIds` and `componentKind`, but that capability is not exposed as a reusable selection/snap scope. |
 | Settings | `bobercad/app/ui/viewer/viewer-settings.json` and `bobercad/app/schemas/viewer-settings.schema.json` | Snap tolerances are scattered by tool, so changing one setting does not change the whole app consistently. |
 
 ## Hard Requirements
@@ -160,7 +160,7 @@ Add these modules:
 | `bobercad/app/rendering/interaction/snap-selection-manager.mjs` | Owns selection and snapping scope state. Converts user filters into predicates for picking and snapping. |
 | `bobercad/app/rendering/interaction/snap-manager.mjs` | One public runtime entrypoint for resolving snaps. Builds provider list, applies scope, calls solver, returns a normalized result. |
 | `bobercad/app/rendering/interaction/snap-profiles.mjs` | Defines `Off`, `Light`, `Normal`, `Strong`, and `Training` strengths. |
-| `bobercad/app/rendering/interaction/snap-providers.mjs` | Providers for model objects, grids, reference planes, work points, construction axes, active workplane, active sketch, sketch relations, adaptive grid, and model-to-plane projection. |
+| `bobercad/app/rendering/interaction/snap-candidate-providers.mjs` | Providers for model objects, grids, reference planes, work points, construction axes, active workplane, active sketch, sketch relations, adaptive grid, and model-to-plane projection. |
 | `bobercad/app/rendering/interaction/snap-result.mjs` | Normalizes accepted snap data, relation hints, labels, preview metadata, and diagnostics. |
 | `bobercad/app/rendering/scene/authoring/snap-overlays.mjs` | One overlay renderer shape for snap markers, candidate highlights, and guide lines. |
 | `bobercad/app/ui/viewer/toolbar/snap-manager-toolbar.mjs` | Compact snap UI: strength, Smart scope, filters, and advanced details. |
@@ -301,7 +301,7 @@ Required providers:
 | `construction.globalAxes` | Global origin and axes. |
 | `construction.memberCreateAxes` | Current start axes, profile axes, creation axes, active reference axes. |
 | `construction.memberEditAxes` | Drag guide axes and relation axes. |
-| `construction.composite` | Projection and axis-axis candidates in `snap-providers.mjs`. |
+| `construction.composite` | Projection and axis-axis candidates in `snap-candidate-providers.mjs`. |
 | `plane.projection` | Projection of accepted model snaps onto active workplane or plate sketch plane in `snap-manager.mjs`. |
 | `precision.adaptiveGrid` | Adaptive grid in `snap-profiles.mjs`, generalized for any local frame. |
 | `sketch.vertices` | Plate sketch vertices, construction vertices, insert midpoint handles. |
@@ -673,7 +673,7 @@ Default provider set should favor endpoints, corners, work points, and grid inte
 
 ### Phase 2: Provider Infrastructure
 
-- Add `snap-providers.mjs`.
+- Add `snap-candidate-providers.mjs`.
 - Move model candidates into providers.
 - Move composite candidate logic into a construction provider.
 - Move plate grid logic into shared adaptive grid profiles.
@@ -690,7 +690,7 @@ Default provider set should favor endpoints, corners, work points, and grid inte
 ### Phase 4: Selection Scope
 
 - Expand `selection-controller.mjs` into a scope-aware manager.
-- Expose picker filters to `webgl-renderer.mjs`.
+- Expose picker filters to `webgl-viewer-runtime.mjs`.
 - Ensure pick filters and snap filters share the same predicates.
 - Add toolbar UI for strength and filters.
 
@@ -699,9 +699,9 @@ Default provider set should favor endpoints, corners, work points, and grid inte
 Migrate tools one at a time, deleting old local snap routes as each tool lands:
 
 1. `member-create-controller.mjs`
-2. `member-edit-controller.mjs`
+2. `member-transform-edit-controller.mjs`
 3. `plate-create-controller.mjs`
-4. `plate-sketch-edit-controller.mjs`
+4. `plate-sketch-drag-edit-controller.mjs`
 5. `sketch-create-controller.mjs`
 6. `work-plane-controller.mjs`
 
@@ -789,7 +789,7 @@ Run targeted JavaScript syntax checks for changed modules:
 ```powershell
 node --check .\bobercad\app\rendering\interaction\snap-manager.mjs
 node --check .\bobercad\app\rendering\interaction\snap-selection-manager.mjs
-node --check .\bobercad\app\rendering\interaction\snap-providers.mjs
+node --check .\bobercad\app\rendering\interaction\snap-candidate-providers.mjs
 node --check .\bobercad\app\rendering\interaction\snap-profiles.mjs
 ```
 

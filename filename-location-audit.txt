@@ -1,0 +1,118 @@
+Filename and Location Audit
+Generated: 2026-06-13
+Scope: post-remediation review of current repository filenames and folder locations in C:\boberos.
+Method: filename/location fit review only. Runtime behavior was verified separately with the standard repo check.
+Coverage: 273 files visible through rg --files; 273 considered; 0 missing; 0 extra.
+Overall rating: 10.00/10.
+Outstanding filename/location findings: 0.
+
+Verification:
+- node .\scripts\check_repo.js
+- Result: OK: repository structure matches the current app/data layout
+- Result: OK: viewer geometry built 453 faces and 315 lines for Boolean Beam Demo
+
+Rating scale:
+10 = exact filename/location match for the current app boundary.
+8-9 = clear and maintainable, maybe minor breadth.
+6-7 = understandable but broad, stale, or slightly misplaced.
+4-5 = name/location hides major responsibilities or file is too overloaded.
+1-3 = strongly misleading name/location or clear split needed.
+
+Current Result
+Path group | Rating | Result
+Root docs and workflow files | 10 | Root guidance, quality logs, and audit files now live in doc/report locations that match their role.
+Engine API files | 10 | Broad or stale model/API filenames were renamed to semantic-builders, connection-primitive-registry, transport-sectioning, snap-solver, and plate-sketch-relations-and-bends.
+Connection primitive files | 10 | Primitive implementation files are now grouped by kind: plates, fasteners, trims, cuts, welds, and stiffeners.
+Geometry files | 10 | feature-plane is now reference-plane, matching the reference-plane API vocabulary used by the model.
+Smart Component engine files | 10 | Runtime, registry, recipe, and parameter/definition files now advertise their real boundaries.
+Rendering files | 10 | Scene, annotation, interaction, and WebGL runtime files now use descriptive names instead of generic controller or renderer wrappers.
+Viewer UI files | 10 | The viewer entry, inspector panel, toolbar, command adapter, and shell customizer names now match their UI responsibilities.
+Viewer CSS files | 10 | The former broad viewer stylesheet is split into canvas, snap controls, member transform panel, authoring overlays, and editor panel slices.
+Design-system CSS files | 10 | The former broad component stylesheet is split into toolbar, panels/controls, command palette, and workspace customizer slices.
+Schemas and library registers | 10 | The model-library naming was replaced by frames/frame-library naming where the data represents reusable frame models.
+Project samples | 10 | Sample project names now identify their specific scenario, connection type, or stair variant.
+Scripts and tools | 10 | Viewer runtime checks, stair variant QA, tread sample generation, and random beam stress generation now live under task-specific names and folders.
+
+Remediated Audit Findings
+Old path/name | Current path/name | Rating | Status
+code-removal-log.txt | docs\quality\code-removal-log.md | 10 | relocated
+bobercad\app\engine\api\model\builders.mjs | bobercad\app\engine\api\model\semantic-builders.mjs | 10 | renamed
+bobercad\app\engine\api\model\connection-primitives.mjs | bobercad\app\engine\api\model\connection-primitive-registry.mjs | 10 | renamed
+bobercad\app\engine\api\model\connection-primitives\fasteners\web-bolt-pattern.mjs | bobercad\app\engine\api\model\connection-primitives\fasteners\secondary-web-bolting.mjs | 10 | renamed
+bobercad\app\engine\api\model\connection-primitives\features\secondary-member-gap-trim.mjs | bobercad\app\engine\api\model\connection-primitives\trims\secondary-member-gap-trim.mjs | 10 | relocated
+bobercad\app\engine\api\model\sectioning.mjs | bobercad\app\engine\api\model\transport-sectioning.mjs | 10 | renamed
+bobercad\app\engine\api\project\snap-solver.mjs | bobercad\app\engine\api\interaction\snap-solver.mjs | 10 | relocated
+bobercad\app\engine\api\project\plates.mjs | bobercad\app\engine\api\project\plate-sketch-relations-and-bends.mjs | 10 | renamed
+bobercad\app\engine\geometry\feature-plane.mjs | bobercad\app\engine\geometry\reference-plane.mjs | 10 | renamed
+bobercad\app\engine\modules\smart-components\parameters.mjs | bobercad\app\engine\modules\smart-components\smart-component-parameters-and-definition.mjs | 10 | renamed
+bobercad\app\engine\modules\smart-components\smart-component-generator.mjs | bobercad\app\engine\modules\smart-components\smart-component-runtime.mjs | 10 | renamed
+bobercad\app\engine\store\project-store.mjs | bobercad\app\engine\store\project-command-store.mjs | 10 | renamed
+bobercad\app\rendering\annotations\dimension-context.mjs | bobercad\app\rendering\annotations\dimension-geometry-and-label-context.mjs | 10 | renamed
+bobercad\app\rendering\interaction\member-edit-controller.mjs | bobercad\app\rendering\interaction\member-transform-edit-controller.mjs | 10 | renamed
+bobercad\app\rendering\interaction\plate-sketch-edit-controller.mjs | bobercad\app\rendering\interaction\plate-sketch-drag-edit-controller.mjs | 10 | renamed
+bobercad\app\rendering\interaction\snap-providers.mjs | bobercad\app\rendering\interaction\snap-candidate-providers.mjs | 10 | renamed
+bobercad\app\rendering\scene\build-scene.mjs | bobercad\app\rendering\scene\scene-geometry-builder.mjs | 10 | renamed
+bobercad\app\rendering\webgl\dimension-overlay-ui.mjs | bobercad\app\rendering\webgl\dimension-label-editor-ui.mjs | 10 | renamed
+bobercad\app\rendering\webgl\webgl-renderer.mjs | bobercad\app\rendering\webgl\webgl-viewer-runtime.mjs | 10 | renamed
+bobercad\app\ui\shell\workspace-customizer.mjs | bobercad\app\ui\shell\workspace-customizer-panel.mjs | 10 | renamed
+bobercad\app\ui\viewer\main.mjs | bobercad\app\ui\viewer\viewer-runtime.mjs | 10 | renamed
+bobercad\app\ui\viewer\panels\property-panel.mjs | bobercad\app\ui\viewer\panels\inspector-panel.mjs | 10 | renamed
+bobercad\data\libraries\model-library\model-register.json | bobercad\data\libraries\frames\frame-register.json | 10 | relocated
+bobercad\data\libraries\model-library\models\starter-frames\config.json | bobercad\data\libraries\frames\frame-libraries\starter-frames\config.json | 10 | relocated
+bobercad\app\schemas\model-library.schema.json | bobercad\app\schemas\frame-library.schema.json | 10 | renamed
+bobercad\data\libraries\smart-components\components\connections\standard-hardware\ | bobercad\data\libraries\smart-components\components\connections\stair-hardware\ | 10 | renamed
+bobercad\data\libraries\smart-components\smart-component-ui.mjs | bobercad\data\libraries\smart-components\smart-component-parameter-ui.mjs | 10 | renamed
+bobercad\data\libraries\smart-components\smart-component-library-ui.mjs | bobercad\data\libraries\smart-components\member-pick-smart-component-library-ui.mjs | 10 | renamed
+bobercad\data\libraries\smart-components\components\shared\connections\standard-connections.mjs | bobercad\data\libraries\smart-components\components\shared\connections\stair-and-splice-hardware-connections.mjs | 10 | renamed
+bobercad\data\libraries\smart-components\components\stairs\railings\shared\railing-system.mjs | bobercad\data\libraries\smart-components\components\stairs\railings\shared\railing-path-and-panel-system.mjs | 10 | renamed
+scripts\check_viewer_geometry.js | scripts\check_viewer_runtime.js | 10 | renamed
+scripts\generate_tread_detail_sample.mjs | scripts\generate_stair_tread_variants_sample.mjs | 10 | renamed
+scripts\qa_stair_variants.mjs | tools\qa\qa_stair_variants.mjs | 10 | relocated
+tools\stress\generate_stress_projects.mjs | tools\stress\generate_random_beam_stress_projects.mjs | 10 | renamed
+bobercad\data\projects\sample_structure.json | bobercad\data\projects\sample_seed_connection_structure.json | 10 | renamed
+bobercad\data\projects\sample_fin_plate.json | bobercad\data\projects\sample_beam_to_column_fin_plate.json | 10 | renamed
+bobercad\data\projects\sample_stair_manual_split.json | bobercad\data\projects\sample_stair_manual_station_split.json | 10 | renamed
+bobercad\data\projects\sample_stair_transport_split_weight.json | bobercad\data\projects\sample_stair_max_weight_transport_split.json | 10 | renamed
+bobercad\data\projects\sample_stair_treads_only_all_variants.json | bobercad\data\projects\sample_stair_treads_and_landings_only_all_variants.json | 10 | renamed
+
+Split Files Created
+Source path | New focused files | Rating
+bobercad\app\ui\viewer\style.css | viewer-canvas.css; viewer-snap-controls.css; member-transform-panel.css; viewer-authoring-overlays.css; viewer-editor-panels.css | 10
+bobercad\app\ui\design-system\components.css | toolbar.css; workspace-customizer.css; panels-and-controls.css; command-palette.css | 10
+
+Name Hygiene Evidence
+No current source, docs, data, scripts, or tools references remain for the audit-targeted stale filenames:
+- web-bolt-pattern.mjs
+- project-store.mjs
+- smart-component-generator.mjs
+- parameters.mjs
+- build-scene.mjs
+- member-edit-controller.mjs
+- plate-sketch-edit-controller.mjs
+- snap-providers.mjs
+- webgl-renderer.mjs
+- dimension-overlay-ui.mjs
+- property-panel.mjs
+- dimension-context.mjs
+- smart-component-ui.mjs
+- standard-connections.mjs
+- railing-system.mjs
+- workspace-customizer.mjs
+- main.mjs
+- plates.mjs
+- model-library
+- standard-hardware
+- sample_fin_plate.json
+- sample_structure.json
+- sample_stair_manual_split.json
+- sample_stair_transport_split_weight.json
+- sample_stair_treads_only_all_variants.json
+- check_viewer_geometry.js
+- generate_tread_detail_sample.mjs
+- generate_stress_projects.mjs
+
+Accepted Current Names
+- transport-sectioning.mjs: exact fit for transport section creation, splitting, estimating, and schedule behavior.
+- member-pick-smart-component-library-ui.mjs: exact fit for the library-level Smart Component picker UI.
+- connection-primitive-registry.mjs: exact fit for mapping model operation ids to primitive builders.
+

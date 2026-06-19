@@ -5,6 +5,7 @@
   "description": "Starter schema for material libraries referenced by steel BIM project files.",
   "type": "object",
   "required": [
+    "$schema",
     "schema",
     "schemaVersion",
     "library",
@@ -13,13 +14,15 @@
   ],
   "properties": {
     "$schema": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "schema": {
       "const": "steel-material-library"
     },
     "schemaVersion": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
     "library": {
       "type": "object",
@@ -30,22 +33,27 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "units": {
       "type": "object",
@@ -55,22 +63,25 @@
       ],
       "properties": {
         "density": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "stress": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "materials": {
       "type": "object",
+      "minProperties": 1,
       "additionalProperties": {
         "$ref": "#/$defs/material"
       }
     }
   },
-  "additionalProperties": true,
+  "additionalProperties": false,
   "$defs": {
     "material": {
       "type": "object",
@@ -82,22 +93,31 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "materialType": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "density": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "nominalYieldStrength": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     }
   }
 }

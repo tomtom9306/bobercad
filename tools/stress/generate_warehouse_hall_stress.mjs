@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { loadConnectionDefinitions } from "../../bobercad/app/engine/modules/connections/connection-registry.mjs";
-import { createProjectStore } from "../../bobercad/app/engine/store/project-store.mjs";
+import { loadSmartComponentDefinitions } from "../../bobercad/app/engine/modules/smart-components/smart-component-registry.mjs";
+import { createProjectStore } from "../../bobercad/app/engine/store/project-command-store.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SOURCE_PROJECT = path.join(ROOT, "bobercad", "data", "projects", "sample_warehouse_12x24.json");
@@ -29,11 +29,13 @@ const COLLECTION_ID_PREFIX = {
   assemblies: "as",
   members: "m",
   plates: "pl",
+  sketches: "sk",
   holePatterns: "hp",
   objectPatterns: "op",
   features: "ft",
   fastenerGroups: "fg",
   welds: "w",
+  relations: "rel",
   connections: "co"
 };
 
@@ -77,11 +79,13 @@ function modelCollections() {
     assemblies: {},
     members: {},
     plates: {},
+    sketches: {},
     holePatterns: {},
     objectPatterns: {},
     features: {},
     fastenerGroups: {},
     welds: {},
+    relations: {},
     connections: {},
     addonData: {}
   };
@@ -95,7 +99,7 @@ function patchLibraryPaths(project) {
   project.libraries.materials.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "materials", "material-libraries", "starter-materials", "config.json"));
   project.libraries.fasteners.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "fasteners", "fastener-libraries", "starter-fasteners", "config.json"));
   project.libraries.connections.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "connections", "connection-register.json"));
-  project.libraries.frames.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "model-library", "model-register.json"));
+  project.libraries.frames.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "frames", "frame-register.json"));
 }
 
 function hallPrefix(index) {
@@ -267,11 +271,11 @@ function stressModelDefaults(baseProject) {
 }
 
 async function main() {
-  const [baseProject, profiles, fasteners, connectionCatalog] = await Promise.all([
+  const [baseProject, profiles, fasteners, smartComponentCatalog] = await Promise.all([
     readJson(SOURCE_PROJECT),
     readJson(PROFILES_PATH),
     readJson(FASTENERS_PATH),
-    loadConnectionDefinitions()
+    loadSmartComponentDefinitions()
   ]);
   const project = {
     ...clone(baseProject),
@@ -338,10 +342,9 @@ async function main() {
   const store = createProjectStore({
     project,
     profiles: profiles.profiles,
-    connectionCatalog,
+    smartComponentCatalog,
     fasteners,
-    cloneOnLoad: false,
-    reconcileOnLoad: true
+    cloneOnLoad: false
   });
   const reconciled = store.project();
   reconciled.model.addonData.stressTest = project.model.addonData.stressTest;

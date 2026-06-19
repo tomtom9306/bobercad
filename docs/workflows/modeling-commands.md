@@ -17,10 +17,10 @@ Do not write generated mesh data, preview state, or temporary snap state into pr
 - `bobercad/app/engine/api/project/member-factory.mjs`: builds semantic member objects.
 - `bobercad/app/rendering/interaction/snap-manager.mjs`: shared snap entry point for modeling tools.
 - `bobercad/app/rendering/interaction/snap-selection-manager.mjs`: shared selection/snap scope and filtering.
-- `bobercad/app/rendering/interaction/snap-providers.mjs`: collects snap points and lines from project objects, construction guides, active sketches, and member profile targets.
-- `bobercad/app/engine/api/project/snap-solver.mjs`: chooses the best snap from candidates supplied by the manager.
+- `bobercad/app/rendering/interaction/snap-candidate-providers.mjs`: collects snap points and lines from project objects, construction guides, active sketches, and member profile targets.
+- `bobercad/app/engine/api/interaction/snap-solver.mjs`: chooses the best snap from candidates supplied by the manager.
 - `bobercad/app/engine/api/project/work-plane.mjs`: active modeling plane helpers.
-- `bobercad/app/engine/store/project-store.mjs`: only place that mutates the project.
+- `bobercad/app/engine/store/project-command-store.mjs`: only place that mutates the project.
 - `bobercad/app/rendering/interaction/command-controller.mjs`: shared keyboard and pointer routing.
 - `bobercad/app/rendering/interaction/member-create-controller.mjs`: beam/column creation command.
 - `bobercad/app/rendering/scene/authoring/`: temporary preview, snap, and work-plane overlays.

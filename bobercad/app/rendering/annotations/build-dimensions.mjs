@@ -1,5 +1,5 @@
 import { arrayValues } from "../../engine/core/model.mjs?v=smart-config-array-values-dry-1";
-import { finite, combine, truthyValues, v } from "./dimension-context.mjs?v=unified-dimension-overlay-1";
+import { finite, combine, truthyValues, v } from "./dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
 import { dimensionHandler } from "./dimension-registry.mjs?v=unified-dimension-overlay-1";
 
 function buildOne(ctx, spec) {

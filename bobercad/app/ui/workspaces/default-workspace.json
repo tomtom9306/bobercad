@@ -1,0 +1,99 @@
+{
+  "$schema": "../../schemas/ui-workspace.schema.json",
+  "schema": "bobercad-ui-workspace",
+  "schemaVersion": "0.1.0",
+  "theme": "light",
+  "density": "compact",
+  "navigation": {
+    "featureNavbar": {
+      "groupIds": [
+        "model",
+        "tools",
+        "structural-analysis"
+      ],
+      "hiddenGroupIds": []
+    }
+  },
+  "toolbars": {
+    "modeling": {
+      "label": "Modeling Toolbar",
+      "dock": "top",
+      "commandIds": [
+        "model.beam.create",
+        "model.column.create",
+        "model.plate.create",
+        "model.sketch.create",
+        "model.workPlane.set",
+        "model.plateBend.add",
+        "model.trim.create"
+      ],
+      "hiddenCommandIds": [],
+      "groupIds": [
+        "model"
+      ],
+      "collapsedGroups": []
+    }
+  },
+  "bottomStrip": {
+    "itemIds": [
+      "selection",
+      "scope",
+      "snap",
+      "relations",
+      "units"
+    ],
+    "hiddenItemIds": []
+  },
+  "viewerSettingsStrip": {
+    "groupIds": [
+      "display",
+      "view",
+      "visibility"
+    ],
+    "hiddenGroupIds": []
+  },
+  "viewerOverlays": {
+    "navCube": {
+      "visible": true,
+      "corner": "bottom-right"
+    }
+  },
+  "panels": {
+    "library": {
+      "label": "Data",
+      "dock": "left",
+      "visible": true,
+      "pinned": true,
+      "width": 300,
+      "tabIds": [
+        "files",
+        "data",
+        "model",
+        "components"
+      ],
+      "hiddenTabIds": [],
+      "activeTab": "model"
+    },
+    "inspector": {
+      "label": "Properties",
+      "dock": "right",
+      "visible": true,
+      "pinned": true,
+      "width": 380,
+      "tabIds": [
+        "properties",
+        "feature",
+        "trim",
+        "component"
+      ],
+      "hiddenTabIds": [],
+      "activeTab": "properties"
+    },
+    "status": {
+      "label": "Status",
+      "dock": "bottom",
+      "visible": true
+    }
+  },
+  "sections": {}
+}

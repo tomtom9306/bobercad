@@ -1,0 +1,344 @@
+.bc-left-dock,
+.bc-right-dock {
+  --bc-side-dock-tab-rail-width: 42px;
+}
+
+.bc-dock-tabs {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: stretch;
+  align-self: start;
+  justify-self: stretch;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: calc(26px + var(--bc-space-2)) var(--bc-space-1) var(--bc-space-1);
+  border: 1px solid color-mix(in srgb, var(--bc-color-border) 72%, transparent);
+  border-left-color: color-mix(in srgb, var(--bc-color-border) 62%, transparent);
+  border-radius: 0 var(--bc-radius-3) var(--bc-radius-3) 0;
+  background: var(--bc-color-surface-solid);
+  overflow: visible;
+  pointer-events: auto;
+  scrollbar-width: none;
+}
+
+.bc-dock-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.bc-dock-tab-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bc-space-1);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.bc-dock-tab-list::-webkit-scrollbar {
+  display: none;
+}
+
+.bc-dock-tab {
+  appearance: none;
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 100%;
+  min-width: 0;
+  min-height: 62px;
+  height: auto;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: var(--bc-radius-2);
+  background: transparent;
+  color: var(--bc-color-text-muted);
+  padding: var(--bc-space-1) 0;
+  font: var(--bc-font-weight-bold) 10px / 1 var(--bc-font-family);
+  cursor: pointer;
+}
+
+.bc-dock-tab .bc-icon {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+}
+
+.bc-dock-tab-label {
+  min-width: 12px;
+  max-height: 58px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.bc-dock-tab:hover,
+.bc-dock-tab:focus-visible {
+  border-color: var(--bc-color-border);
+  background: var(--bc-color-hover);
+  color: var(--bc-color-text);
+}
+
+.bc-dock-tab:focus-visible {
+  outline: 2px solid var(--bc-color-focus);
+  outline-offset: 1px;
+}
+
+.bc-dock-tab[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--bc-color-accent) 36%, var(--bc-color-border));
+  background: var(--bc-color-active);
+  color: var(--bc-color-accent-strong);
+}
+
+.bc-dock-reveal-slot {
+  position: absolute;
+  top: var(--bc-space-1);
+  right: var(--bc-space-1);
+  left: var(--bc-space-1);
+  display: grid;
+  height: 26px;
+  min-height: 26px;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.bc-dock-reveal-slot > .bc-dock-reveal-toggle {
+  position: static;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: var(--bc-radius-2);
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.bc-dock-tab-panel {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: var(--bc-space-3) var(--bc-space-4);
+  border-right: 1px solid color-mix(in srgb, var(--bc-color-border) 82%, transparent);
+  background: var(--bc-color-surface-solid);
+  pointer-events: auto;
+  scrollbar-width: none;
+}
+
+.bc-dock-tab-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.bc-dock-tab-panel[hidden] {
+  display: none;
+}
+
+.bc-left-dock #library-panel {
+  grid-template-columns: minmax(0, 1fr) var(--bc-side-dock-tab-rail-width);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  overflow: visible;
+  border-right: 0;
+  background: var(--bc-color-surface-solid);
+  pointer-events: none;
+}
+
+.bc-left-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) #library-panel .bc-dock-tabs {
+  transform: translateX(var(--bc-side-dock-tab-rail-width));
+}
+
+.bc-left-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) #library-panel .bc-dock-tab-list {
+  display: none;
+}
+
+.bc-left-dock .bc-dock-tabs {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.bc-left-dock:has(#library-panel:not([hidden])) > .bc-dock-pin-toggle {
+  top: calc(var(--bc-space-3) + var(--bc-space-2));
+  right: calc(var(--bc-side-dock-tab-rail-width) + var(--bc-space-2));
+  left: auto;
+  width: 24px;
+  height: 24px;
+}
+
+.bc-left-dock:has(#library-panel:not([hidden])) .bc-data-header-icon {
+  opacity: 0;
+}
+
+.bc-left-dock .bc-dock-tab-panel {
+  grid-column: 1;
+}
+
+.bc-left-dock[data-workspace-panel-dock="right"] #library-panel,
+.bc-right-dock[data-workspace-panel-dock="right"] #library-panel {
+  grid-template-columns: var(--bc-side-dock-tab-rail-width) minmax(0, 1fr);
+}
+
+.bc-left-dock[data-workspace-panel-dock="right"] .bc-dock-tabs,
+.bc-right-dock[data-workspace-panel-dock="right"] .bc-dock-tabs {
+  grid-column: 1;
+  border-right-color: color-mix(in srgb, var(--bc-color-border) 62%, transparent);
+  border-left-color: color-mix(in srgb, var(--bc-color-border) 72%, transparent);
+  border-radius: var(--bc-radius-3) 0 0 var(--bc-radius-3);
+}
+
+.bc-left-dock[data-workspace-panel-dock="right"] .bc-dock-reveal-slot > .bc-dock-reveal-toggle,
+.bc-right-dock[data-workspace-panel-dock="right"] .bc-dock-reveal-slot > .bc-dock-reveal-toggle {
+  border: 0;
+  border-radius: var(--bc-radius-2);
+}
+
+.bc-left-dock[data-workspace-panel-dock="right"] .bc-dock-tab-panel,
+.bc-right-dock[data-workspace-panel-dock="right"] .bc-dock-tab-panel {
+  grid-column: 2;
+  border-right: 0;
+  border-left: 1px solid color-mix(in srgb, var(--bc-color-border) 82%, transparent);
+}
+
+.bc-left-dock .bc-data-panel {
+  gap: var(--bc-space-3);
+  font-size: var(--bc-font-size-11);
+}
+
+.bc-left-dock .bc-data-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--bc-space-2);
+  min-height: 32px;
+}
+
+.bc-left-dock .bc-data-header-copy {
+  order: 1;
+}
+
+.bc-left-dock .bc-data-header-icon {
+  order: 2;
+  justify-self: end;
+  width: 17px;
+  height: 17px;
+  grid-area: auto;
+}
+
+.bc-left-dock .bc-data-title {
+  font-size: var(--bc-font-size-12);
+}
+
+.bc-left-dock .bc-data-meta {
+  font-size: var(--bc-font-size-11);
+}
+
+.bc-left-dock .bc-data-search {
+  height: 26px;
+  gap: var(--bc-space-2);
+  padding: 0 var(--bc-space-3);
+}
+
+.bc-left-dock .bc-data-section {
+  gap: var(--bc-space-1);
+}
+
+.bc-left-dock .bc-data-section + .bc-data-section {
+  margin-top: var(--bc-space-1);
+}
+
+.bc-left-dock .bc-data-section-title {
+  padding-top: var(--bc-space-1);
+  font-size: 10px;
+}
+
+.bc-left-dock .bc-data-list,
+.bc-left-dock .bc-data-collection {
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--bc-color-border) 62%, transparent);
+  border-radius: 0;
+  background: transparent;
+}
+
+.bc-left-dock .bc-data-collection-summary {
+  min-height: 28px;
+  gap: var(--bc-space-2);
+  padding: 0 var(--bc-space-1);
+}
+
+.bc-left-dock .bc-data-rows {
+  gap: 0;
+  padding: 0;
+}
+
+.bc-left-dock .bc-data-row,
+.bc-left-dock .bc-data-action-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--bc-color-border) 50%, transparent);
+}
+
+.bc-left-dock .bc-data-row:last-child,
+.bc-left-dock .bc-data-action-row:last-child {
+  border-bottom: 0;
+}
+
+.bc-left-dock .bc-data-row {
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  gap: var(--bc-space-2);
+  min-height: 34px;
+  padding: var(--bc-space-2) var(--bc-space-1);
+}
+
+.bc-left-dock .bc-data-action-row {
+  grid-template-columns: minmax(0, 1fr) 24px;
+  gap: var(--bc-space-1);
+  min-height: 34px;
+}
+
+.bc-left-dock .bc-data-row-main {
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: var(--bc-space-2);
+  min-height: 34px;
+  padding: var(--bc-space-1);
+}
+
+.bc-left-dock .bc-data-row-action {
+  width: 24px;
+  min-height: 30px;
+}
+
+.bc-left-dock .bc-data-row-copy {
+  gap: 0;
+}
+
+.bc-left-dock .bc-data-collection-icon,
+.bc-left-dock .bc-data-row-icon {
+  width: 14px;
+  height: 14px;
+  grid-area: auto;
+}
+
+.bc-left-dock .bc-data-collection-label,
+.bc-left-dock .bc-data-row-label {
+  font-size: var(--bc-font-size-11);
+  line-height: 1.08;
+}
+
+.bc-left-dock .bc-data-row-value {
+  font-size: 10px;
+  line-height: 1.12;
+}
+
+.bc-left-dock .bc-data-row-meta {
+  max-width: 58px;
+  min-height: 16px;
+  padding: 0 var(--bc-space-2);
+  font-size: 10px;
+}

@@ -28,7 +28,7 @@ node .\scripts\check_repo.js
 Run schema validation for a specific JSON file when changing JSON contracts:
 
 ```powershell
-node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_structure.json
+node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_seed_connection_structure.json
 ```
 
 ## When Work Gets Confusing

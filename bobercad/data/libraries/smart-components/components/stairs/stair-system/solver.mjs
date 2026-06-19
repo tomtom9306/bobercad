@@ -1,5 +1,5 @@
-import { frameAtStation, normalizePath, pointAtStation } from "../../../../../../app/engine/api/geometry/paths.mjs?v=path-segment-parameter-dry-1";
-import { createSolverResult } from "../../../../../../app/engine/api/model/solver-result.mjs?v=final-array-values-dry-1";
+import { frameAtStation, normalizePath, pointAtStation } from "../../../../../../app/engine/api/geometry/paths.mjs";
+import { createSolverResult } from "../../../../../../app/engine/api/model/solver-result.mjs";
 import { runUkPartK } from "../rule-packs/uk-part-k/rules.mjs";
 
 const EPSILON = 1e-9;
@@ -16,6 +16,38 @@ function positive(value, fallback) {
 function nonNegative(value, fallback = 0) {
   const number = finite(value, fallback);
   return number >= 0 ? number : fallback;
+}
+
+function requiredFinite(value, label) {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`stair solver: ${label} must be a finite number`);
+  return value;
+}
+
+function requiredPositive(value, label) {
+  const number = requiredFinite(value, label);
+  if (number <= 0) throw new Error(`stair solver: ${label} must be positive`);
+  return number;
+}
+
+function requiredNonNegative(value, label) {
+  const number = requiredFinite(value, label);
+  if (number < 0) throw new Error(`stair solver: ${label} must be non-negative`);
+  return number;
+}
+
+function requiredArray(value, label) {
+  if (!Array.isArray(value)) throw new Error(`stair solver: ${label} must be an array`);
+  return value;
+}
+
+function requiredObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`stair solver: ${label} must be an object`);
+  return value;
+}
+
+function requiredString(value, label) {
+  if (typeof value !== "string" || !value) throw new Error(`stair solver: ${label} must be a non-empty string`);
+  return value;
 }
 
 function deg(value) {
@@ -73,7 +105,7 @@ function frameWithElevation(planPath, station, elevation) {
 }
 
 function segmentForStation(planPath, station, prefer = "before") {
-  const segments = planPath.segments || [];
+  const segments = requiredArray(planPath.segments, "planPath.segments");
   if (!segments.length) return null;
   if (prefer === "after") {
     return segments.find((segment) => station >= segment.stationStart - EPSILON && station < segment.stationEnd - EPSILON)
@@ -236,8 +268,7 @@ function solveFlightStepDistribution(modules = [], targetStepCount) {
         code: "stair-flight-overrides-total-mismatch",
         message: `Flight step overrides total ${solvedStepCount}, but level/max-rise calculation targets ${targetStepCount}.`,
         parameterPaths: ["route.modules", "geometry.maxStepHeight"],
-        measured: { overrideTotal: solvedStepCount, targetStepCount },
-        resolve: "Remove at least one flight override or adjust max step height so free flights can rebalance the route."
+        measured: { overrideTotal: solvedStepCount, targetStepCount }
       });
     }
     return { counts: explicit, targetStepCount, solvedStepCount, diagnostics };
@@ -254,8 +285,7 @@ function solveFlightStepDistribution(modules = [], targetStepCount) {
       code: "stair-flight-overrides-exceed-target",
       message: `Flight step overrides use ${explicitTotal} steps, above the calculated ${targetStepCount}; free flights receive no remaining steps.`,
       parameterPaths: ["route.modules", "geometry.maxStepHeight"],
-      measured: { overrideTotal: explicitTotal, targetStepCount },
-      resolve: "Lower one of the flight overrides or increase FFL rise/max step target if this is intentional."
+      measured: { overrideTotal: explicitTotal, targetStepCount }
     });
   }
   if (counts.some((count) => count <= 0)) {
@@ -264,8 +294,7 @@ function solveFlightStepDistribution(modules = [], targetStepCount) {
       code: "stair-flight-zero-step",
       message: "At least one non-overridden flight has no remaining steps after applying flight overrides.",
       parameterPaths: ["route.modules"],
-      measured: { counts, targetStepCount },
-      resolve: "Reduce overridden flight steps or remove the empty flight module."
+      measured: { counts, targetStepCount }
     });
   }
   return { counts, targetStepCount, solvedStepCount: Math.max(1, solvedStepCount), diagnostics };
@@ -564,7 +593,7 @@ function uLanding({ module, landingIndex, currentPoint, currentStation, currentS
 }
 
 function modularRoute({ origin, modules, parameters, computed }) {
-  const flightCounts = computed.flightStepCounts || [];
+  const flightCounts = requiredArray(computed.flightStepCounts, "computed.flightStepCounts");
   const points = [origin];
   const pathSegments = [];
   const flights = [];
@@ -850,12 +879,12 @@ function supportSegments(planPath, flights, computed, options = {}) {
 }
 
 function elevationAtStation(route, computed, station) {
-  for (const landing of route.landings || []) {
+  for (const landing of requiredArray(route.landings, "route.landings")) {
     if (station >= landing.stationStart - EPSILON && station <= landing.stationEnd + EPSILON) {
       return computed.baseElevation + computed.rise * landing.afterStep;
     }
   }
-  for (const flight of route.flights || []) {
+  for (const flight of requiredArray(route.flights, "route.flights")) {
     const count = flight.stepCount ?? computed.stepCount;
     if (station >= flight.startStation - EPSILON && station <= flight.startStation + flight.run + EPSILON) {
       const progress = Math.max(0, Math.min(1, (station - flight.startStation) / Math.max(flight.run, 1)));
@@ -883,7 +912,7 @@ function railingStationFromSegment(segment, station, elevation, id, index) {
 function railingStations(planPath, computed, route) {
   const spacing = positive(computed.railingPostSpacing, 1200);
   const stations = [];
-  for (const segment of planPath.segments || []) {
+  for (const segment of requiredArray(planPath.segments, "planPath.segments")) {
     const divisions = Math.max(1, Math.ceil(segment.length / spacing));
     for (let localIndex = 0; localIndex <= divisions; localIndex += 1) {
       const station = segment.stationStart + segment.length * localIndex / divisions;
@@ -907,7 +936,7 @@ function diagnosticsForSpecialRoutes(computed) {
 }
 
 function moduleRouteDiagnostics(computed) {
-  const modules = computed.routeModules || [];
+  const modules = requiredArray(computed.routeModules, "computed.routeModules");
   const specialFlights = modules.filter((module) => ["flight.winder", "flight.curved", "flight.spiral", "flight.helical"].includes(module.type));
   if (!specialFlights.length) return [];
   if (modules.length === 1) return [];
@@ -917,22 +946,22 @@ function moduleRouteDiagnostics(computed) {
     severity: "error",
     code: "stair-special-route-modules-unsupported",
     message: `${computed.routeType} route must be a single analytic flight module; landings and extra flights require a straight/L/U modular route.`,
-    parameterPaths: ["route.modules"],
-    resolve: "Use one curved, winder, spiral, or helical flight module, or build the route from straight flights and landing modules."
+    parameterPaths: ["route.modules"]
   }];
 }
 
-function sectionSplitFrames(planPath, route, computed, parameters = {}) {
-  const strategy = parameters.sections?.strategy || "none";
+function sectionSplitFrames(planPath, route, computed, parameters) {
+  const sections = requiredObject(parameters.sections, "parameters.sections");
+  const strategy = requiredString(sections.strategy, "parameters.sections.strategy");
   const routeLength = planPath.length;
-  const targetLength = positive(parameters.sections?.targetLength, routeLength);
+  const targetLength = positive(sections.targetLength, routeLength);
   const maxWeightStations = strategy === "max-weight"
     ? Array.from({ length: Math.max(1, Math.ceil(routeLength / targetLength)) - 1 }, (_, index) => routeLength * (index + 1) / Math.max(1, Math.ceil(routeLength / targetLength)))
     : [];
   const rawStations = strategy === "manual-stations"
-    ? parameters.sections?.manualStations || []
+    ? requiredArray(sections.manualStations, "parameters.sections.manualStations")
     : strategy === "landings"
-      ? (route.landings || []).flatMap((landing) => [landing.stationStart, landing.stationEnd])
+      ? requiredArray(route.landings, "route.landings").flatMap((landing) => [landing.stationStart, landing.stationEnd])
       : maxWeightStations;
   return [...new Set(rawStations
     .filter((station) => typeof station === "number" && Number.isFinite(station))
@@ -958,8 +987,7 @@ function capabilityDiagnostics(parameters, computed) {
       severity: "error",
       code: "stair-route-support-family-unsupported",
       message: `${routeType} route requires a rolled/spiral-capable support family.`,
-      parameterPaths: ["route.modules", "supports.family"],
-      resolve: "Use spiral-column, mono-stringer, or twin-stringer support for spiral/helical stairs."
+      parameterPaths: ["route.modules", "supports.family"]
     });
   }
   if (["winder", "curved", "mixed-curved", "spiral", "helical"].includes(routeType) && treads === "grating-tread") {
@@ -968,8 +996,7 @@ function capabilityDiagnostics(parameters, computed) {
       code: "stair-curved-grating-review-required",
       message: `${routeType} route with grating treads needs explicit tread-frame and nosing review.`,
       parameterPaths: ["route.modules", "treads.family"],
-      objectRoles: ["treadPattern"],
-      resolve: "Confirm the grating tread family supports the solved curved/winder frame before fabrication."
+      objectRoles: ["treadPattern"]
     });
   }
   if (["spiral", "helical"].includes(routeType) && railings === "wall-handrail") {
@@ -977,8 +1004,7 @@ function capabilityDiagnostics(parameters, computed) {
       severity: "error",
       code: "stair-route-railing-family-unsupported",
       message: `${routeType} route cannot use wall-handrail without a wall interface path.`,
-      parameterPaths: ["route.modules", "railings.family"],
-      resolve: "Use post-and-rail or glass-panel railing, or provide an explicit wall handrail support path."
+      parameterPaths: ["route.modules", "railings.family"]
     });
   }
   return diagnostics;
@@ -992,35 +1018,30 @@ function riseCalculationDiagnostics(computed) {
       code: "stair-rise-exceeds-max-step-height",
       message: `Solved rise ${computed.rise.toFixed(2)} mm exceeds max step height ${computed.maxStepHeight.toFixed(2)} mm.`,
       parameterPaths: ["geometry.maxStepHeight", "route.modules"],
-      measured: { rise: computed.rise, maxStepHeight: computed.maxStepHeight, stepCount: computed.stepCount, targetStepCount: computed.targetStepCount },
-      resolve: "Increase max step height, remove low flight overrides, or add more steps to overridden flights."
+      measured: { rise: computed.rise, maxStepHeight: computed.maxStepHeight, stepCount: computed.stepCount, targetStepCount: computed.targetStepCount }
     });
   }
   return diagnostics;
 }
 
 function railingPostSpacing(parameters, computed) {
-  const baseSpacing = positive(parameters.railings?.postSpacing, 1200);
+  const baseSpacing = requiredPositive(parameters.railings?.postSpacing, "railings.postSpacing");
   if (!["spiral", "helical", "winder", "curved", "mixed-curved"].includes(computed.routeType)) return baseSpacing;
-  const curvedDefault = Math.max(360, computed.width * 0.55);
-  return Math.min(baseSpacing, positive(parameters.railings?.curvePostSpacing, curvedDefault));
+  return Math.min(baseSpacing, requiredPositive(parameters.railings?.curvePostSpacing, "railings.curvePostSpacing"));
 }
 
 function solveLevelGeometry(parameters = {}, inputs = {}) {
-  const legacyRise = positive(parameters.geometry?.rise, 180);
-  const legacyStepCount = Math.max(1, Math.round(positive(parameters.geometry?.stepCount, 8)));
-  const legacyFloorToFloor = positive(parameters.levels?.floorToFloor, legacyRise * legacyStepCount);
-  const ffl1 = finite(parameters.levels?.ffl1, 0);
-  let ffl2 = finite(parameters.levels?.ffl2, ffl1 + legacyFloorToFloor);
-  if (ffl2 <= ffl1 + EPSILON) ffl2 = ffl1 + legacyFloorToFloor;
+  const ffl1 = requiredFinite(parameters.levels?.ffl1, "levels.ffl1");
+  const ffl2 = requiredFinite(parameters.levels?.ffl2, "levels.ffl2");
+  if (ffl2 <= ffl1 + EPSILON) throw new Error("stair solver: levels.ffl2 must be above levels.ffl1");
   const finishedFloorRise = Math.max(EPSILON, ffl2 - ffl1);
-  const maxStepHeight = positive(parameters.geometry?.maxStepHeight, legacyRise);
+  const maxStepHeight = requiredPositive(parameters.geometry?.maxStepHeight, "geometry.maxStepHeight");
   const targetStepCount = Math.max(1, Math.ceil(finishedFloorRise / maxStepHeight - EPSILON));
   const placementElevation = finite(inputs.placement?.origin?.[2], 0);
   const baseElevation = placementElevation + ffl1;
   const topFinishedFloorElevation = placementElevation + ffl2;
-  const slab1ToFfl1 = nonNegative(parameters.levels?.slab1ToFfl1, 0);
-  const slab2ToFfl2 = nonNegative(parameters.levels?.slab2ToFfl2, 0);
+  const slab1ToFfl1 = requiredNonNegative(parameters.levels?.slab1ToFfl1, "levels.slab1ToFfl1");
+  const slab2ToFfl2 = requiredNonNegative(parameters.levels?.slab2ToFfl2, "levels.slab2ToFfl2");
   return {
     ffl1,
     ffl2,
@@ -1043,12 +1064,11 @@ export function solveStairSystem(parameters = {}, inputs = {}) {
   const levels = solveLevelGeometry(parameters, inputs);
   const distribution = solveFlightStepDistribution(routeModules, levels.targetStepCount);
   const stepCount = distribution.solvedStepCount;
-  const width = positive(parameters.geometry?.width, 900);
+  const width = requiredPositive(parameters.geometry?.width, "geometry.width");
   const rise = levels.finishedFloorRise / stepCount;
   const totalRise = levels.finishedFloorRise;
-  const going = positive(parameters.geometry?.going, 260);
-  const treadDepthFallback = positive(parameters.treads?.depth, going);
-  const treadOverlap = nonNegative(parameters.treads?.overlap, Math.max(0, treadDepthFallback - going));
+  const going = requiredPositive(parameters.geometry?.going, "geometry.going");
+  const treadOverlap = requiredNonNegative(parameters.treads?.overlap, "treads.overlap");
   const routeType = routeTypeForModules(routeModules);
   const computed = {
     stepCount,
@@ -1077,8 +1097,8 @@ export function solveStairSystem(parameters = {}, inputs = {}) {
     pitchDeg: Math.atan2(rise, going) * 180 / Math.PI,
     twiceRisePlusGoing: 2 * rise + going,
     routeType,
-    headroom: positive(parameters.compliance?.headroom, 2000),
-    handrailHeight: positive(parameters.railings?.height, 1000)
+    headroom: requiredPositive(parameters.compliance?.headroom, "compliance.headroom"),
+    handrailHeight: requiredPositive(parameters.railings?.height, "railings.height")
   };
   computed.railingPostSpacing = railingPostSpacing(parameters, computed);
   const route = solveRoute(parameters, inputs, computed);
@@ -1091,7 +1111,7 @@ export function solveStairSystem(parameters = {}, inputs = {}) {
   const treads = createTreadFrames(planPath, flights, computed, route.landings);
   const landings = landingFrames(planPath, route.landings, computed);
   const treadExclusionZones = treadExclusionZonesForLandings(landings);
-  const supports = supportSegments(planPath, flights, computed, parameters.supports || {});
+  const supports = supportSegments(planPath, flights, computed, requiredObject(parameters.supports, "parameters.supports"));
   const railStations = railingStations(planPath, computed, { ...route, flights });
   const splitFrames = sectionSplitFrames(planPath, { ...route, flights }, computed, parameters);
   const measurements = {
@@ -1138,7 +1158,7 @@ export function solveStairSystem(parameters = {}, inputs = {}) {
       supports,
       railStations,
       sections: {
-        strategy: parameters.sections?.strategy || "none",
+        strategy: requiredString(requiredObject(parameters.sections, "parameters.sections").strategy, "parameters.sections.strategy"),
         splitFrames
       }
     },

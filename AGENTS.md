@@ -6,8 +6,8 @@ Start here, then open the specific docs needed for the task.
 
 ## Source Of Truth
 
-- Connection sample project: `bobercad/data/projects/sample_structure.json`
-- Fin plate sample project: `bobercad/data/projects/sample_fin_plate.json`
+- Connection sample project: `bobercad/data/projects/sample_seed_connection_structure.json`
+- Fin plate sample project: `bobercad/data/projects/sample_beam_to_column_fin_plate.json`
 - Connection test frame sample project: `bobercad/data/projects/sample_connection_test_frame.json`
 - Portal frame sample project: `bobercad/data/projects/sample_portal_frame.json`
 - Beam-to-beam fin plate sample project: `bobercad/data/projects/sample_beam_to_beam_fin_plate.json`
@@ -17,7 +17,7 @@ Start here, then open the specific docs needed for the task.
 - Material library pack: `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json`
 - Fastener library pack: `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json`
 - Smart Component library register: `bobercad/data/libraries/smart-components/smart-component-register.json`
-- Model library register: `bobercad/data/libraries/model-library/model-register.json`
+- Frame library register: `bobercad/data/libraries/frames/frame-register.json`
 - Viewer settings: `bobercad/app/ui/viewer/viewer-settings.json`
 - Schemas: `bobercad/app/schemas/`
 
@@ -32,7 +32,7 @@ Start here, then open the specific docs needed for the task.
 - Fastener library schema: `bobercad/app/schemas/fastener-library.schema.json`
 - Smart Component schema: `bobercad/app/schemas/smart-component.schema.json`
 - Smart Component register schema: `bobercad/app/schemas/smart-component-register.schema.json`
-- Model library schema: `bobercad/app/schemas/model-library.schema.json`
+- Frame library schema: `bobercad/app/schemas/frame-library.schema.json`
 
 ## Hard Rules
 
@@ -62,5 +62,5 @@ node .\scripts\check_repo.js
 Run schema validation for a specific JSON file:
 
 ```powershell
-node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_structure.json
+node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_seed_connection_structure.json
 ```

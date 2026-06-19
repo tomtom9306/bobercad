@@ -23,6 +23,7 @@ function requiredInput(ctx, path, label) {
 
 function requiredPositiveInput(ctx, path, label) {
   const value = requiredInput(ctx, path, label);
+  if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
     ctx.error("stair-support-input-invalid", `${label} must be a positive number.`, { parameterPaths: [path] });
     return undefined;
@@ -32,11 +33,20 @@ function requiredPositiveInput(ctx, path, label) {
 
 function requiredNonNegativeInput(ctx, path, label) {
   const value = requiredInput(ctx, path, label);
+  if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     ctx.error("stair-support-input-invalid", `${label} must be zero or positive.`, { parameterPaths: [path] });
     return undefined;
   }
   return value;
+}
+
+function requiredArrayInput(ctx, path, label) {
+  const value = requiredInput(ctx, path, label);
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) return value;
+  ctx.error("stair-support-input-invalid", `${label} must be an array.`, { parameterPaths: [path] });
+  return undefined;
 }
 
 function segmentBeam(ctx, role, segment, offset, profile, memberType, name, color) {
@@ -90,7 +100,7 @@ function rolledBeam(ctx, role, centerline, profile, memberType, name, color, pla
 }
 
 export function buildSupportSystem(ctx, options = {}) {
-  const segments = requiredInput(ctx, "layout.supports", "Solved support segments") || [];
+  const segments = requiredArrayInput(ctx, "layout.supports", "Solved support segments");
   const width = requiredPositiveInput(ctx, "geometry.width", "Stair width");
   const profile = requiredInput(ctx, "supports.profile", "Support profile");
   const offset = requiredNonNegativeInput(ctx, "supports.sideOffset", "Support side offset");
@@ -100,13 +110,12 @@ export function buildSupportSystem(ctx, options = {}) {
   const memberIds = [];
   let centerColumnId = null;
   let rolledMemberCount = 0;
-  if (!Array.isArray(segments) || !width || !profile || offset === undefined || !routeType) return;
+  if (!segments || !width || !profile || offset === undefined || !routeType) return;
   const requiresAnalyticRolledPath = ["winder", "curved", "spiral", "helical"].includes(routeType)
     && ["mono-stringer", "spiral-column", "twin-stringer"].includes(options.family);
   if (requiresAnalyticRolledPath && !rolledPath) {
     ctx.error("stair-support-analytic-centerline-missing", `${routeType} support requires an analytic rolled centerline.`, {
-      parameterPaths: ["route.modules", "supports.family"],
-      resolve: "Pass layout.rolledPath from the stair solver; do not generate segmented fallback members for curved stairs."
+      parameterPaths: ["route.modules", "supports.family"]
     });
     return;
   }
@@ -190,8 +199,7 @@ export function buildSupportSystem(ctx, options = {}) {
 
   if (requiresAnalyticRolledPath) {
     ctx.error("stair-support-analytic-centerline-invalid", `${routeType} support could not produce a valid analytic rolled centerline.`, {
-      parameterPaths: ["route.modules", "supports.profile", "supports.sideOffset"],
-      resolve: "Adjust radius/side offset/profile so the rolled centerline has a positive radius."
+      parameterPaths: ["route.modules", "supports.profile", "supports.sideOffset"]
     });
     return;
   }

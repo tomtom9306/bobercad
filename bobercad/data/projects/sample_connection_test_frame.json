@@ -80,7 +80,7 @@
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
-      "path": "../libraries/model-library/model-register.json"
+      "path": "../libraries/frames/frame-register.json"
     },
     "smartComponents": {
       "libraryId": "starter-smart-component-library",
@@ -113,56 +113,6 @@
         "name": "Connection Test Frame",
         "children": []
       }
-    }
-  },
-  "gridSystems": {
-    "main_grid": {
-      "id": "main_grid",
-      "name": "Main Grid",
-      "origin": [
-        0,
-        0,
-        0
-      ],
-      "rotation": 0,
-      "axes": {
-        "x": [
-          {
-            "id": "grid_1",
-            "label": "1",
-            "position": 0
-          },
-          {
-            "id": "grid_2",
-            "label": "2",
-            "position": 5000
-          }
-        ],
-        "y": [
-          {
-            "id": "grid_a",
-            "label": "A",
-            "position": 0
-          },
-          {
-            "id": "grid_b",
-            "label": "B",
-            "position": 3000
-          }
-        ]
-      }
-    }
-  },
-  "levels": {
-    "level_base": {
-      "id": "level_base",
-      "name": "Base",
-      "elevation": 0
-    },
-    "level_top": {
-      "id": "level_top",
-      "name": "Top Steel",
-      "elevation": 3200
     }
   },
   "phases": {
@@ -216,35 +166,35 @@
     },
     "if_c1_east": {
       "collection": "interfaces",
-      "type": "member-side-face"
+      "type": "planar-face"
     },
     "if_c1_north": {
       "collection": "interfaces",
-      "type": "member-side-face"
+      "type": "planar-face"
     },
     "if_c2_west": {
       "collection": "interfaces",
-      "type": "member-side-face"
+      "type": "planar-face"
     },
     "if_c2_north": {
       "collection": "interfaces",
-      "type": "member-side-face"
+      "type": "planar-face"
     },
     "if_c3_west": {
       "collection": "interfaces",
-      "type": "member-side-face"
+      "type": "planar-face"
     },
     "if_c3_south": {
       "collection": "interfaces",
-      "type": "member-side-face"
+      "type": "planar-face"
     },
     "if_c4_east": {
       "collection": "interfaces",
-      "type": "member-side-face"
+      "type": "planar-face"
     },
     "if_c4_south": {
       "collection": "interfaces",
-      "type": "member-side-face"
+      "type": "planar-face"
     },
     "if_b1_start": {
       "collection": "interfaces",
@@ -345,6 +295,18 @@
     "beam_b4_west": {
       "collection": "members",
       "type": "test-top-beam"
+    },
+    "main_grid": {
+      "collection": "gridSystems",
+      "type": "orthogonal-grid-system"
+    },
+    "level_base": {
+      "collection": "levels",
+      "type": "datum-level"
+    },
+    "level_top": {
+      "collection": "levels",
+      "type": "datum-level"
     }
   },
   "modelDefaults": {
@@ -429,11 +391,11 @@
           0
         ],
         "role": "column-base",
-        "gridSystemId": "main_grid",
         "gridRefs": {
-          "x": "1",
-          "y": "A",
-          "level": "level_base"
+          "gridSystemId": "main_grid",
+          "xAxisId": "grid_1",
+          "yAxisId": "grid_a",
+          "levelId": "level_base"
         }
       },
       "wp_c1_top": {
@@ -445,11 +407,11 @@
           3200
         ],
         "role": "column-top",
-        "gridSystemId": "main_grid",
         "gridRefs": {
-          "x": "1",
-          "y": "A",
-          "level": "level_top"
+          "gridSystemId": "main_grid",
+          "xAxisId": "grid_1",
+          "yAxisId": "grid_a",
+          "levelId": "level_top"
         }
       },
       "wp_c2_base": {
@@ -461,11 +423,11 @@
           0
         ],
         "role": "column-base",
-        "gridSystemId": "main_grid",
         "gridRefs": {
-          "x": "2",
-          "y": "A",
-          "level": "level_base"
+          "gridSystemId": "main_grid",
+          "xAxisId": "grid_2",
+          "yAxisId": "grid_a",
+          "levelId": "level_base"
         }
       },
       "wp_c2_top": {
@@ -477,11 +439,11 @@
           3200
         ],
         "role": "column-top",
-        "gridSystemId": "main_grid",
         "gridRefs": {
-          "x": "2",
-          "y": "A",
-          "level": "level_top"
+          "gridSystemId": "main_grid",
+          "xAxisId": "grid_2",
+          "yAxisId": "grid_a",
+          "levelId": "level_top"
         }
       },
       "wp_c3_base": {
@@ -493,11 +455,11 @@
           0
         ],
         "role": "column-base",
-        "gridSystemId": "main_grid",
         "gridRefs": {
-          "x": "2",
-          "y": "B",
-          "level": "level_base"
+          "gridSystemId": "main_grid",
+          "xAxisId": "grid_2",
+          "yAxisId": "grid_b",
+          "levelId": "level_base"
         }
       },
       "wp_c3_top": {
@@ -509,11 +471,11 @@
           3200
         ],
         "role": "column-top",
-        "gridSystemId": "main_grid",
         "gridRefs": {
-          "x": "2",
-          "y": "B",
-          "level": "level_top"
+          "gridSystemId": "main_grid",
+          "xAxisId": "grid_2",
+          "yAxisId": "grid_b",
+          "levelId": "level_top"
         }
       },
       "wp_c4_base": {
@@ -525,11 +487,11 @@
           0
         ],
         "role": "column-base",
-        "gridSystemId": "main_grid",
         "gridRefs": {
-          "x": "1",
-          "y": "B",
-          "level": "level_base"
+          "gridSystemId": "main_grid",
+          "xAxisId": "grid_1",
+          "yAxisId": "grid_b",
+          "levelId": "level_base"
         }
       },
       "wp_c4_top": {
@@ -541,11 +503,11 @@
           3200
         ],
         "role": "column-top",
-        "gridSystemId": "main_grid",
         "gridRefs": {
-          "x": "1",
-          "y": "B",
-          "level": "level_top"
+          "gridSystemId": "main_grid",
+          "xAxisId": "grid_1",
+          "yAxisId": "grid_b",
+          "levelId": "level_top"
         }
       }
     },
@@ -582,7 +544,7 @@
     "interfaces": {
       "if_c1_east": {
         "id": "if_c1_east",
-        "type": "member-side-face",
+        "type": "planar-face",
         "ownerId": "column_c1",
         "role": "beam-column-candidate-face",
         "stationReference": "connection-secondary-interface-origin",
@@ -590,7 +552,7 @@
       },
       "if_c1_north": {
         "id": "if_c1_north",
-        "type": "member-side-face",
+        "type": "planar-face",
         "ownerId": "column_c1",
         "role": "beam-column-candidate-face",
         "stationReference": "connection-secondary-interface-origin",
@@ -598,7 +560,7 @@
       },
       "if_c2_west": {
         "id": "if_c2_west",
-        "type": "member-side-face",
+        "type": "planar-face",
         "ownerId": "column_c2",
         "role": "beam-column-candidate-face",
         "stationReference": "connection-secondary-interface-origin",
@@ -606,7 +568,7 @@
       },
       "if_c2_north": {
         "id": "if_c2_north",
-        "type": "member-side-face",
+        "type": "planar-face",
         "ownerId": "column_c2",
         "role": "beam-column-candidate-face",
         "stationReference": "connection-secondary-interface-origin",
@@ -614,7 +576,7 @@
       },
       "if_c3_west": {
         "id": "if_c3_west",
-        "type": "member-side-face",
+        "type": "planar-face",
         "ownerId": "column_c3",
         "role": "beam-column-candidate-face",
         "stationReference": "connection-secondary-interface-origin",
@@ -622,7 +584,7 @@
       },
       "if_c3_south": {
         "id": "if_c3_south",
-        "type": "member-side-face",
+        "type": "planar-face",
         "ownerId": "column_c3",
         "role": "beam-column-candidate-face",
         "stationReference": "connection-secondary-interface-origin",
@@ -630,7 +592,7 @@
       },
       "if_c4_east": {
         "id": "if_c4_east",
-        "type": "member-side-face",
+        "type": "planar-face",
         "ownerId": "column_c4",
         "role": "beam-column-candidate-face",
         "stationReference": "connection-secondary-interface-origin",
@@ -638,7 +600,7 @@
       },
       "if_c4_south": {
         "id": "if_c4_south",
-        "type": "member-side-face",
+        "type": "planar-face",
         "ownerId": "column_c4",
         "role": "beam-column-candidate-face",
         "stationReference": "connection-secondary-interface-origin",
@@ -881,6 +843,18 @@
         },
         "bim": {
           "name": "Column C1"
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            0,
+            0,
+            3200
+          ]
         }
       },
       "column_c2": {
@@ -903,6 +877,18 @@
         },
         "bim": {
           "name": "Column C2"
+        },
+        "layoutAxis": {
+          "start": [
+            5000,
+            0,
+            0
+          ],
+          "end": [
+            5000,
+            0,
+            3200
+          ]
         }
       },
       "column_c3": {
@@ -925,6 +911,18 @@
         },
         "bim": {
           "name": "Column C3"
+        },
+        "layoutAxis": {
+          "start": [
+            5000,
+            3000,
+            0
+          ],
+          "end": [
+            5000,
+            3000,
+            3200
+          ]
         }
       },
       "column_c4": {
@@ -947,6 +945,18 @@
         },
         "bim": {
           "name": "Column C4"
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            3000,
+            0
+          ],
+          "end": [
+            0,
+            3000,
+            3200
+          ]
         }
       },
       "beam_b1_south": {
@@ -967,6 +977,18 @@
         },
         "bim": {
           "name": "South top beam B1"
+        },
+        "layoutAxis": {
+          "start": [
+            150,
+            0,
+            3200
+          ],
+          "end": [
+            4850,
+            0,
+            3200
+          ]
         }
       },
       "beam_b2_east": {
@@ -987,6 +1009,18 @@
         },
         "bim": {
           "name": "East top beam B2"
+        },
+        "layoutAxis": {
+          "start": [
+            5000,
+            75,
+            3200
+          ],
+          "end": [
+            5000,
+            2925,
+            3200
+          ]
         }
       },
       "beam_b3_north": {
@@ -1007,6 +1041,18 @@
         },
         "bim": {
           "name": "North top beam B3"
+        },
+        "layoutAxis": {
+          "start": [
+            4850,
+            3000,
+            3200
+          ],
+          "end": [
+            150,
+            3000,
+            3200
+          ]
         }
       },
       "beam_b4_west": {
@@ -1027,19 +1073,104 @@
         },
         "bim": {
           "name": "West top beam B4"
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            2925,
+            3200
+          ],
+          "end": [
+            0,
+            75,
+            3200
+          ]
         }
       }
     },
     "plates": {},
+    "sketches": {},
     "holePatterns": {},
     "objectPatterns": {},
     "features": {},
     "fastenerGroups": {},
     "welds": {},
+    "relations": {},
     "addonData": {},
     "referencePlanes": {},
     "trimJoints": {},
-    "smartComponentInstances": {}
+    "smartComponentInstances": {},
+    "gridSystems": {
+      "main_grid": {
+        "id": "main_grid",
+        "name": "Main Grid",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axes": {
+          "x": [
+            {
+              "id": "grid_1",
+              "label": "1",
+              "position": 0
+            },
+            {
+              "id": "grid_2",
+              "label": "2",
+              "position": 5000
+            }
+          ],
+          "y": [
+            {
+              "id": "grid_a",
+              "label": "A",
+              "position": 0
+            },
+            {
+              "id": "grid_b",
+              "label": "B",
+              "position": 3000
+            }
+          ]
+        },
+        "type": "orthogonal-grid-system",
+        "axisX": [
+          1,
+          0,
+          0
+        ],
+        "axisY": [
+          0,
+          1,
+          0
+        ],
+        "axisZ": [
+          0,
+          0,
+          1
+        ],
+        "levelIds": [
+          "level_base",
+          "level_top"
+        ]
+      }
+    },
+    "levels": {
+      "level_base": {
+        "id": "level_base",
+        "name": "Base",
+        "elevation": 0,
+        "type": "datum-level"
+      },
+      "level_top": {
+        "id": "level_top",
+        "name": "Top Steel",
+        "elevation": 3200,
+        "type": "datum-level"
+      }
+    }
   },
   "migrationHistory": [
     {

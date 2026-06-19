@@ -1,31 +1,40 @@
-import { libraryProfileById } from "../../../project/profiles.mjs?v=profile-lookup-dry-1";
+import { libraryProfileById } from "../../../project/profiles.mjs";
+import { enumValue, requiredFiniteNumber, requiredNonNegativeNumber, requiredPositiveInteger, requiredPositiveNumber, requiredString } from "../shared/validation.mjs";
 
 function memberDirectionFromJoint(ctx, member, iface) {
   const frame = ctx.geometry.memberFrame(member);
-  return iface.memberEnd === "end" ? ctx.geometry.v.mul(frame.x, -1) : frame.x;
+  if (iface.memberEnd === "start") return frame.x;
+  if (iface.memberEnd === "end") return ctx.geometry.v.mul(frame.x, -1);
+  ctx.fail(`${iface.id || "interface"} memberEnd must be start or end`);
 }
 
-function equalAngleNormal(ctx, ownDirection, mateDirection) {
-  const v = ctx.geometry.v;
+function equalAngleNormal(v, ownDirection, mateDirection) {
   let normal = v.norm(v.sub(mateDirection, ownDirection));
   if (v.len(normal) <= 1e-9) return ownDirection;
   if (v.dot(normal, ownDirection) < 0) normal = v.mul(normal, -1);
   return Math.abs(v.dot(normal, ownDirection)) <= 1e-9 ? ownDirection : normal;
 }
 
+function squareExtents(size) {
+  return {
+    xMin: -size / 2,
+    xMax: size / 2,
+    yMin: -size / 2,
+    yMax: size / 2
+  };
+}
+
 function trimPlaneAtJoint(ctx, member, ownDirection, mateDirection, joint) {
   const v = ctx.geometry.v;
   const frame = ctx.geometry.memberFrame(member);
-  const normal = equalAngleNormal(ctx, ownDirection, mateDirection);
+  const normal = equalAngleNormal(v, ownDirection, mateDirection);
   const axisX = ctx.geometry.projectedAxis(frame.y, normal)
-    || ctx.geometry.projectedAxis(frame.z, normal)
-    || ctx.geometry.projectedAxis([0, 0, 1], normal)
-    || ctx.geometry.projectedAxis([0, 1, 0], normal);
+    || ctx.geometry.projectedAxis(frame.z, normal);
   if (!axisX) ctx.fail(`${member.id}: cannot resolve gusset trim plane axis`);
   const axisY = v.norm(v.cross(normal, axisX));
   const bounds = ctx.geometry.sectionBounds(libraryProfileById(ctx.profiles, member.profile));
   const span = Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1) * 1.35;
-  return { origin: joint, normal, axisX, axisY, size: [span, span] };
+  return { origin: joint, normal, axisX, axisY, extents: squareExtents(span) };
 }
 
 function boltPositions(rows, pitch, lineOffset) {
@@ -38,7 +47,8 @@ function boltPositions(rows, pitch, lineOffset) {
 
 function webSidePlateOffset(ctx, plateThickness) {
   const webBounds = ctx.geometry.sectionWebBounds(ctx.profile("main"));
-  const webHalfThickness = Math.max(Math.abs(webBounds.minY || 0), Math.abs(webBounds.maxY || 0));
+  if (!Number.isFinite(webBounds.minY) || !Number.isFinite(webBounds.maxY)) ctx.fail("dual-member-gusset: main member web bounds must be finite");
+  const webHalfThickness = Math.max(Math.abs(webBounds.minY), Math.abs(webBounds.maxY));
   return webHalfThickness + plateThickness / 2;
 }
 
@@ -49,7 +59,7 @@ function apexGussetOutline(ctx, plate, center, plateNormal, localAxisY, localAxi
   const keepPoint = v.add(center, v.mul(localAxisZ, -plate.height / 2));
   const trimToMemberSlope = (direction) => {
     const projectedDirection = ctx.geometry.projectedAxis(direction, plateNormal);
-    if (!projectedDirection) return;
+    if (!projectedDirection) ctx.fail("dual-member-gusset: member direction is parallel to gusset plate normal");
     const planeNormal = v.norm(v.cross(plateNormal, projectedDirection));
     outline = ctx.geometry.clipPlateOutlineByPlane({
       outline,
@@ -79,7 +89,10 @@ export function build(ctx) {
     width: "plate.width",
     height: "plate.height"
   });
-  plate.verticalOffset = ctx.optionalParam("plate.verticalOffset", 0);
+  plate.thickness = requiredPositiveNumber(ctx, plate.thickness, "plate.thickness");
+  plate.width = requiredPositiveNumber(ctx, plate.width, "plate.width");
+  plate.height = requiredPositiveNumber(ctx, plate.height, "plate.height");
+  plate.verticalOffset = requiredFiniteNumber(ctx, ctx.parameterValue("plate.verticalOffset"), "plate.verticalOffset");
   const bolts = ctx.params({
     fastenerRef: "bolts.fastenerRef",
     rows: "bolts.rows",
@@ -90,16 +103,24 @@ export function build(ctx) {
     holeType: "holes.type",
     memberDepth: "holes.memberDepth"
   });
+  bolts.fastenerRef = requiredString(ctx, bolts.fastenerRef, "bolts.fastenerRef");
+  bolts.rows = requiredPositiveInteger(ctx, bolts.rows, "bolts.rows");
+  bolts.pitch = requiredNonNegativeNumber(ctx, bolts.pitch, "bolts.pitch");
+  bolts.groupSpacing = requiredNonNegativeNumber(ctx, bolts.groupSpacing, "bolts.groupSpacing");
+  bolts.length = requiredPositiveNumber(ctx, bolts.length, "bolts.length");
+  bolts.holeDiameter = requiredPositiveNumber(ctx, bolts.holeDiameter, "holes.diameter");
+  bolts.holeType = enumValue(ctx, bolts.holeType, ["round", "slotted", "countersunk"], "holes.type");
+  bolts.memberDepth = requiredPositiveNumber(ctx, bolts.memberDepth, "holes.memberDepth");
   const v = ctx.geometry.v;
   const mainDirection = memberDirectionFromJoint(ctx, mainMember, mainInterface);
   const secondaryDirection = memberDirectionFromJoint(ctx, secondaryMember, secondaryInterface);
   let plateNormal = v.cross(mainDirection, secondaryDirection);
-  if (v.len(plateNormal) <= 1e-9) plateNormal = mainInterface.localAxisY || [0, 1, 0];
+  if (v.len(plateNormal) <= 1e-9) ctx.fail("dual-member-gusset: member directions must not be parallel");
   plateNormal = v.norm(plateNormal);
   if (v.dot(plateNormal, [0, 1, 0]) < 0) plateNormal = v.mul(plateNormal, -1);
 
   let localAxisZ = ctx.geometry.projectedAxis([0, 0, 1], plateNormal) || ctx.geometry.projectedAxis(mainInterface.localAxisZ, plateNormal);
-  if (!localAxisZ) localAxisZ = [0, 0, 1];
+  if (!localAxisZ) ctx.fail("dual-member-gusset: cannot resolve localAxisZ");
   if (v.dot(localAxisZ, [0, 0, 1]) < 0) localAxisZ = v.mul(localAxisZ, -1);
   let localAxisY = v.norm(v.cross(localAxisZ, plateNormal));
   if (v.dot(localAxisY, secondaryDirection) < 0) localAxisY = v.mul(localAxisY, -1);
@@ -111,8 +132,6 @@ export function build(ctx) {
   const gussetPlate = ctx.part.plate("gussetPlate", {
     type: "rectangular-plate",
     thickness: plate.thickness,
-    width: plate.width,
-    height: plate.height,
     outline: apexGussetOutline(ctx, plate, center, plateNormal, localAxisY, localAxisZ, mainDirection, secondaryDirection),
     center,
     normal: plateNormal,
@@ -135,6 +154,8 @@ export function build(ctx) {
     memberId: mainMember.id,
     memberEnd: mainInterface.memberEnd,
     referencePlaneIds: [mainTrimPlane.id],
+    removedRegionKeys: [`${mainTrimPlane.id}:-`],
+    gap: 0,
     display: trimDisplay,
     fabrication: { operation: "trim-main-member-to-apex-gusset" },
     placementIntent: {
@@ -149,6 +170,8 @@ export function build(ctx) {
     memberId: secondaryMember.id,
     memberEnd: secondaryInterface.memberEnd,
     referencePlaneIds: [secondaryTrimPlane.id],
+    removedRegionKeys: [`${secondaryTrimPlane.id}:-`],
+    gap: 0,
     display: trimDisplay,
     fabrication: { operation: "trim-secondary-member-to-apex-gusset" },
     placementIntent: {
@@ -173,14 +196,14 @@ export function build(ctx) {
     code: "apex-gusset-outline-invalid-after-trimming",
     message: "Apex gusset trimming left no valid plate outline.",
     objectRoles: ["gussetPlate"],
-    parameters: ["plate.width", "plate.height"]
+    parameterPaths: ["plate.width", "plate.height"]
   });
   for (const [pattern, rolePrefix] of [[mainPattern, "main"], [secondaryPattern, "secondary"]]) {
     ctx.check.gridFitsPlate(pattern, gussetPlate, {
       code: `${rolePrefix}-gusset-hole-grid-outside-plate`,
       message: "Gusset bolt holes do not fit inside the plate.",
       objectRoles: ["gussetPlate", `${rolePrefix}HolePattern`, `${rolePrefix}PlateHoles`, `${rolePrefix}Fasteners`],
-      parameters: ["bolts.pitch", "bolts.groupSpacing", "holes.diameter", "plate.width", "plate.height"]
+      parameterPaths: ["bolts.pitch", "bolts.groupSpacing", "holes.diameter", "plate.width", "plate.height"]
     });
   }
 
@@ -241,4 +264,5 @@ export function build(ctx) {
     orientation: { axis: v.mul(plateNormal, -1) },
     assembly: { length: bolts.length, gripLength: plate.thickness + bolts.memberDepth }
   });
+  return {};
 }

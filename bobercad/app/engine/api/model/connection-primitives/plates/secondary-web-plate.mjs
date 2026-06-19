@@ -1,4 +1,4 @@
-import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs?v=member-end-point-dry-1";
+import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs";
 
 function trimAllowance(ctx, height, localAxisY, localAxisZ, planeNormal) {
   const alongY = Math.abs(ctx.geometry.v.dot(localAxisY, planeNormal));
@@ -36,7 +36,7 @@ function finPlateOutline(ctx, plate, supportInterface, beamDirection, webReferen
   return outline;
 }
 
-export function build(ctx, input = {}) {
+export function build(ctx, input) {
   const context = secondaryWebConnectionContext(ctx, input);
   const { plate, supportInterface, beamInterface, supportMember, supportedBeam, beamDirection, plateReference, beamHoleReference, beamWebThickness } = context;
 
@@ -56,14 +56,12 @@ export function build(ctx, input = {}) {
     code: "fin-plate-outline-invalid-after-trimming",
     message: "Fin plate trimming left no valid plate outline.",
     objectRoles: ["finPlate"],
-    parameters: ["plate.length", "plate.height", "plate.edgeOffset"]
+    parameterPaths: ["plate.length", "plate.height", "plate.edgeOffset"]
   });
 
   const finPlate = ctx.part.plate("finPlate", {
     type: "rectangular-plate",
     thickness: plate.thickness,
-    width: plate.length,
-    height: plate.height,
     outline,
     center: plateReference.origin,
     normal: plateReference.normal,
@@ -84,8 +82,6 @@ export function build(ctx, input = {}) {
   const backFinPlate = ctx.part.plate("backFinPlate", {
     type: "rectangular-plate",
     thickness: plate.thickness,
-    width: plate.length,
-    height: plate.height,
     outline,
     center: backPlateCenter,
     normal: ctx.geometry.v.mul(plateReference.normal, -1),

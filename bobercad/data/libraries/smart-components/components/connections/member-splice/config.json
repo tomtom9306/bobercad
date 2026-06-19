@@ -6,12 +6,21 @@
   "version": 1,
   "interfaces": [
     {
-      "role": "main"
+      "role": "main",
+      "auto": {
+        "type": "planar-face",
+        "faceRef": "connection-secondary-facing-section-face",
+        "stationReference": "connection-secondary-interface-origin"
+      }
     },
     {
-      "role": "secondary"
+      "role": "secondary",
+      "auto": {
+        "type": "member-end-face"
+      }
     }
   ],
+  "components": [],
   "roles": {
     "connectionPattern": "_connection_pattern",
     "connectionAssembly": "_connection_assembly"

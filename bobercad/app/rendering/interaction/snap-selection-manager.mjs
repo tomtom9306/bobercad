@@ -34,7 +34,6 @@ function normalizeScope(raw = {}) {
     ...Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Boolean(value)]))
   };
 }
-
 function collectionScopeKey(collection) {
   return COLLECTION_SCOPE[collection] || collection || null;
 }
@@ -165,8 +164,4 @@ export function createSnapSelectionManager({ settings = {}, viewer = null } = {}
     candidateAllowed,
     pickOptions
   };
-}
-
-export function snapScopeFromSettings(settings = {}) {
-  return normalizeScope(settings.authoring?.snap?.scope);
 }

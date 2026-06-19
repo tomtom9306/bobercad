@@ -10,7 +10,6 @@ const DEFAULT_LABEL_OFFSET = 10;
 export function formatDraftingNumber(value, { decimals = 2 } = {}) {
   return finiteNumber(value) ? value.toFixed(decimals) : "";
 }
-
 export function midpoint3(a, b) {
   return v.mul(v.add(a, b), 0.5);
 }
@@ -144,13 +143,5 @@ export function linearDraftingDimension({
       labelUpAxis: upAxis,
       labelLine: [resolvedStart, resolvedEnd]
     }))
-  };
-}
-
-export function combineDimensionParts(parts) {
-  return {
-    lines: parts.flatMap((part) => Array.isArray(part?.lines) ? part.lines : []),
-    labels: parts.flatMap((part) => Array.isArray(part?.labels) ? part.labels : []),
-    handles: parts.flatMap((part) => Array.isArray(part?.handles) ? part.handles : [])
   };
 }

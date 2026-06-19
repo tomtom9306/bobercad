@@ -2,8 +2,15 @@ import { v } from "../core/math.mjs";
 
 const EPSILON = 1e-9;
 
+function polygonError(message) {
+  throw new Error(`polygon: ${message}`);
+}
+
 export function faceNormal(points) {
-  if (points.length < 3) return [0, 0, 1];
+  if (!Array.isArray(points) || points.length < 3) polygonError("face requires at least three points");
+  for (const [index, point] of points.entries()) {
+    if (!v.isVec3(point)) polygonError(`face point ${index} must be a finite [x, y, z] point`);
+  }
   let normal = [0, 0, 0];
   for (let index = 0; index < points.length; index += 1) {
     const current = points[index];
@@ -19,14 +26,18 @@ export function faceNormal(points) {
     const candidate = v.cross(v.sub(points[index], points[0]), v.sub(points[index + 1], points[0]));
     if (v.len(candidate) > EPSILON) return v.norm(candidate);
   }
-  return [0, 0, 1];
+  polygonError("face points are degenerate");
 }
 
 export function signedArea2d(points) {
+  if (!Array.isArray(points)) polygonError("2d polygon points must be an array");
   let area = 0;
   for (let index = 0; index < points.length; index += 1) {
     const a = points[index];
     const b = points[(index + 1) % points.length];
+    if (!Array.isArray(a) || a.length !== 2 || typeof a[0] !== "number" || !Number.isFinite(a[0]) || typeof a[1] !== "number" || !Number.isFinite(a[1])) {
+      polygonError(`2d polygon point ${index} must be a finite [x, y] point`);
+    }
     area += a[0] * b[1] - b[0] * a[1];
   }
   return area / 2;
@@ -54,6 +65,30 @@ function pointInTriangle(p, a, b, c) {
     || (d1 < -EPSILON && d2 < -EPSILON && d3 < -EPSILON);
 }
 
+function pointInPolygon(point, polygon) {
+  let inside = false;
+  for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+    const a = polygon[index];
+    const b = polygon[previous];
+    const crosses = (a.y > point.y) !== (b.y > point.y);
+    if (!crosses) continue;
+    const x = (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x;
+    if (point.x < x) inside = !inside;
+  }
+  return inside;
+}
+
+function triangleCentroid(a, b, c) {
+  return {
+    x: (a.x + b.x + c.x) / 3,
+    y: (a.y + b.y + c.y) / 3
+  };
+}
+
+function triangleNormalLength(a, b, c) {
+  return v.len(v.cross(v.sub(b, a), v.sub(c, a)));
+}
+
 function projectFacePoint(point, dropAxis) {
   if (dropAxis === 0) return { x: point[1], y: point[2] };
   if (dropAxis === 1) return { x: point[0], y: point[2] };
@@ -61,8 +96,11 @@ function projectFacePoint(point, dropAxis) {
 }
 
 export function triangulateFace(points) {
-  if (points.length < 3) return [];
-  if (points.length === 3) return [[points[0], points[1], points[2]]];
+  if (!Array.isArray(points) || points.length < 3) polygonError("face requires at least three points");
+  if (points.length === 3) {
+    if (triangleNormalLength(points[0], points[1], points[2]) <= EPSILON) polygonError("face points are degenerate");
+    return [[points[0], points[1], points[2]]];
+  }
 
   const normal = faceNormal(points);
   const absNormal = normal.map(Math.abs);
@@ -81,8 +119,15 @@ export function triangulateFace(points) {
       const a = flatPoints[ia];
       const b = flatPoints[ib];
       const c = flatPoints[ic];
+      const turn = edge(a, b, c) * orientation;
 
-      if (edge(a, b, c) * orientation <= 0) continue;
+      if (Math.abs(turn) <= EPSILON) {
+        indexes.splice(i, 1);
+        earFound = true;
+        break;
+      }
+      if (turn < 0) continue;
+      if (!pointInPolygon(triangleCentroid(a, b, c), flatPoints)) continue;
 
       let containsPoint = false;
       for (const index of indexes) {
@@ -102,11 +147,12 @@ export function triangulateFace(points) {
     }
 
     if (!earFound) {
-      for (let i = 1; i < points.length - 1; i += 1) triangles.push([points[0], points[i], points[i + 1]]);
-      return triangles;
+      polygonError("failed to triangulate face");
     }
   }
 
-  triangles.push(indexes.map((index) => points[index]));
+  const finalTriangle = indexes.map((index) => points[index]);
+  if (triangleNormalLength(finalTriangle[0], finalTriangle[1], finalTriangle[2]) > EPSILON) triangles.push(finalTriangle);
+  if (!triangles.length) polygonError("failed to triangulate face");
   return triangles;
 }

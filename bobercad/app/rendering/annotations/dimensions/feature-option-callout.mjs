@@ -1,6 +1,6 @@
 import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs?v=geometry-api-array-values-dry-1";
 import { arrayValues } from "../../../engine/core/model.mjs?v=smart-config-array-values-dry-1";
-import { requiredReferencePlane } from "../../../engine/geometry/feature-plane.mjs";
+import { requiredReferencePlane } from "../../../engine/geometry/reference-plane.mjs";
 import { trimOperationFirstReferencePlaneId, trimPlaneOperation } from "../../../engine/api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
 import {
   clearanceAnnotationBasis,
@@ -12,7 +12,7 @@ import {
   rangeMid,
   roleObject,
   v
-} from "../dimension-context.mjs?v=unified-dimension-overlay-1";
+} from "../dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
 
 const EPSILON = 1e-9;
 
@@ -26,11 +26,11 @@ function optionLabel(spec, value) {
 }
 
 function planePlacement(plane) {
-  if (!Array.isArray(plane?.origin) || !Array.isArray(plane?.normal)) return null;
+  if (!Array.isArray(plane?.origin) || !Array.isArray(plane?.normal) || !Array.isArray(plane?.axisX) || !Array.isArray(plane?.axisY)) return null;
   const normal = v.norm(plane.normal);
-  const localAxisY = v.norm(plane.axisX || plane.localAxisY || [1, 0, 0]);
-  let localAxisZ = plane.axisY || plane.localAxisZ || v.cross(normal, localAxisY);
-  if (v.len(localAxisZ) <= EPSILON) localAxisZ = [0, 0, 1];
+  const localAxisY = v.norm(plane.axisX);
+  let localAxisZ = plane.axisY;
+  if (v.len(localAxisZ) <= EPSILON) return null;
   return {
     basis: {
       origin: plane.origin,
@@ -43,7 +43,7 @@ function planePlacement(plane) {
 }
 
 function clearanceFeaturePlacement(ctx, feature) {
-  if (feature?.kind !== "support-flange-notch" && feature?.cut?.kind !== "support-flange-notch") return null;
+  if (feature?.kind !== "support-flange-notch") return null;
   const geometry = clearanceCutGeometry(ctx.project, ctx.profiles, feature);
   if (!geometry) return null;
   const anchor = geometry.pointAt(

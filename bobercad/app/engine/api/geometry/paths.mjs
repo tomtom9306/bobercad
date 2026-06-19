@@ -1,5 +1,4 @@
-import { clamp, finiteNumber, finiteVec3, v } from "../../core/math.mjs?v=finite-vec3-dry-1";
-import { arrayValues } from "../../core/model.mjs?v=final-array-values-dry-1";
+import { clamp, finiteNumber, finiteVec3, v } from "../../core/math.mjs";
 
 const EPSILON = 1e-9;
 const DEFAULT_UP = [0, 0, 1];
@@ -14,6 +13,29 @@ function requiredFiniteNumber(value, label) {
 }
 
 const vec3 = (value, label) => finiteVec3(value, label, fail);
+
+function optionalObject(value, label) {
+  if (value === undefined) return {};
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${label} must be an object`);
+  return value;
+}
+
+function optionalString(value, fallback, label) {
+  if (value === undefined) return fallback;
+  if (typeof value !== "string" || !value) fail(`${label} must be a non-empty string`);
+  return value;
+}
+
+function optionalSampleCount(value, fallback, label) {
+  if (value === undefined) return fallback;
+  if (!Number.isInteger(value) || value < 2) fail(`${label} must be an integer greater than 1`);
+  return value;
+}
+
+function pathType(spec) {
+  if (spec.type === undefined) fail("path type is required");
+  return optionalString(spec.type, undefined, "path type");
+}
 
 function unit(value, label) {
   const vector = vec3(value, label);
@@ -30,8 +52,10 @@ function lerpPoint(a, b, t) {
   return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
 }
 
-function segmentParameter(distance, length) {
-  return clamp(distance / length, 0, 1);
+function stationParameter(distance, length, label) {
+  const station = requiredFiniteNumber(distance, label);
+  if (station < -EPSILON || station > length + EPSILON) fail(`${label} must be between 0 and ${length}`);
+  return clamp(station / length, 0, 1);
 }
 
 function chooseFrameAxes(tangent, preferredUp = DEFAULT_UP) {
@@ -51,21 +75,23 @@ function lineSegment(spec, index = 0) {
   const length = v.len(axis);
   if (length <= EPSILON) fail(`segment ${index} line cannot have zero length`);
   return {
-    id: spec.id || `segment_${index + 1}`,
+    id: optionalString(spec.id, `segment_${index + 1}`, `segment ${index} id`),
     type: "line",
     start,
     end,
     length,
-    pointAt: (distance) => lerpPoint(start, end, segmentParameter(distance, length)),
+    pointAt: (distance) => lerpPoint(start, end, stationParameter(distance, length, `segment ${index} station`)),
     tangentAt: () => v.mul(axis, 1 / length)
   };
 }
 
 function polylineSegments(spec) {
-  const points = arrayValues(spec.points).map((point, index) => vec3(point, `polyline point ${index}`));
+  if (!Array.isArray(spec.points)) fail("polyline points must be an array");
+  const points = spec.points.map((point, index) => vec3(point, `polyline point ${index}`));
   if (points.length < 2) fail("polyline path requires at least two points");
+  const id = optionalString(spec.id, undefined, "polyline id");
   return points.slice(0, -1).map((point, index) => lineSegment({
-    id: spec.id ? `${spec.id}_${index + 1}` : undefined,
+    id: id ? `${id}_${index + 1}` : undefined,
     start: point,
     end: points[index + 1]
   }, index));
@@ -73,8 +99,8 @@ function polylineSegments(spec) {
 
 function arcAxes(spec, index) {
   const center = vec3(spec.center, `segment ${index} center`);
-  const axisX = unit(spec.axisX || [1, 0, 0], `segment ${index} axisX`);
-  const rawAxisY = vec3(spec.axisY || [0, 1, 0], `segment ${index} axisY`);
+  const axisX = unit(spec.axisX, `segment ${index} axisX`);
+  const rawAxisY = vec3(spec.axisY, `segment ${index} axisY`);
   const projectedAxisY = v.sub(rawAxisY, v.mul(axisX, v.dot(axisX, rawAxisY)));
   const axisY = unit(projectedAxisY, `segment ${index} axisY`);
   return { center, axisX, axisY };
@@ -97,7 +123,7 @@ function arcTangent(axisX, axisY, angle, directionSign = 1) {
 function radialSweep(spec, index) {
   const radius = requiredFiniteNumber(spec.radius, `segment ${index} radius`);
   if (radius <= EPSILON) fail(`segment ${index} radius must be positive`);
-  const startAngle = requiredFiniteNumber(spec.startAngle || 0, `segment ${index} startAngle`);
+  const startAngle = requiredFiniteNumber(spec.startAngle, `segment ${index} startAngle`);
   const endAngle = requiredFiniteNumber(spec.endAngle, `segment ${index} endAngle`);
   return { radius, startAngle, endAngle, sweep: endAngle - startAngle };
 }
@@ -109,7 +135,7 @@ function arcSegment(spec, index = 0) {
   const length = Math.abs(sweep) * radius;
   const directionSign = Math.sign(sweep);
   return {
-    id: spec.id || `segment_${index + 1}`,
+    id: optionalString(spec.id, `segment_${index + 1}`, `segment ${index} id`),
     type: "arc",
     center,
     radius,
@@ -121,11 +147,11 @@ function arcSegment(spec, index = 0) {
     directionSign,
     length,
     pointAt: (distance) => {
-      const t = segmentParameter(distance, length);
+      const t = stationParameter(distance, length, `segment ${index} station`);
       return arcPoint(center, axisX, axisY, radius, startAngle + sweep * t);
     },
     tangentAt: (distance) => {
-      const t = segmentParameter(distance, length);
+      const t = stationParameter(distance, length, `segment ${index} station`);
       return arcTangent(axisX, axisY, startAngle + sweep * t, directionSign);
     }
   };
@@ -133,14 +159,14 @@ function arcSegment(spec, index = 0) {
 
 function helixSegment(spec, index = 0) {
   const { center, axisX, axisY } = arcAxes(spec, index);
-  const axisZ = unit(spec.axisZ || v.cross(axisX, axisY), `segment ${index} axisZ`);
+  const axisZ = unit(spec.axisZ, `segment ${index} axisZ`);
   const { radius, startAngle, endAngle, sweep } = radialSweep(spec, index);
-  const height = requiredFiniteNumber(spec.height || 0, `segment ${index} height`);
+  const height = requiredFiniteNumber(spec.height, `segment ${index} height`);
   if (Math.abs(sweep) <= EPSILON && Math.abs(height) <= EPSILON) fail(`segment ${index} helix cannot have zero length`);
   const length = Math.hypot(Math.abs(sweep) * radius, height);
   const directionSign = Math.sign(sweep || 1);
   return {
-    id: spec.id || `segment_${index + 1}`,
+    id: optionalString(spec.id, `segment_${index + 1}`, `segment ${index} id`),
     type: spec.type === "spiral" ? "spiral" : "helix",
     center,
     radius,
@@ -154,12 +180,12 @@ function helixSegment(spec, index = 0) {
     height,
     length,
     pointAt: (distance) => {
-      const t = segmentParameter(distance, length);
+      const t = stationParameter(distance, length, `segment ${index} station`);
       const angle = startAngle + sweep * t;
       return arcPoint(center, axisX, axisY, radius, angle, v.mul(axisZ, height * t));
     },
     tangentAt: (distance) => {
-      const t = segmentParameter(distance, length);
+      const t = stationParameter(distance, length, `segment ${index} station`);
       const angle = startAngle + sweep * t;
       const angular = v.mul(arcTangent(axisX, axisY, angle, directionSign), Math.abs(sweep) * radius);
       return v.norm(v.add(angular, v.mul(axisZ, height)));
@@ -168,10 +194,18 @@ function helixSegment(spec, index = 0) {
 }
 
 function normalizeSegments(spec) {
-  const sourceSegments = spec.type === "polyline"
-    ? polylineSegments(spec)
-    : Array.isArray(spec.segments) ? spec.segments.flatMap((segment, index) => normalizeSegment(segment, index))
-      : [normalizeSegment(spec, 0)].flat();
+  const type = pathType(spec);
+  if (spec.segments !== undefined && !Array.isArray(spec.segments)) fail("path segments must be an array");
+  if (type === "polyline") return stationSegments(polylineSegments(spec));
+  if (type === "custom") {
+    if (!Array.isArray(spec.segments)) fail("custom path segments must be an array");
+    return stationSegments(spec.segments.flatMap((segment, index) => normalizeSegment(segment, index)));
+  }
+  if (spec.segments !== undefined) fail("path segments require type custom");
+  return stationSegments([normalizeSegment(spec, 0)].flat());
+}
+
+function stationSegments(sourceSegments) {
   let station = 0;
   return sourceSegments.map((segment) => {
     const next = { ...segment, stationStart: station, stationEnd: station + segment.length };
@@ -181,20 +215,23 @@ function normalizeSegments(spec) {
 }
 
 function normalizeSegment(spec, index) {
-  if (spec.type === "polyline") return polylineSegments(spec);
-  if (spec.type === "line") return [lineSegment(spec, index)];
-  if (spec.type === "arc") return [arcSegment(spec, index)];
-  if (spec.type === "helix" || spec.type === "spiral") return [helixSegment(spec, index)];
-  fail(`unsupported path segment type ${spec.type}`);
+  spec = optionalObject(spec, `segment ${index}`);
+  const type = pathType(spec);
+  if (type === "polyline") return polylineSegments(spec);
+  if (type === "line") return [lineSegment(spec, index)];
+  if (type === "arc") return [arcSegment(spec, index)];
+  if (type === "helix" || type === "spiral") return [helixSegment(spec, index)];
+  fail(`unsupported path segment type ${type}`);
 }
 
-export function normalizePath(spec = {}) {
+export function normalizePath(spec) {
+  spec = optionalObject(spec, "path spec");
   const segments = normalizeSegments(spec);
   const length = segments.reduce((sum, segment) => sum + segment.length, 0);
   if (length <= EPSILON) fail("path cannot have zero length");
   return {
-    id: spec.id || "path",
-    type: spec.type || "custom",
+    id: optionalString(spec.id, "path", "path id"),
+    type: pathType(spec),
     length,
     segments
   };
@@ -202,12 +239,32 @@ export function normalizePath(spec = {}) {
 
 function segmentAtStation(path, station) {
   const normalized = normalizedPath(path);
-  const clampedStation = clamp(station, 0, normalized.length);
-  return normalized.segments.find((segment) => clampedStation <= segment.stationEnd + EPSILON) || normalized.segments[normalized.segments.length - 1];
+  const clampedStation = stationParameter(station, normalized.length, "path station") * normalized.length;
+  const segment = normalized.segments.find((item) => clampedStation <= item.stationEnd + EPSILON);
+  if (!segment) fail(`path station ${clampedStation} is outside normalized segments`);
+  return segment;
+}
+
+function runtimePath(spec) {
+  return Array.isArray(spec.segments)
+    && spec.segments.length > 0
+    && finiteNumber(spec.length)
+    && spec.length > EPSILON
+    && spec.segments.every((segment) => (
+      segment
+      && typeof segment === "object"
+      && !Array.isArray(segment)
+      && finiteNumber(segment.stationStart)
+      && finiteNumber(segment.stationEnd)
+      && segment.stationEnd >= segment.stationStart
+      && typeof segment.pointAt === "function"
+      && typeof segment.tangentAt === "function"
+    ));
 }
 
 function normalizedPath(spec) {
-  return spec.segments ? spec : normalizePath(spec);
+  spec = optionalObject(spec, "path spec");
+  return runtimePath(spec) ? spec : normalizePath(spec);
 }
 
 export function pathLength(spec) {
@@ -217,21 +274,25 @@ export function pathLength(spec) {
 export function pointAtStation(spec, station) {
   const path = normalizedPath(spec);
   const segment = segmentAtStation(path, station);
-  return segment.pointAt(clamp(station, segment.stationStart, segment.stationEnd) - segment.stationStart);
+  const clampedStation = stationParameter(station, path.length, "path station") * path.length;
+  return segment.pointAt(clampedStation - segment.stationStart);
 }
 
 export function frameAtStation(spec, station, options = {}) {
+  options = optionalObject(options, "path frame options");
   const path = normalizedPath(spec);
   const segment = segmentAtStation(path, station);
-  const localStation = clamp(station, segment.stationStart, segment.stationEnd) - segment.stationStart;
+  const clampedStation = stationParameter(station, path.length, "path station") * path.length;
+  const localStation = clampedStation - segment.stationStart;
   const origin = segment.pointAt(localStation);
   const tangent = segment.tangentAt(localStation);
-  return { origin, ...chooseFrameAxes(tangent, options.up || DEFAULT_UP), station: clamp(station, 0, path.length) };
+  return { origin, ...chooseFrameAxes(tangent, options.up === undefined ? DEFAULT_UP : options.up), station: clampedStation };
 }
 
 export function samplePath(spec, options = {}) {
+  options = optionalObject(options, "path sample options");
   const path = normalizedPath(spec);
-  const count = Math.max(2, Math.floor(options.count || 16));
+  const count = optionalSampleCount(options.count, 16, "path sample count");
   return Array.from({ length: count }, (_, index) => {
     const station = path.length * index / (count - 1);
     return { station, point: pointAtStation(path, station), frame: frameAtStation(path, station, options) };
@@ -239,10 +300,14 @@ export function samplePath(spec, options = {}) {
 }
 
 export function offsetPath(spec, offset, options = {}) {
+  options = optionalObject(options, "path offset options");
   const distance = requiredFiniteNumber(offset, "offset");
-  const samples = samplePath(spec, { count: options.count || 24, up: options.up || DEFAULT_UP });
+  const samples = samplePath(spec, {
+    count: optionalSampleCount(options.count, 24, "path offset sample count"),
+    up: options.up === undefined ? DEFAULT_UP : options.up
+  });
   return {
-    id: options.id || `${spec.id || "path"}_offset`,
+    id: optionalString(options.id, `${optionalString(spec.id, "path", "path id")}_offset`, "path offset id"),
     type: "polyline",
     points: samples.map(({ frame }) => v.add(frame.origin, v.mul(frame.normal, distance)))
   };

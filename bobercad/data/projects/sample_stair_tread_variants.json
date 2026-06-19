@@ -81,7 +81,7 @@
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
-      "path": "../libraries/model-library/model-register.json"
+      "path": "../libraries/frames/frame-register.json"
     },
     "smartComponents": {
       "libraryId": "starter-smart-component-library",
@@ -114,61 +114,6 @@
         "name": "Grid A / 1-2",
         "children": []
       }
-    }
-  },
-  "gridSystems": {
-    "main_grid": {
-      "id": "main_grid",
-      "name": "Main Grid",
-      "origin": [
-        0,
-        0,
-        0
-      ],
-      "rotation": 0,
-      "axes": {
-        "x": [
-          {
-            "id": "grid_1",
-            "label": "1",
-            "position": 0
-          },
-          {
-            "id": "grid_2",
-            "label": "2",
-            "position": 6000
-          }
-        ],
-        "y": [
-          {
-            "id": "grid_a",
-            "label": "A",
-            "position": 0
-          },
-          {
-            "id": "grid_b",
-            "label": "B",
-            "position": 5000
-          }
-        ]
-      }
-    }
-  },
-  "levels": {
-    "level_base": {
-      "id": "level_base",
-      "name": "Base",
-      "elevation": 0
-    },
-    "level_connection": {
-      "id": "level_connection",
-      "name": "Connection Level",
-      "elevation": 1500
-    },
-    "level_top": {
-      "id": "level_top",
-      "name": "Top",
-      "elevation": 3000
     }
   },
   "phases": {
@@ -303,6 +248,22 @@
     "sc_folded_tray_tread_tread_pattern": {
       "collection": "objectPatterns",
       "type": "linear-pattern"
+    },
+    "main_grid": {
+      "collection": "gridSystems",
+      "type": "orthogonal-grid-system"
+    },
+    "level_base": {
+      "collection": "levels",
+      "type": "datum-level"
+    },
+    "level_connection": {
+      "collection": "levels",
+      "type": "datum-level"
+    },
+    "level_top": {
+      "collection": "levels",
+      "type": "datum-level"
     }
   },
   "modelDefaults": {
@@ -695,6 +656,92 @@
               "from": "sc_plate_tread_tread_1_v4",
               "to": "sc_plate_tread_tread_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_plate_tread_tread_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_plate_tread_tread_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_plate_tread_tread_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_plate_tread_tread_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_plate_tread_tread_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_plate_tread_tread_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_plate_tread_tread_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_plate_tread_tread_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_1_e1_sc_plate_tread_tread_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_1_e1",
+                "sc_plate_tread_tread_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_1_e2_sc_plate_tread_tread_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_1_e2",
+                "sc_plate_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_1_e3_sc_plate_tread_tread_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_1_e3",
+                "sc_plate_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_1_e4_sc_plate_tread_tread_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_1_e1",
+                "sc_plate_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_plate_tread_tread_1_e1_sc_plate_tread_tread_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_plate_tread_tread_1_e1",
+                "sc_plate_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_plate_tread_tread_1_e1_sc_plate_tread_tread_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_plate_tread_tread_1_e1",
+                "sc_plate_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_plate_tread_tread_1_e2_sc_plate_tread_tread_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_plate_tread_tread_1_e2",
+                "sc_plate_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_plate_tread_tread_1_e2_sc_plate_tread_tread_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_plate_tread_tread_1_e2",
+                "sc_plate_tread_tread_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -806,6 +853,92 @@
               "id": "sc_plate_tread_tread_2_e4",
               "from": "sc_plate_tread_tread_2_v4",
               "to": "sc_plate_tread_tread_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_plate_tread_tread_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_plate_tread_tread_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_plate_tread_tread_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_plate_tread_tread_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_plate_tread_tread_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_plate_tread_tread_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_plate_tread_tread_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_plate_tread_tread_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_2_e1_sc_plate_tread_tread_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_2_e1",
+                "sc_plate_tread_tread_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_2_e2_sc_plate_tread_tread_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_2_e2",
+                "sc_plate_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_2_e3_sc_plate_tread_tread_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_2_e3",
+                "sc_plate_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_2_e4_sc_plate_tread_tread_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_2_e1",
+                "sc_plate_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_plate_tread_tread_2_e1_sc_plate_tread_tread_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_plate_tread_tread_2_e1",
+                "sc_plate_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_plate_tread_tread_2_e1_sc_plate_tread_tread_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_plate_tread_tread_2_e1",
+                "sc_plate_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_plate_tread_tread_2_e2_sc_plate_tread_tread_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_plate_tread_tread_2_e2",
+                "sc_plate_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_plate_tread_tread_2_e2_sc_plate_tread_tread_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_plate_tread_tread_2_e2",
+                "sc_plate_tread_tread_2_e4"
+              ]
             }
           ]
         }
@@ -919,6 +1052,92 @@
               "from": "sc_plate_tread_tread_3_v4",
               "to": "sc_plate_tread_tread_3_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_plate_tread_tread_3_e1",
+              "type": "horizontal",
+              "edgeId": "sc_plate_tread_tread_3_e1"
+            },
+            {
+              "id": "rel_vertical_sc_plate_tread_tread_3_e2",
+              "type": "vertical",
+              "edgeId": "sc_plate_tread_tread_3_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_plate_tread_tread_3_e3",
+              "type": "horizontal",
+              "edgeId": "sc_plate_tread_tread_3_e3"
+            },
+            {
+              "id": "rel_vertical_sc_plate_tread_tread_3_e4",
+              "type": "vertical",
+              "edgeId": "sc_plate_tread_tread_3_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_3_e1_sc_plate_tread_tread_3_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_3_e1",
+                "sc_plate_tread_tread_3_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_3_e2_sc_plate_tread_tread_3_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_3_e2",
+                "sc_plate_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_3_e3_sc_plate_tread_tread_3_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_3_e3",
+                "sc_plate_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_plate_tread_tread_3_e4_sc_plate_tread_tread_3_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_plate_tread_tread_3_e1",
+                "sc_plate_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_plate_tread_tread_3_e1_sc_plate_tread_tread_3_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_plate_tread_tread_3_e1",
+                "sc_plate_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_plate_tread_tread_3_e1_sc_plate_tread_tread_3_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_plate_tread_tread_3_e1",
+                "sc_plate_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_plate_tread_tread_3_e2_sc_plate_tread_tread_3_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_plate_tread_tread_3_e2",
+                "sc_plate_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_plate_tread_tread_3_e2_sc_plate_tread_tread_3_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_plate_tread_tread_3_e2",
+                "sc_plate_tread_tread_3_e4"
+              ]
+            }
           ]
         }
       },
@@ -1030,6 +1249,92 @@
               "id": "sc_grating_tread_tread_1_e4",
               "from": "sc_grating_tread_tread_1_v4",
               "to": "sc_grating_tread_tread_1_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_grating_tread_tread_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_grating_tread_tread_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_grating_tread_tread_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_grating_tread_tread_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_grating_tread_tread_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_grating_tread_tread_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_grating_tread_tread_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_grating_tread_tread_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_1_e1_sc_grating_tread_tread_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_1_e1",
+                "sc_grating_tread_tread_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_1_e2_sc_grating_tread_tread_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_1_e2",
+                "sc_grating_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_1_e3_sc_grating_tread_tread_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_1_e3",
+                "sc_grating_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_1_e4_sc_grating_tread_tread_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_1_e1",
+                "sc_grating_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_grating_tread_tread_1_e1_sc_grating_tread_tread_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_grating_tread_tread_1_e1",
+                "sc_grating_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_grating_tread_tread_1_e1_sc_grating_tread_tread_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_grating_tread_tread_1_e1",
+                "sc_grating_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_grating_tread_tread_1_e2_sc_grating_tread_tread_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_grating_tread_tread_1_e2",
+                "sc_grating_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_grating_tread_tread_1_e2_sc_grating_tread_tread_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_grating_tread_tread_1_e2",
+                "sc_grating_tread_tread_1_e4"
+              ]
             }
           ]
         }
@@ -1143,6 +1448,92 @@
               "from": "sc_grating_tread_tread_2_v4",
               "to": "sc_grating_tread_tread_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_grating_tread_tread_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_grating_tread_tread_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_grating_tread_tread_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_grating_tread_tread_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_grating_tread_tread_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_grating_tread_tread_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_grating_tread_tread_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_grating_tread_tread_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_2_e1_sc_grating_tread_tread_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_2_e1",
+                "sc_grating_tread_tread_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_2_e2_sc_grating_tread_tread_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_2_e2",
+                "sc_grating_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_2_e3_sc_grating_tread_tread_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_2_e3",
+                "sc_grating_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_2_e4_sc_grating_tread_tread_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_2_e1",
+                "sc_grating_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_grating_tread_tread_2_e1_sc_grating_tread_tread_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_grating_tread_tread_2_e1",
+                "sc_grating_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_grating_tread_tread_2_e1_sc_grating_tread_tread_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_grating_tread_tread_2_e1",
+                "sc_grating_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_grating_tread_tread_2_e2_sc_grating_tread_tread_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_grating_tread_tread_2_e2",
+                "sc_grating_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_grating_tread_tread_2_e2_sc_grating_tread_tread_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_grating_tread_tread_2_e2",
+                "sc_grating_tread_tread_2_e4"
+              ]
+            }
           ]
         }
       },
@@ -1254,6 +1645,92 @@
               "id": "sc_grating_tread_tread_3_e4",
               "from": "sc_grating_tread_tread_3_v4",
               "to": "sc_grating_tread_tread_3_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_grating_tread_tread_3_e1",
+              "type": "horizontal",
+              "edgeId": "sc_grating_tread_tread_3_e1"
+            },
+            {
+              "id": "rel_vertical_sc_grating_tread_tread_3_e2",
+              "type": "vertical",
+              "edgeId": "sc_grating_tread_tread_3_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_grating_tread_tread_3_e3",
+              "type": "horizontal",
+              "edgeId": "sc_grating_tread_tread_3_e3"
+            },
+            {
+              "id": "rel_vertical_sc_grating_tread_tread_3_e4",
+              "type": "vertical",
+              "edgeId": "sc_grating_tread_tread_3_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_3_e1_sc_grating_tread_tread_3_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_3_e1",
+                "sc_grating_tread_tread_3_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_3_e2_sc_grating_tread_tread_3_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_3_e2",
+                "sc_grating_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_3_e3_sc_grating_tread_tread_3_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_3_e3",
+                "sc_grating_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_grating_tread_tread_3_e4_sc_grating_tread_tread_3_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_grating_tread_tread_3_e1",
+                "sc_grating_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_grating_tread_tread_3_e1_sc_grating_tread_tread_3_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_grating_tread_tread_3_e1",
+                "sc_grating_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_grating_tread_tread_3_e1_sc_grating_tread_tread_3_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_grating_tread_tread_3_e1",
+                "sc_grating_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_grating_tread_tread_3_e2_sc_grating_tread_tread_3_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_grating_tread_tread_3_e2",
+                "sc_grating_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_grating_tread_tread_3_e2_sc_grating_tread_tread_3_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_grating_tread_tread_3_e2",
+                "sc_grating_tread_tread_3_e4"
+              ]
             }
           ]
         }
@@ -1368,6 +1845,92 @@
               "from": "sc_pan_tread_tread_1_v4",
               "to": "sc_pan_tread_tread_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_pan_tread_tread_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_tread_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_tread_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_tread_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_pan_tread_tread_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_tread_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_tread_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_tread_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_1_e1_sc_pan_tread_tread_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_1_e1",
+                "sc_pan_tread_tread_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_1_e2_sc_pan_tread_tread_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_1_e2",
+                "sc_pan_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_1_e3_sc_pan_tread_tread_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_1_e3",
+                "sc_pan_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_1_e4_sc_pan_tread_tread_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_1_e1",
+                "sc_pan_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_tread_1_e1_sc_pan_tread_tread_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_tread_1_e1",
+                "sc_pan_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_tread_1_e1_sc_pan_tread_tread_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_tread_1_e1",
+                "sc_pan_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_tread_1_e2_sc_pan_tread_tread_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_tread_1_e2",
+                "sc_pan_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_tread_1_e2_sc_pan_tread_tread_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_tread_1_e2",
+                "sc_pan_tread_tread_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -1479,6 +2042,92 @@
               "id": "sc_pan_tread_front_plate_1_e4",
               "from": "sc_pan_tread_front_plate_1_v4",
               "to": "sc_pan_tread_front_plate_1_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_pan_tread_front_plate_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_front_plate_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_front_plate_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_front_plate_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_pan_tread_front_plate_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_front_plate_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_front_plate_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_front_plate_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_1_e1_sc_pan_tread_front_plate_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_1_e1",
+                "sc_pan_tread_front_plate_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_1_e2_sc_pan_tread_front_plate_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_1_e2",
+                "sc_pan_tread_front_plate_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_1_e3_sc_pan_tread_front_plate_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_1_e3",
+                "sc_pan_tread_front_plate_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_1_e4_sc_pan_tread_front_plate_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_1_e1",
+                "sc_pan_tread_front_plate_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_front_plate_1_e1_sc_pan_tread_front_plate_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_1_e1",
+                "sc_pan_tread_front_plate_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_front_plate_1_e1_sc_pan_tread_front_plate_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_1_e1",
+                "sc_pan_tread_front_plate_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_front_plate_1_e2_sc_pan_tread_front_plate_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_1_e2",
+                "sc_pan_tread_front_plate_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_front_plate_1_e2_sc_pan_tread_front_plate_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_1_e2",
+                "sc_pan_tread_front_plate_1_e4"
+              ]
             }
           ]
         }
@@ -1593,6 +2242,92 @@
               "from": "sc_pan_tread_tread_2_v4",
               "to": "sc_pan_tread_tread_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_pan_tread_tread_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_tread_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_tread_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_tread_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_pan_tread_tread_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_tread_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_tread_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_tread_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_2_e1_sc_pan_tread_tread_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_2_e1",
+                "sc_pan_tread_tread_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_2_e2_sc_pan_tread_tread_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_2_e2",
+                "sc_pan_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_2_e3_sc_pan_tread_tread_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_2_e3",
+                "sc_pan_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_2_e4_sc_pan_tread_tread_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_2_e1",
+                "sc_pan_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_tread_2_e1_sc_pan_tread_tread_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_tread_2_e1",
+                "sc_pan_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_tread_2_e1_sc_pan_tread_tread_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_tread_2_e1",
+                "sc_pan_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_tread_2_e2_sc_pan_tread_tread_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_tread_2_e2",
+                "sc_pan_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_tread_2_e2_sc_pan_tread_tread_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_tread_2_e2",
+                "sc_pan_tread_tread_2_e4"
+              ]
+            }
           ]
         }
       },
@@ -1704,6 +2439,92 @@
               "id": "sc_pan_tread_front_plate_2_e4",
               "from": "sc_pan_tread_front_plate_2_v4",
               "to": "sc_pan_tread_front_plate_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_pan_tread_front_plate_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_front_plate_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_front_plate_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_front_plate_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_pan_tread_front_plate_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_front_plate_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_front_plate_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_front_plate_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_2_e1_sc_pan_tread_front_plate_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_2_e1",
+                "sc_pan_tread_front_plate_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_2_e2_sc_pan_tread_front_plate_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_2_e2",
+                "sc_pan_tread_front_plate_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_2_e3_sc_pan_tread_front_plate_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_2_e3",
+                "sc_pan_tread_front_plate_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_2_e4_sc_pan_tread_front_plate_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_2_e1",
+                "sc_pan_tread_front_plate_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_front_plate_2_e1_sc_pan_tread_front_plate_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_2_e1",
+                "sc_pan_tread_front_plate_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_front_plate_2_e1_sc_pan_tread_front_plate_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_2_e1",
+                "sc_pan_tread_front_plate_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_front_plate_2_e2_sc_pan_tread_front_plate_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_2_e2",
+                "sc_pan_tread_front_plate_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_front_plate_2_e2_sc_pan_tread_front_plate_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_2_e2",
+                "sc_pan_tread_front_plate_2_e4"
+              ]
             }
           ]
         }
@@ -1818,6 +2639,92 @@
               "from": "sc_pan_tread_tread_3_v4",
               "to": "sc_pan_tread_tread_3_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_pan_tread_tread_3_e1",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_tread_3_e1"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_tread_3_e2",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_tread_3_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_pan_tread_tread_3_e3",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_tread_3_e3"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_tread_3_e4",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_tread_3_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_3_e1_sc_pan_tread_tread_3_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_3_e1",
+                "sc_pan_tread_tread_3_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_3_e2_sc_pan_tread_tread_3_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_3_e2",
+                "sc_pan_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_3_e3_sc_pan_tread_tread_3_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_3_e3",
+                "sc_pan_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_tread_3_e4_sc_pan_tread_tread_3_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_tread_3_e1",
+                "sc_pan_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_tread_3_e1_sc_pan_tread_tread_3_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_tread_3_e1",
+                "sc_pan_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_tread_3_e1_sc_pan_tread_tread_3_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_tread_3_e1",
+                "sc_pan_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_tread_3_e2_sc_pan_tread_tread_3_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_tread_3_e2",
+                "sc_pan_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_tread_3_e2_sc_pan_tread_tread_3_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_tread_3_e2",
+                "sc_pan_tread_tread_3_e4"
+              ]
+            }
           ]
         }
       },
@@ -1929,6 +2836,92 @@
               "id": "sc_pan_tread_front_plate_3_e4",
               "from": "sc_pan_tread_front_plate_3_v4",
               "to": "sc_pan_tread_front_plate_3_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_pan_tread_front_plate_3_e1",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_front_plate_3_e1"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_front_plate_3_e2",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_front_plate_3_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_pan_tread_front_plate_3_e3",
+              "type": "horizontal",
+              "edgeId": "sc_pan_tread_front_plate_3_e3"
+            },
+            {
+              "id": "rel_vertical_sc_pan_tread_front_plate_3_e4",
+              "type": "vertical",
+              "edgeId": "sc_pan_tread_front_plate_3_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_3_e1_sc_pan_tread_front_plate_3_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_3_e1",
+                "sc_pan_tread_front_plate_3_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_3_e2_sc_pan_tread_front_plate_3_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_3_e2",
+                "sc_pan_tread_front_plate_3_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_3_e3_sc_pan_tread_front_plate_3_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_3_e3",
+                "sc_pan_tread_front_plate_3_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_pan_tread_front_plate_3_e4_sc_pan_tread_front_plate_3_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_3_e1",
+                "sc_pan_tread_front_plate_3_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_front_plate_3_e1_sc_pan_tread_front_plate_3_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_3_e1",
+                "sc_pan_tread_front_plate_3_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_front_plate_3_e1_sc_pan_tread_front_plate_3_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_3_e1",
+                "sc_pan_tread_front_plate_3_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_pan_tread_front_plate_3_e2_sc_pan_tread_front_plate_3_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_3_e2",
+                "sc_pan_tread_front_plate_3_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_pan_tread_front_plate_3_e2_sc_pan_tread_front_plate_3_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_pan_tread_front_plate_3_e2",
+                "sc_pan_tread_front_plate_3_e4"
+              ]
             }
           ]
         }
@@ -2043,6 +3036,92 @@
               "from": "sc_folded_tray_tread_tread_1_v4",
               "to": "sc_folded_tray_tread_tread_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_tread_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_tread_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_tread_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_tread_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_tread_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_tread_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_tread_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_tread_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_1_e1_sc_folded_tray_tread_tread_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_1_e1",
+                "sc_folded_tray_tread_tread_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_1_e2_sc_folded_tray_tread_tread_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_1_e2",
+                "sc_folded_tray_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_1_e3_sc_folded_tray_tread_tread_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_1_e3",
+                "sc_folded_tray_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_1_e4_sc_folded_tray_tread_tread_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_1_e1",
+                "sc_folded_tray_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_tread_1_e1_sc_folded_tray_tread_tread_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_1_e1",
+                "sc_folded_tray_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_tread_1_e1_sc_folded_tray_tread_tread_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_1_e1",
+                "sc_folded_tray_tread_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_tread_1_e2_sc_folded_tray_tread_tread_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_1_e2",
+                "sc_folded_tray_tread_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_tread_1_e2_sc_folded_tray_tread_tread_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_1_e2",
+                "sc_folded_tray_tread_tread_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -2152,6 +3231,92 @@
               "id": "sc_folded_tray_tread_wood_tread_1_e4",
               "from": "sc_folded_tray_tread_wood_tread_1_v4",
               "to": "sc_folded_tray_tread_wood_tread_1_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_wood_tread_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_wood_tread_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_wood_tread_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_wood_tread_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_wood_tread_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_wood_tread_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_wood_tread_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_wood_tread_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_1_e1_sc_folded_tray_tread_wood_tread_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_1_e1",
+                "sc_folded_tray_tread_wood_tread_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_1_e2_sc_folded_tray_tread_wood_tread_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_1_e2",
+                "sc_folded_tray_tread_wood_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_1_e3_sc_folded_tray_tread_wood_tread_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_1_e3",
+                "sc_folded_tray_tread_wood_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_1_e4_sc_folded_tray_tread_wood_tread_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_1_e1",
+                "sc_folded_tray_tread_wood_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_wood_tread_1_e1_sc_folded_tray_tread_wood_tread_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_1_e1",
+                "sc_folded_tray_tread_wood_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_wood_tread_1_e1_sc_folded_tray_tread_wood_tread_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_1_e1",
+                "sc_folded_tray_tread_wood_tread_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_wood_tread_1_e2_sc_folded_tray_tread_wood_tread_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_1_e2",
+                "sc_folded_tray_tread_wood_tread_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_wood_tread_1_e2_sc_folded_tray_tread_wood_tread_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_1_e2",
+                "sc_folded_tray_tread_wood_tread_1_e4"
+              ]
             }
           ]
         }
@@ -2266,6 +3431,92 @@
               "from": "sc_folded_tray_tread_tread_2_v4",
               "to": "sc_folded_tray_tread_tread_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_tread_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_tread_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_tread_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_tread_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_tread_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_tread_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_tread_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_tread_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_2_e1_sc_folded_tray_tread_tread_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_2_e1",
+                "sc_folded_tray_tread_tread_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_2_e2_sc_folded_tray_tread_tread_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_2_e2",
+                "sc_folded_tray_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_2_e3_sc_folded_tray_tread_tread_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_2_e3",
+                "sc_folded_tray_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_2_e4_sc_folded_tray_tread_tread_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_2_e1",
+                "sc_folded_tray_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_tread_2_e1_sc_folded_tray_tread_tread_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_2_e1",
+                "sc_folded_tray_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_tread_2_e1_sc_folded_tray_tread_tread_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_2_e1",
+                "sc_folded_tray_tread_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_tread_2_e2_sc_folded_tray_tread_tread_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_2_e2",
+                "sc_folded_tray_tread_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_tread_2_e2_sc_folded_tray_tread_tread_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_2_e2",
+                "sc_folded_tray_tread_tread_2_e4"
+              ]
+            }
           ]
         }
       },
@@ -2375,6 +3626,92 @@
               "id": "sc_folded_tray_tread_wood_tread_2_e4",
               "from": "sc_folded_tray_tread_wood_tread_2_v4",
               "to": "sc_folded_tray_tread_wood_tread_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_wood_tread_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_wood_tread_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_wood_tread_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_wood_tread_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_wood_tread_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_wood_tread_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_wood_tread_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_wood_tread_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_2_e1_sc_folded_tray_tread_wood_tread_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_2_e1",
+                "sc_folded_tray_tread_wood_tread_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_2_e2_sc_folded_tray_tread_wood_tread_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_2_e2",
+                "sc_folded_tray_tread_wood_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_2_e3_sc_folded_tray_tread_wood_tread_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_2_e3",
+                "sc_folded_tray_tread_wood_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_2_e4_sc_folded_tray_tread_wood_tread_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_2_e1",
+                "sc_folded_tray_tread_wood_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_wood_tread_2_e1_sc_folded_tray_tread_wood_tread_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_2_e1",
+                "sc_folded_tray_tread_wood_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_wood_tread_2_e1_sc_folded_tray_tread_wood_tread_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_2_e1",
+                "sc_folded_tray_tread_wood_tread_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_wood_tread_2_e2_sc_folded_tray_tread_wood_tread_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_2_e2",
+                "sc_folded_tray_tread_wood_tread_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_wood_tread_2_e2_sc_folded_tray_tread_wood_tread_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_2_e2",
+                "sc_folded_tray_tread_wood_tread_2_e4"
+              ]
             }
           ]
         }
@@ -2489,6 +3826,92 @@
               "from": "sc_folded_tray_tread_tread_3_v4",
               "to": "sc_folded_tray_tread_tread_3_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_tread_3_e1",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_tread_3_e1"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_tread_3_e2",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_tread_3_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_tread_3_e3",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_tread_3_e3"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_tread_3_e4",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_tread_3_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_3_e1_sc_folded_tray_tread_tread_3_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_3_e1",
+                "sc_folded_tray_tread_tread_3_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_3_e2_sc_folded_tray_tread_tread_3_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_3_e2",
+                "sc_folded_tray_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_3_e3_sc_folded_tray_tread_tread_3_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_3_e3",
+                "sc_folded_tray_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_tread_3_e4_sc_folded_tray_tread_tread_3_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_3_e1",
+                "sc_folded_tray_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_tread_3_e1_sc_folded_tray_tread_tread_3_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_3_e1",
+                "sc_folded_tray_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_tread_3_e1_sc_folded_tray_tread_tread_3_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_3_e1",
+                "sc_folded_tray_tread_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_tread_3_e2_sc_folded_tray_tread_tread_3_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_3_e2",
+                "sc_folded_tray_tread_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_tread_3_e2_sc_folded_tray_tread_tread_3_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_tread_3_e2",
+                "sc_folded_tray_tread_tread_3_e4"
+              ]
+            }
           ]
         }
       },
@@ -2599,10 +4022,97 @@
               "from": "sc_folded_tray_tread_wood_tread_3_v4",
               "to": "sc_folded_tray_tread_wood_tread_3_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_wood_tread_3_e1",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_wood_tread_3_e1"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_wood_tread_3_e2",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_wood_tread_3_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_folded_tray_tread_wood_tread_3_e3",
+              "type": "horizontal",
+              "edgeId": "sc_folded_tray_tread_wood_tread_3_e3"
+            },
+            {
+              "id": "rel_vertical_sc_folded_tray_tread_wood_tread_3_e4",
+              "type": "vertical",
+              "edgeId": "sc_folded_tray_tread_wood_tread_3_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_3_e1_sc_folded_tray_tread_wood_tread_3_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_3_e1",
+                "sc_folded_tray_tread_wood_tread_3_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_3_e2_sc_folded_tray_tread_wood_tread_3_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_3_e2",
+                "sc_folded_tray_tread_wood_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_3_e3_sc_folded_tray_tread_wood_tread_3_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_3_e3",
+                "sc_folded_tray_tread_wood_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_folded_tray_tread_wood_tread_3_e4_sc_folded_tray_tread_wood_tread_3_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_3_e1",
+                "sc_folded_tray_tread_wood_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_wood_tread_3_e1_sc_folded_tray_tread_wood_tread_3_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_3_e1",
+                "sc_folded_tray_tread_wood_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_wood_tread_3_e1_sc_folded_tray_tread_wood_tread_3_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_3_e1",
+                "sc_folded_tray_tread_wood_tread_3_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_folded_tray_tread_wood_tread_3_e2_sc_folded_tray_tread_wood_tread_3_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_3_e2",
+                "sc_folded_tray_tread_wood_tread_3_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_folded_tray_tread_wood_tread_3_e2_sc_folded_tray_tread_wood_tread_3_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_folded_tray_tread_wood_tread_3_e2",
+                "sc_folded_tray_tread_wood_tread_3_e4"
+              ]
+            }
           ]
         }
       }
     },
+    "sketches": {},
     "holePatterns": {},
     "objectPatterns": {
       "sc_plate_tread_tread_pattern": {
@@ -2823,27 +4333,11 @@
                   1
                 ]
               }
-            ]
+            ],
+            "noTreadZones": []
           }
         },
         "referenceParameters": {
-          "meta": {
-            "family": "plate-tread"
-          },
-          "geometry": {
-            "width": 900,
-            "rise": 180
-          },
-          "treads": {
-            "thickness": 12,
-            "depth": 300,
-            "overlap": 20,
-            "material": "S355",
-            "closedRisers": false,
-            "finish": "galvanized"
-          }
-        },
-        "parameters": {
           "meta": {
             "family": "plate-tread"
           },
@@ -2897,6 +4391,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -3005,27 +4500,11 @@
                   1
                 ]
               }
-            ]
+            ],
+            "noTreadZones": []
           }
         },
         "referenceParameters": {
-          "meta": {
-            "family": "grating-tread"
-          },
-          "geometry": {
-            "width": 900,
-            "rise": 180
-          },
-          "treads": {
-            "thickness": 35,
-            "depth": 300,
-            "overlap": 20,
-            "material": "S355",
-            "closedRisers": false,
-            "finish": "galvanized"
-          }
-        },
-        "parameters": {
           "meta": {
             "family": "grating-tread"
           },
@@ -3079,6 +4558,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -3187,28 +4667,11 @@
                   1
                 ]
               }
-            ]
+            ],
+            "noTreadZones": []
           }
         },
         "referenceParameters": {
-          "meta": {
-            "family": "pan-tread"
-          },
-          "geometry": {
-            "width": 900,
-            "rise": 180
-          },
-          "treads": {
-            "thickness": 8,
-            "depth": 300,
-            "overlap": 20,
-            "material": "S355",
-            "frontLip": 45,
-            "closedRisers": false,
-            "finish": "powder-coated"
-          }
-        },
-        "parameters": {
           "meta": {
             "family": "pan-tread"
           },
@@ -3273,6 +4736,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -3381,31 +4845,11 @@
                   1
                 ]
               }
-            ]
+            ],
+            "noTreadZones": []
           }
         },
         "referenceParameters": {
-          "meta": {
-            "family": "folded-tray-tread"
-          },
-          "geometry": {
-            "width": 900,
-            "rise": 180
-          },
-          "treads": {
-            "thickness": 8,
-            "depth": 300,
-            "overlap": 20,
-            "material": "S355",
-            "closedRisers": false,
-            "finish": "powder-coated",
-            "woodThickness": 32,
-            "woodNosing": 25,
-            "woodMaterial": "OAK_TIMBER",
-            "woodFinish": "clear-sealed-oak"
-          }
-        },
-        "parameters": {
           "meta": {
             "family": "folded-tray-tread"
           },
@@ -3473,6 +4917,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -3492,7 +4937,85 @@
         "version": 1
       }
     },
-    "relations": {}
+    "relations": {},
+    "gridSystems": {
+      "main_grid": {
+        "id": "main_grid",
+        "name": "Main Grid",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axes": {
+          "x": [
+            {
+              "id": "grid_1",
+              "label": "1",
+              "position": 0
+            },
+            {
+              "id": "grid_2",
+              "label": "2",
+              "position": 6000
+            }
+          ],
+          "y": [
+            {
+              "id": "grid_a",
+              "label": "A",
+              "position": 0
+            },
+            {
+              "id": "grid_b",
+              "label": "B",
+              "position": 5000
+            }
+          ]
+        },
+        "type": "orthogonal-grid-system",
+        "axisX": [
+          1,
+          0,
+          0
+        ],
+        "axisY": [
+          0,
+          1,
+          0
+        ],
+        "axisZ": [
+          0,
+          0,
+          1
+        ],
+        "levelIds": [
+          "level_base",
+          "level_connection",
+          "level_top"
+        ]
+      }
+    },
+    "levels": {
+      "level_base": {
+        "id": "level_base",
+        "name": "Base",
+        "elevation": 0,
+        "type": "datum-level"
+      },
+      "level_connection": {
+        "id": "level_connection",
+        "name": "Connection Level",
+        "elevation": 1500,
+        "type": "datum-level"
+      },
+      "level_top": {
+        "id": "level_top",
+        "name": "Top",
+        "elevation": 3000,
+        "type": "datum-level"
+      }
+    }
   },
   "migrationHistory": [
     {

@@ -80,7 +80,7 @@
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
-      "path": "../libraries/model-library/model-register.json"
+      "path": "../libraries/frames/frame-register.json"
     },
     "smartComponents": {
       "libraryId": "starter-smart-component-library",
@@ -107,8 +107,6 @@
       }
     }
   },
-  "gridSystems": {},
-  "levels": {},
   "phases": {
     "phase_1": {
       "id": "phase_1",
@@ -239,10 +237,23 @@
         "authoring": {
           "source": "manual-reference-image",
           "notes": "All cuts are semantic runtime operations. Moving a cut means editing its body center, axes, size, outline, radius, depth, or referenced plane."
+        },
+        "layoutAxis": {
+          "start": [
+            -850,
+            0,
+            0
+          ],
+          "end": [
+            850,
+            0,
+            0
+          ]
         }
       }
     },
     "plates": {},
+    "sketches": {},
     "holePatterns": {},
     "objectPatterns": {},
     "features": {
@@ -520,6 +531,9 @@
     "interfaces": {},
     "connectionZones": {},
     "workPoints": {},
-    "smartComponentInstances": {}
+    "smartComponentInstances": {},
+    "relations": {},
+    "gridSystems": {},
+    "levels": {}
   }
 }

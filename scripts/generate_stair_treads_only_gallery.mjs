@@ -1,9 +1,9 @@
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { loadSmartComponentDefinitions, smartComponentDefinition } from "../bobercad/app/engine/modules/smart-components/smart-component-registry.mjs";
-import { createProjectSmartComponentFromPreset, updateSmartComponent } from "../bobercad/app/engine/modules/smart-components/smart-component-generator.mjs";
+import { createProjectSmartComponentFromPreset, updateSmartComponent } from "../bobercad/app/engine/modules/smart-components/smart-component-runtime.mjs";
 
-const OUT_FILE = new URL("../bobercad/data/projects/sample_stair_treads_only_all_variants.json", import.meta.url);
+const OUT_FILE = new URL("../bobercad/data/projects/sample_stair_treads_and_landings_only_all_variants.json", import.meta.url);
 const STAIR_PRESET_ID = "stair_system_straight_basic";
 
 function clone(value) {
@@ -68,6 +68,7 @@ function emptyProject(base) {
     "relations",
     "members",
     "plates",
+    "sketches",
     "holePatterns",
     "objectPatterns",
     "features",
@@ -267,11 +268,12 @@ const variants = [
 ];
 
 await withFileFetch(async () => {
-  const [catalog, baseProject, profilesLibrary, fasteners] = await Promise.all([
+  const [catalog, baseProject, profilesLibrary, fasteners, materials] = await Promise.all([
     loadSmartComponentDefinitions(),
-    fs.readFile(new URL("../bobercad/data/projects/sample_fin_plate.json", import.meta.url), "utf8").then(JSON.parse),
+    fs.readFile(new URL("../bobercad/data/projects/sample_beam_to_column_fin_plate.json", import.meta.url), "utf8").then(JSON.parse),
     fs.readFile(new URL("../bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json", import.meta.url), "utf8").then(JSON.parse),
-    fs.readFile(new URL("../bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json", import.meta.url), "utf8").then(JSON.parse)
+    fs.readFile(new URL("../bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json", import.meta.url), "utf8").then(JSON.parse),
+    fs.readFile(new URL("../bobercad/data/libraries/materials/material-libraries/starter-materials/config.json", import.meta.url), "utf8").then(JSON.parse)
   ]);
   const preset = catalog.smartComponents[STAIR_PRESET_ID];
   const definition = smartComponentDefinition(catalog, { type: preset.type, sourceComponent: { id: STAIR_PRESET_ID } });
@@ -299,6 +301,7 @@ await withFileFetch(async () => {
       definition,
       catalog,
       fasteners,
+      materials,
       instanceId: created.smartComponentId,
       parameters: treadsOnlyParameters(baseParameters, variant)
     });

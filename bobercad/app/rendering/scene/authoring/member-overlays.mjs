@@ -2,7 +2,7 @@ import { WORLD_AXIS_ENTRIES, clamp, finiteNumber, sameVec3, v } from "../../../e
 import { formatNumber } from "../../../engine/core/format.mjs?v=format-number-dry-1";
 import { memberAuthoringPoints, memberById } from "../../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
 import { authoringAxisLines, authoringLine as line } from "./authoring-primitives.mjs?v=work-plane-axis-dry-1";
-import { activeAxisFromSnap, snapPointOverlay } from "./snap-overlays.mjs?v=unified-snap-manager-8";
+import { activeAxisFromSnap, snapPointOverlay } from "./snap-overlays.mjs?v=plate-face-snap-2";
 import { coordinateSpaceLabel, memberAxesByTarget, normalizeCoordinateSpace } from "./member-axis-space.mjs?v=member-api-distance-dry-1";
 import { memberManipulatorHandles } from "./member-manipulator-overlays.mjs";
 
@@ -72,6 +72,7 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
   const lines = [
     line([points.physicalStart, points.physicalEnd], "#22c55e", { objectId: memberId, kind: "physical-axis" })
   ];
+  const faces = [];
   if (showLayoutAxis) {
     lines.push(line([points.layoutStart, points.layoutEnd], "#f59e0b", { objectId: memberId, kind: "layout-axis" }));
   }
@@ -81,6 +82,7 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
     settings: options.settings || {},
     objectId: memberId
   });
+  faces.push(...snapOverlay.faces);
   lines.push(...snapOverlay.lines);
   const axisGuides = globalAxisGuides(
     options.globalAxesOrigins || options.globalAxesOrigin,
@@ -123,6 +125,7 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
     });
   }
   return {
+    faces,
     lines,
     handles,
     labels
@@ -130,6 +133,7 @@ export function memberAuthoringOverlay(project, memberId, options = {}) {
 }
 
 export function memberCreationOverlay({ start, end, snap, rawPoint, type, workPlane, profileAxes = [], settings = {} }) {
+  const faces = [];
   const lines = [];
   const handles = [];
   const labels = [];
@@ -154,6 +158,7 @@ export function memberCreationOverlay({ start, end, snap, rawPoint, type, workPl
     settings,
     handleRadius: 12
   });
+  faces.push(...snapOverlay.faces);
   lines.push(...snapOverlay.lines);
   if (start && end) {
     lines.push(line([start, end], color, { kind: "create-axis" }));
@@ -169,7 +174,7 @@ export function memberCreationOverlay({ start, end, snap, rawPoint, type, workPl
   }
   handles.push(...snapOverlay.handles);
   labels.push(...snapOverlay.labels);
-  return { lines, handles, labels };
+  return { faces, lines, handles, labels };
 }
 
 function isFreshPoint(point, points) {
@@ -247,6 +252,7 @@ export function plateCreationOverlay({ points = [], current = null, guidePoint =
     labelOffset: { x: 18, y: -34 },
     handleRadius: 10
   });
+  faces.push(...snapOverlay.faces);
   lines.push(...snapOverlay.lines);
   handles.push(...snapOverlay.handles);
   labels.push(...snapOverlay.labels);
@@ -262,7 +268,8 @@ export function plateCreationOverlay({ points = [], current = null, guidePoint =
     lines.push(line([previewBaseStart, previewBaseEnd], color, { kind: "create-axis" }));
     const base = v.sub(previewBaseEnd, previewBaseStart);
     const baseLength = v.len(base);
-    const planeNormal = v.safeNorm(workPlane?.normal || v.cross(workPlane?.axisX || [1, 0, 0], workPlane?.axisY || [0, 1, 0]), [0, 0, 1]);
+    if (!v.isVec3(workPlane?.normal)) throw new Error("plate creation overlay requires workPlane.normal");
+    const planeNormal = v.norm(workPlane.normal);
     const depthAxis = baseLength > 1e-9 ? v.safeNorm(v.cross(planeNormal, v.mul(base, 1 / baseLength)), [0, 0, 0]) : [0, 0, 0];
     if (v.len(depthAxis) > 1e-9) {
       const guideLength = settings.plateDepthGuideLength || Math.max(settings.workPlaneSize || 220, 360);

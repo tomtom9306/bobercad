@@ -1,28 +1,36 @@
-import { secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs?v=member-end-point-dry-1";
+import { recipeContext, secondaryWebConnectionContext } from "../shared/secondary-web-context.mjs";
+import { enumValue, requiredNonNegativeNumber, requiredObject } from "../shared/validation.mjs";
 
-function isBeam(member) {
-  return String(member.type || "").includes("beam");
+function isBeam(ctx, member) {
+  if (typeof member.type !== "string" || !member.type) ctx.fail(`${member.id}: member type is required`);
+  return member.type.includes("beam");
+}
+
+function notchOffset(ctx, path) {
+  return requiredNonNegativeNumber(ctx, ctx.parameterValue(path), path);
 }
 
 function notchOffsets(ctx, path) {
   return {
-    xMinus: Math.max(0, ctx.optionalParam(`${path}.xMinus`, 5)),
-    xPlus: Math.max(0, ctx.optionalParam(`${path}.xPlus`, 5)),
-    yMinus: Math.max(0, ctx.optionalParam(`${path}.yMinus`, 5)),
-    yPlus: Math.max(0, ctx.optionalParam(`${path}.yPlus`, 5)),
-    zMinus: Math.max(0, ctx.optionalParam(`${path}.zMinus`, 5)),
-    zPlus: Math.max(0, ctx.optionalParam(`${path}.zPlus`, 5))
+    xMinus: notchOffset(ctx, `${path}.xMinus`),
+    xPlus: notchOffset(ctx, `${path}.xPlus`),
+    yMinus: notchOffset(ctx, `${path}.yMinus`),
+    yPlus: notchOffset(ctx, `${path}.yPlus`),
+    zMinus: notchOffset(ctx, `${path}.zMinus`),
+    zPlus: notchOffset(ctx, `${path}.zPlus`)
   };
 }
 
 function supportFlangeNotch(ctx, { region, modePath, offsetsPath, supportMember, supportProfile, supportedBeam, supportedBeamProfile, supportInterface, beamInterface }) {
-  if (!isBeam(supportMember)) return null;
-  if (supportProfile.profileType !== "i-section" || supportedBeamProfile.profileType !== "i-section") return null;
+  if (!isBeam(ctx, supportMember)) return null;
+  if (!isBeam(ctx, supportedBeam)) ctx.fail(`${supportedBeam.id}: support-flange-clearance requires a beam secondary member`);
+  if (supportProfile.profileType !== "i-section") ctx.fail(`${supportMember.id}: support-flange-clearance requires an i-section support beam profile`);
+  if (supportedBeamProfile.profileType !== "i-section") ctx.fail(`${supportedBeam.id}: support-flange-clearance requires an i-section secondary beam profile`);
 
   const supportStation = ctx.geometry.memberStationAtPoint(supportMember, supportInterface.origin);
 
   return {
-    operationEnabled: ctx.optionalParam(modePath, "auto") !== "off",
+    operationEnabled: enumValue(ctx, ctx.parameterValue(modePath), ["auto", "off"], modePath) !== "off",
     source: {
       kind: "member-region",
       memberId: supportMember.id,
@@ -38,9 +46,9 @@ function supportFlangeNotch(ctx, { region, modePath, offsetsPath, supportMember,
   };
 }
 
-export function build(ctx, input = {}) {
+export function build(ctx, input) {
   const context = secondaryWebConnectionContext(ctx, input);
-  const recipeContext = input.recipeContext || {};
+  const recipe = recipeContext(ctx, input, "support-flange-clearance");
   const {
     supportMember,
     supportProfile,
@@ -49,10 +57,7 @@ export function build(ctx, input = {}) {
     supportInterface,
     beamInterface
   } = context;
-  const finPlate = input.finPlate || recipeContext.finPlate;
-  if (!supportMember || !supportProfile || !supportedBeam || !supportedBeamProfile || !supportInterface || !beamInterface || !finPlate) {
-    ctx.fail("support-flange-clearance: secondary-web-plate must run before support-flange-clearance");
-  }
+  const finPlate = requiredObject(ctx, recipe.finPlate, "recipeContext.finPlate");
 
   for (const spec of [
     {
@@ -137,4 +142,5 @@ export function build(ctx, input = {}) {
       display: hiddenTrimDisplay
     });
   }
+  return {};
 }

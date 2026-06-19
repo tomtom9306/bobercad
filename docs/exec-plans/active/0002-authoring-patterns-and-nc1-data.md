@@ -17,7 +17,7 @@ Implemented in schema/model baseline `0.5.0`:
 - `sourceTemplate` for frame/template provenance
 - `settings.tolerances`
 - starter `bobercad/data/libraries/smart-components/smart-component-register.json`
-- starter `bobercad/data/libraries/model-library/model-register.json`
+- starter `bobercad/data/libraries/frames/frame-register.json`
 - sample beam-to-beam end plate connection with stored hole patterns, web bolts, weld, and top flange notch feature
 
 ## Non-Goals
@@ -289,8 +289,8 @@ But the actual members, plates, holes, fasteners, welds, cuts, and patterns must
 Add:
 
 ```text
-bobercad/data/libraries/model-library/model-register.json
-bobercad/app/schemas/model-library.schema.json
+bobercad/data/libraries/frames/frame-register.json
+bobercad/app/schemas/frame-library.schema.json
 ```
 
 Frame library entries are templates for common arrangements:

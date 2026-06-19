@@ -2,11 +2,11 @@
 
 ## Goal
 
-Build the first web viewer for `bobercad/data/projects/sample_structure.json`.
+Build the first web viewer for `bobercad/data/projects/sample_seed_connection_structure.json`.
 
 ## Inputs
 
-- `bobercad/data/projects/sample_structure.json`
+- `bobercad/data/projects/sample_seed_connection_structure.json`
 - `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json`
 - `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json`
 - `bobercad/app/ui/viewer/viewer-settings.json`
@@ -42,5 +42,8 @@ Build the first web viewer for `bobercad/data/projects/sample_structure.json`.
 
 - Static entrypoint: `bobercad/app/ui/viewer/index.html`
 - Styles: `bobercad/app/ui/viewer/style.css`
-- Runtime entrypoint: `bobercad/app/ui/viewer/main.mjs`
+- Runtime entrypoint: `bobercad/app/ui/viewer/viewer-runtime.mjs`
+- Professional UI shell work is in progress and remains design-system driven through imported shell/viewer modules.
+- Left dock tabs are implemented in `bobercad/app/ui/shell/dock-tabs.mjs` and `bobercad/app/ui/shell/dock-tabs.css`; the shell owns tab state, persistence, ARIA, and panel visibility while the model browser and Smart Component library keep their own rendering logic.
+- 2026-06-14 DOM smoke: Model and Components tabs mounted, tab roles/labels wired, panel visibility switched both directions, Arrow/Home keyboard navigation moved focus and selection correctly, status text updated, and browser console errors stayed at zero.
 - No viewer geometry is written back to project JSON.

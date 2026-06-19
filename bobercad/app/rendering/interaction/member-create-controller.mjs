@@ -4,7 +4,7 @@ import { createPreviewMember } from "../../engine/api/project/member-factory.mjs
 import { memberAxisData, memberById, memberStationAtPoint } from "../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
 import { activeWorkPlane, rayPlaneIntersection } from "../../engine/api/project/work-plane.mjs?v=finite-point-api-dry-1";
 import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs?v=geometry-api-array-values-dry-1";
-import { memberCreationOverlay } from "../scene/authoring/member-overlays.mjs?v=unified-snap-manager-8";
+import { memberCreationOverlay } from "../scene/authoring/member-overlays.mjs?v=plate-face-snap-2";
 import { coordinateSpaceLabel as axisGuideModeLabel, normalizeCoordinateSpace as normalizeAxisGuideMode } from "../scene/authoring/member-axis-space.mjs?v=final-array-values-dry-1";
 import { matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs?v=truthy-values-dry-1";
 import { pointOnViewRay } from "./pointer-plane-point.mjs?v=view-ray-dry-1";
@@ -27,6 +27,13 @@ function memberEndReference(member) {
     memberId: member.id,
     station: axis.length
   };
+}
+
+function stationSourceFromSnapSource(source) {
+  const type = source?.type || "";
+  if (type === "layout-axis" || type === "layout-endpoint") return { type: "layout-axis" };
+  if (type === "member-axis" || type.startsWith("member-")) return { type: "member-axis" };
+  return null;
 }
 
 function statusFor(state, extra = "") {
@@ -81,6 +88,9 @@ export function createMemberCreateController({
 }) {
   const authoringSettings = settings.authoring || {};
   const shortcuts = settings.shortcuts?.memberCreate || {};
+  const requestPointerFrame = typeof requestAnimationFrame === "function"
+    ? requestAnimationFrame
+    : (callback) => setTimeout(callback, 0);
   const state = {
     active: false,
     type: null,
@@ -99,6 +109,78 @@ export function createMemberCreateController({
     axisGuideModeLabel: normalizeAxisGuideMode(authoringSettings.axisGuideMode),
     activeReferenceMemberIds: []
   };
+  let pendingPointer = null;
+  let pointerFramePending = false;
+
+  function profileCatalog() {
+    try {
+      const catalog = api.profiles?.();
+      if (catalog && typeof catalog === "object" && !Array.isArray(catalog)) return catalog;
+    } catch {
+      // Fall back to the loaded library map if the store catalog is unavailable during startup.
+    }
+    return profiles && typeof profiles === "object" && !Array.isArray(profiles) ? profiles : {};
+  }
+
+  function validProfileId(value, catalog = profileCatalog()) {
+    if (typeof value !== "string" || !value.trim()) return null;
+    const id = value.trim();
+    return !catalog || catalog[id] ? id : null;
+  }
+
+  function memberDefaults() {
+    const defaults = api.project()?.modelDefaults?.collections?.members;
+    return defaults && typeof defaults === "object" && !Array.isArray(defaults) ? defaults : {};
+  }
+
+  function profileFromDefaults(type, catalog) {
+    const defaults = memberDefaults();
+    const preferredKeys = type === "column"
+      ? ["column", "supporting-column", "primary-column"]
+      : ["beam", "supported-beam", "supporting-beam", "primary-beam"];
+    for (const key of preferredKeys) {
+      const profile = validProfileId(defaults[key]?.profile, catalog);
+      if (profile) return profile;
+    }
+    for (const [key, value] of Object.entries(defaults)) {
+      if (key === "*" || !key.includes(type)) continue;
+      const profile = validProfileId(value?.profile, catalog);
+      if (profile) return profile;
+    }
+    return null;
+  }
+
+  function profileFromExistingMember(type, catalog) {
+    const members = Object.values(api.project()?.model?.members || {})
+      .filter((member) => member && typeof member === "object");
+    const typeMatches = (member) => member.type === type || String(member.type || "").includes(type);
+    const preferred = members.find((member) => typeMatches(member) && validProfileId(member.profile, catalog));
+    if (preferred) return validProfileId(preferred.profile, catalog);
+    return null;
+  }
+
+  function profileFromCatalog(catalog) {
+    return Object.keys(catalog || {}).find((id) => validProfileId(id, catalog)) || null;
+  }
+
+  function creationProfile(type) {
+    const catalog = profileCatalog();
+    return profileFromDefaults(type, catalog)
+      || profileFromExistingMember(type, catalog)
+      || profileFromCatalog(catalog);
+  }
+
+  function memberOptionsFor(end, endSnap = state.endSnap) {
+    const profile = creationProfile(state.type);
+    return {
+      type: state.type,
+      start: state.start,
+      end,
+      startSnap: state.startSnap,
+      endSnap,
+      ...(profile ? { profile } : {})
+    };
+  }
 
   function plane() {
     return activeWorkPlane(api.project(), {});
@@ -118,9 +200,15 @@ export function createMemberCreateController({
     const memberId = snapMemberId || hitMemberId;
     const member = memberId ? memberById(api.project(), memberId) : null;
     if (!member || !v.isVec3(point)) return null;
+    let station = null;
+    try {
+      station = memberStationAtPoint(member, point, snapMemberId ? stationSourceFromSnapSource(snapSource) : null);
+    } catch {
+      return null;
+    }
     return {
       memberId,
-      station: memberStationAtPoint(member, point, snapMemberId ? snapSource : null)
+      station
     };
   }
 
@@ -176,6 +264,7 @@ export function createMemberCreateController({
       screen,
       rawPoint: raw,
       event,
+      scope: state.start ? { referencePlanes: false } : {},
       context: {
         tool: "member-create",
         phase: state.start ? "pick-end" : "pick-start",
@@ -186,7 +275,11 @@ export function createMemberCreateController({
         axisGuideMode: activeAxisGuideMode(),
         workPlane: activePlane,
         projectToPlane: false,
-        includeLines: true
+        includeLines: true,
+        includeSurfaceTargets: state.start ? "edges" : "corners",
+        includeGlobalAxes: state.start ? false : true,
+        snapVisibilityRequirePrecise: false,
+        maxIntersectionSources: state.start ? 24 : undefined
       }
     });
     const snap = snapResult.snap;
@@ -219,11 +312,7 @@ export function createMemberCreateController({
     }));
     if (state.start && distinctPoints(state.start, end)) {
       onPreviewChange([createPreviewMember(api.project(), profiles, {
-        type: state.type,
-        start: state.start,
-        end,
-        startSnap: state.startSnap,
-        endSnap: state.endSnap,
+        ...memberOptionsFor(end),
         display: {
           opacity: authoringSettings.previewOpacity || 0.32,
           color: state.type === "column" ? authoringSettings.columnColor : authoringSettings.beamColor
@@ -255,6 +344,8 @@ export function createMemberCreateController({
 
   function start(type) {
     state.active = true;
+    pendingPointer = null;
+    pointerFramePending = false;
     state.type = type === "column" ? "column" : "beam";
     state.start = null;
     state.startSnap = null;
@@ -279,6 +370,8 @@ export function createMemberCreateController({
 
   function cancel() {
     state.active = false;
+    pendingPointer = null;
+    pointerFramePending = false;
     state.type = null;
     state.start = null;
     state.startReference = null;
@@ -306,13 +399,7 @@ export function createMemberCreateController({
 
   function commit(end = state.end, endSnap = state.endSnap, endReference = state.endReference) {
     if (!state.start || !distinctPoints(state.start, end)) return false;
-    const result = api.createMember({
-      type: state.type,
-      start: state.start,
-      end,
-      startSnap: state.startSnap,
-      endSnap
-    });
+    const result = api.createMember(memberOptionsFor(end, endSnap));
     onProjectChange(result.project);
     if (state.type === "beam") {
       const chainReference = memberEndReference(result.member);
@@ -338,13 +425,23 @@ export function createMemberCreateController({
 
   function pointerMove(pointer) {
     if (!state.active) return false;
-    snapManager?.resetCycle?.();
-    setPointerState(pointer);
+    pendingPointer = pointer;
+    if (pointerFramePending) return true;
+    pointerFramePending = true;
+    requestPointerFrame(() => {
+      pointerFramePending = false;
+      const nextPointer = pendingPointer;
+      pendingPointer = null;
+      if (!state.active || !nextPointer) return;
+      snapManager?.resetCycle?.();
+      setPointerState(nextPointer);
+    });
     return true;
   }
 
   function pointerDown(pointer) {
     if (!state.active) return false;
+    pendingPointer = null;
     const result = setPointerState(pointer);
     if (!result.point) return true;
     if (!state.start) {
@@ -455,6 +552,7 @@ export function createMemberCreateController({
 
   return {
     active: () => state.active,
+    needsPointerHit: () => true,
     cancel,
     handleKey,
     pointerDown,

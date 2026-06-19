@@ -1,11 +1,11 @@
 {
   "$schema": "../../../app/schemas/smart-component-register.schema.json",
-  "libraryUi": "./smart-component-library-ui.mjs",
+  "libraryUi": "./member-pick-smart-component-library-ui.mjs",
   "components": [
     "./components/connections/fin-plate/",
     "./components/connections/moment-end-plate/",
     "./components/connections/base-plate/",
-    "./components/connections/standard-hardware/",
+    "./components/connections/stair-hardware/",
     "./components/connections/member-splice/",
     "./components/connections/apex-gusset/",
     "./components/stairs/stair-system/",

@@ -26,7 +26,7 @@ This checks:
 Use:
 
 ```powershell
-node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_structure.json
+node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_seed_connection_structure.json
 ```
 
 This validates a JSON file against the schema referenced by its `$schema` field. With no arguments it validates sample projects, the Smart Component register, and Smart Component `config.json` files. It has no third-party package requirement.

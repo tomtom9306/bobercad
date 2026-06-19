@@ -1,0 +1,63 @@
+export const DATA_DOCK_PANEL_ID = "library";
+export const DATA_DOCK_PANEL_LABEL = "Data";
+export const DATA_DOCK_PANEL_DESCRIPTION = "Files, data, model browser, and Smart Component library dock.";
+export const DATA_DOCK_PANEL_ICON = "database";
+export const DATA_DOCK_PANEL_DOCK = "left";
+export const DATA_DOCK_PANEL_DEFAULT_WIDTH = 300;
+export const DATA_DOCK_PANEL_MIN_WIDTH = 220;
+export const DATA_DOCK_PANEL_MAX_WIDTH = 520;
+export const DATA_DOCK_PANEL_DEFAULT_VISIBLE = true;
+export const DATA_DOCK_PANEL_DEFAULT_PINNED = true;
+export const DATA_DOCK_COMMAND_LABEL = "Data Dock";
+export const DATA_DOCK_COMMAND_TITLE = "Toggle data dock";
+export const DATA_DOCK_COMMAND_DESCRIPTION = "Show or hide the Files, Data, Model, and Components dock.";
+export const DATA_DOCK_COMMAND_ICON = DATA_DOCK_PANEL_ICON;
+export const DATA_DOCK_DEFAULT_TAB = "model";
+export const DATA_DOCK_LEGACY_TAB_STORAGE_KEY = "bobercad.ui.left-dock.active-tab.v1";
+
+export const DATA_DOCK_TABS = Object.freeze([
+  {
+    id: "files",
+    label: "Files",
+    icon: "file",
+    panelElementId: "project-files-panel",
+    commandId: "data.dock.showFiles",
+    action: "onDataDockShowFiles",
+    title: "Show files tab",
+    description: "Show project JSON, viewer workspace, and declared library config files in the Data Dock."
+  },
+  {
+    id: "data",
+    label: "Data",
+    icon: "database",
+    panelElementId: "project-data-panel",
+    commandId: "data.dock.showData",
+    action: "onDataDockShowData",
+    title: "Show data tab",
+    description: "Show library packs, model contents, and project settings in the Data Dock."
+  },
+  {
+    id: "model",
+    label: "Model",
+    icon: "model-browser",
+    panelElementId: "model-browser",
+    commandId: "data.dock.showModel",
+    action: "onDataDockShowModel",
+    title: "Show model tab",
+    description: "Show the searchable project model browser in the Data Dock."
+  },
+  {
+    id: "components",
+    label: "Components",
+    icon: "smart-component",
+    panelElementId: "smart-component-library",
+    commandId: "data.dock.showComponents",
+    action: "onDataDockShowComponents",
+    title: "Show components tab",
+    description: "Show the Smart Component library in the Data Dock."
+  }
+]);
+
+export function dataDockTabLabel(tabId) {
+  return DATA_DOCK_TABS.find((tab) => tab.id === tabId)?.label || String(tabId || "");
+}

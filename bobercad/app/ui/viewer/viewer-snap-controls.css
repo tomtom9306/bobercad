@@ -1,0 +1,143 @@
+.snap-manager {
+  position: relative;
+  min-width: 62px;
+  height: 32px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: var(--bc-radius-2);
+  background: transparent;
+  color: var(--bc-color-text);
+  font: var(--bc-font-weight-medium) var(--bc-font-size-12) / 1 var(--bc-font-family);
+}
+
+.snap-manager[open] {
+  border-color: color-mix(in srgb, var(--bc-color-accent) 42%, transparent);
+  background: var(--bc-color-active);
+  color: var(--bc-color-accent-strong);
+}
+
+.snap-manager-summary {
+  display: inline-flex;
+  gap: var(--bc-space-2);
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 var(--bc-space-4);
+  cursor: pointer;
+  list-style: none;
+}
+
+.snap-manager-summary::-webkit-details-marker {
+  display: none;
+}
+
+.snap-manager:hover {
+  border-color: var(--bc-color-border-strong);
+  background: var(--bc-color-hover);
+  color: var(--bc-color-accent-strong);
+}
+
+.snap-manager-summary:focus-visible {
+  outline: 2px solid var(--bc-color-focus);
+  outline-offset: 2px;
+}
+
+.snap-manager-summary .bc-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.snap-manager-label {
+  font-size: var(--bc-font-size-12);
+  font-weight: var(--bc-font-weight-bold);
+}
+
+.snap-manager-body {
+  position: absolute;
+  top: 38px;
+  left: 50%;
+  width: 214px;
+  display: grid;
+  gap: var(--bc-space-4);
+  padding: var(--bc-space-5);
+  transform: translateX(-50%);
+}
+
+.snap-manager-filters {
+  display: grid;
+  border-top: 1px solid color-mix(in srgb, var(--bc-color-border) 72%, transparent);
+  padding-top: var(--bc-space-3);
+}
+
+.snap-manager-filters-summary {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  gap: var(--bc-space-2);
+  align-items: center;
+  min-height: var(--bc-control-height-small);
+  color: var(--bc-color-text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.snap-manager-filters-summary::-webkit-details-marker {
+  display: none;
+}
+
+.snap-manager-filters-summary:focus-visible {
+  border-radius: var(--bc-radius-2);
+  outline: 2px solid var(--bc-color-focus);
+  outline-offset: 2px;
+}
+
+.snap-manager-filters-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--bc-color-text-muted);
+  transition: transform var(--bc-duration-fast) ease;
+}
+
+.snap-manager-filters[open] .snap-manager-filters-chevron {
+  transform: rotate(90deg);
+}
+
+.snap-manager-filters-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--bc-font-size-12);
+  font-weight: var(--bc-font-weight-bold);
+  line-height: var(--bc-line-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.snap-manager-filters-count {
+  color: var(--bc-color-text-subtle);
+  font-size: var(--bc-font-size-11);
+  font-weight: var(--bc-font-weight-bold);
+  line-height: 1;
+}
+
+.snap-manager-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--bc-space-2) var(--bc-space-3);
+  padding-top: var(--bc-space-3);
+}
+
+.snap-manager-filters:not([open]) .snap-manager-filter-grid {
+  display: none;
+}
+
+.snap-manager-checkbox {
+  display: flex;
+  gap: var(--bc-space-2);
+  align-items: center;
+  min-width: 0;
+  color: var(--bc-color-text-muted);
+  font: var(--bc-font-weight-medium) var(--bc-font-size-11) / var(--bc-line-tight) var(--bc-font-family);
+}
+
+.snap-manager-checkbox input {
+  margin: 0;
+}

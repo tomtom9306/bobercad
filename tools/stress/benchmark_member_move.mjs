@@ -4,9 +4,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 
-import { buildScene } from "../../bobercad/app/rendering/scene/build-scene.mjs";
-import { loadConnectionDefinitions } from "../../bobercad/app/engine/modules/connections/connection-registry.mjs";
-import { createProjectStore } from "../../bobercad/app/engine/store/project-store.mjs";
+import { buildScene } from "../../bobercad/app/rendering/scene/scene-geometry-builder.mjs";
+import { loadSmartComponentDefinitions } from "../../bobercad/app/engine/modules/smart-components/smart-component-registry.mjs";
+import { createProjectStore } from "../../bobercad/app/engine/store/project-command-store.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DEFAULT_PROJECT = path.join(ROOT, "stress-output", "stress-100-warehouse-halls.json");
@@ -127,20 +127,19 @@ async function main() {
   const loadProject = await timeAsync("load project json", () => readJson(args.project));
   const project = loadProject.result;
   const projectDir = path.dirname(args.project);
-  const [settings, profiles, fasteners, connectionCatalog] = await Promise.all([
+  const [settings, profiles, fasteners, smartComponentCatalog] = await Promise.all([
     readJson(SETTINGS_PATH),
     readJson(path.resolve(projectDir, project.libraries.profiles.path)),
     readJson(path.resolve(projectDir, project.libraries.fasteners.path)),
-    loadConnectionDefinitions()
+    loadSmartComponentDefinitions()
   ]);
 
   const storeTime = time("create project store", () => createProjectStore({
     project,
     profiles: profiles.profiles,
     fasteners,
-    connectionCatalog,
-    cloneOnLoad: false,
-    reconcileOnLoad: false
+    smartComponentCatalog,
+    cloneOnLoad: false
   }));
   const store = storeTime.result;
   const selected = pickMembers(store.project(), args.moves);

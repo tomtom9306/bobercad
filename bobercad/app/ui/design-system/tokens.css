@@ -1,0 +1,161 @@
+:root {
+  color-scheme: light;
+
+  --bc-font-family: Inter, "Segoe UI", Arial, sans-serif;
+  --bc-font-size-11: 11px;
+  --bc-font-size-12: 12px;
+  --bc-font-size-13: 13px;
+  --bc-font-size-14: 14px;
+  --bc-font-weight-regular: 400;
+  --bc-font-weight-medium: 600;
+  --bc-font-weight-semibold: 600;
+  --bc-font-weight-bold: 700;
+  --bc-line-tight: 1.15;
+  --bc-line-normal: 1.35;
+
+  --bc-space-1: 2px;
+  --bc-space-2: 4px;
+  --bc-space-3: 6px;
+  --bc-space-4: 8px;
+  --bc-space-5: 10px;
+  --bc-space-6: 12px;
+  --bc-space-8: 16px;
+  --bc-space-12: 24px;
+
+  --bc-radius-1: 2px;
+  --bc-radius-2: 4px;
+  --bc-radius-3: 6px;
+  --bc-radius-4: 8px;
+
+  --bc-z-canvas: 0;
+  --bc-z-overlay: 8;
+  --bc-z-panel: 10;
+  --bc-z-toolbar: 30;
+  --bc-z-popover: 40;
+  --bc-z-modal: 60;
+
+  --bc-shell-topbar-row-main-height: 38px;
+  --bc-shell-topbar-row-menu-height: 28px;
+  --bc-shell-topbar-row-feature-height: 60px;
+  --bc-shell-topbar-height: 128px;
+  --bc-shell-topbar-row-feature-min-height-mobile: 62px;
+  --bc-shell-topbar-height-mobile: 132px;
+  --bc-feature-nav-tab-height: var(--bc-shell-topbar-row-menu-height);
+  --bc-feature-nav-tab-max-width: 132px;
+  --bc-feature-nav-tab-max-width-medium: 112px;
+  --bc-feature-nav-tab-max-width-mobile: 96px;
+  --bc-feature-nav-tab-icon-size: 14px;
+  --bc-feature-nav-ribbon-min-height: calc(var(--bc-shell-topbar-row-feature-height) - var(--bc-space-1));
+  --bc-feature-ribbon-section-title-height: 16px;
+  --bc-feature-ribbon-section-title-font-size: 10px;
+  --bc-feature-ribbon-section-command-min-height: calc(var(--bc-feature-nav-ribbon-min-height) - var(--bc-feature-ribbon-section-title-height));
+  --bc-feature-ribbon-command-width: 60px;
+  --bc-feature-ribbon-command-width-medium: 58px;
+  --bc-feature-ribbon-command-width-mobile: 56px;
+  --bc-feature-ribbon-command-font-size: 10px;
+  --bc-feature-ribbon-command-icon-box-size: 17px;
+  --bc-feature-ribbon-command-icon-size: 15px;
+  --bc-feature-ribbon-command-label-max-height: 23px;
+  --bc-viewer-settings-band-height: 36px;
+  --bc-statusbar-height: 38px;
+  --bc-shell-viewer-settings-top-offset: calc(var(--bc-shell-topbar-height) + var(--bc-space-2));
+  --bc-shell-viewer-settings-top-offset-mobile: calc(var(--bc-shell-topbar-height-mobile) + var(--bc-space-2));
+  --bc-shell-toolbar-top-offset: calc(var(--bc-shell-topbar-height) + var(--bc-viewer-settings-band-height) + var(--bc-space-8));
+  --bc-shell-toolbar-top-offset-mobile: calc(var(--bc-shell-topbar-height-mobile) + var(--bc-viewer-settings-band-height) + var(--bc-space-8));
+  --bc-shell-toolbar-bottom-offset: calc(var(--bc-statusbar-height) + var(--bc-space-5));
+  --bc-shell-toolbar-max-height-offset: calc(var(--bc-shell-topbar-height) + var(--bc-viewer-settings-band-height) + var(--bc-statusbar-height) + var(--bc-space-12) + var(--bc-space-5));
+  --bc-shell-toolbar-available-height: calc(100vh - var(--bc-shell-toolbar-max-height-offset));
+  --bc-shell-dock-top-offset: var(--bc-shell-topbar-height);
+  --bc-shell-dock-top-offset-mobile: var(--bc-shell-topbar-height-mobile);
+  --bc-shell-dock-screen-margin: 36px;
+  --bc-shell-floating-dock-screen-margin: 72px;
+  --bc-shell-floating-dock-height: min(42vh, 420px);
+  --bc-shell-floating-dock-max-height: calc(100vh - 180px);
+  --bc-shell-floating-dock-top-offset: 168px;
+  --bc-shell-floating-dock-tall-height: min(56vh, 520px);
+  --bc-shell-inspector-wide-min-width: 640px;
+  --bc-nav-cube-toolbar-clearance: 132px;
+  --bc-nav-cube-surface-size: 112px;
+  --bc-nav-cube-stage-size: 108px;
+  --bc-nav-cube-model-size: 66px;
+  --bc-nav-cube-perspective: 420px;
+  --bc-nav-cube-surface-size-mobile: 104px;
+  --bc-nav-cube-stage-size-mobile: 96px;
+  --bc-nav-cube-model-size-mobile: 58px;
+
+  --bc-duration-fast: 90ms;
+  --bc-duration-normal: 160ms;
+
+  --bc-control-height: 32px;
+  --bc-control-height-tiny: 22px;
+  --bc-control-height-small: 24px;
+  --bc-control-tile-size: 30px;
+  --bc-control-action-size: 26px;
+  --bc-control-icon-size: 15px;
+  --bc-control-icon-size-medium: 18px;
+  --bc-customizer-status-column: 42px;
+  --bc-customizer-icon-column: 32px;
+  --bc-icon-button-width: 36px;
+  --bc-icon-button-height: 32px;
+  --bc-input-height: 28px;
+  --bc-trigger-height: 30px;
+  --bc-disclosure-summary-height: 34px;
+  --bc-list-row-min-height: 48px;
+  --bc-command-input-height: 38px;
+}
+
+:root[data-bc-density="normal"] {
+  --bc-control-height: 36px;
+  --bc-control-height-tiny: 24px;
+  --bc-control-height-small: 28px;
+  --bc-control-tile-size: 34px;
+  --bc-control-action-size: 30px;
+  --bc-control-icon-size: 16px;
+  --bc-control-icon-size-medium: 20px;
+  --bc-feature-nav-tab-max-width: 140px;
+  --bc-feature-nav-tab-max-width-medium: 120px;
+  --bc-feature-nav-tab-max-width-mobile: 104px;
+  --bc-feature-nav-tab-icon-size: 15px;
+  --bc-feature-ribbon-command-width: 64px;
+  --bc-feature-ribbon-command-width-medium: 62px;
+  --bc-feature-ribbon-command-width-mobile: 60px;
+  --bc-feature-ribbon-command-icon-box-size: 18px;
+  --bc-feature-ribbon-command-icon-size: 16px;
+  --bc-customizer-status-column: 46px;
+  --bc-customizer-icon-column: 36px;
+  --bc-icon-button-width: 40px;
+  --bc-icon-button-height: 36px;
+  --bc-input-height: 32px;
+  --bc-trigger-height: 34px;
+  --bc-disclosure-summary-height: 38px;
+  --bc-list-row-min-height: 54px;
+  --bc-command-input-height: 42px;
+}
+
+:root[data-bc-density="spacious"] {
+  --bc-control-height: 40px;
+  --bc-control-height-tiny: 26px;
+  --bc-control-height-small: 32px;
+  --bc-control-tile-size: 38px;
+  --bc-control-action-size: 34px;
+  --bc-control-icon-size: 18px;
+  --bc-control-icon-size-medium: 22px;
+  --bc-feature-nav-tab-max-width: 148px;
+  --bc-feature-nav-tab-max-width-medium: 128px;
+  --bc-feature-nav-tab-max-width-mobile: 112px;
+  --bc-feature-nav-tab-icon-size: 16px;
+  --bc-feature-ribbon-command-width: 68px;
+  --bc-feature-ribbon-command-width-medium: 66px;
+  --bc-feature-ribbon-command-width-mobile: 64px;
+  --bc-feature-ribbon-command-icon-box-size: 19px;
+  --bc-feature-ribbon-command-icon-size: 17px;
+  --bc-customizer-status-column: 50px;
+  --bc-customizer-icon-column: 40px;
+  --bc-icon-button-width: 44px;
+  --bc-icon-button-height: 40px;
+  --bc-input-height: 36px;
+  --bc-trigger-height: 38px;
+  --bc-disclosure-summary-height: 42px;
+  --bc-list-row-min-height: 60px;
+  --bc-command-input-height: 46px;
+}

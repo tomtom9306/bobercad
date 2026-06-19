@@ -2,6 +2,15 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function requiredObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`warehouse: ${label} must be an object`);
+  return value;
+}
+
+function parameterGroup(parameters, key) {
+  return clone(requiredObject(parameters[key], `stair preset parameters.${key}`));
+}
+
 export function build(ctx) {
   const frameCount = ctx.param("building.frameCount");
   const frameSpacing = ctx.param("building.frameSpacing");
@@ -13,7 +22,7 @@ export function build(ctx) {
     const role = `frame${index + 1}`;
     ctx.generatedRole(role, `_frame_${index + 1}`);
     const frame = ctx.component.create(role, {
-      componentRef: "portal-frame",
+      componentRef: "portal_frame_demo",
       kind: "frame",
       inputs: {
         placement: {
@@ -36,7 +45,8 @@ export function build(ctx) {
   }
 
   const stairSteps = Math.max(4, Math.round(eavesHeight / 180));
-  const stairParameters = clone(ctx.catalog?.smartComponents?.stair_system_straight_basic?.parameters || {});
+  const stairPreset = requiredObject(ctx.catalog?.smartComponents?.stair_system_straight_basic, "stair_system_straight_basic preset");
+  const stairParameters = requiredObject(stairPreset.parameters, "stair_system_straight_basic parameters");
   ctx.component.create("accessStair", {
     componentRef: "stair_system_straight_basic",
     kind: "stair",
@@ -48,40 +58,40 @@ export function build(ctx) {
     parameters: {
       ...stairParameters,
       levels: {
-        ...(stairParameters.levels || {}),
+        ...parameterGroup(stairParameters, "levels"),
         ffl1: 0,
         ffl2: stairSteps * 180
       },
       geometry: {
-        ...(stairParameters.geometry || {}),
+        ...parameterGroup(stairParameters, "geometry"),
         maxStepHeight: 180,
         going: 260,
         width: 900
       },
       route: {
-        ...(stairParameters.route || {}),
+        ...parameterGroup(stairParameters, "route"),
         type: "straight"
       },
       supports: {
-        ...(stairParameters.supports || {}),
+        ...parameterGroup(stairParameters, "supports"),
         profile: "DEMO_I_200X100X8X12"
       },
       treads: {
-        ...(stairParameters.treads || {}),
+        ...parameterGroup(stairParameters, "treads"),
         family: "plate-tread",
         thickness: 8,
         depth: 240
       },
       railings: {
-        ...(stairParameters.railings || {}),
+        ...parameterGroup(stairParameters, "railings"),
         family: "none"
       },
       connections: {
-        ...(stairParameters.connections || {}),
+        ...parameterGroup(stairParameters, "connections"),
         family: "none"
       },
       sections: {
-        ...(stairParameters.sections || {}),
+        ...parameterGroup(stairParameters, "sections"),
         strategy: "none"
       }
     }

@@ -42,10 +42,10 @@
         "path": "../../../data/projects/sample_stair_glass_rail.json"
       },
       "stair-system-split-weight": {
-        "path": "../../../data/projects/sample_stair_transport_split_weight.json"
+        "path": "../../../data/projects/sample_stair_max_weight_transport_split.json"
       },
       "stair-system-manual-split": {
-        "path": "../../../data/projects/sample_stair_manual_split.json"
+        "path": "../../../data/projects/sample_stair_manual_station_split.json"
       },
       "stair-system-compliance-failures": {
         "path": "../../../data/projects/sample_stair_compliance_failures.json"
@@ -57,16 +57,16 @@
         "path": "../../../data/projects/sample_stair_tread_variants.json"
       },
       "stair-system-treads-only-all-variants": {
-        "path": "../../../data/projects/sample_stair_treads_only_all_variants.json"
+        "path": "../../../data/projects/sample_stair_treads_and_landings_only_all_variants.json"
       },
       "stair-system-treads-landings-only-all-variants": {
-        "path": "../../../data/projects/sample_stair_treads_only_all_variants.json"
+        "path": "../../../data/projects/sample_stair_treads_and_landings_only_all_variants.json"
       },
       "moment-end-plate-1": {
-        "path": "../../../data/projects/sample_structure.json"
+        "path": "../../../data/projects/sample_seed_connection_structure.json"
       },
       "fin-plate-1": {
-        "path": "../../../data/projects/sample_fin_plate.json"
+        "path": "../../../data/projects/sample_beam_to_column_fin_plate.json"
       },
       "connection-test-frame-1": {
         "path": "../../../data/projects/sample_connection_test_frame.json"
@@ -292,6 +292,11 @@
     }
   },
   "render": {
+    "visibility": {
+      "cuttingObjects": true,
+      "fasteners": true,
+      "referencePlanes": true
+    },
     "background": "#f5f7fb",
     "lighting": {
       "direction": [

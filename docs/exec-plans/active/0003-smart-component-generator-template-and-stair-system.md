@@ -351,7 +351,7 @@ bobercad/data/libraries/smart-components/components/stairs/
 |   `-- wall-handrail/
 |
 |-- connections/
-|   |-- standard-hardware/
+|   |-- stair-hardware/
 |   `-- member-splice/
 |
 `-- rule-packs/
@@ -771,8 +771,8 @@ Create samples:
 - `sample_stair_mono_stringer.json`
 - `sample_stair_grating_treads.json`
 - `sample_stair_glass_rail.json`
-- `sample_stair_transport_split_weight.json`
-- `sample_stair_manual_split.json`
+- `sample_stair_max_weight_transport_split.json`
+- `sample_stair_manual_station_split.json`
 - `sample_stair_compliance_failures.json`
 
 ### 15. Tests

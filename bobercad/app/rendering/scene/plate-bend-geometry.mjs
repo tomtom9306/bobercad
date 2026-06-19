@@ -1,5 +1,5 @@
 import { clamp, distance2, finiteNumber, finiteNumberOr, v } from "../../engine/core/math.mjs?v=distance2-dry-1";
-import { orderedSketchLoop, plateBends, plateOutline, sketchEdgePoints, sketchEdges, sketchVertexPointMap } from "../../engine/api/project/plates.mjs?v=plate-outline-relation-safety-1";
+import { orderedSketchLoop, plateBends, plateOutline, sketchEdgePoints, sketchEdges, sketchVertexPointMap } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs?v=plate-outline-relation-safety-1";
 import { signedArea2d } from "../../engine/geometry/polygon.mjs?v=signed-area-1";
 
 function bendTargetKey(target) {

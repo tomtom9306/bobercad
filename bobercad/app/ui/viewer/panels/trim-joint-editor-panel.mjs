@@ -3,8 +3,10 @@ import { arrayValues, uniqueTruthy } from "../../../engine/core/model.mjs?v=ui-a
 import { defaultPlaneTrimRemovedRegionKeys, planeTrimRegionKeys, reconcilePlaneTrimRemovedRegionKeys } from "../../../engine/api/model/trim-region-keys.mjs?v=geometry-api-array-values-dry-1";
 import { libraryProfileById } from "../../../engine/api/project/profiles.mjs?v=profile-api-dry-1";
 import { trimJointOperations, trimJointParticipants, trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd, trimPlaneOperationsForMember } from "../../../engine/api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
-import { TRIM_OPERATION_TYPES, trimOperationIconMarkup, trimOperationLabel, trimOperationSupportsGap } from "../../../rendering/trim-operation-icons.mjs?v=color-helpers-dry-1";
-import { button, checkboxControl, createPanelMessageState, field, hidePanel, numericControl, readout, renderEditorPanel, text } from "./panel-elements.mjs?v=panel-controls-dry-1";
+import { TRIM_OPERATION_TYPES, trimOperationIcon, trimOperationLabel, trimOperationSupportsGap } from "../../commands/trim-operation-metadata.mjs?v=trim-operation-metadata-1";
+import { button, createPanelMessageState, disclosureSection, field, hidePanel, renderEditorPanel, text } from "./panel-elements.mjs?v=panel-primitives-1";
+import { bindGeneratedPropertySections } from "./generated-property-bindings.mjs?v=generated-property-bindings-1";
+import { generatedPropertyField } from "./generated-properties-panel.mjs?v=trim-option-icons-1";
 
 const { add, sub, mul, dot } = v;
 const norm = (point) => v.safeNorm(point, [0, 0, 1]);
@@ -18,6 +20,7 @@ const MITER_MODE_OPTIONS = [
   { id: "equal-angle", label: "Equal angle" },
   { id: "profile-balanced", label: "Balanced profile" }
 ];
+const TRIM_MEMBER_SWATCH_FALLBACK = "var(--bc-color-guide)";
 
 function profileLabel(profiles, member) {
   const profile = libraryProfileById(profiles, member.profile);
@@ -49,30 +52,6 @@ function memberButton(label, color, className, onClick) {
   element.append(colorSwatch(color), text("span", "trim-member-name", label));
   element.addEventListener("click", onClick);
   return element;
-}
-
-function trimOptionGroup({ options, value, ariaLabel, role, itemRole = null, ariaSelected, onChange }) {
-  const group = document.createElement("div");
-  group.className = "trim-member-end-toggle";
-  group.setAttribute("role", role);
-  group.setAttribute("aria-label", ariaLabel);
-  for (const option of options) {
-    const selected = option.id === value;
-    const item = button(option.label, "trim-end-option", () => {
-      if (!selected) onChange(option.id, option.label);
-    });
-    item.dataset.selected = selected ? "true" : "false";
-    if (itemRole) item.setAttribute("role", itemRole);
-    item.setAttribute(ariaSelected, selected ? "true" : "false");
-    group.append(item);
-  }
-  return group;
-}
-
-function trimTypeIcon(type, colors = {}) {
-  const template = document.createElement("template");
-  template.innerHTML = trimOperationIconMarkup(type, colors).trim();
-  return template.content.firstElementChild;
 }
 
 export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onLocalObjectProjectChange, onFocusChange }) {
@@ -266,6 +245,76 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     updateTrimJoint((trimJointId) => api.updateTrimJointOperation(trimJointId, operationId, patch), message);
   };
 
+  const trimOperationCommit = (operation, patchKey) => ({
+    action: "trim.operation.update",
+    operationId: operation.id,
+    patchKey
+  });
+
+  const trimOperationTypeCommit = (operation) => ({
+    action: "trim.operation.type.set",
+    operationId: operation.id
+  });
+
+  const trimMemberEndCommit = (operation, member) => ({
+    action: "trim.operation.memberEnd.set",
+    operationId: operation.id,
+    role: member.role,
+    messageLabel: member.messageLabel || member.label
+  });
+
+  const trimEditorAction = (action, payload = {}) => ({ action, payload });
+
+  const trimEditorBindings = () => ({
+    commits: {
+      "trim.operation.type.set": (value, commit = {}) => {
+        const operation = trimOperationById(selectedTrimJoint(), commit.operationId);
+        if (!operation) return;
+        updateOperationType(operation, value);
+      },
+      "trim.operation.update": (value, commit = {}) => {
+        if (!commit.operationId || !commit.patchKey) return;
+        const message = commit.patchKey === "miterMode"
+          ? `${value === "profile-balanced" ? "Balanced profile" : "Equal angle"} miter selected.`
+          : "Trim updated.";
+        updateOperation(commit.operationId, { [commit.patchKey]: value }, message);
+      },
+      "trim.operation.memberEnd.set": (value, commit = {}) => {
+        if (!commit.operationId || !commit.role) return;
+        const option = MEMBER_END_OPTIONS.find((item) => item.id === value);
+        const optionLabel = option?.label || value;
+        updateOperation(
+          commit.operationId,
+          { [`${commit.role}End`]: value },
+          `${commit.messageLabel || commit.role} ${String(optionLabel).toLowerCase()} end selected.`
+        );
+      }
+    },
+    actions: {
+      "trim.plane.pick": (field = {}) => {
+        const operation = trimOperationById(selectedTrimJoint(), field.payload?.operationId);
+        if (operation) beginPickOperationPlane(operation);
+      },
+      "trim.plane.remove": (field = {}) => {
+        const operation = trimOperationById(selectedTrimJoint(), field.payload?.operationId);
+        const referencePlaneId = field.payload?.referencePlaneId;
+        if (operation && referencePlaneId) removeOperationPlane(operation, referencePlaneId);
+      },
+      "trim.region.toggle": (field = {}) => {
+        const operation = trimOperationById(selectedTrimJoint(), field.payload?.operationId);
+        const regionKeyValue = field.payload?.regionKey;
+        if (operation && regionKeyValue) toggleRegionRemoved(operation, regionKeyValue);
+      }
+    }
+  });
+
+  const renderTrimFields = (fields = []) => {
+    const section = bindGeneratedPropertySections([{ id: "trim.editor.inline", fields }], trimEditorBindings())[0];
+    return (section?.fields || []).map(generatedPropertyField).filter(Boolean);
+  };
+
+  const renderTrimField = (field) => renderTrimFields([field])[0] || null;
+
   const updateOperationType = (operation, type) => {
     const patch = trimOperationSupportsGap(type) ? { type } : { type, gap: 0 };
     if (type === "plane-trim") {
@@ -285,6 +334,13 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       patch.memberBId = memberBId;
     }
     updateOperation(operation.id, patch, `${trimOperationLabel(type)} selected.`);
+  };
+
+  const trimTypeOptions = (operation) => {
+    return operation.typeOptions.map((option) => ({
+      ...option,
+      icon: trimOperationIcon(option.id)
+    }));
   };
 
   const swapOperation = (operation) => {
@@ -312,82 +368,28 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     setMessage(role === "memberA" ? "Pick member A." : "Pick member B.", "ok");
   };
 
-  const endToggle = (value, ariaLabel, onChange) => {
-    return trimOptionGroup({
-      options: MEMBER_END_OPTIONS,
-      value,
-      ariaLabel,
-      role: "group",
-      ariaSelected: "aria-pressed",
-      onChange
-    });
-  };
+  const trimMemberEndField = (operation, member) => renderTrimField({
+    type: "segmented",
+    label: "End",
+    value: member.end || "end",
+    options: MEMBER_END_OPTIONS,
+    className: "trim-member-end-segment",
+    buttonClassName: "trim-member-end-segment-button",
+    commit: trimMemberEndCommit(operation, member)
+  });
 
   const memberPicker = (operation, member) => {
     const wrap = document.createElement("div");
     wrap.className = "trim-member-picker";
-    const color = memberColor(api, member.id, "#94a3b8");
+    const color = memberColor(api, member.id, TRIM_MEMBER_SWATCH_FALLBACK);
     wrap.append(memberButton(memberName(api, member.id), color, "trim-member-value", () => member.id && selectMember(member.id)));
-    if (member.showEnd) wrap.append(endToggle(member.end || "end", `${operation.id} ${member.label} end`, member.onEndChange));
-    if (member.canPick !== false) wrap.append(button("Pick", "editor-button", member.onPick));
+    const endField = member.showEnd ? trimMemberEndField(operation, member) : null;
+    if (endField) wrap.append(endField);
+    if (member.canPick !== false) wrap.append(button("Pick", "bc-button", member.onPick));
     return wrap;
   };
 
-  const trimTypePicker = (operation) => {
-    const group = document.createElement("div");
-    group.className = "trim-type-grid";
-    group.setAttribute("role", "radiogroup");
-    group.setAttribute("aria-label", `${operation.id} cut result`);
-    const colors = {
-      memberA: memberColor(api, operation.memberA?.id, "#365f74"),
-      memberB: memberColor(api, operation.memberB?.id, "#d99200")
-    };
-    for (const option of operation.typeOptions) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "trim-type-button";
-      item.dataset.selected = option.id === operation.type ? "true" : "false";
-      item.setAttribute("role", "radio");
-      item.setAttribute("aria-checked", option.id === operation.type ? "true" : "false");
-      item.setAttribute("aria-label", option.label);
-      item.append(trimTypeIcon(option.id, colors), text("span", "trim-type-label", option.label));
-      item.addEventListener("click", () => {
-        if (option.id !== operation.type) operation.onTypeChange(option.id);
-      });
-      group.append(item);
-    }
-    return group;
-  };
-
-  const miterModePicker = (operation) => {
-    return trimOptionGroup({
-      options: operation.miterModeOptions,
-      value: operation.miterMode,
-      ariaLabel: `${operation.id} miter mode`,
-      role: "radiogroup",
-      itemRole: "radio",
-      ariaSelected: "aria-checked",
-      onChange: operation.onMiterModeChange
-    });
-  };
-
   const planeLabel = (referencePlaneId) => api.project().model.referencePlanes?.[referencePlaneId]?.name || referencePlaneId;
-
-  const planeTrimPlanesRow = (operation) => {
-    const wrap = document.createElement("div");
-    wrap.className = "trim-plane-list";
-    for (const referencePlaneId of operation.referencePlaneIds) {
-      const item = document.createElement("div");
-      item.className = "trim-plane-chip";
-      item.append(
-        text("span", "trim-plane-name", planeLabel(referencePlaneId)),
-        button("Remove", "editor-button danger", () => operation.onPlaneRemove(referencePlaneId))
-      );
-      wrap.append(item);
-    }
-    wrap.append(button("Pick Plane", "editor-button", operation.onPlanePick));
-    return field("Planes", wrap);
-  };
 
   const regionLabel = (regionKeyValue) => regionKeyValue.split("|")
     .map((part) => {
@@ -396,26 +398,42 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     })
     .join(", ");
 
-  const planeTrimRegionsRow = (operation) => {
-    const wrap = document.createElement("div");
-    wrap.className = "trim-region-list";
-    if (!operation.regionKeys.length) {
-      wrap.append(text("div", "editor-empty", "Pick planes to create removable regions."));
-      return field("Regions", wrap);
-    }
-    for (const regionKeyValue of operation.regionKeys) {
+  const planeTrimPlanesField = (operation) => ({
+    type: "actionList",
+    label: "Planes",
+    emptyMessage: "No planes picked.",
+    actions: [
+      ...operation.referencePlaneIds.map((referencePlaneId) => ({
+        label: `Remove ${planeLabel(referencePlaneId)}`,
+        icon: "cancel",
+        danger: true,
+        title: `Remove ${planeLabel(referencePlaneId)} from this trim`,
+        ...trimEditorAction("trim.plane.remove", { operationId: operation.id, referencePlaneId })
+      })),
+      {
+        label: "Pick Plane",
+        icon: "selection",
+        primary: true,
+        ...trimEditorAction("trim.plane.pick", { operationId: operation.id })
+      }
+    ]
+  });
+
+  const planeTrimRegionsField = (operation) => ({
+    type: "actionList",
+    label: "Regions",
+    emptyMessage: "Pick planes to create removable regions.",
+    actions: operation.regionKeys.map((regionKeyValue) => {
       const isRemoved = operation.removedRegionKeys.includes(regionKeyValue);
-      const item = button(
-        `${isRemoved ? "Remove" : "Keep"}: ${regionLabel(regionKeyValue)}`,
-        "trim-region-button",
-        () => operation.onRegionToggle(regionKeyValue)
-      );
-      item.dataset.removed = isRemoved ? "true" : "false";
-      item.dataset.active = regionKeyValue === activeRegionKey ? "true" : "false";
-      wrap.append(item);
-    }
-    return field("Regions", wrap);
-  };
+      return {
+        label: `${isRemoved ? "Remove" : "Keep"}: ${regionLabel(regionKeyValue)}`,
+        danger: isRemoved,
+        pressed: regionKeyValue === activeRegionKey,
+        title: isRemoved ? "Click to keep this region" : "Click to remove this region",
+        ...trimEditorAction("trim.region.toggle", { operationId: operation.id, regionKey: regionKeyValue })
+      };
+    })
+  });
 
   const operationCard = (operation, index) => {
     const card = document.createElement("div");
@@ -424,23 +442,45 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
 
     const header = document.createElement("div");
     header.className = "trim-cut-header";
-    header.append(
-      text("div", "editor-section-title", `Cut ${operation.cutNumber || index + 1}: ${trimOperationLabel(operation.type)}`),
-      checkboxControl(`${operation.id} enabled`, operation.enabled !== false, operation.onEnabledChange)
-    );
-    if (operation.onSwap) header.append(button("Swap", "editor-button", operation.onSwap));
-    if (operation.onRemove) header.append(button("Remove", "editor-button danger", operation.onRemove));
+    header.append(text("div", "bc-section-title", `Cut ${operation.cutNumber || index + 1}: ${trimOperationLabel(operation.type)}`));
+    if (operation.onSwap) header.append(button("Swap", "bc-button", operation.onSwap));
+    if (operation.onRemove) header.append(button("Remove", "bc-button bc-button-danger", operation.onRemove));
 
-    const rows = [field(operation.memberA.label, memberPicker(operation, operation.memberA))];
+    const rows = renderTrimFields([{
+      type: "checkbox",
+      label: "Enabled",
+      value: operation.enabled !== false,
+      commit: trimOperationCommit(operation, "enabled")
+    }]);
+    rows.push(field(operation.memberA.label, memberPicker(operation, operation.memberA)));
     if (operation.memberB) rows.push(field(operation.memberB.label, memberPicker(operation, operation.memberB)));
-    rows.push(field("Result", trimTypePicker(operation)));
+    rows.push(...renderTrimFields([{
+      type: "optionGrid",
+      label: "Result",
+      value: operation.type,
+      options: trimTypeOptions(operation),
+      commit: trimOperationTypeCommit(operation)
+    }]));
     if (operation.referencePlane) {
-      rows.push(planeTrimPlanesRow(operation), planeTrimRegionsRow(operation));
+      rows.push(...renderTrimFields([planeTrimPlanesField(operation), planeTrimRegionsField(operation)]));
     }
     if (operation.showGap) {
-      rows.push(field("Gap", numericControl(`${operation.id} gap`, finiteNumberOr(operation.gap, 0), operation.onGapChange)));
+      rows.push(...renderTrimFields([{
+        type: "number",
+        label: "Gap",
+        value: finiteNumberOr(operation.gap, 0),
+        commit: trimOperationCommit(operation, "gap")
+      }]));
     }
-    if (operation.miterModeOptions) rows.push(field("Miter", miterModePicker(operation)));
+    if (operation.miterModeOptions) {
+      rows.push(...renderTrimFields([{
+        type: "segmented",
+        label: "Miter",
+        value: operation.miterMode,
+        options: operation.miterModeOptions,
+        commit: trimOperationCommit(operation, "miterMode")
+      }]));
+    }
     rows.push(...arrayValues(operation.extraRows));
     card.append(header, ...rows);
     return card;
@@ -448,10 +488,11 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
 
   const operationMemberRoleModel = (operation, type, role, label, messageLabel = label) => ({
     label,
+    role,
     id: operation[`${role}Id`],
     showEnd: trimOperationUsesMemberEnd(type, role),
     end: operation[`${role}End`] || "end",
-    onEndChange: (end, optionLabel) => updateOperation(operation.id, { [`${role}End`]: end }, `${messageLabel} ${optionLabel.toLowerCase()} end selected.`),
+    messageLabel,
     onPick: () => pickOperationMember(operation, role)
   });
 
@@ -474,13 +515,6 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       gap: operation.gap,
       miterModeOptions: type === "end-miter" ? MITER_MODE_OPTIONS : null,
       miterMode: operation.miterMode || "equal-angle",
-      onMiterModeChange: (miterMode) => updateOperation(operation.id, { miterMode }, `${miterMode === "profile-balanced" ? "Balanced profile" : "Equal angle"} miter selected.`),
-      onEnabledChange: (enabled) => updateOperation(operation.id, { enabled }),
-      onTypeChange: (nextType) => updateOperationType(operation, nextType),
-      onGapChange: (gap) => updateOperation(operation.id, { gap }),
-      onPlanePick: () => beginPickOperationPlane(operation),
-      onPlaneRemove: (referencePlaneId) => removeOperationPlane(operation, referencePlaneId),
-      onRegionToggle: (regionKeyValue) => toggleRegionRemoved(operation, regionKeyValue),
       onSwap: usesMemberB ? () => swapOperation(operation) : null,
       onRemove: () => removeOperation(operation.id)
     };
@@ -488,30 +522,28 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
 
   const operationList = ({ operations, canAdd = false, totalOperations = operations.length, activeCutNumber = null }) => {
     const section = document.createElement("div");
-    section.className = "trim-editor-section";
+    section.className = "bc-trim-section";
     const toolbar = document.createElement("div");
     toolbar.className = "trim-section-toolbar";
-    toolbar.append(text("div", "editor-section-title", activeOperationId ? `Selected cut ${activeCutNumber} of ${totalOperations}` : "Cuts"));
-    if (activeOperationId) toolbar.append(button("Show All", "editor-button", () => {
+    if (activeOperationId) toolbar.append(button("Show All", "bc-button", () => {
       activeOperationId = null;
       activeRegionKey = null;
       render();
       notifyFocusChange();
     }));
-    if (canAdd && !activeOperationId) toolbar.append(button("New Cut", "editor-button primary", addOperationFromToolbar));
-    section.append(toolbar);
-    if (!operations.length) section.append(text("div", "editor-empty", "Add a cut, then pick the cut member and cutting member from the model."));
+    if (canAdd && !activeOperationId) toolbar.append(button("New Cut", "bc-button bc-button-primary", addOperationFromToolbar));
+    if (toolbar.childElementCount) section.append(toolbar);
+    if (!operations.length) section.append(text("div", "bc-empty", "Add a cut, then pick the cut member and cutting member from the model."));
     else section.append(...operations.map(operationCard));
     return section;
   };
 
   const memberList = ({ participants, canAdd = false }) => {
     const section = document.createElement("div");
-    section.className = "trim-editor-section";
+    section.className = "bc-trim-section";
     const toolbar = document.createElement("div");
     toolbar.className = "trim-section-toolbar";
-    toolbar.append(text("div", "editor-section-title", "Members"));
-    if (canAdd) toolbar.append(button("Add Member", "editor-button", beginAddParticipant));
+    if (canAdd) toolbar.append(button("Add Member", "bc-button", beginAddParticipant));
     const list = document.createElement("div");
     list.className = "trim-member-list";
     for (const participant of participants) {
@@ -520,13 +552,14 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       row.className = "trim-member-row";
       row.dataset.active = participant.memberId === activeMemberId ? "true" : "false";
       row.append(
-        memberButton(participant.memberId, memberColor(api, participant.memberId, "#94a3b8"), "trim-participant-member", () => selectMember(participant.memberId)),
+        memberButton(participant.memberId, memberColor(api, participant.memberId, TRIM_MEMBER_SWATCH_FALLBACK), "trim-participant-member", () => selectMember(participant.memberId)),
         text("div", "trim-participant-profile", profileLabel(profiles, member))
       );
-      if (participant.canRemove) row.append(button("Remove", "editor-button danger", () => removeParticipant(participant.memberId)));
+      if (participant.canRemove) row.append(button("Remove", "bc-button bc-button-danger", () => removeParticipant(participant.memberId)));
       list.append(row);
     }
-    section.append(toolbar, list);
+    if (toolbar.childElementCount) section.append(toolbar);
+    section.append(list);
     return section;
   };
 
@@ -546,16 +579,27 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     };
   };
 
-  const editorRows = (model) => [
-    readout("Trim", model.id),
-    operationList({
-      operations: model.operations,
-      canAdd: model.canAddOperations,
-      totalOperations: model.totalOperations,
-      activeCutNumber: model.activeCutNumber
-    }),
-    memberList({ participants: model.participants, canAdd: model.canAddParticipants })
-  ];
+  const editorRows = (model) => {
+    const cutsLabel = model.activeCutNumber
+      ? `Selected cut ${model.activeCutNumber} of ${model.totalOperations}`
+      : `Cuts (${model.totalOperations})`;
+    return [
+      disclosureSection("Overview", renderTrimFields([
+        { label: "Trim", value: model.id },
+        { label: "Cuts", value: String(model.totalOperations) },
+        { label: "Members", value: String(model.participants.length) }
+      ]), { open: true, sectionId: "trim.overview" }),
+      disclosureSection(cutsLabel, [operationList({
+        operations: model.operations,
+        canAdd: model.canAddOperations,
+        totalOperations: model.totalOperations,
+        activeCutNumber: model.activeCutNumber
+      })], { open: true, sectionId: "trim.cuts" }),
+      disclosureSection(`Members (${model.participants.length})`, [
+        memberList({ participants: model.participants, canAdd: model.canAddParticipants })
+      ], { open: Boolean(activeMemberId), sectionId: "trim.members" })
+    ];
+  };
 
   function clear() {
     const hadFocus = Boolean(selectedTrimJointId);

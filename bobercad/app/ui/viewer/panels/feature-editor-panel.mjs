@@ -1,16 +1,8 @@
-import { arrayInput, checkboxInput, createPanelMessageState, hidePanel, numericInput, readout, renderEditorPanel, selectInput, text, textInput, vectorInput } from "./panel-elements.mjs?v=panel-controls-dry-1";
+import { createPanelMessageState, disclosureSection, hidePanel, renderEditorPanel } from "./panel-elements.mjs?v=panel-primitives-1";
 import { arrayValues } from "../../../engine/core/model.mjs?v=ui-array-values-dry-1";
-
-const BOOLEAN_TYPE_OPTIONS = [
-  { id: "BOOLEAN_CUT", label: "Cut" },
-  { id: "BOOLEAN_ADD", label: "Add" },
-  { id: "BOOLEAN_WELDPREP", label: "Weld prep" }
-];
-
-const SOURCE_KIND_OPTIONS = [
-  { id: "member-profile", label: "Member profile" }
-];
-const BODY_AXIS_TYPES = new Set(["box", "cylinder", "polygonal-prism"]);
+import { inspectorFeatureEditorSections } from "../../commands/inspector-property-metadata.mjs?v=feature-editor-metadata-1";
+import { bindGeneratedPropertySections } from "./generated-property-bindings.mjs?v=generated-property-bindings-1";
+import { generatedPropertyField } from "./generated-properties-panel.mjs?v=feature-editor-generated-fields-1";
 
 export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectProjectChange }) {
   let selectedFeatureId = null;
@@ -39,71 +31,55 @@ export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectPr
     }
   };
 
-  const bodyAxesEditor = (body) => [
-    ...vectorInput("Axis X", body.axisX, (axisX) => updateFeature((featureId) => api.setFeatureBody(featureId, { axisX }))),
-    ...vectorInput("Axis Y", body.axisY, (axisY) => updateFeature((featureId) => api.setFeatureBody(featureId, { axisY }))),
-    ...vectorInput("Axis Z", body.axisZ, (axisZ) => updateFeature((featureId) => api.setFeatureBody(featureId, { axisZ })))
-  ];
-
-  const bodyEditor = (feature) => {
-    const body = feature.body;
-    if (!body) return [];
-    const rows = [
-      text("div", "editor-subtitle", "Cutting body"),
-      readout("Body", body.type || "-"),
-      ...vectorInput("Center", body.center, (center) => updateFeature((featureId) => api.setFeatureBody(featureId, { center })))
-    ];
-    if (feature.type === "boolean-part") {
-      rows.push(selectInput("Boolean", BOOLEAN_TYPE_OPTIONS, feature.booleanType || "BOOLEAN_CUT", (booleanType) => updateFeature((featureId) => api.updateFeature(featureId, { booleanType }))));
-    }
-    if (body.type === "box") {
-      rows.push(...vectorInput("Size", body.size, (size) => updateFeature((featureId) => api.setFeatureBody(featureId, { size }))));
-    } else if (body.type === "cylinder") {
-      rows.push(numericInput("Radius", body.radius, (radius) => updateFeature((featureId) => api.setFeatureBody(featureId, { radius }))));
-      rows.push(numericInput("Depth", body.depth, (depth) => updateFeature((featureId) => api.setFeatureBody(featureId, { depth }))));
-    } else if (body.type === "polygonal-prism") {
-      rows.push(numericInput("Depth", body.depth, (depth) => updateFeature((featureId) => api.setFeatureBody(featureId, { depth }))));
-    }
-    if (BODY_AXIS_TYPES.has(body.type)) rows.push(...bodyAxesEditor(body));
-    if (body.type === "polygonal-prism") {
-      arrayValues(body.outline).forEach((point, index) => {
-        rows.push(...arrayInput(`Point ${index + 1}`, ["Y", "Z"], point, (nextPoint) => {
-          const outline = [...arrayValues(body.outline)];
-          outline[index] = nextPoint;
-          updateFeature((featureId) => api.setFeatureBody(featureId, { outline }));
-        }));
-      });
-    }
-    return rows;
-  };
-
-  const sourceEditor = (feature) => {
-    if (!feature.source) return [];
-    const source = feature.source;
-    return [
-      text("div", "editor-subtitle", "Source"),
-      selectInput("Kind", SOURCE_KIND_OPTIONS, source.kind || "member-profile", (kind) => updateFeature((featureId) => api.setFeatureSource(featureId, { kind }))),
-      textInput("Member", source.memberId || "", (memberId) => {
-        if (!memberId.trim()) {
+  const featureEditorBindings = () => ({
+    commits: {
+      "feature.operationEnabled.set": (enabled) => updateFeature((featureId) => api.setFeatureOperationEnabled(featureId, enabled)),
+      "feature.update": (value, commit = {}) => {
+        if (!commit.patchKey) return;
+        updateFeature((featureId) => api.updateFeature(featureId, { [commit.patchKey]: value }));
+      },
+      "feature.body.update": (value, commit = {}) => {
+        if (!commit.patchKey) return;
+        updateFeature((featureId) => api.setFeatureBody(featureId, { [commit.patchKey]: value }));
+      },
+      "feature.body.outlinePoint.update": (point, commit = {}) => {
+        const feature = selectedFeature();
+        const outline = [...arrayValues(feature?.body?.outline)];
+        if (!Number.isInteger(commit.pointIndex) || commit.pointIndex < 0 || commit.pointIndex >= outline.length) return;
+        outline[commit.pointIndex] = point;
+        updateFeature((featureId) => api.setFeatureBody(featureId, { outline }));
+      },
+      "feature.source.update": (value, commit = {}) => {
+        if (!commit.patchKey) return;
+        const nextValue = commit.patchKey === "memberId" ? String(value || "").trim() : value;
+        if (commit.patchKey === "memberId" && !nextValue) {
           setMessage("Source member cannot be empty from this editor.", "error");
           return;
         }
-        updateFeature((featureId) => api.setFeatureSource(featureId, { memberId: memberId.trim() }));
-      })
-    ];
+        updateFeature((featureId) => api.setFeatureSource(featureId, { [commit.patchKey]: nextValue }));
+      }
+    }
+  });
+
+  const renderFeatureFields = (fields = []) => {
+    const section = bindGeneratedPropertySections([{ id: "feature.editor.inline", fields }], featureEditorBindings())[0];
+    return (section?.fields || []).map(generatedPropertyField).filter(Boolean);
+  };
+
+  const renderFeatureSection = (section) => {
+    const rows = renderFeatureFields(section.fields);
+    for (const nested of section.sections || []) {
+      rows.push(disclosureSection(nested.label, renderFeatureFields(nested.fields), {
+        className: "bc-disclosure-nested",
+        sectionId: nested.id,
+        open: nested.open
+      }));
+    }
+    return disclosureSection(section.label, rows, { open: section.open, sectionId: section.id });
   };
 
   const editorRows = (feature) => {
-    const rows = [
-      readout("Feature", feature.id),
-      readout("Type", feature.type),
-      readout("Owner", feature.ownerId || "-"),
-      text("div", "editor-subtitle", "Feature"),
-      checkboxInput("Enabled", feature.operationEnabled !== false, (enabled) => updateFeature((featureId) => api.setFeatureOperationEnabled(featureId, enabled)))
-    ];
-    rows.push(...sourceEditor(feature));
-    if (feature.type === "boolean-part" || feature.body) rows.push(...bodyEditor(feature));
-    return rows;
+    return inspectorFeatureEditorSections(feature).map(renderFeatureSection);
   };
 
   function render() {

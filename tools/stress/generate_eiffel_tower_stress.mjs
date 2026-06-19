@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadConnectionDefinitions } from "../../bobercad/app/engine/modules/connections/connection-registry.mjs";
-import { createProjectStore } from "../../bobercad/app/engine/store/project-store.mjs";
+import { loadSmartComponentDefinitions } from "../../bobercad/app/engine/modules/smart-components/smart-component-registry.mjs";
+import { createProjectStore } from "../../bobercad/app/engine/store/project-command-store.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const OUTPUT = path.join(ROOT, "stress-output", "stress-eiffel-tower.json");
@@ -116,11 +116,13 @@ function emptyModel() {
     assemblies: {},
     members: {},
     plates: {},
+    sketches: {},
     holePatterns: {},
     objectPatterns: {},
     features: {},
     fastenerGroups: {},
     welds: {},
+    relations: {},
     connections: {},
     addonData: {}
   };
@@ -134,7 +136,7 @@ function patchLibraryPaths(project) {
   project.libraries.materials.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "materials", "material-libraries", "starter-materials", "config.json"));
   project.libraries.fasteners.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "fasteners", "fastener-libraries", "starter-fasteners", "config.json"));
   project.libraries.connections.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "connections", "connection-register.json"));
-  project.libraries.frames.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "model-library", "model-register.json"));
+  project.libraries.frames.path = rel(outputDir, path.join(ROOT, "bobercad", "data", "libraries", "frames", "frame-register.json"));
 }
 
 function smoothstep(t) {
@@ -665,7 +667,7 @@ async function main() {
   const template = readJson("bobercad", "data", "projects", "sample_connection_test_frame.json");
   const profiles = readJson("bobercad", "data", "libraries", "profiles", "profile-libraries", "starter-profiles", "config.json");
   const fasteners = readJson("bobercad", "data", "libraries", "fasteners", "fastener-libraries", "starter-fasteners", "config.json");
-  const connectionCatalog = await loadConnectionDefinitions();
+  const smartComponentCatalog = await loadSmartComponentDefinitions();
   const project = projectBase(template);
   addCoreRecords(project);
   addReferencePoints(project);
@@ -679,7 +681,7 @@ async function main() {
   project.model.groups.group_eiffel_tower.objectIds = Object.keys(project.model.members);
   project.model.assemblies.assembly_eiffel_tower.memberIds = Object.keys(project.model.members);
 
-  const store = createProjectStore({ project, profiles: profiles.profiles, connectionCatalog, fasteners });
+  const store = createProjectStore({ project, profiles: profiles.profiles, smartComponentCatalog, fasteners });
   const failures = [];
 
   for (let corner = 0; corner < CORNERS.length; corner += 1) {

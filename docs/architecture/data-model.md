@@ -4,7 +4,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 
 ## Files
 
-- `bobercad/data/projects/sample_structure.json` - sample beam-column connection project and model database.
+- `bobercad/data/projects/sample_seed_connection_structure.json` - sample beam-column connection project and model database.
 - `bobercad/data/projects/sample_portal_frame.json` - sample grid-based portal frame project and model database.
 - `bobercad/data/projects/sample_connection_test_frame.json` - clean four-column top-frame project for connection add/remove/change workflows.
 - `bobercad/data/projects/sample_beam_to_beam_fin_plate.json` - horizontal beam-to-beam fin plate connection sample with generated flange notches.
@@ -15,7 +15,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json` - material library.
 - `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json` - bolt, blind bolt, hook bolt, anchor, stud, nut, and washer catalog library.
 - `bobercad/data/libraries/smart-components/smart-component-register.json` - Smart Component authoring library for connections, stairs, frames, warehouses, and nested components.
-- `bobercad/data/libraries/model-library/model-register.json` - frame template authoring library.
+- `bobercad/data/libraries/frames/frame-register.json` - frame template authoring library.
 - `bobercad/app/ui/viewer/viewer-settings.json` - viewer-only camera, UI, control, and render settings.
 - `bobercad/app/schemas/project.schema.json` - schema for project files.
 - `bobercad/app/schemas/profile-library.schema.json` - schema for profile libraries.
@@ -23,7 +23,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - `bobercad/app/schemas/fastener-library.schema.json` - schema for fastener libraries.
 - `bobercad/app/schemas/smart-component.schema.json` - schema for reusable Smart Component definitions.
 - `bobercad/app/schemas/smart-component-register.schema.json` - schema for the Smart Component register.
-- `bobercad/app/schemas/model-library.schema.json` - schema for frame template libraries.
+- `bobercad/app/schemas/frame-library.schema.json` - schema for frame template libraries.
 - `bobercad/app/schemas/viewer-settings.schema.json` - schema for viewer settings.
 
 ## Non-Negotiable Model Rules
@@ -37,7 +37,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - Fasteners live in `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json`; fastener groups reference catalog entries with `"fastenerRef": "M16_8_8"` directly or through `modelDefaults`.
 - Smart Component presets live in `bobercad/data/libraries/smart-components/smart-component-register.json`; project instances store `sourceComponent`, `referenceParameters`, `objectRoles`, and owned object ids.
 - Connections are Smart Components with `kind: "connection"`. They use the same instance model and API as stairs, frames, warehouses, and nested components.
-- Frame templates live in `bobercad/data/libraries/model-library/model-register.json`; project groups/assemblies may keep `sourceTemplate` provenance, but stored project objects remain the source of truth.
+- Frame templates live in `bobercad/data/libraries/frames/frame-register.json`; project groups/assemblies may keep `sourceTemplate` provenance, but stored project objects remain the source of truth.
 - Hole and slot positions live in `model.holePatterns`; repeated object authoring lives in `model.objectPatterns`.
 - Notches and other generated trims should be stored as semantic `clearance-cut` / cut-feature intent. The viewer/exporter derives temporary cutter geometry from the referenced member region and per-surface offsets.
 - Repeated object values live in `modelDefaults`; objects only store fields that differ from those defaults.
@@ -58,7 +58,7 @@ Keep defaults semantic. They can store repeated project data such as material, p
 
 ## Member Geometry Convention
 
-Defined in `bobercad/data/projects/sample_structure.json/settings/modelingConvention`:
+Defined in `bobercad/data/projects/sample_seed_connection_structure.json/settings/modelingConvention`:
 
 - `memberLocalX`: start-to-end
 - `memberLocalY`: profile-section-y-width-axis

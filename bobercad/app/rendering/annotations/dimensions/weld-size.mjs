@@ -1,4 +1,4 @@
-import { EPSILON, dimensionText, finite, fmt, fullDimensionText, interfaceAxis, interfaceByRole, makeNote, paramValue, parameterLabel, plateBasis, plateSupportEdge, roleObject, v } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
+import { EPSILON, dimensionText, finite, fmt, fullDimensionText, interfaceAxis, interfaceByRole, makeNote, paramValue, parameterLabel, plateBasis, plateSupportEdge, roleObject, v } from "../dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
 
 export function weldSizeDimension(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);

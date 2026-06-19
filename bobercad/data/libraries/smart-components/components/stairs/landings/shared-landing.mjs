@@ -19,15 +19,6 @@ function cleanFootprint(footprint) {
   return points.length >= 3 ? points : null;
 }
 
-function footprintBounds(footprint) {
-  const ys = footprint.map((point) => point[0]);
-  const zs = footprint.map((point) => point[1]);
-  return {
-    width: Math.max(...ys) - Math.min(...ys),
-    length: Math.max(...zs) - Math.min(...zs)
-  };
-}
-
 function footprintPoint(frame, point) {
   return corner(frame, point[1], point[0]);
 }
@@ -43,6 +34,7 @@ function requiredInput(ctx, path, label) {
 
 function requiredPositiveInput(ctx, path, label) {
   const value = requiredInput(ctx, path, label);
+  if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
     ctx.error("stair-landing-input-invalid", `${label} must be a positive number.`, { parameterPaths: [path] });
     return undefined;
@@ -50,26 +42,31 @@ function requiredPositiveInput(ctx, path, label) {
   return value;
 }
 
+function requiredArrayInput(ctx, path, label) {
+  const value = requiredInput(ctx, path, label);
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) return value;
+  ctx.error("stair-landing-input-invalid", `${label} must be an array.`, { parameterPaths: [path] });
+  return undefined;
+}
+
 export function buildLandingSet(ctx, options = {}) {
-  const landings = requiredInput(ctx, "layout.landings", "Solved landing frames") || [];
+  const landings = requiredArrayInput(ctx, "layout.landings", "Solved landing frames");
   const thickness = requiredPositiveInput(ctx, "landings.thickness", "Landing thickness");
   const material = requiredInput(ctx, "landings.material", "Landing material");
   const profile = requiredInput(ctx, "landings.frameProfile", "Landing frame profile");
   const plateIds = [];
   const memberIds = [];
-  if (!Array.isArray(landings) || !thickness || !material || !profile) return;
+  if (!landings || !thickness || !material || !profile) return;
 
   for (const [index, landing] of landings.entries()) {
     const role = `landing${index + 1}`;
     ctx.generatedRole(role, `_landing_${index + 1}`);
     const footprint = cleanFootprint(landing.footprint);
-    const bounds = footprint ? footprintBounds(footprint) : null;
-    const plate = ctx.plate.create(role, {
+    const plate = ctx.part.plate(role, {
       type: "rectangular-plate",
       thickness,
-      width: footprint ? bounds.width : landing.width,
-      height: footprint ? bounds.length : landing.length,
-      outline: footprint || undefined,
+      ...(footprint ? { outline: footprint } : { width: landing.width, height: landing.length }),
       material,
       center: landing.origin,
       normal: [0, 0, 1],

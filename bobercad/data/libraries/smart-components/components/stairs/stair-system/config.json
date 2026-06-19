@@ -400,7 +400,7 @@
       "label": "Connection family",
       "values": [
         "none",
-        "standard-hardware"
+        "stair-hardware"
       ]
     },
     "connections.weldSize": {
@@ -813,7 +813,7 @@
           "railProfile": "DEMO_RHS_60X40X4"
         },
         "connections": {
-          "family": "standard-hardware",
+          "family": "stair-hardware",
           "weldSize": 6,
           "treadFastenerRef": "M12_8_8",
           "anchorFastenerRef": "M16_8_8",

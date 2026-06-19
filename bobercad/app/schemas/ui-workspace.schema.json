@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bobercad/app/schemas/ui-workspace.schema.json",
+  "title": "Bobercad UI Workspace Schema",
+  "description": "Schema for committed UI workspace presets. User overrides may be partial, but project JSON must never store this data.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "schemaVersion",
+    "theme",
+    "density",
+    "navigation",
+    "toolbars",
+    "bottomStrip",
+    "viewerSettingsStrip",
+    "viewerOverlays",
+    "panels"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema": {
+      "const": "bobercad-ui-workspace"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "theme": {
+      "enum": [
+        "light",
+        "dark",
+        "system"
+      ]
+    },
+    "density": {
+      "enum": [
+        "compact",
+        "normal",
+        "spacious"
+      ]
+    },
+    "navigation": {
+      "$ref": "#/$defs/navigation"
+    },
+    "toolbars": {
+      "type": "object",
+      "required": [
+        "modeling"
+      ],
+      "properties": {
+        "modeling": {
+          "$ref": "#/$defs/toolbar"
+        }
+      },
+      "additionalProperties": false
+    },
+    "bottomStrip": {
+      "$ref": "#/$defs/bottomStrip"
+    },
+    "viewerSettingsStrip": {
+      "$ref": "#/$defs/viewerSettingsStrip"
+    },
+    "viewerOverlays": {
+      "$ref": "#/$defs/viewerOverlays"
+    },
+    "panels": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/panel"
+      }
+    },
+    "sections": {
+      "type": "object",
+      "description": "Optional persisted open/closed state for inspector and editor disclosure sections.",
+      "propertyNames": {
+        "pattern": "^[a-z][A-Za-z0-9.-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/sectionState"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "toolbarDock": {
+      "enum": [
+        "top",
+        "left",
+        "right",
+        "bottom"
+      ]
+    },
+    "panelDock": {
+      "enum": [
+        "top",
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ]
+    },
+    "commandId": {
+      "type": "string",
+      "pattern": "^[a-z][A-Za-z0-9.-]*$"
+    },
+    "commandGroupId": {
+      "type": "string",
+      "pattern": "^[a-z][A-Za-z0-9.-]*$"
+    },
+    "navigation": {
+      "type": "object",
+      "properties": {
+        "featureNavbar": {
+          "$ref": "#/$defs/featureNavbarNavigation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "featureNavbarNavigation": {
+      "type": "object",
+      "required": [
+        "groupIds",
+        "hiddenGroupIds"
+      ],
+      "properties": {
+        "groupIds": {
+          "type": "array",
+          "description": "Ordered command groups shown by the top feature navbar.",
+          "items": {
+            "$ref": "#/$defs/commandGroupId"
+          },
+          "uniqueItems": true
+        },
+        "hiddenGroupIds": {
+          "type": "array",
+          "description": "Command groups hidden from the top feature navbar for this workspace.",
+          "items": {
+            "$ref": "#/$defs/commandGroupId"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "toolbar": {
+      "type": "object",
+      "required": [
+        "dock",
+        "commandIds",
+        "hiddenCommandIds",
+        "groupIds"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dock": {
+          "$ref": "#/$defs/toolbarDock"
+        },
+        "commandIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commandId"
+          },
+          "uniqueItems": true
+        },
+        "hiddenCommandIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commandId"
+          },
+          "uniqueItems": true
+        },
+        "groupIds": {
+          "type": "array",
+          "description": "Ordered toolbar command groups. Groups without current commands are ignored by the runtime until commands from that group are added.",
+          "items": {
+            "$ref": "#/$defs/commandGroupId"
+          },
+          "uniqueItems": true
+        },
+        "collapsedGroups": {
+          "type": "array",
+          "description": "Toolbar command groups hidden by default in this workspace preset.",
+          "items": {
+            "$ref": "#/$defs/commandGroupId"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "bottomStripItemId": {
+      "enum": [
+        "selection",
+        "scope",
+        "snap",
+        "relations",
+        "units"
+      ]
+    },
+    "viewerSettingsStripGroupId": {
+      "enum": [
+        "display",
+        "view",
+        "visibility"
+      ]
+    },
+    "bottomStrip": {
+      "type": "object",
+      "required": [
+        "itemIds",
+        "hiddenItemIds"
+      ],
+      "properties": {
+        "itemIds": {
+          "type": "array",
+          "description": "Ordered bottom interaction strip items.",
+          "items": {
+            "$ref": "#/$defs/bottomStripItemId"
+          },
+          "uniqueItems": true
+        },
+        "hiddenItemIds": {
+          "type": "array",
+          "description": "Bottom interaction strip items hidden in this workspace.",
+          "items": {
+            "$ref": "#/$defs/bottomStripItemId"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewerSettingsStrip": {
+      "type": "object",
+      "required": [
+        "groupIds",
+        "hiddenGroupIds"
+      ],
+      "properties": {
+        "groupIds": {
+          "type": "array",
+          "description": "Ordered control groups shown by the top viewer settings strip.",
+          "items": {
+            "$ref": "#/$defs/viewerSettingsStripGroupId"
+          },
+          "uniqueItems": true
+        },
+        "hiddenGroupIds": {
+          "type": "array",
+          "description": "Viewer settings strip groups hidden in this workspace.",
+          "items": {
+            "$ref": "#/$defs/viewerSettingsStripGroupId"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewerOverlayCorner": {
+      "enum": [
+        "bottom-right",
+        "bottom-left",
+        "top-right",
+        "top-left"
+      ]
+    },
+    "viewerOverlays": {
+      "type": "object",
+      "required": [
+        "navCube"
+      ],
+      "properties": {
+        "navCube": {
+          "$ref": "#/$defs/viewerOverlay"
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewerOverlay": {
+      "type": "object",
+      "required": [
+        "visible",
+        "corner"
+      ],
+      "properties": {
+        "visible": {
+          "type": "boolean",
+          "description": "Whether the viewer overlay control is visible in this workspace."
+        },
+        "corner": {
+          "$ref": "#/$defs/viewerOverlayCorner"
+        }
+      },
+      "additionalProperties": false
+    },
+    "panel": {
+      "type": "object",
+      "required": [
+        "dock",
+        "visible"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dock": {
+          "$ref": "#/$defs/panelDock"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "pinned": {
+          "type": "boolean",
+          "description": "Whether a side-docked panel stays open instead of collapsing to its edge reveal button."
+        },
+        "width": {
+          "type": "number",
+          "minimum": 180
+        },
+        "tabIds": {
+          "type": "array",
+          "description": "Ordered tab ids for tabbed workspace panels.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z0-9.-]*$"
+          },
+          "uniqueItems": true
+        },
+        "hiddenTabIds": {
+          "type": "array",
+          "description": "Tabbed panel tabs hidden in this workspace.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z0-9.-]*$"
+          },
+          "uniqueItems": true
+        },
+        "activeTab": {
+          "type": "string",
+          "description": "Active tab id for tabbed workspace panels.",
+          "pattern": "^[a-z][A-Za-z0-9.-]*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sectionState": {
+      "type": "object",
+      "required": [
+        "open"
+      ],
+      "properties": {
+        "open": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

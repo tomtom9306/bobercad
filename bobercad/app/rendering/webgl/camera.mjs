@@ -89,6 +89,13 @@ export function createCamera(settings) {
     return true;
   }
 
+  function setViewAngles({ yaw, pitch } = {}, scene, viewport, options = {}) {
+    if (finiteNumber(yaw)) state.yaw = wrapAngle(yaw);
+    if (finiteNumber(pitch)) state.pitch = wrapAngle(pitch);
+    if (options.fit !== false && scene && viewport) fit(scene, viewport);
+    return true;
+  }
+
   function orbit(dx, dy) {
     const controls = settings.controls;
     state.yaw = wrapAngle(state.yaw + dx * controls.orbitSpeed);
@@ -175,5 +182,12 @@ export function createCamera(settings) {
     return state.scale;
   }
 
-  return { clipPoint, fit, fitPoints, orbit, pan, projectPoint, reset, screenDeltaToWorld, screenRay, screenScale, setOrbitPivot, viewUniforms, zoomAt };
+  function viewAngles() {
+    return {
+      yaw: state.yaw,
+      pitch: state.pitch
+    };
+  }
+
+  return { clipPoint, fit, fitPoints, orbit, pan, projectPoint, reset, screenDeltaToWorld, screenRay, screenScale, setOrbitPivot, setViewAngles, viewAngles, viewUniforms, zoomAt };
 }

@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../../app/schemas/smart-component.schema.json",
+  "type": "stair-hardware",
+  "kind": "connection",
+  "title": "Stair Hardware",
+  "version": 1,
+  "interfaces": [
+    {
+      "role": "main",
+      "auto": {
+        "type": "planar-face",
+        "faceRef": "connection-secondary-facing-section-face",
+        "stationReference": "connection-secondary-interface-origin"
+      }
+    },
+    {
+      "role": "secondary",
+      "auto": {
+        "type": "member-end-face"
+      }
+    }
+  ],
+  "components": [],
+  "roles": {
+    "connectionPattern": "_connection_pattern",
+    "connectionAssembly": "_connection_assembly"
+  },
+  "parameters": {},
+  "presets": {
+    "stair-hardware": {
+      "id": "stair-hardware",
+      "version": "0.1.0",
+      "name": "Standard hardware",
+      "parameters": {
+        "meta": {
+          "family": "stair-hardware"
+        }
+      }
+    }
+  },
+  "ui": {
+    "tabs": [
+      {
+        "id": "connections",
+        "label": "Hardware",
+        "items": []
+      }
+    ]
+  }
+}

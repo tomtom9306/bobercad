@@ -1,5 +1,9 @@
-function projectedAxis(ctx, axis, normal, fallback) {
-  return ctx.geometry.projectedAxis(axis, normal) || ctx.geometry.projectedAxis(fallback, normal);
+import { enumValue, requiredBoolean, requiredFiniteNumber, requiredNonNegativeNumber, requiredPositiveInteger, requiredPositiveNumber, requiredString } from "../shared/validation.mjs";
+
+function requiredProjectedAxis(ctx, axis, normal, label) {
+  const projected = ctx.geometry.projectedAxis(axis, normal);
+  if (!projected) ctx.fail(`${label}: axis is parallel to plate normal`);
+  return projected;
 }
 
 export function build(ctx) {
@@ -14,7 +18,10 @@ export function build(ctx) {
     width: "plate.width",
     depth: "plate.depth"
   });
-  plate.offset = ctx.optionalParam("plate.offset", 0);
+  plate.thickness = requiredPositiveNumber(ctx, plate.thickness, "plate.thickness");
+  plate.width = requiredPositiveNumber(ctx, plate.width, "plate.width");
+  plate.depth = requiredPositiveNumber(ctx, plate.depth, "plate.depth");
+  plate.offset = requiredFiniteNumber(ctx, ctx.parameterValue("plate.offset"), "plate.offset");
 
   const anchors = ctx.params({
     fastenerRef: "anchors.fastenerRef",
@@ -27,6 +34,15 @@ export function build(ctx) {
     holeType: "holes.type",
     supportDepth: "holes.supportDepth"
   });
+  anchors.fastenerRef = requiredString(ctx, anchors.fastenerRef, "anchors.fastenerRef");
+  anchors.rows = requiredPositiveInteger(ctx, anchors.rows, "anchors.rows");
+  anchors.columns = requiredPositiveInteger(ctx, anchors.columns, "anchors.columns");
+  anchors.pitch = requiredNonNegativeNumber(ctx, anchors.pitch, "anchors.pitch");
+  anchors.gauge = requiredNonNegativeNumber(ctx, anchors.gauge, "anchors.gauge");
+  anchors.length = requiredPositiveNumber(ctx, anchors.length, "anchors.length");
+  anchors.holeDiameter = requiredPositiveNumber(ctx, anchors.holeDiameter, "holes.diameter");
+  anchors.holeType = enumValue(ctx, anchors.holeType, ["round", "slotted", "countersunk"], "holes.type");
+  anchors.supportDepth = requiredPositiveNumber(ctx, anchors.supportDepth, "holes.supportDepth");
   const v = ctx.geometry.v;
   const columnStation = columnInterface.memberEnd === "end" ? ctx.geometry.memberLength(column) : 0;
   const columnFrame = ctx.geometry.memberFrameAt(column, columnStation);
@@ -34,8 +50,7 @@ export function build(ctx) {
   let normal = v.norm(supportInterface.normal);
   if (v.dot(normal, columnDirection) < 0) normal = v.mul(normal, -1);
 
-  let localAxisY = projectedAxis(ctx, columnFrame.y, normal, supportInterface.localAxisY);
-  if (!localAxisY) localAxisY = projectedAxis(ctx, [1, 0, 0], normal, [0, 1, 0]);
+  let localAxisY = requiredProjectedAxis(ctx, columnFrame.y, normal, "base plate localAxisY");
   if (v.dot(localAxisY, columnFrame.y) < 0) localAxisY = v.mul(localAxisY, -1);
   const localAxisZ = v.norm(v.cross(normal, localAxisY));
   const center = v.add(supportInterface.origin, v.mul(normal, plate.thickness / 2 + plate.offset));
@@ -43,8 +58,7 @@ export function build(ctx) {
   const basePlate = ctx.part.plate("basePlate", {
     type: "rectangular-plate",
     thickness: plate.thickness,
-    width: plate.width,
-    height: plate.depth,
+    outline: ctx.geometry.rectangleOutline(plate.width, plate.depth),
     center,
     normal,
     localAxisY,
@@ -68,11 +82,11 @@ export function build(ctx) {
     holeDiameter: anchors.holeDiameter,
     holeType: anchors.holeType
   });
-  ctx.check.gridFitsPlate(anchorPattern, plate.width, plate.depth, {
+  ctx.check.gridFitsRectangularPlate(anchorPattern, plate.width, plate.depth, {
     code: "base-plate-anchor-grid-outside-plate",
     message: "Anchor holes do not fit inside the base plate.",
     objectRoles: ["basePlate", "anchorPattern", "plateHoles", "anchors"],
-    parameters: ["anchors.pitch", "anchors.gauge", "holes.diameter", "plate.width", "plate.depth"]
+    parameterPaths: ["anchors.pitch", "anchors.gauge", "holes.diameter", "plate.width", "plate.depth"]
   });
 
   const plateHoles = ctx.feature.holePattern("plateHoles", {
@@ -100,13 +114,14 @@ export function build(ctx) {
       length: anchors.length,
       gripLength: plate.thickness + anchors.supportDepth,
       washers: {
-        head: ctx.optionalParam("washers.head", true),
-        nut: ctx.optionalParam("washers.nut", true)
+        head: requiredBoolean(ctx, ctx.parameterValue("washers.head"), "washers.head"),
+        nut: requiredBoolean(ctx, ctx.parameterValue("washers.nut"), "washers.nut")
       }
     }
   });
 
   const weldSize = ctx.param("welds.column");
+  requiredNonNegativeNumber(ctx, weldSize, "welds.column");
   if (weldSize > 0) {
     ctx.weld.fillet("weld", {
       size: weldSize,
@@ -114,4 +129,5 @@ export function build(ctx) {
       reference: { kind: "member-end-profile", memberId: column.id, end: columnInterface.memberEnd }
     });
   }
+  return {};
 }

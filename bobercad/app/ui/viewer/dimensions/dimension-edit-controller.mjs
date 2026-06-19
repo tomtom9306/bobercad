@@ -1,6 +1,6 @@
 import { arrayValues, jsonClone as clone, truthyValues } from "../../../engine/core/model.mjs?v=array-values-dry-1";
 import { finiteNonNegativeInteger, finiteNumber, finitePositiveInteger } from "../../../engine/core/math.mjs?v=integer-number-dry-1";
-import { optionalPath, setPath } from "../../../engine/modules/smart-components/parameters.mjs?v=smart-config-array-values-dry-1";
+import { optionalPath, setPath } from "../../../engine/modules/smart-components/smart-component-parameters-and-definition.mjs?v=smart-config-array-values-dry-1";
 import { buildSmartComponentDimensions } from "../../../rendering/annotations/build-dimensions.mjs?v=unified-dimension-overlay-1";
 
 function writeParameter(parameters, definition, path, value) {

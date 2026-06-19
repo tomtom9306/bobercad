@@ -1,7 +1,6 @@
-import { arrayValues } from "../../core/model.mjs?v=smart-config-array-values-dry-1";
-import { defineSmartComponent } from "./parameters.mjs?v=smart-config-array-values-dry-1";
+import { defineSmartComponent } from "./smart-component-parameters-and-definition.mjs";
 import { buildSmartComponentRecipe } from "./smart-component-recipe.mjs";
-import { mountParameterSmartComponentUi } from "../../../../data/libraries/smart-components/smart-component-ui.mjs?v=unique-dry-1";
+import { mountParameterSmartComponentUi } from "../../../../data/libraries/smart-components/smart-component-parameter-ui.mjs";
 
 const definitions = new Map();
 const presets = new Map();
@@ -22,20 +21,45 @@ async function loadJson(url) {
   return response.json();
 }
 
-function moduleImportUrl(url) {
-  const next = new URL(url.href);
-  if (typeof globalThis.location !== "undefined") {
-    next.searchParams.set("v", Date.now().toString(36));
-  }
-  return next.href;
+function registryObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`smart component registry: ${label} must be an object`);
+  return value;
+}
+
+function registryString(value, label) {
+  if (typeof value !== "string" || !value.trim()) throw new Error(`smart component registry: ${label} must be a non-empty string`);
+  return value;
+}
+
+function registryArray(value, label) {
+  if (!Array.isArray(value)) throw new Error(`smart component registry: ${label} must be an array`);
+  return value;
+}
+
+function catalogPresets(catalog) {
+  return registryObject(registryObject(catalog, "catalog").smartComponents, "catalog.smartComponents");
+}
+
+function catalogDefinitions(catalog) {
+  return registryObject(registryObject(catalog, "catalog").definitions, "catalog.definitions");
+}
+
+function filterKind(options = {}) {
+  registryObject(options, "options");
+  if (options.kind === undefined) return null;
+  return registryString(options.kind, "options.kind");
 }
 
 function registerSmartComponentDefinition(definition) {
   if (definitions.has(definition.type)) throw new Error(`smart component registry: duplicate definition ${definition.type}`);
   definitions.set(definition.type, definition);
-  for (const preset of Object.values(definition.presets || {})) {
-    if (presets.has(preset.id)) throw new Error(`smart component registry: duplicate preset ${preset.id}`);
-    presets.set(preset.id, { ...preset, type: definition.type, kind: definition.kind });
+  const definitionPresets = Object.values(registryObject(definition.presets, `${definition.type}.presets`));
+  if (!definitionPresets.length) throw new Error(`smart component registry: ${definition.type}.presets must not be empty`);
+  for (const preset of definitionPresets) {
+    registryObject(preset, `${definition.type}.preset`);
+    const presetId = registryString(preset.id, `${definition.type}.preset.id`);
+    if (presets.has(presetId)) throw new Error(`smart component registry: duplicate preset ${presetId}`);
+    presets.set(presetId, { ...preset, type: definition.type, kind: definition.kind });
   }
 }
 
@@ -46,24 +70,16 @@ export function smartComponentCatalog() {
 export async function loadSmartComponentDefinitions() {
   if (loaded) return smartComponentCatalog();
 
-  const register = await loadJson(registerUrl);
-  if (typeof register.libraryUi !== "string") throw new Error("smart component register missing libraryUi");
-  libraryUi = await import(new URL(register.libraryUi, registerUrl).href);
-  const nextDefinitions = await Promise.all(arrayValues(register.components).map(async (componentPath) => {
-    if (typeof componentPath !== "string") throw new Error("smart component register entries must be folder paths");
+  const register = registryObject(await loadJson(registerUrl), "register");
+  libraryUi = await import(new URL(registryString(register.libraryUi, "register.libraryUi"), registerUrl).href);
+  const nextDefinitions = await Promise.all(registryArray(register.components, "register.components").map(async (componentPath) => {
+    registryString(componentPath, "register.components entry");
     const base = new URL(componentPath.endsWith("/") ? componentPath : `${componentPath}/`, registerUrl);
     const config = await loadJson(new URL("config.json", base));
     if (!config.kind) throw new Error(`${config.type}: missing kind`);
-    let build = Array.isArray(config.recipe) && config.recipe.length ? buildSmartComponentRecipe(config.recipe) : null;
-    if (!build) {
-      try {
-        const buildModule = await import(moduleImportUrl(new URL("build.mjs", base)));
-        build = buildModule.build || buildModule.default || build;
-      } catch (error) {
-        const message = String(error.message || "");
-        if (!message.includes("Cannot find module") && !message.includes("404") && !message.includes("Failed to fetch dynamically imported module")) throw error;
-      }
-    }
+    const build = Array.isArray(config.recipe) && config.recipe.length
+      ? buildSmartComponentRecipe(config.recipe)
+      : (await import(new URL("build.mjs", base).href)).build;
     if (typeof build !== "function") throw new Error(`${config.type}: missing recipe or build.mjs`);
     return defineSmartComponent({
       ...config,
@@ -77,25 +93,44 @@ export async function loadSmartComponentDefinitions() {
   return smartComponentCatalog();
 }
 
-export function smartComponentDefinition(catalog, instance) {
-  const preset = catalog.smartComponents?.[instance.sourceComponent?.id];
-  const type = preset?.type || instance.type;
-  const definition = definitions.get(type) || catalog.definitions?.[type];
-  if (!definition) throw new Error(`smart component registry: unsupported component type ${type}`);
+function sourceComponentId(instance) {
+  instance = registryObject(instance, "smart component instance");
+  const sourceComponent = registryObject(instance.sourceComponent, `${instance.id || "smart component"}.sourceComponent`);
+  return registryString(sourceComponent.id, `${instance.id || "smart component"}.sourceComponent.id`);
+}
+
+function definitionForPreset(catalogDefinitionMap, preset) {
+  const definition = catalogDefinitionMap[preset.type];
+  if (!definition) throw new Error(`smart component registry: unsupported component type ${preset.type}`);
   return definition;
 }
 
+export function smartComponentDefinition(catalog, instance) {
+  const presetId = sourceComponentId(instance);
+  const preset = catalogPresets(catalog)[presetId];
+  if (!preset) throw new Error(`smart component registry: preset not found: ${presetId}`);
+  return definitionForPreset(catalogDefinitions(catalog), preset);
+}
+
 export function supportedSmartComponents(project, catalog, options = {}) {
-  return Object.values(project.model.smartComponentInstances || {}).filter((instance) => {
-    const preset = catalog.smartComponents?.[instance.sourceComponent?.id];
-    const definition = definitions.get(preset?.type || instance.type) || catalog.definitions?.[preset?.type || instance.type];
-    if (!definition) return false;
-    return !options.kind || definition.kind === options.kind || instance.kind === options.kind;
+  const kind = filterKind(options);
+  const instances = registryObject(registryObject(project, "project").model, "project.model").smartComponentInstances;
+  const presetsById = catalogPresets(catalog);
+  const definitionMap = catalogDefinitions(catalog);
+  return Object.values(registryObject(instances, "project.model.smartComponentInstances")).filter((instance) => {
+    const presetId = sourceComponentId(instance);
+    const preset = presetsById[presetId];
+    if (!preset) throw new Error(`smart component registry: preset not found: ${presetId}`);
+    const definition = definitionForPreset(definitionMap, preset);
+    return !kind || definition.kind === kind;
   });
 }
 
 export function supportedSmartComponentPresets(catalog, options = {}) {
-  return Object.values(catalog.smartComponents || {}).filter((preset) => (
-    (definitions.has(preset.type) || catalog.definitions?.[preset.type]) && (!options.kind || preset.kind === options.kind)
-  ));
+  const kind = filterKind(options);
+  const definitionMap = catalogDefinitions(catalog);
+  return Object.values(catalogPresets(catalog)).filter((preset) => {
+    definitionForPreset(definitionMap, preset);
+    return !kind || preset.kind === kind;
+  });
 }

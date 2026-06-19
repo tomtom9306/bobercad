@@ -1,4 +1,4 @@
-import { createRulePack, runRulePack } from "../../../../../../../app/engine/api/model/compliance.mjs?v=final-array-values-dry-1";
+import { createRulePack, runRulePack } from "../../../../../../../app/engine/api/model/compliance.mjs";
 
 const LIMITS = {
   private: { riseMin: 150, riseMax: 220, goingMin: 220, goingMax: 300, pitchMax: 42 },
@@ -7,8 +7,24 @@ const LIMITS = {
   "assembly-gangway": { riseMin: 100, riseMax: 190, goingMin: 250, goingMax: 400, pitchMax: 35 }
 };
 
+function fail(message) {
+  throw new Error(`uk part k rule pack: ${message}`);
+}
+
+function requiredObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${label} must be an object`);
+  return value;
+}
+
+function requiredString(value, label) {
+  if (typeof value !== "string" || !value) fail(`${label} must be a non-empty string`);
+  return value;
+}
+
 function categoryLimits(category) {
-  return LIMITS[category] || LIMITS.utility;
+  const limits = LIMITS[requiredString(category, "category")];
+  if (!limits) fail(`unsupported category ${category}`);
+  return limits;
 }
 
 function rangeRule(id, label, measurementPath, min, max, parameterPath, clause, objectRoles = []) {
@@ -19,7 +35,7 @@ function rangeRule(id, label, measurementPath, min, max, parameterPath, clause, 
     measurementPath,
     min,
     max,
-    parameterPath,
+    parameterPaths: [parameterPath],
     objectRoles,
     clause,
     message: `${label} is outside the selected UK Part K guidance range.`,
@@ -36,25 +52,25 @@ function partKRulesForCategory(category) {
     rangeRule("uk-part-k-rise", "Rise", "rise", limits.riseMin, limits.riseMax, "geometry.maxStepHeight", "K1 1.3 Table 1.1", ["treadPattern"]),
     rangeRule("uk-part-k-going", "Going", "going", limits.goingMin, limits.goingMax, "geometry.going", "K1 1.3 Table 1.1", ["treadPattern"]),
     rangeRule("uk-part-k-step-formula", "2R + G", "twiceRisePlusGoing", 550, 700, "geometry.going", "K1 1.3 Table 1.1 note", ["treadPattern"]),
-    {
+    ...(typeof limits.pitchMax === "number" ? [{
       id: "uk-part-k-pitch",
       type: "number-range",
       severity: "error",
       measurementPath: "pitchDeg",
-      max: limits.pitchMax || 90,
-      parameterPath: "geometry.going",
+      max: limits.pitchMax,
+      parameterPaths: ["geometry.going"],
       objectRoles: ["treadPattern"],
       clause: category === "assembly-gangway" ? "K1 1.4(a)" : "K1 1.3 Table 1.1 note 1",
       message: "Pitch is above the selected UK Part K guidance maximum.",
-      resolve: [{ mode: "min", path: "geometry.going", value: Math.ceil(1 / Math.tan((limits.pitchMax || 42) * Math.PI / 180)) }]
-    },
+      resolve: [{ mode: "min", path: "geometry.going", value: Math.ceil(1 / Math.tan(limits.pitchMax * Math.PI / 180)) }]
+    }] : []),
     {
       id: "uk-part-k-headroom",
       type: "number-range",
       severity: "warning",
       measurementPath: "headroom",
       min: 2000,
-      parameterPath: "compliance.headroom",
+      parameterPaths: ["compliance.headroom"],
       objectRoles: ["treadPattern"],
       clause: "K1 Headroom for stairs",
       message: "Headroom should be reviewed against UK Part K guidance."
@@ -66,7 +82,7 @@ function partKRulesForCategory(category) {
       measurementPath: "handrailHeight",
       min: 900,
       max: 1100,
-      parameterPath: "railings.height",
+      parameterPaths: ["railings.height"],
       objectRoles: ["railing"],
       clause: "K1 Handrails for stairs",
       message: "Handrail height should be reviewed against UK Part K guidance."
@@ -74,7 +90,7 @@ function partKRulesForCategory(category) {
   ];
 }
 
-export function createUkPartKRulePack(category = "utility") {
+export function createUkPartKRulePack(category) {
   return createRulePack({
     id: "uk-part-k",
     title: "UK Part K stair checks",
@@ -91,10 +107,13 @@ export function createUkPartKRulePack(category = "utility") {
   });
 }
 
-export function runUkPartK(context = {}) {
-  const category = context.parameters?.compliance?.category || context.category || "utility";
+export function runUkPartK(context) {
+  requiredObject(context, "context");
+  const parameters = requiredObject(context.parameters, "context.parameters");
+  const compliance = requiredObject(parameters.compliance, "context.parameters.compliance");
+  const category = requiredString(compliance.category, "context.parameters.compliance.category");
   return runRulePack(createUkPartKRulePack(category), {
     ...context,
     componentKind: "stair-system"
-  });
+  }, {});
 }

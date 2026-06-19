@@ -5,6 +5,7 @@
   "description": "Schema for a Smart Component library register. The register is the app-visible list of component folders.",
   "type": "object",
   "required": [
+    "$schema",
     "libraryUi",
     "components"
   ],
@@ -14,13 +15,17 @@
     },
     "libraryUi": {
       "type": "string",
+      "minLength": 3,
       "pattern": "^\\./"
     },
     "components": {
       "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
       "items": {
         "type": "string",
-        "pattern": "^\\./"
+        "minLength": 4,
+        "pattern": "^\\./.+/$"
       }
     }
   },

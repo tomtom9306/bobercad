@@ -1,8 +1,8 @@
 import { isTextInput, matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs?v=truthy-values-dry-1";
-import { createMemberCreateController } from "./member-create-controller.mjs?v=unified-snap-manager-8";
-import { createPlateCreateController } from "./plate-create-controller.mjs?v=unified-snap-manager-8";
-import { createSketchCreateController } from "./sketch-create-controller.mjs?v=backspace-escape-dry-1";
-import { createWorkPlaneController } from "./work-plane-controller.mjs?v=backspace-escape-dry-1";
+import { createMemberCreateController } from "./member-create-controller.mjs?v=member-reference-snap-1-own-axis-restore-1";
+import { createPlateCreateController } from "./plate-create-controller.mjs?v=pointer-coalesce-2";
+import { createSketchCreateController } from "./sketch-create-controller.mjs?v=pointer-coalesce-1";
+import { createWorkPlaneController } from "./work-plane-controller.mjs?v=pointer-coalesce-1";
 import { createPlateBendController } from "./plate-bend-controller.mjs?v=plate-placement-vertex-dry-1";
 import { activeWorkPlane } from "../../engine/api/project/work-plane.mjs?v=finite-point-api-dry-1";
 
@@ -124,6 +124,9 @@ export function createCommandController({
 
   viewer.setCommandHandler({
     active: commandActive,
+    needsPointerHit() {
+      return activeCommand?.needsPointerHit?.() !== false;
+    },
     pointerMove(pointer) {
       return activeCommand?.pointerMove?.(pointer) || false;
     },

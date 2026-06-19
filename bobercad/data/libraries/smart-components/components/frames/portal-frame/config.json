@@ -41,6 +41,15 @@
       "id": "portal_frame_demo",
       "version": "0.1.0",
       "name": "Portal frame",
+      "inputs": {
+        "placement": {
+          "origin": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
       "parameters": {
         "geometry": {
           "span": 6000,
@@ -74,5 +83,6 @@
         ]
       }
     ]
-  }
+  },
+  "components": []
 }

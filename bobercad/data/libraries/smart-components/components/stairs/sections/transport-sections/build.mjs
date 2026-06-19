@@ -1,22 +1,50 @@
-import { uniqueTruthy as unique } from "../../../../../../../app/engine/core/model.mjs?v=unique-dry-1";
-import { createSection, estimateObjects, splitByMaxWeight, sectionSchedule } from "../../../../../../../app/engine/api/model/sectioning.mjs";
+import { flattenIds, uniqueTruthy as unique } from "../../../../../../../app/engine/core/model.mjs";
+import { createSection, estimateObjects, splitByMaxWeight, sectionSchedule } from "../../../../../../../app/engine/api/model/transport-sectioning.mjs";
 
-function flattenIds(value) {
-  if (!value) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap(flattenIds);
-  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
-  return [];
+const SECTION_STRATEGIES = new Set(["max-weight", "manual-stations", "landings"]);
+
+function sourceOwnedIds(ctx, instance, componentId) {
+  if (!Array.isArray(instance.ownedObjectIds)) {
+    ctx.error("transport-section-source-invalid", `${componentId}: ownedObjectIds must be an array.`, {
+      parameterPaths: ["sections.sourceComponentIds"]
+    });
+    return null;
+  }
+  if (!instance.objectRoles || typeof instance.objectRoles !== "object" || Array.isArray(instance.objectRoles)) {
+    ctx.error("transport-section-source-invalid", `${componentId}: objectRoles must be an object.`, {
+      parameterPaths: ["sections.sourceComponentIds"]
+    });
+    return null;
+  }
+  return unique([...instance.ownedObjectIds, ...flattenIds(instance.objectRoles)]);
 }
 
-function ownedIds(project, componentIds = []) {
-  return unique(componentIds.flatMap((id) => {
-    const instance = project.model?.smartComponentInstances?.[id];
-    return instance ? unique([...(instance.ownedObjectIds || []), ...flattenIds(instance.objectRoles || {})]) : [];
+function ownedIds(ctx, componentIds) {
+  let missing = false;
+  const ids = unique(componentIds.flatMap((id) => {
+    const instance = ctx.project.model.smartComponentInstances[id];
+    if (instance) {
+      const sourceIds = sourceOwnedIds(ctx, instance, id);
+      if (sourceIds) return sourceIds;
+      missing = true;
+      return [];
+    }
+    ctx.error("transport-section-source-missing", `Transport section source component not found: ${id}.`, {
+      parameterPaths: ["sections.sourceComponentIds"]
+    });
+    missing = true;
+    return [];
   })).filter((id) => {
-    const collection = project.objectIndex?.[id]?.collection;
-    return ["members", "plates", "fastenerGroups", "welds", "trimJoints"].includes(collection);
+    const collection = ctx.project.objectIndex?.[id]?.collection;
+    return collection === "members" || collection === "plates";
   });
+  if (!missing && !ids.length) {
+    ctx.error("transport-section-source-empty", "Transport section source components did not resolve to members or plates.", {
+      parameterPaths: ["sections.sourceComponentIds"]
+    });
+    return null;
+  }
+  return missing ? null : ids;
 }
 
 function requiredInput(ctx, path, label) {
@@ -28,35 +56,64 @@ function requiredInput(ctx, path, label) {
   return value;
 }
 
+function requiredArrayInput(ctx, path, label) {
+  const value = requiredInput(ctx, path, label);
+  if (value === undefined) return null;
+  if (Array.isArray(value)) return value;
+  ctx.error("transport-section-input-invalid", `${label} must be an array.`, { parameterPaths: [path] });
+  return null;
+}
+
+function requiredStringInput(ctx, path, label) {
+  const value = requiredInput(ctx, path, label);
+  if (value === undefined) return null;
+  if (typeof value === "string" && value) return value;
+  ctx.error("transport-section-input-invalid", `${label} must be a non-empty string.`, { parameterPaths: [path] });
+  return null;
+}
+
+function requiredNumberInput(ctx, path, label) {
+  const value = requiredInput(ctx, path, label);
+  if (value === undefined) return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  ctx.error("transport-section-input-invalid", `${label} must be a finite number.`, { parameterPaths: [path] });
+  return null;
+}
+
 function splitByCount(project, libraries, objectIds, sectionCount, idPrefix, metadata = {}) {
   const estimates = estimateObjects(project, libraries, objectIds);
-  const count = Math.max(1, Math.min(sectionCount, estimates.length || 1));
+  const count = Math.max(1, Math.min(sectionCount, estimates.length));
   const sections = [];
   for (let index = 0; index < count; index += 1) {
     const start = Math.floor(estimates.length * index / count);
     const end = Math.floor(estimates.length * (index + 1) / count);
     sections.push(createSection(`${idPrefix}_${index + 1}`, estimates.slice(start, end), metadata));
   }
-  return sections.filter((section) => section.objectIds.length);
+  return sections;
 }
 
 export function build(ctx) {
-  const sourceComponentIds = requiredInput(ctx, "sections.sourceComponentIds", "Source component ids") || [];
-  const objectIds = ownedIds(ctx.project, sourceComponentIds);
-  const strategy = requiredInput(ctx, "sections.strategy", "Sectioning strategy");
-  const maxWeightKg = requiredInput(ctx, "sections.maxWeightKg", "Maximum transport section weight");
-  const manualStations = requiredInput(ctx, "sections.manualStations", "Manual split stations") || [];
-  const splitFrames = ctx.input("sections.splitFrames") || [];
-  const libraries = { profiles: ctx.profiles };
+  const sourceComponentIds = requiredArrayInput(ctx, "sections.sourceComponentIds", "Source component ids");
+  const strategy = requiredStringInput(ctx, "sections.strategy", "Sectioning strategy");
+  const maxWeightKg = requiredNumberInput(ctx, "sections.maxWeightKg", "Maximum transport section weight");
+  const manualStations = requiredArrayInput(ctx, "sections.manualStations", "Manual split stations");
+  const splitFrames = requiredArrayInput(ctx, "sections.splitFrames", "Transport split frames");
+  if (!sourceComponentIds || !strategy || maxWeightKg === null || !manualStations || !splitFrames) return;
+  const objectIds = ownedIds(ctx, sourceComponentIds);
+  if (!objectIds) return;
+  if (!SECTION_STRATEGIES.has(strategy)) {
+    ctx.error("transport-section-strategy-invalid", `Unsupported transport section strategy: ${strategy}.`, {
+      parameterPaths: ["sections.strategy"]
+    });
+    return;
+  }
+  const libraries = { profiles: ctx.profiles, materials: ctx.materials };
   const idPrefix = `${ctx.instanceId}_transport_section`;
-  if (!Array.isArray(sourceComponentIds) || !strategy || typeof maxWeightKg !== "number" || !Array.isArray(manualStations)) return;
   const sections = strategy === "max-weight"
     ? splitByMaxWeight(ctx.project, libraries, objectIds, { maxWeightKg, idPrefix })
     : strategy === "manual-stations"
-      ? splitByCount(ctx.project, libraries, objectIds, (manualStations || []).length + 1, idPrefix, { strategy, manualStations })
-      : strategy === "landings"
-        ? splitByCount(ctx.project, libraries, objectIds, Math.max(2, sourceComponentIds.length - 1), idPrefix, { strategy })
-        : objectIds.length ? splitByCount(ctx.project, libraries, objectIds, 1, idPrefix, { strategy }) : [];
+      ? splitByCount(ctx.project, libraries, objectIds, manualStations.length + 1, idPrefix, { strategy, manualStations })
+      : splitByCount(ctx.project, libraries, objectIds, Math.max(2, sourceComponentIds.length - 1), idPrefix, { strategy });
   const schedule = sectionSchedule(sections);
   const assemblyIds = [];
 

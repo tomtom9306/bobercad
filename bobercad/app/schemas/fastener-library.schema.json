@@ -5,6 +5,7 @@
   "description": "Starter schema for bolt, blind bolt, hook bolt, anchor, stud, nut, and washer catalog data referenced by steel BIM project files.",
   "type": "object",
   "required": [
+    "$schema",
     "schema",
     "schemaVersion",
     "library",
@@ -13,13 +14,15 @@
   ],
   "properties": {
     "$schema": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "schema": {
       "const": "steel-fastener-library"
     },
     "schemaVersion": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
     "library": {
       "type": "object",
@@ -30,22 +33,27 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "units": {
       "type": "object",
@@ -54,19 +62,21 @@
       ],
       "properties": {
         "length": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "fasteners": {
       "type": "object",
+      "minProperties": 1,
       "additionalProperties": {
         "$ref": "#/$defs/fastener"
       }
     }
   },
-  "additionalProperties": true,
+  "additionalProperties": false,
   "$defs": {
     "fastener": {
       "type": "object",
@@ -79,19 +89,25 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "kind": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "standard": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "grade": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "lengths": {
           "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
           "items": {
             "type": "number",
             "exclusiveMinimum": 0
@@ -104,10 +120,11 @@
           ],
           "properties": {
             "diameter": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "hole": {
           "type": "object",
@@ -117,93 +134,142 @@
           ],
           "properties": {
             "defaultDiameter": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "shape": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "tolerances": {
               "type": "object",
               "properties": {
                 "tight": {
-                  "type": "number"
+                  "type": "number",
+                  "exclusiveMinimum": 0
                 },
                 "normal": {
-                  "type": "number"
+                  "type": "number",
+                  "exclusiveMinimum": 0
                 },
                 "loose": {
-                  "type": "number"
+                  "type": "number",
+                  "exclusiveMinimum": 0
                 }
               },
-              "additionalProperties": true
+              "additionalProperties": false
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "head": {
           "type": "object",
           "properties": {
             "kind": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "acrossFlats": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "height": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "nut": {
           "type": "object",
           "properties": {
             "kind": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "acrossFlats": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "height": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "washer": {
           "type": "object",
           "properties": {
             "outerDiameter": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "thickness": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "blindEnd": {
           "type": "object",
-          "additionalProperties": true
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requiresOrientation": {
+              "type": "boolean"
+            },
+            "clearanceEnvelope": {
+              "$ref": "#/$defs/clearanceEnvelope"
+            }
+          },
+          "additionalProperties": false
         },
         "hook": {
           "type": "object",
-          "additionalProperties": true
-        },
-        "anchor": {
-          "type": "object",
-          "additionalProperties": true
-        },
-        "orientation": {
-          "type": "object",
-          "additionalProperties": true
-        },
-        "clearanceEnvelope": {
-          "type": "object",
-          "additionalProperties": true
+          "properties": {
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "opening": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "requiresOrientation": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
+    },
+    "clearanceEnvelope": {
+      "type": "object",
+      "required": [
+        "width",
+        "height",
+        "length"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "length": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

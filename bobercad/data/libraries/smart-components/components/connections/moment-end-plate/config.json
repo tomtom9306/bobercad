@@ -4,7 +4,8 @@
   "version": 1,
   "recipe": [
     {
-      "operation": "member-end-plate"
+      "operation": "member-end-plate",
+      "inputs": {}
     }
   ],
   "interfaces": [
@@ -12,7 +13,8 @@
       "role": "main",
       "auto": {
         "type": "planar-face",
-        "faceRef": "connection-secondary-facing-section-face"
+        "faceRef": "connection-secondary-facing-section-face",
+        "stationReference": "connection-secondary-interface-origin"
       }
     },
     {

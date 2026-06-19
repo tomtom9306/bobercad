@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadConnectionDefinitions } from "../../bobercad/app/engine/modules/connections/connection-registry.mjs";
-import { createProjectStore } from "../../bobercad/app/engine/store/project-store.mjs";
+import { loadSmartComponentDefinitions } from "../../bobercad/app/engine/modules/smart-components/smart-component-registry.mjs";
+import { createProjectStore } from "../../bobercad/app/engine/store/project-command-store.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const OUTPUT = path.join(ROOT, "bobercad", "data", "projects", "sample_warehouse_12x24.json");
@@ -36,11 +36,13 @@ function emptyModel() {
     assemblies: {},
     members: {},
     plates: {},
+    sketches: {},
     holePatterns: {},
     objectPatterns: {},
     features: {},
     fastenerGroups: {},
     welds: {},
+    relations: {},
     connections: {},
     addonData: {}
   };
@@ -108,7 +110,7 @@ async function main() {
   const template = readJson("bobercad", "data", "projects", "sample_connection_test_frame.json");
   const profiles = readJson("bobercad", "data", "libraries", "profiles", "profile-libraries", "starter-profiles", "config.json");
   const fasteners = readJson("bobercad", "data", "libraries", "fasteners", "fastener-libraries", "starter-fasteners", "config.json");
-  const connectionCatalog = await loadConnectionDefinitions();
+  const smartComponentCatalog = await loadSmartComponentDefinitions();
   const project = clone(template);
 
   project.project = {
@@ -301,7 +303,7 @@ async function main() {
   project.model.groups.group_warehouse_12x24.objectIds = Object.keys(project.model.members);
   project.model.assemblies.assembly_warehouse_12x24.memberIds = Object.keys(project.model.members);
 
-  const store = createProjectStore({ project, profiles: profiles.profiles, connectionCatalog, fasteners });
+  const store = createProjectStore({ project, profiles: profiles.profiles, smartComponentCatalog, fasteners });
 
   for (const [indexY, item] of frame.entries()) {
     addConnection(store, "column_base_plate_m16_2x2", [item.foundationLeft, item.leftColumn], `base plate left frame ${indexY + 1}`);

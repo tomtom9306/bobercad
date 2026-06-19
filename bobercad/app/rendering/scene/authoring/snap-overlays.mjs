@@ -28,6 +28,16 @@ function isSnapAxisSource(source) {
   return source?.kind === "line" && v.isVec3(source.a) && v.isVec3(source.b) && v.len(v.sub(source.b, source.a)) > 1e-9;
 }
 
+function snapFacePoints(source) {
+  const points = source?.kind === "plane" ? source.points : source?.snapFacePoints;
+  const cleanPoints = arrayValues(points);
+  return cleanPoints.length >= 3 && cleanPoints.every(v.isVec3) ? cleanPoints : [];
+}
+
+function isSnapFaceSource(source) {
+  return snapFacePoints(source).length >= 3;
+}
+
 export function snapAxisSources(snap) {
   const sources = [];
   if (isSnapAxisSource(snap)) sources.push(snap);
@@ -89,6 +99,36 @@ export function snapAxisSourceLines(snap, settings = {}) {
   ));
 }
 
+export function snapFaceSources(snap) {
+  const sources = [];
+  if (isSnapFaceSource(snap)) sources.push(snap);
+  for (const source of arrayValues(snap?.sources)) {
+    if (isSnapFaceSource(source)) sources.push(source);
+  }
+  const seen = new Set();
+  return sources.filter((source) => {
+    const points = snapFacePoints(source);
+    const key = `${source.type || ""}:${source.objectId || ""}:${points.map((point) => point.join(",")).join("|")}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function snapFaceOverlays(snap, settings = {}) {
+  const color = settings.snapFaceColor || settings.snapColor || DEFAULT_SNAP_COLOR;
+  const opacity = settings.snapFaceOpacity ?? 0.22;
+  return snapFaceSources(snap).map((source) => ({
+    kind: "snap-face-active",
+    objectId: source.objectId,
+    sourceType: source.type,
+    points: snapFacePoints(source),
+    color,
+    opacity,
+    depthTest: true
+  }));
+}
+
 export function snapPointOverlay({
   snap = null,
   rawPoint = null,
@@ -109,9 +149,10 @@ export function snapPointOverlay({
   const point = snapPoint(snap);
   const snapColor = color || settings.snapColor || DEFAULT_SNAP_COLOR;
   const lines = includeAxisLines ? snapAxisSourceLines(snap, settings) : [];
+  const faces = snapFaceOverlays(snap, { ...settings, snapFaceColor: color || settings.snapFaceColor });
   const handles = [];
   const labels = [];
-  if (!point) return { lines, handles, labels };
+  if (!point) return { faces, lines, handles, labels };
   const linkStart = v.isVec3(sourcePoint) ? sourcePoint : rawPoint;
   if (includeLink && distinctPoints(linkStart, point)) {
     lines.push(line([linkStart, point], snapColor, { kind: linkKind, objectId }));
@@ -133,5 +174,5 @@ export function snapPointOverlay({
       ...(labelOffset ? { screenOffsetPx: labelOffset } : {})
     });
   }
-  return { lines, handles, labels };
+  return { faces, lines, handles, labels };
 }

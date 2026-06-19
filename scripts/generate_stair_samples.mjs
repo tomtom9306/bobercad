@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { loadSmartComponentDefinitions, smartComponentDefinition } from "../bobercad/app/engine/modules/smart-components/smart-component-registry.mjs";
-import { createProjectSmartComponentFromPreset, updateSmartComponent } from "../bobercad/app/engine/modules/smart-components/smart-component-generator.mjs";
-import { createProjectStore } from "../bobercad/app/engine/store/project-store.mjs";
+import { createProjectSmartComponentFromPreset, updateSmartComponent } from "../bobercad/app/engine/modules/smart-components/smart-component-runtime.mjs";
+import { createProjectStore } from "../bobercad/app/engine/store/project-command-store.mjs";
 
 const OUT_DIR = new URL("../bobercad/data/projects/", import.meta.url);
 const STAIR_PRESET_ID = "stair_system_straight_basic";
@@ -90,6 +90,7 @@ function emptyProject(base, variant) {
     "relations",
     "members",
     "plates",
+    "sketches",
     "holePatterns",
     "objectPatterns",
     "features",
@@ -100,7 +101,6 @@ function emptyProject(base, variant) {
   ]) {
     project.model[collection] = {};
   }
-  project.model.relations ||= {};
   project.model.addonData ||= {};
   return project;
 }
@@ -238,7 +238,7 @@ const variants = [
     }
   },
   {
-    file: "sample_stair_transport_split_weight.json",
+    file: "sample_stair_max_weight_transport_split.json",
     projectId: "project_stair_transport_split_weight",
     name: "Stair Transport Split Weight",
     description: "Stair-system sample with max-weight transport sectioning.",
@@ -249,7 +249,7 @@ const variants = [
     }
   },
   {
-    file: "sample_stair_manual_split.json",
+    file: "sample_stair_manual_station_split.json",
     projectId: "project_stair_manual_split",
     name: "Stair Manual Split",
     description: "Stair-system sample with manual station split points.",
@@ -282,7 +282,7 @@ function galleryPlacement(index) {
   ];
 }
 
-async function writeGalleryProject({ baseProject, catalog, profiles, fasteners, baseParameters }) {
+async function writeGalleryProject({ baseProject, catalog, profiles, fasteners, materials, baseParameters }) {
   const gallery = emptyProject(baseProject, {
     projectId: "project_stair_all_variants",
     name: "Stair System All Variants",
@@ -321,6 +321,7 @@ async function writeGalleryProject({ baseProject, catalog, profiles, fasteners, 
       definition,
       catalog,
       fasteners,
+      materials,
       instanceId: created.smartComponentId,
       parameters: variantParameters(baseParameters, variant)
     });
@@ -336,11 +337,12 @@ async function writeGalleryProject({ baseProject, catalog, profiles, fasteners, 
 }
 
 await withFileFetch(async () => {
-  const [catalog, baseProject, profilesLibrary, fasteners] = await Promise.all([
+  const [catalog, baseProject, profilesLibrary, fasteners, materials] = await Promise.all([
     loadSmartComponentDefinitions(),
-    fs.readFile(new URL("../bobercad/data/projects/sample_fin_plate.json", import.meta.url), "utf8").then(JSON.parse),
+    fs.readFile(new URL("../bobercad/data/projects/sample_beam_to_column_fin_plate.json", import.meta.url), "utf8").then(JSON.parse),
     fs.readFile(new URL("../bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json", import.meta.url), "utf8").then(JSON.parse),
-    fs.readFile(new URL("../bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json", import.meta.url), "utf8").then(JSON.parse)
+    fs.readFile(new URL("../bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json", import.meta.url), "utf8").then(JSON.parse),
+    fs.readFile(new URL("../bobercad/data/libraries/materials/material-libraries/starter-materials/config.json", import.meta.url), "utf8").then(JSON.parse)
   ]);
   const baseParameters = catalog.smartComponents[STAIR_PRESET_ID].parameters;
 
@@ -350,7 +352,8 @@ await withFileFetch(async () => {
       project,
       profiles: profilesLibrary.profiles,
       smartComponentCatalog: catalog,
-      fasteners
+      fasteners,
+      materials
     });
     const created = store.createSmartComponentFromPreset(STAIR_PRESET_ID, []);
     const parameters = variantParameters(baseParameters, variant);
@@ -366,6 +369,7 @@ await withFileFetch(async () => {
     catalog,
     profiles: profilesLibrary.profiles,
     fasteners,
+    materials,
     baseParameters
   });
 });

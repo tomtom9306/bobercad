@@ -1,8 +1,8 @@
 import { activeWorkPlane } from "../../engine/api/project/work-plane.mjs?v=plate-draw-feedback-4";
 import { finiteNumber, finitePositiveNumberOr, sameVec3, v } from "../../engine/core/math.mjs?v=same-vec3-dry-1";
 import { formatNumber } from "../../engine/core/format.mjs?v=format-number-dry-1";
-import { platePlacementFromThreePoints, sketchVertices } from "../../engine/api/project/plates.mjs?v=plate-construction-vertex-drag-1";
-import { plateCreationOverlay } from "../scene/authoring/member-overlays.mjs?v=unified-snap-manager-8";
+import { platePlacementFromThreePoints, sketchVertices } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs?v=plate-construction-vertex-drag-1";
+import { plateCreationOverlay } from "../scene/authoring/member-overlays.mjs?v=plate-face-snap-2";
 import { pointerPlanePoint } from "./pointer-plane-point.mjs?v=plate-draw-feedback-3";
 import { handleEscapeReset } from "./keyboard-shortcuts.mjs?v=escape-reset-dry-1";
 import { adaptiveSnapGridStep } from "./snap-profiles.mjs?v=unified-snap-manager-10";
@@ -24,6 +24,9 @@ export function createPlateCreateController({
   onStatusChange
 }) {
   const authoringSettings = settings?.authoring || {};
+  const requestPointerFrame = typeof requestAnimationFrame === "function"
+    ? requestAnimationFrame
+    : (callback) => setTimeout(callback, 0);
   const state = {
     active: false,
     points: [],
@@ -34,6 +37,8 @@ export function createPlateCreateController({
     lastPointer: null,
     axisLocked: DEFAULT_PLATE_CREATE_AXIS_LOCK
   };
+  let pendingPointer = null;
+  let pointerFramePending = false;
 
   function status(previewPoints = [], current = state.current) {
     if (!state.active) return "No modeling command";
@@ -331,6 +336,8 @@ export function createPlateCreateController({
 
   function reset() {
     state.active = false;
+    pendingPointer = null;
+    pointerFramePending = false;
     state.points = [];
     state.current = null;
     state.rawPoint = null;
@@ -346,6 +353,8 @@ export function createPlateCreateController({
 
   function start(initialPointer = null) {
     state.active = true;
+    pendingPointer = null;
+    pointerFramePending = false;
     state.points = [];
     state.current = null;
     state.rawPoint = null;
@@ -365,11 +374,20 @@ export function createPlateCreateController({
 
   function pointerMove(pointer) {
     if (!state.active) return false;
-    snapManager?.resetCycle?.();
-    const plane = state.plane || getWorkPlane?.() || activeWorkPlane(api.project(), {});
-    state.plane = plane;
-    setPointerState(pointer, plane);
-    renderOverlay();
+    pendingPointer = pointer;
+    if (pointerFramePending) return true;
+    pointerFramePending = true;
+    requestPointerFrame(() => {
+      pointerFramePending = false;
+      const nextPointer = pendingPointer;
+      pendingPointer = null;
+      if (!state.active || !nextPointer) return;
+      snapManager?.resetCycle?.();
+      const plane = state.plane || getWorkPlane?.() || activeWorkPlane(api.project(), {});
+      state.plane = plane;
+      setPointerState(nextPointer, plane);
+      renderOverlay();
+    });
     return true;
   }
 
@@ -385,6 +403,7 @@ export function createPlateCreateController({
 
   function pointerDown(pointer) {
     if (!state.active) return false;
+    pendingPointer = null;
     if (pointer?.handle?.kind === "plate-create-axis-lock-toggle") {
       state.axisLocked = !state.axisLocked;
       renderOverlay();
@@ -453,6 +472,7 @@ export function createPlateCreateController({
 
   return {
     active: () => state.active,
+    needsPointerHit: () => false,
     start,
     cancel,
     cycleSnap,

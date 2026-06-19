@@ -4,7 +4,6 @@ function bindingList(binding) {
   if (Array.isArray(binding)) return binding;
   return [binding];
 }
-
 function normalizedKey(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -77,15 +76,4 @@ export function handleBackspaceOrEscape(event, onBackspace, reset) {
 
 export function shortcutSetting(scope, key, fallback = "") {
   return Object.prototype.hasOwnProperty.call(scope || {}, key) ? scope[key] : fallback;
-}
-
-export function shortcutLabel(binding, fallback = "") {
-  const first = bindingList(binding).find((item) => typeof item === "string" && item.trim());
-  if (!first) return fallback;
-  return first.split("+").map((part) => {
-    const token = part.trim();
-    if (token.toLowerCase() === "escape") return "Esc";
-    if (token.toLowerCase() === "control") return "Ctrl";
-    return token;
-  }).join("+");
 }

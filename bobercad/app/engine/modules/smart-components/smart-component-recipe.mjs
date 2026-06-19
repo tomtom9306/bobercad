@@ -1,23 +1,26 @@
-function componentType(ref) {
-  if (typeof ref === "string") return ref;
-  return ref?.operation || ref?.component || ref?.type;
+function recipeStepOperation(ctx, step) {
+  if (!step || typeof step !== "object" || Array.isArray(step)) ctx.fail("smart component recipe step must be an object");
+  if (typeof step.operation !== "string" || !step.operation.trim()) ctx.fail("smart component recipe step missing operation");
+  return step.operation;
 }
 
-function recipeStepInput(ref) {
-  if (!ref || typeof ref === "string") return {};
-  return ref.input || ref.inputs || {};
+function recipeStepInputs(ctx, step) {
+  if (!step.inputs || typeof step.inputs !== "object" || Array.isArray(step.inputs)) ctx.fail(`${step.operation}: recipe step inputs must be an object`);
+  return step.inputs;
 }
 
-export function buildSmartComponentRecipe(recipe = []) {
+export function buildSmartComponentRecipe(recipe) {
+  if (!Array.isArray(recipe) || !recipe.length) throw new Error("smart component recipe must be a non-empty array");
   return (ctx) => {
     const recipeContext = {};
     for (const step of recipe) {
-      const type = componentType(step);
-      if (!type) ctx.fail("smart component recipe step missing operation");
-      const result = step?.kind === "child" || step?.child
-        ? ctx.component.create(step.role || type, { componentRef: type, ...recipeStepInput(step), recipeContext })
-        : ctx.operation(type, { ...recipeStepInput(step), recipeContext });
-      if (result && typeof result === "object") Object.assign(recipeContext, result);
+      const operation = recipeStepOperation(ctx, step);
+      const result = ctx.operation(operation, { ...recipeStepInputs(ctx, step), recipeContext });
+      if (!result || typeof result !== "object" || Array.isArray(result)) ctx.fail(`${operation}: recipe step result must be an object`);
+      for (const key of Object.keys(result)) {
+        if (Object.hasOwn(recipeContext, key)) ctx.fail(`${operation}: recipeContext.${key} already exists`);
+      }
+      Object.assign(recipeContext, result);
     }
   };
 }

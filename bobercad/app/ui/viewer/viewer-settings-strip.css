@@ -1,0 +1,303 @@
+.bc-toolbar-band {
+  gap: var(--bc-space-1);
+  padding: var(--bc-space-1);
+  border: 1px solid color-mix(in srgb, var(--bc-color-border) 64%, transparent);
+  border-radius: var(--bc-radius-3);
+  background: color-mix(in srgb, var(--bc-color-surface-solid) 74%, transparent);
+  box-shadow: var(--bc-shadow-toolbar-compact);
+  backdrop-filter: blur(12px);
+}
+
+.bc-viewer-settings-strip {
+  position: static;
+  z-index: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: var(--bc-space-1);
+  box-sizing: border-box;
+  min-height: var(--bc-control-tile-size);
+  max-width: min(640px, calc(100vw - 24px));
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--bc-color-text);
+  box-shadow: none;
+  font-family: var(--bc-font-family);
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  backdrop-filter: none;
+}
+
+.bc-toolbar-band #modeling-toolbar.bc-toolbar {
+  min-height: var(--bc-control-tile-size);
+  gap: var(--bc-space-1);
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.bc-toolbar-band #modeling-toolbar .bc-toolbar-group {
+  gap: var(--bc-space-1);
+}
+
+.bc-toolbar-band #modeling-toolbar .bc-toolbar-separator {
+  height: 18px;
+  margin: 0 var(--bc-space-1);
+  background: color-mix(in srgb, var(--bc-color-border) 58%, transparent);
+}
+
+.bc-toolbar-band #modeling-toolbar .bc-icon-button,
+.bc-toolbar-band #modeling-toolbar .bc-toolbar-overflow-summary {
+  width: var(--bc-control-tile-size);
+  height: var(--bc-control-tile-size);
+  border-radius: var(--bc-radius-2);
+}
+
+.bc-toolbar-band #modeling-toolbar .bc-icon-button .bc-icon,
+.bc-toolbar-band #modeling-toolbar .bc-toolbar-overflow-summary .bc-icon {
+  width: var(--bc-control-icon-size);
+  height: var(--bc-control-icon-size);
+}
+
+.bc-toolbar-band #modeling-toolbar .bc-shortcut-badge {
+  display: none;
+}
+
+.bc-viewer-overlay-action {
+  flex: 0 0 auto;
+  width: var(--bc-control-tile-size);
+  height: var(--bc-control-tile-size);
+  border: 1px solid transparent;
+  border-radius: var(--bc-radius-2);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.bc-viewer-overlay-action .bc-icon {
+  width: var(--bc-control-icon-size);
+  height: var(--bc-control-icon-size);
+}
+
+.bc-viewer-overlay-action:hover,
+.bc-viewer-overlay-action:focus-visible {
+  border-color: var(--bc-color-border-strong);
+  background: var(--bc-color-hover);
+  color: var(--bc-color-accent-strong);
+}
+
+.bc-viewer-settings-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.bc-viewer-settings-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bc-space-1);
+  min-width: max-content;
+}
+
+.bc-viewer-settings-group + .bc-viewer-settings-group {
+  margin-left: var(--bc-space-1);
+}
+
+.bc-viewer-settings-segment {
+  flex-wrap: nowrap;
+  gap: 1px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.bc-viewer-settings-button {
+  min-width: 0;
+  height: var(--bc-control-tile-size);
+  padding: 0 var(--bc-space-2);
+  border-color: transparent;
+  background: transparent;
+  color: var(--bc-color-text-subtle);
+  white-space: nowrap;
+}
+
+.bc-viewer-settings-button:hover,
+.bc-viewer-settings-button:focus-visible {
+  border-color: color-mix(in srgb, var(--bc-color-border-strong) 76%, transparent);
+}
+
+.bc-viewer-settings-button.active,
+.bc-viewer-settings-button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--bc-color-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--bc-color-active) 66%, transparent);
+  color: var(--bc-color-accent-strong);
+}
+
+.bc-viewer-settings-button .bc-icon {
+  width: var(--bc-control-icon-size);
+  height: var(--bc-control-icon-size);
+}
+
+.bc-viewer-settings-button .bc-segment-button-label {
+  font-size: var(--bc-font-size-11);
+}
+
+.bc-viewer-settings-group[data-settings-group="display"] .bc-viewer-settings-button {
+  width: var(--bc-control-tile-size);
+  padding: 0;
+}
+
+.bc-viewer-settings-group[data-settings-group="display"] .bc-segment-button-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.bc-viewer-settings-menu {
+  position: relative;
+  display: inline-flex;
+  min-width: max-content;
+}
+
+.bc-viewer-settings-menu-summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--bc-space-1);
+  box-sizing: border-box;
+  min-width: 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.bc-viewer-settings-menu-summary::-webkit-details-marker {
+  display: none;
+}
+
+.bc-viewer-settings-menu-summary .bc-icon {
+  flex: 0 0 auto;
+}
+
+.bc-viewer-settings-menu-chevron {
+  opacity: 0.68;
+  transition: transform 120ms ease;
+}
+
+.bc-viewer-settings-menu[open] .bc-viewer-settings-menu-summary {
+  border-color: color-mix(in srgb, var(--bc-color-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--bc-color-active) 66%, transparent);
+  color: var(--bc-color-accent-strong);
+}
+
+.bc-viewer-settings-menu[open] .bc-viewer-settings-menu-chevron {
+  transform: rotate(180deg);
+}
+
+.bc-viewer-settings-menu-popover {
+  position: absolute;
+  top: calc(100% + var(--bc-space-2));
+  right: 0;
+  z-index: calc(var(--bc-z-toolbar) + 1);
+  display: grid;
+  gap: var(--bc-space-1);
+  min-width: 176px;
+  box-sizing: border-box;
+  padding: var(--bc-space-1);
+  border: 1px solid color-mix(in srgb, var(--bc-color-border) 76%, transparent);
+  border-radius: var(--bc-radius-2);
+  background: color-mix(in srgb, var(--bc-color-surface-solid) 96%, transparent);
+  box-shadow: var(--bc-shadow-toolbar);
+  backdrop-filter: blur(12px);
+}
+
+.bc-viewer-settings-menu-option {
+  display: grid;
+  grid-template-columns: 16px 16px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--bc-space-2);
+  min-height: calc(var(--bc-control-tile-size) - 2px);
+  box-sizing: border-box;
+  padding: 0 var(--bc-space-2);
+  border-radius: var(--bc-radius-1);
+  color: var(--bc-color-text-muted);
+  font: var(--bc-font-weight-semibold) var(--bc-font-size-12) / 1 var(--bc-font-family);
+  cursor: pointer;
+  user-select: none;
+}
+
+.bc-viewer-settings-menu-option:hover,
+.bc-viewer-settings-menu-option:focus-within {
+  background: var(--bc-color-hover);
+  color: var(--bc-color-accent-strong);
+}
+
+.bc-viewer-settings-menu-option[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.52;
+}
+
+.bc-viewer-settings-menu-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--bc-color-accent);
+}
+
+.bc-viewer-settings-menu-option .bc-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.bc-viewer-settings-menu-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.snap-manager {
+  min-width: var(--bc-control-tile-size);
+  height: var(--bc-control-tile-size);
+  border-radius: var(--bc-radius-2);
+}
+
+.snap-manager-summary {
+  gap: var(--bc-space-1);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.snap-manager-summary .bc-icon {
+  width: var(--bc-control-icon-size);
+  height: var(--bc-control-icon-size);
+}
+
+.snap-manager-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.snap-manager-body {
+  top: calc(var(--bc-control-tile-size) + var(--bc-space-3));
+}
+
+@media (max-width: 760px) {
+  .bc-toolbar-band {
+    max-width: calc(100vw - 16px);
+  }
+
+  .bc-viewer-settings-strip {
+    max-width: calc(100vw - 16px);
+  }
+}

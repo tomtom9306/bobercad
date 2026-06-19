@@ -4,22 +4,28 @@
   "version": 1,
   "recipe": [
     {
-      "operation": "secondary-web-plate"
+      "operation": "secondary-web-plate",
+      "inputs": {}
     },
     {
-      "operation": "secondary-member-gap-trim"
+      "operation": "secondary-member-gap-trim",
+      "inputs": {}
     },
     {
-      "operation": "web-bolt-pattern"
+      "operation": "web-bolt-pattern",
+      "inputs": {}
     },
     {
-      "operation": "support-flange-clearance"
+      "operation": "support-flange-clearance",
+      "inputs": {}
     },
     {
-      "operation": "support-edge-fillet"
+      "operation": "support-edge-fillet",
+      "inputs": {}
     },
     {
-      "operation": "support-web-stiffeners"
+      "operation": "support-web-stiffeners",
+      "inputs": {}
     }
   ],
   "interfaces": [
@@ -27,7 +33,8 @@
       "role": "main",
       "auto": {
         "type": "planar-face",
-        "faceRef": "connection-secondary-facing-section-face"
+        "faceRef": "connection-secondary-facing-section-face",
+        "stationReference": "connection-secondary-interface-origin"
       }
     },
     {
@@ -102,6 +109,13 @@
           "back": 6,
           "top": 0,
           "bottom": 0
+        },
+        "stiffeners": {
+          "thickness": 10,
+          "leftNearAxisOffset": 55,
+          "leftFarAxisOffset": 55,
+          "rightNearAxisOffset": 55,
+          "rightFarAxisOffset": 55
         },
         "designAssumptions": {
           "standard": "EN 1993-1-8",

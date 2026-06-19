@@ -1,4 +1,4 @@
-import { solveStairSystem } from "./solver.mjs?v=path-radial-sweep-dry-1";
+import { solveStairSystem } from "./solver.mjs";
 
 function stairParameters(ctx) {
   const p = (path) => ctx.parameterValue(path);
@@ -143,15 +143,24 @@ function childRole(ctx, role, suffix = role) {
   return ctx.generatedRole(role, `_${suffix}`);
 }
 
-function emitDiagnostics(ctx, diagnostics = []) {
-  for (const diagnostic of diagnostics) {
+function childConnectionIds(ctx, role, connectionRole) {
+  const base = `${ctx.id(role)}_${connectionRole}`;
+  return {
+    interfaceIdPrefix: base,
+    zoneId: `${base}_zone`,
+    assemblyId: `${base}_assembly`
+  };
+}
+
+function emitDiagnostics(ctx, diagnostics) {
+  for (const diagnostic of requiredArray(ctx, diagnostics, "solution.diagnostics")) {
     if (!["error", "warning"].includes(diagnostic.severity)) continue;
     ctx.diagnostic(diagnostic.severity, diagnostic.code, diagnostic.message, {
       source: diagnostic.source,
       ruleId: diagnostic.ruleId,
       clause: diagnostic.clause,
       objectRoles: diagnostic.objectRoles,
-      parameterPaths: diagnostic.parameterPaths || diagnostic.parameters,
+      parameterPaths: diagnostic.parameterPaths,
       measured: diagnostic.measured,
       allowed: diagnostic.allowed,
       resolve: diagnostic.resolve
@@ -159,9 +168,14 @@ function emitDiagnostics(ctx, diagnostics = []) {
   }
 }
 
+function requiredArray(ctx, value, label) {
+  if (!Array.isArray(value)) ctx.fail(`${label} must be an array`);
+  return value;
+}
+
 function flightChildren(ctx, solution) {
   const childIds = [];
-  const flights = solution.computedValues.route.flights || [];
+  const flights = requiredArray(ctx, solution.computedValues.route.flights, "solution.computedValues.route.flights");
   for (const [index, flight] of flights.entries()) {
     const role = childRole(ctx, `flight${index + 1}`, `flight_${index + 1}`);
     const child = ctx.component.create(role, {
@@ -180,7 +194,7 @@ function componentRefForRailing(family) {
   return family;
 }
 
-function landingTreadFrames(landings = []) {
+function landingTreadFrames(landings) {
   return landings.map((landing, index) => ({
     ...landing,
     depth: landing.length,
@@ -207,6 +221,8 @@ export function build(ctx) {
   const solution = solveStairSystem(parameters, { placement });
   const computed = solution.computedValues;
   emitDiagnostics(ctx, solution.diagnostics);
+  const routeLandings = requiredArray(ctx, computed.route.landings, "solution.computedValues.route.landings");
+  const treadExclusionZones = requiredArray(ctx, computed.route.treadExclusionZones, "solution.computedValues.route.treadExclusionZones");
 
   const childIds = [];
   childIds.push(...flightChildren(ctx, solution));
@@ -240,21 +256,21 @@ export function build(ctx) {
       treads: parameters.treads,
       layout: {
         treads: computed.treads,
-        noTreadZones: computed.route.treadExclusionZones || []
+        noTreadZones: treadExclusionZones
       }
     },
     parameters: { meta: { parent: ctx.instanceId, family: parameters.treads.family } }
   });
   childIds.push(treads.id);
 
-  if (parameters.landings.family === "same-as-treads" && (computed.route.landings || []).length) {
+  if (parameters.landings.family === "same-as-treads" && routeLandings.length) {
     const landings = ctx.component.create(childRole(ctx, "landings"), {
       componentRef: parameters.treads.family,
       kind: "stair-landing",
       inputs: {
         geometry: { width: computed.width, rise: computed.rise },
         treads: parameters.treads,
-        layout: { treads: landingTreadFrames(computed.route.landings) }
+        layout: { treads: landingTreadFrames(routeLandings), noTreadZones: [] }
       },
       parameters: {
         meta: {
@@ -265,13 +281,13 @@ export function build(ctx) {
       }
     });
     childIds.push(landings.id);
-  } else if (parameters.landings.family !== "none" && (computed.route.landings || []).length) {
+  } else if (parameters.landings.family !== "none" && routeLandings.length) {
     const landings = ctx.component.create(childRole(ctx, "landings"), {
       componentRef: parameters.landings.family,
       kind: "stair-landing",
       inputs: {
         landings: parameters.landings,
-        layout: { landings: computed.route.landings }
+        layout: { landings: routeLandings }
       },
       parameters: { meta: { parent: ctx.instanceId, family: parameters.landings.family } }
     });
@@ -300,10 +316,13 @@ export function build(ctx) {
 
   let connections = null;
   if (support && parameters.connections.family !== "none") {
-    connections = ctx.component.create(childRole(ctx, "connections"), {
+    const role = childRole(ctx, "connections");
+    const ids = childConnectionIds(ctx, role, "standardHardware");
+    connections = ctx.component.create(role, {
       componentRef: parameters.connections.family,
       kind: "connection",
       inputs: {
+        assemblyId: ids.assemblyId,
         connections: parameters.connections,
         levels: {
           ffl1: computed.ffl1,
@@ -328,8 +347,9 @@ export function build(ctx) {
         }
       },
       connection: {
-        role: "standardHardware",
-        type: "standard-hardware-zone",
+        id: ids.zoneId,
+        interfaceIdPrefix: ids.interfaceIdPrefix,
+        type: "stair-hardware-zone",
         name: "Standard hardware connection zone",
         mainObjectId: support.id,
         secondaryObjectIds: [treads.id, railing?.id].filter(Boolean),
@@ -341,12 +361,21 @@ export function build(ctx) {
   }
 
   if (support && parameters.sections.strategy !== "none") {
-    const splitFrames = computed.sections?.splitFrames || [];
+    const splitFrames = computed.sections?.splitFrames;
+    if (!Array.isArray(splitFrames)) {
+      ctx.error("stair-system-section-output-invalid", "Solved transport split frames must be an array.", {
+        parameterPaths: ["sections.strategy"]
+      });
+      return;
+    }
     if (splitFrames.length) {
-      const sectionSplices = ctx.component.create(childRole(ctx, "sectionSplices", "section_splices"), {
+      const role = childRole(ctx, "sectionSplices", "section_splices");
+      const ids = childConnectionIds(ctx, role, "memberSplice");
+      const sectionSplices = ctx.component.create(role, {
         componentRef: "member-splice",
         kind: "connection",
         inputs: {
+          assemblyId: ids.assemblyId,
           connections: parameters.connections,
           components: {
             supportComponentId: support.id
@@ -357,7 +386,8 @@ export function build(ctx) {
           }
         },
         connection: {
-          role: "memberSplice",
+          id: ids.zoneId,
+          interfaceIdPrefix: ids.interfaceIdPrefix,
           type: "member-splice-zone",
           name: "Member splice connection zone",
           mainObjectId: support.id,
@@ -418,5 +448,5 @@ export function build(ctx) {
     finishedFloorRise: computed.finishedFloorRise,
     flightStepDistribution: computed.flightStepDistribution
   });
-  ctx.output("splitFrames", computed.sections?.splitFrames || []);
+  ctx.output("splitFrames", computed.sections.splitFrames);
 }

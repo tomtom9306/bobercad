@@ -84,7 +84,6 @@ function finitePositive(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) && number > EPSILON ? number : fallback;
 }
-
 function finiteNonNegative(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : fallback;
@@ -222,8 +221,4 @@ export function snapScalarToGrid(value, step) {
 export function snapSketchWorldTolerance(authoring = {}, key, fallback = 0, options = {}) {
   const profile = snapProfile(authoring, options);
   return finitePositive(profile.sketchWorldTolerance?.[key], fallback);
-}
-
-export function snapProfileDefaults() {
-  return JSON.parse(JSON.stringify(DEFAULT_PROFILES));
 }

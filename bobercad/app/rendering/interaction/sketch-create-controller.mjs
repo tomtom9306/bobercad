@@ -23,6 +23,9 @@ export function createSketchCreateController({
   onProjectChange,
   onStatusChange
 }) {
+  const requestPointerFrame = typeof requestAnimationFrame === "function"
+    ? requestAnimationFrame
+    : (callback) => setTimeout(callback, 0);
   const state = {
     active: false,
     points: [],
@@ -30,6 +33,8 @@ export function createSketchCreateController({
     lastPointer: null,
     previewSnap: null
   };
+  let pendingPointer = null;
+  let pointerFramePending = false;
 
   function status() {
     const snap = state.previewSnap?.label ? ` | ${state.previewSnap.label}` : "";
@@ -38,6 +43,8 @@ export function createSketchCreateController({
 
   function reset() {
     state.active = false;
+    pendingPointer = null;
+    pointerFramePending = false;
     state.points = [];
     state.plane = null;
     state.lastPointer = null;
@@ -48,6 +55,8 @@ export function createSketchCreateController({
 
   function start() {
     state.active = true;
+    pendingPointer = null;
+    pointerFramePending = false;
     state.points = [];
     state.plane = getWorkPlane?.() || activeWorkPlane(api.project(), {});
     state.lastPointer = viewer.currentPointer?.() || null;
@@ -120,16 +129,26 @@ export function createSketchCreateController({
 
   function pointerMove(pointer) {
     if (!state.active) return false;
-    snapManager?.resetCycle?.();
-    state.lastPointer = pointer;
-    const result = resolvedPointer(pointer);
-    state.previewSnap = result.snap;
-    onStatusChange?.(status());
+    pendingPointer = pointer;
+    if (pointerFramePending) return true;
+    pointerFramePending = true;
+    requestPointerFrame(() => {
+      pointerFramePending = false;
+      const nextPointer = pendingPointer;
+      pendingPointer = null;
+      if (!state.active || !nextPointer) return;
+      snapManager?.resetCycle?.();
+      state.lastPointer = nextPointer;
+      const result = resolvedPointer(nextPointer);
+      state.previewSnap = result.snap;
+      onStatusChange?.(status());
+    });
     return true;
   }
 
   function pointerDown(pointer) {
     if (!state.active) return false;
+    pendingPointer = null;
     state.lastPointer = pointer;
     const result = resolvedPointer(pointer);
     if (!v.isVec3(result.point)) {
@@ -164,6 +183,7 @@ export function createSketchCreateController({
 
   return {
     active: () => state.active,
+    needsPointerHit: () => false,
     start,
     cancel: reset,
     cycleSnap,

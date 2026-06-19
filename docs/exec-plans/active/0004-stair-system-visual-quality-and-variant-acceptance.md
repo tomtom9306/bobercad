@@ -64,7 +64,7 @@ Wariant schodow przechodzi tylko wtedy, gdy wszystkie ponizsze obszary sa popraw
 - Polaczenia i mocowania
   - floor base plates sa przy dolnym koncu i maja anchor bolts
   - top slab / floor connection jest przy gornym koncu i ma realne plyty oraz anchor bolts
-  - standard-hardware ma bearing cleats/brackets lub inne wybrane mocowanie tread-to-support
+  - stair-hardware ma bearing cleats/brackets lub inne wybrane mocowanie tread-to-support
   - post base plates sa przy kazdym slupku, nie tylko przy czesci slupkow
   - transport split ma splice plates/flanges i sruby w miejscach splitu
   - bolt groups trafiaja w holePatterns i host plates
@@ -100,8 +100,8 @@ Kazdy wariant z tej listy musi miec automatyczne checki, screenshoty i recenzje 
 | `stair-system-mono-stringer` | `sample_stair_mono_stringer.json` | mono stringer, wall handrail, brak bocznych twin stringerow |
 | `stair-system-grating-treads` | `sample_stair_grating_treads.json` | grating tread family i poprawne mocowania gratingu |
 | `stair-system-glass-rail` | `sample_stair_glass_rail.json` | glass railing, panele bez luk i bez kolizji ze stopniami |
-| `stair-system-split-weight` | `sample_stair_transport_split_weight.json` | sekcje po wadze, splice hardware na splitach |
-| `stair-system-manual-split` | `sample_stair_manual_split.json` | reczne split stations i logiczne polaczenia montazowe |
+| `stair-system-split-weight` | `sample_stair_max_weight_transport_split.json` | sekcje po wadze, splice hardware na splitach |
+| `stair-system-manual-split` | `sample_stair_manual_station_split.json` | reczne split stations i logiczne polaczenia montazowe |
 | `stair-system-compliance-failures` | `sample_stair_compliance_failures.json` | geometria nadal czytelna, ale diagnostics pokazuja oczekiwane bledy Part K |
 
 Po tych wariantach dodac macierz kombinacji rodzin:
@@ -131,7 +131,7 @@ Te punkty wynikaja z przegladu obecnych plikow `scripts/generate_stair_samples.m
 - Obecne sample maja ryzyko `interfaces:0` i `connectionZones:0`; dla polaczen trzeba zapisac realne interfaces/zones albo jawnie uzasadnic inny generyczny model.
 - Parametr `weldSize` nie wystarcza; jezeli wariant ma weldy, musza powstac normalne weld objects.
 - Fastenery i otwory musza sprawdzac zgodnosc przez wszystkie uczestniczace obiekty, nie tylko jedna host plate.
-- Stare stair-only connection families sa usuniete. `standard-hardware` i `member-splice` potrzebuja osobnych sample i osobnej oceny wizualnej jako generyczne connection components.
+- Stare stair-only connection families sa usuniete. `stair-hardware` i `member-splice` potrzebuja osobnych sample i osobnej oceny wizualnej jako generyczne connection components.
 - Stringer splice nie moze konczyc sie na plytach bez srub/otworow.
 - `manualStations` nie moze tylko zwiekszac liczby sekcji; musi faktycznie ciac po stacjach i tworzyc hardware splitu.
 - `sections.strategy = landings` nie moze byc tylko count-based; split musi byc przestrzennie powiazany z landingami.
@@ -139,7 +139,7 @@ Te punkty wynikaja z przegladu obecnych plikow `scripts/generate_stair_samples.m
 - Masa sekcji musi uwzgledniac members, plates, fasteners i material library, a nie tylko default steel plates.
 - Viewer QA musi robic screenshoty/pixel checks wszystkich wariantow schodow, nie tylko generic geometry check.
 - Sample generation musi uruchamiac per-file schema validation i expected counts/diagnostics dla kazdego `sample_stair_*.json`.
-- Base project nie moze niesc przypadkowych ustawien z `sample_fin_plate.json`; trzeba sprawdzic `modelDefaults`, reference metadata i odziedziczone migration notes.
+- Base project nie moze niesc przypadkowych ustawien z `sample_beam_to_column_fin_plate.json`; trzeba sprawdzic `modelDefaults`, reference metadata i odziedziczone migration notes.
 
 ## Artefakty QA
 
@@ -283,7 +283,7 @@ Jezeli jeden wariant nie przejdzie, goal nadal trwa.
 
 ### 2. Zrobic narzedzie QA do widokow
 
-- Dodac skrypt, na przyklad `scripts/qa_stair_variants.mjs`.
+- Dodac skrypt, na przyklad `tools/qa/qa_stair_variants.mjs`.
 - Skrypt ma iterowac po demo ids z macierzy.
 - Skrypt ma otwierac viewer URL `bobercad/app/ui/viewer/index.html?demo=<demo-id>&run=<run-id>`.
 - Skrypt ma czekac, az tytul, meta i canvas sa gotowe.
@@ -477,7 +477,7 @@ Jezeli jeden wariant nie przejdzie, goal nadal trwa.
 ### 11. Naprawic polaczenia
 
 - Uzywac generycznych connection components:
-  - `standard-hardware` dla tread/support fixings, floor/top fixings, post bases, wall brackets i spiral column brackets
+  - `stair-hardware` dla tread/support fixings, floor/top fixings, post bases, wall brackets i spiral column brackets
   - `member-splice` dla transport split hardware
 - Kazdy connection component ma dostac input:
   - host object ids

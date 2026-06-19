@@ -1,0 +1,36 @@
+:root[data-bc-theme="dark"] {
+  color-scheme: dark;
+
+  --bc-color-canvas: #111315;
+  --bc-color-surface: rgba(34, 37, 39, 0.96);
+  --bc-color-surface-solid: #222527;
+  --bc-color-surface-raised: rgba(42, 45, 47, 0.96);
+  --bc-color-field: #181a1d;
+  --bc-color-text: #eef2f3;
+  --bc-color-text-muted: #a9b3b7;
+  --bc-color-text-subtle: #829096;
+  --bc-color-border: #4b5558;
+  --bc-color-border-strong: #697477;
+  --bc-color-hover: #30383a;
+  --bc-color-active: #1d454c;
+  --bc-color-accent: #4fb3c1;
+  --bc-color-accent-strong: #76d2de;
+  --bc-color-focus: rgba(79, 179, 193, 0.38);
+  --bc-color-danger: #f87171;
+  --bc-color-warning: #fbbf24;
+  --bc-color-success: #4ade80;
+  --bc-color-disabled: #6f7b7f;
+
+  --bc-color-axis-x: #fb7185;
+  --bc-color-axis-y: #4ade80;
+  --bc-color-axis-z: #60a5fa;
+  --bc-color-snap: #38bdf8;
+  --bc-color-guide: #9aa6aa;
+  --bc-color-preview: #76d2de;
+
+  --bc-shadow-toolbar: 0 12px 28px rgba(0, 0, 0, 0.34);
+  --bc-shadow-toolbar-compact: 0 1px 2px rgba(0, 0, 0, 0.34);
+  --bc-shadow-dock-reveal: 0 8px 18px rgba(0, 0, 0, 0.42);
+  --bc-shadow-panel: 0 16px 36px rgba(0, 0, 0, 0.38);
+  --bc-shadow-popover: 0 18px 44px rgba(0, 0, 0, 0.42);
+}

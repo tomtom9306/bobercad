@@ -1,0 +1,49 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bc-color-canvas);
+  color: var(--bc-color-text);
+  font-family: var(--bc-font-family);
+}
+
+#view {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  overscroll-behavior: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+#view:active {
+  cursor: grabbing;
+}
+
+#view.dimension-hover {
+  cursor: text;
+}
+
+#view.authoring-hover {
+  cursor: pointer;
+}
+
+#modeling-toolbar {
+  position: static;
+  left: auto;
+  top: auto;
+  z-index: auto;
+  max-width: 100%;
+  overflow: visible;
+  transform: none;
+  scrollbar-width: thin;
+}
+
+#modeling-toolbar .bc-toolbar-group {
+  flex: 0 0 auto;
+}

@@ -81,7 +81,7 @@
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
-      "path": "../libraries/model-library/model-register.json"
+      "path": "../libraries/frames/frame-register.json"
     },
     "smartComponents": {
       "libraryId": "starter-smart-component-library",
@@ -116,61 +116,6 @@
       }
     }
   },
-  "gridSystems": {
-    "main_grid": {
-      "id": "main_grid",
-      "name": "Main Grid",
-      "origin": [
-        0,
-        0,
-        0
-      ],
-      "rotation": 0,
-      "axes": {
-        "x": [
-          {
-            "id": "grid_1",
-            "label": "1",
-            "position": 0
-          },
-          {
-            "id": "grid_2",
-            "label": "2",
-            "position": 6000
-          }
-        ],
-        "y": [
-          {
-            "id": "grid_a",
-            "label": "A",
-            "position": 0
-          },
-          {
-            "id": "grid_b",
-            "label": "B",
-            "position": 5000
-          }
-        ]
-      }
-    }
-  },
-  "levels": {
-    "level_base": {
-      "id": "level_base",
-      "name": "Base",
-      "elevation": 0
-    },
-    "level_connection": {
-      "id": "level_connection",
-      "name": "Connection Level",
-      "elevation": 1500
-    },
-    "level_top": {
-      "id": "level_top",
-      "name": "Top",
-      "elevation": 3000
-    }
-  },
   "phases": {
     "phase_1": {
       "id": "phase_1",
@@ -198,7 +143,7 @@
     },
     "sc_stair_system_connections_standardHardware_zone": {
       "collection": "connectionZones",
-      "type": "standard-hardware-zone"
+      "type": "stair-hardware-zone"
     },
     "sc_stair_system_connections_standardHardware_assembly": {
       "collection": "assemblies",
@@ -786,7 +731,7 @@
     },
     "sc_stair_system_connections": {
       "collection": "smartComponentInstances",
-      "type": "standard-hardware"
+      "type": "stair-hardware"
     },
     "sc_stair_system_connections_standardHardware_main_interface_2": {
       "collection": "interfaces",
@@ -798,7 +743,7 @@
     },
     "sc_stair_system_connections_standardHardware_zone_2": {
       "collection": "connectionZones",
-      "type": "standard-hardware-zone"
+      "type": "stair-hardware-zone"
     },
     "sc_stair_system_connections_standardHardware_assembly_2": {
       "collection": "assemblies",
@@ -854,11 +799,27 @@
     },
     "sc_stair_system_connections_standardHardware_zone_3": {
       "collection": "connectionZones",
-      "type": "standard-hardware-zone"
+      "type": "stair-hardware-zone"
     },
     "sc_stair_system_connections_standardHardware_assembly_3": {
       "collection": "assemblies",
       "type": "connection-assembly"
+    },
+    "main_grid": {
+      "collection": "gridSystems",
+      "type": "orthogonal-grid-system"
+    },
+    "level_base": {
+      "collection": "levels",
+      "type": "datum-level"
+    },
+    "level_connection": {
+      "collection": "levels",
+      "type": "datum-level"
+    },
+    "level_top": {
+      "collection": "levels",
+      "type": "datum-level"
     }
   },
   "modelDefaults": {
@@ -1031,7 +992,7 @@
           0,
           0
         ],
-        "notes": "standard-hardware nested connection interface",
+        "notes": "stair-hardware nested connection interface",
         "authoring": {
           "source": "smart-component-api",
           "lifecycle": "delete-with-smart-component",
@@ -1050,7 +1011,7 @@
           0,
           0
         ],
-        "notes": "standard-hardware nested connection interface",
+        "notes": "stair-hardware nested connection interface",
         "authoring": {
           "source": "smart-component-api",
           "lifecycle": "delete-with-smart-component",
@@ -1069,7 +1030,7 @@
           0,
           0
         ],
-        "notes": "standard-hardware nested connection interface",
+        "notes": "stair-hardware nested connection interface",
         "authoring": {
           "source": "smart-component-api",
           "lifecycle": "delete-with-smart-component",
@@ -1088,7 +1049,7 @@
           0,
           0
         ],
-        "notes": "standard-hardware nested connection interface",
+        "notes": "stair-hardware nested connection interface",
         "authoring": {
           "source": "smart-component-api",
           "lifecycle": "delete-with-smart-component",
@@ -1107,7 +1068,7 @@
           0,
           0
         ],
-        "notes": "standard-hardware nested connection interface",
+        "notes": "stair-hardware nested connection interface",
         "authoring": {
           "source": "smart-component-api",
           "lifecycle": "delete-with-smart-component",
@@ -1126,7 +1087,7 @@
           0,
           0
         ],
-        "notes": "standard-hardware nested connection interface",
+        "notes": "stair-hardware nested connection interface",
         "authoring": {
           "source": "smart-component-api",
           "lifecycle": "delete-with-smart-component",
@@ -1139,7 +1100,7 @@
     "connectionZones": {
       "sc_stair_system_connections_standardHardware_zone": {
         "id": "sc_stair_system_connections_standardHardware_zone",
-        "type": "standard-hardware-zone",
+        "type": "stair-hardware-zone",
         "name": "Standard hardware connection zone",
         "mainObjectId": "sc_stair_system_support",
         "secondaryObjectIds": [
@@ -1278,7 +1239,7 @@
       },
       "sc_stair_system_connections_standardHardware_zone_2": {
         "id": "sc_stair_system_connections_standardHardware_zone_2",
-        "type": "standard-hardware-zone",
+        "type": "stair-hardware-zone",
         "name": "Standard hardware connection zone",
         "mainObjectId": "sc_stair_system_support",
         "secondaryObjectIds": [
@@ -1417,7 +1378,7 @@
       },
       "sc_stair_system_connections_standardHardware_zone_3": {
         "id": "sc_stair_system_connections_standardHardware_zone_3",
-        "type": "standard-hardware-zone",
+        "type": "stair-hardware-zone",
         "name": "Standard hardware connection zone",
         "mainObjectId": "sc_stair_system_support",
         "secondaryObjectIds": [
@@ -1886,6 +1847,18 @@
           "stationStart": 0,
           "stationEnd": 2240,
           "flightId": "flight_1"
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            -450,
+            0
+          ],
+          "end": [
+            2240,
+            -450,
+            1440
+          ]
         }
       },
       "sc_stair_system_support_rightStringer1": {
@@ -1932,6 +1905,18 @@
           "stationStart": 0,
           "stationEnd": 2240,
           "flightId": "flight_1"
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            450,
+            0
+          ],
+          "end": [
+            2240,
+            450,
+            1440
+          ]
         }
       },
       "sc_stair_system_railing_left_post_1": {
@@ -1977,6 +1962,18 @@
           "side": "left",
           "station": 0,
           "topReference": "handrail-axis"
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            -380,
+            0
+          ],
+          "end": [
+            0,
+            -380,
+            1000
+          ]
         }
       },
       "sc_stair_system_railing_left_post_2": {
@@ -2022,6 +2019,18 @@
           "side": "left",
           "station": 1120,
           "topReference": "handrail-axis"
+        },
+        "layoutAxis": {
+          "start": [
+            1120,
+            -380,
+            720
+          ],
+          "end": [
+            1120,
+            -380,
+            1720
+          ]
         }
       },
       "sc_stair_system_railing_left_post_3": {
@@ -2067,6 +2076,18 @@
           "side": "left",
           "station": 2240,
           "topReference": "handrail-axis"
+        },
+        "layoutAxis": {
+          "start": [
+            2240,
+            -380,
+            1440
+          ],
+          "end": [
+            2240,
+            -380,
+            2440
+          ]
         }
       },
       "sc_stair_system_railing_left_handrail_1": {
@@ -2115,6 +2136,18 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            -380,
+            1000
+          ],
+          "end": [
+            2240,
+            -380,
+            2440
+          ]
         }
       },
       "sc_stair_system_railing_left_midrail_1_1": {
@@ -2164,6 +2197,18 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            -380,
+            420
+          ],
+          "end": [
+            2240,
+            -380,
+            1860
+          ]
         }
       },
       "sc_stair_system_railing_left_midrail_2_1": {
@@ -2213,6 +2258,18 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            -380,
+            680
+          ],
+          "end": [
+            2240,
+            -380,
+            2120
+          ]
         }
       },
       "sc_stair_system_railing_right_post_1": {
@@ -2258,6 +2315,18 @@
           "side": "right",
           "station": 0,
           "topReference": "handrail-axis"
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            380,
+            0
+          ],
+          "end": [
+            0,
+            380,
+            1000
+          ]
         }
       },
       "sc_stair_system_railing_right_post_2": {
@@ -2303,6 +2372,18 @@
           "side": "right",
           "station": 1120,
           "topReference": "handrail-axis"
+        },
+        "layoutAxis": {
+          "start": [
+            1120,
+            380,
+            720
+          ],
+          "end": [
+            1120,
+            380,
+            1720
+          ]
         }
       },
       "sc_stair_system_railing_right_post_3": {
@@ -2348,6 +2429,18 @@
           "side": "right",
           "station": 2240,
           "topReference": "handrail-axis"
+        },
+        "layoutAxis": {
+          "start": [
+            2240,
+            380,
+            1440
+          ],
+          "end": [
+            2240,
+            380,
+            2440
+          ]
         }
       },
       "sc_stair_system_railing_right_handrail_1": {
@@ -2396,6 +2489,18 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            380,
+            1000
+          ],
+          "end": [
+            2240,
+            380,
+            2440
+          ]
         }
       },
       "sc_stair_system_railing_right_midrail_1_1": {
@@ -2445,6 +2550,18 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            380,
+            420
+          ],
+          "end": [
+            2240,
+            380,
+            1860
+          ]
         }
       },
       "sc_stair_system_railing_right_midrail_2_1": {
@@ -2494,6 +2611,18 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
+        },
+        "layoutAxis": {
+          "start": [
+            0,
+            380,
+            680
+          ],
+          "end": [
+            2240,
+            380,
+            2120
+          ]
         }
       }
     },
@@ -2599,6 +2728,92 @@
               "from": "sc_stair_system_connections_treadCleat1_1_v4",
               "to": "sc_stair_system_connections_treadCleat1_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat1_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat1_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat1_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat1_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat1_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat1_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat1_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat1_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat1_1_e1_sc_stair_system_connections_treadCleat1_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_1_e1",
+                "sc_stair_system_connections_treadCleat1_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat1_1_e2_sc_stair_system_connections_treadCleat1_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_1_e2",
+                "sc_stair_system_connections_treadCleat1_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat1_1_e3_sc_stair_system_connections_treadCleat1_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_1_e3",
+                "sc_stair_system_connections_treadCleat1_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat1_1_e4_sc_stair_system_connections_treadCleat1_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_1_e1",
+                "sc_stair_system_connections_treadCleat1_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat1_1_e1_sc_stair_system_connections_treadCleat1_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_1_e1",
+                "sc_stair_system_connections_treadCleat1_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat1_1_e1_sc_stair_system_connections_treadCleat1_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_1_e1",
+                "sc_stair_system_connections_treadCleat1_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat1_1_e2_sc_stair_system_connections_treadCleat1_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_1_e2",
+                "sc_stair_system_connections_treadCleat1_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat1_1_e2_sc_stair_system_connections_treadCleat1_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_1_e2",
+                "sc_stair_system_connections_treadCleat1_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -2702,6 +2917,92 @@
               "id": "sc_stair_system_connections_treadCleat1_2_e4",
               "from": "sc_stair_system_connections_treadCleat1_2_v4",
               "to": "sc_stair_system_connections_treadCleat1_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat1_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat1_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat1_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat1_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat1_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat1_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat1_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat1_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat1_2_e1_sc_stair_system_connections_treadCleat1_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_2_e1",
+                "sc_stair_system_connections_treadCleat1_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat1_2_e2_sc_stair_system_connections_treadCleat1_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_2_e2",
+                "sc_stair_system_connections_treadCleat1_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat1_2_e3_sc_stair_system_connections_treadCleat1_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_2_e3",
+                "sc_stair_system_connections_treadCleat1_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat1_2_e4_sc_stair_system_connections_treadCleat1_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_2_e1",
+                "sc_stair_system_connections_treadCleat1_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat1_2_e1_sc_stair_system_connections_treadCleat1_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_2_e1",
+                "sc_stair_system_connections_treadCleat1_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat1_2_e1_sc_stair_system_connections_treadCleat1_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_2_e1",
+                "sc_stair_system_connections_treadCleat1_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat1_2_e2_sc_stair_system_connections_treadCleat1_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_2_e2",
+                "sc_stair_system_connections_treadCleat1_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat1_2_e2_sc_stair_system_connections_treadCleat1_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat1_2_e2",
+                "sc_stair_system_connections_treadCleat1_2_e4"
+              ]
             }
           ]
         }
@@ -2807,6 +3108,92 @@
               "from": "sc_stair_system_connections_treadCleat2_1_v4",
               "to": "sc_stair_system_connections_treadCleat2_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat2_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat2_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat2_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat2_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat2_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat2_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat2_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat2_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat2_1_e1_sc_stair_system_connections_treadCleat2_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_1_e1",
+                "sc_stair_system_connections_treadCleat2_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat2_1_e2_sc_stair_system_connections_treadCleat2_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_1_e2",
+                "sc_stair_system_connections_treadCleat2_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat2_1_e3_sc_stair_system_connections_treadCleat2_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_1_e3",
+                "sc_stair_system_connections_treadCleat2_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat2_1_e4_sc_stair_system_connections_treadCleat2_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_1_e1",
+                "sc_stair_system_connections_treadCleat2_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat2_1_e1_sc_stair_system_connections_treadCleat2_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_1_e1",
+                "sc_stair_system_connections_treadCleat2_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat2_1_e1_sc_stair_system_connections_treadCleat2_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_1_e1",
+                "sc_stair_system_connections_treadCleat2_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat2_1_e2_sc_stair_system_connections_treadCleat2_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_1_e2",
+                "sc_stair_system_connections_treadCleat2_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat2_1_e2_sc_stair_system_connections_treadCleat2_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_1_e2",
+                "sc_stair_system_connections_treadCleat2_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -2910,6 +3297,92 @@
               "id": "sc_stair_system_connections_treadCleat2_2_e4",
               "from": "sc_stair_system_connections_treadCleat2_2_v4",
               "to": "sc_stair_system_connections_treadCleat2_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat2_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat2_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat2_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat2_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat2_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat2_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat2_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat2_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat2_2_e1_sc_stair_system_connections_treadCleat2_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_2_e1",
+                "sc_stair_system_connections_treadCleat2_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat2_2_e2_sc_stair_system_connections_treadCleat2_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_2_e2",
+                "sc_stair_system_connections_treadCleat2_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat2_2_e3_sc_stair_system_connections_treadCleat2_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_2_e3",
+                "sc_stair_system_connections_treadCleat2_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat2_2_e4_sc_stair_system_connections_treadCleat2_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_2_e1",
+                "sc_stair_system_connections_treadCleat2_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat2_2_e1_sc_stair_system_connections_treadCleat2_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_2_e1",
+                "sc_stair_system_connections_treadCleat2_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat2_2_e1_sc_stair_system_connections_treadCleat2_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_2_e1",
+                "sc_stair_system_connections_treadCleat2_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat2_2_e2_sc_stair_system_connections_treadCleat2_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_2_e2",
+                "sc_stair_system_connections_treadCleat2_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat2_2_e2_sc_stair_system_connections_treadCleat2_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat2_2_e2",
+                "sc_stair_system_connections_treadCleat2_2_e4"
+              ]
             }
           ]
         }
@@ -3015,6 +3488,92 @@
               "from": "sc_stair_system_connections_treadCleat3_1_v4",
               "to": "sc_stair_system_connections_treadCleat3_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat3_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat3_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat3_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat3_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat3_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat3_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat3_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat3_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat3_1_e1_sc_stair_system_connections_treadCleat3_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_1_e1",
+                "sc_stair_system_connections_treadCleat3_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat3_1_e2_sc_stair_system_connections_treadCleat3_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_1_e2",
+                "sc_stair_system_connections_treadCleat3_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat3_1_e3_sc_stair_system_connections_treadCleat3_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_1_e3",
+                "sc_stair_system_connections_treadCleat3_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat3_1_e4_sc_stair_system_connections_treadCleat3_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_1_e1",
+                "sc_stair_system_connections_treadCleat3_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat3_1_e1_sc_stair_system_connections_treadCleat3_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_1_e1",
+                "sc_stair_system_connections_treadCleat3_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat3_1_e1_sc_stair_system_connections_treadCleat3_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_1_e1",
+                "sc_stair_system_connections_treadCleat3_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat3_1_e2_sc_stair_system_connections_treadCleat3_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_1_e2",
+                "sc_stair_system_connections_treadCleat3_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat3_1_e2_sc_stair_system_connections_treadCleat3_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_1_e2",
+                "sc_stair_system_connections_treadCleat3_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -3118,6 +3677,92 @@
               "id": "sc_stair_system_connections_treadCleat3_2_e4",
               "from": "sc_stair_system_connections_treadCleat3_2_v4",
               "to": "sc_stair_system_connections_treadCleat3_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat3_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat3_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat3_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat3_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat3_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat3_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat3_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat3_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat3_2_e1_sc_stair_system_connections_treadCleat3_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_2_e1",
+                "sc_stair_system_connections_treadCleat3_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat3_2_e2_sc_stair_system_connections_treadCleat3_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_2_e2",
+                "sc_stair_system_connections_treadCleat3_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat3_2_e3_sc_stair_system_connections_treadCleat3_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_2_e3",
+                "sc_stair_system_connections_treadCleat3_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat3_2_e4_sc_stair_system_connections_treadCleat3_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_2_e1",
+                "sc_stair_system_connections_treadCleat3_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat3_2_e1_sc_stair_system_connections_treadCleat3_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_2_e1",
+                "sc_stair_system_connections_treadCleat3_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat3_2_e1_sc_stair_system_connections_treadCleat3_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_2_e1",
+                "sc_stair_system_connections_treadCleat3_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat3_2_e2_sc_stair_system_connections_treadCleat3_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_2_e2",
+                "sc_stair_system_connections_treadCleat3_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat3_2_e2_sc_stair_system_connections_treadCleat3_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat3_2_e2",
+                "sc_stair_system_connections_treadCleat3_2_e4"
+              ]
             }
           ]
         }
@@ -3223,6 +3868,92 @@
               "from": "sc_stair_system_connections_treadCleat4_1_v4",
               "to": "sc_stair_system_connections_treadCleat4_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat4_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat4_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat4_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat4_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat4_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat4_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat4_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat4_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat4_1_e1_sc_stair_system_connections_treadCleat4_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_1_e1",
+                "sc_stair_system_connections_treadCleat4_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat4_1_e2_sc_stair_system_connections_treadCleat4_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_1_e2",
+                "sc_stair_system_connections_treadCleat4_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat4_1_e3_sc_stair_system_connections_treadCleat4_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_1_e3",
+                "sc_stair_system_connections_treadCleat4_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat4_1_e4_sc_stair_system_connections_treadCleat4_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_1_e1",
+                "sc_stair_system_connections_treadCleat4_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat4_1_e1_sc_stair_system_connections_treadCleat4_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_1_e1",
+                "sc_stair_system_connections_treadCleat4_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat4_1_e1_sc_stair_system_connections_treadCleat4_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_1_e1",
+                "sc_stair_system_connections_treadCleat4_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat4_1_e2_sc_stair_system_connections_treadCleat4_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_1_e2",
+                "sc_stair_system_connections_treadCleat4_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat4_1_e2_sc_stair_system_connections_treadCleat4_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_1_e2",
+                "sc_stair_system_connections_treadCleat4_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -3326,6 +4057,92 @@
               "id": "sc_stair_system_connections_treadCleat4_2_e4",
               "from": "sc_stair_system_connections_treadCleat4_2_v4",
               "to": "sc_stair_system_connections_treadCleat4_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat4_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat4_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat4_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat4_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat4_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat4_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat4_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat4_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat4_2_e1_sc_stair_system_connections_treadCleat4_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_2_e1",
+                "sc_stair_system_connections_treadCleat4_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat4_2_e2_sc_stair_system_connections_treadCleat4_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_2_e2",
+                "sc_stair_system_connections_treadCleat4_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat4_2_e3_sc_stair_system_connections_treadCleat4_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_2_e3",
+                "sc_stair_system_connections_treadCleat4_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat4_2_e4_sc_stair_system_connections_treadCleat4_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_2_e1",
+                "sc_stair_system_connections_treadCleat4_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat4_2_e1_sc_stair_system_connections_treadCleat4_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_2_e1",
+                "sc_stair_system_connections_treadCleat4_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat4_2_e1_sc_stair_system_connections_treadCleat4_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_2_e1",
+                "sc_stair_system_connections_treadCleat4_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat4_2_e2_sc_stair_system_connections_treadCleat4_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_2_e2",
+                "sc_stair_system_connections_treadCleat4_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat4_2_e2_sc_stair_system_connections_treadCleat4_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat4_2_e2",
+                "sc_stair_system_connections_treadCleat4_2_e4"
+              ]
             }
           ]
         }
@@ -3431,6 +4248,92 @@
               "from": "sc_stair_system_connections_treadCleat5_1_v4",
               "to": "sc_stair_system_connections_treadCleat5_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat5_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat5_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat5_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat5_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat5_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat5_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat5_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat5_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat5_1_e1_sc_stair_system_connections_treadCleat5_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_1_e1",
+                "sc_stair_system_connections_treadCleat5_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat5_1_e2_sc_stair_system_connections_treadCleat5_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_1_e2",
+                "sc_stair_system_connections_treadCleat5_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat5_1_e3_sc_stair_system_connections_treadCleat5_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_1_e3",
+                "sc_stair_system_connections_treadCleat5_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat5_1_e4_sc_stair_system_connections_treadCleat5_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_1_e1",
+                "sc_stair_system_connections_treadCleat5_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat5_1_e1_sc_stair_system_connections_treadCleat5_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_1_e1",
+                "sc_stair_system_connections_treadCleat5_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat5_1_e1_sc_stair_system_connections_treadCleat5_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_1_e1",
+                "sc_stair_system_connections_treadCleat5_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat5_1_e2_sc_stair_system_connections_treadCleat5_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_1_e2",
+                "sc_stair_system_connections_treadCleat5_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat5_1_e2_sc_stair_system_connections_treadCleat5_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_1_e2",
+                "sc_stair_system_connections_treadCleat5_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -3534,6 +4437,92 @@
               "id": "sc_stair_system_connections_treadCleat5_2_e4",
               "from": "sc_stair_system_connections_treadCleat5_2_v4",
               "to": "sc_stair_system_connections_treadCleat5_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat5_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat5_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat5_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat5_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat5_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat5_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat5_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat5_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat5_2_e1_sc_stair_system_connections_treadCleat5_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_2_e1",
+                "sc_stair_system_connections_treadCleat5_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat5_2_e2_sc_stair_system_connections_treadCleat5_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_2_e2",
+                "sc_stair_system_connections_treadCleat5_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat5_2_e3_sc_stair_system_connections_treadCleat5_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_2_e3",
+                "sc_stair_system_connections_treadCleat5_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat5_2_e4_sc_stair_system_connections_treadCleat5_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_2_e1",
+                "sc_stair_system_connections_treadCleat5_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat5_2_e1_sc_stair_system_connections_treadCleat5_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_2_e1",
+                "sc_stair_system_connections_treadCleat5_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat5_2_e1_sc_stair_system_connections_treadCleat5_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_2_e1",
+                "sc_stair_system_connections_treadCleat5_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat5_2_e2_sc_stair_system_connections_treadCleat5_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_2_e2",
+                "sc_stair_system_connections_treadCleat5_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat5_2_e2_sc_stair_system_connections_treadCleat5_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat5_2_e2",
+                "sc_stair_system_connections_treadCleat5_2_e4"
+              ]
             }
           ]
         }
@@ -3639,6 +4628,92 @@
               "from": "sc_stair_system_connections_treadCleat6_1_v4",
               "to": "sc_stair_system_connections_treadCleat6_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat6_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat6_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat6_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat6_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat6_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat6_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat6_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat6_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat6_1_e1_sc_stair_system_connections_treadCleat6_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_1_e1",
+                "sc_stair_system_connections_treadCleat6_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat6_1_e2_sc_stair_system_connections_treadCleat6_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_1_e2",
+                "sc_stair_system_connections_treadCleat6_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat6_1_e3_sc_stair_system_connections_treadCleat6_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_1_e3",
+                "sc_stair_system_connections_treadCleat6_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat6_1_e4_sc_stair_system_connections_treadCleat6_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_1_e1",
+                "sc_stair_system_connections_treadCleat6_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat6_1_e1_sc_stair_system_connections_treadCleat6_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_1_e1",
+                "sc_stair_system_connections_treadCleat6_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat6_1_e1_sc_stair_system_connections_treadCleat6_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_1_e1",
+                "sc_stair_system_connections_treadCleat6_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat6_1_e2_sc_stair_system_connections_treadCleat6_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_1_e2",
+                "sc_stair_system_connections_treadCleat6_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat6_1_e2_sc_stair_system_connections_treadCleat6_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_1_e2",
+                "sc_stair_system_connections_treadCleat6_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -3742,6 +4817,92 @@
               "id": "sc_stair_system_connections_treadCleat6_2_e4",
               "from": "sc_stair_system_connections_treadCleat6_2_v4",
               "to": "sc_stair_system_connections_treadCleat6_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat6_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat6_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat6_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat6_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat6_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat6_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat6_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat6_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat6_2_e1_sc_stair_system_connections_treadCleat6_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_2_e1",
+                "sc_stair_system_connections_treadCleat6_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat6_2_e2_sc_stair_system_connections_treadCleat6_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_2_e2",
+                "sc_stair_system_connections_treadCleat6_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat6_2_e3_sc_stair_system_connections_treadCleat6_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_2_e3",
+                "sc_stair_system_connections_treadCleat6_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat6_2_e4_sc_stair_system_connections_treadCleat6_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_2_e1",
+                "sc_stair_system_connections_treadCleat6_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat6_2_e1_sc_stair_system_connections_treadCleat6_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_2_e1",
+                "sc_stair_system_connections_treadCleat6_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat6_2_e1_sc_stair_system_connections_treadCleat6_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_2_e1",
+                "sc_stair_system_connections_treadCleat6_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat6_2_e2_sc_stair_system_connections_treadCleat6_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_2_e2",
+                "sc_stair_system_connections_treadCleat6_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat6_2_e2_sc_stair_system_connections_treadCleat6_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat6_2_e2",
+                "sc_stair_system_connections_treadCleat6_2_e4"
+              ]
             }
           ]
         }
@@ -3847,6 +5008,92 @@
               "from": "sc_stair_system_connections_treadCleat7_1_v4",
               "to": "sc_stair_system_connections_treadCleat7_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat7_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat7_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat7_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat7_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat7_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat7_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat7_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat7_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat7_1_e1_sc_stair_system_connections_treadCleat7_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_1_e1",
+                "sc_stair_system_connections_treadCleat7_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat7_1_e2_sc_stair_system_connections_treadCleat7_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_1_e2",
+                "sc_stair_system_connections_treadCleat7_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat7_1_e3_sc_stair_system_connections_treadCleat7_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_1_e3",
+                "sc_stair_system_connections_treadCleat7_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat7_1_e4_sc_stair_system_connections_treadCleat7_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_1_e1",
+                "sc_stair_system_connections_treadCleat7_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat7_1_e1_sc_stair_system_connections_treadCleat7_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_1_e1",
+                "sc_stair_system_connections_treadCleat7_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat7_1_e1_sc_stair_system_connections_treadCleat7_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_1_e1",
+                "sc_stair_system_connections_treadCleat7_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat7_1_e2_sc_stair_system_connections_treadCleat7_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_1_e2",
+                "sc_stair_system_connections_treadCleat7_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat7_1_e2_sc_stair_system_connections_treadCleat7_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_1_e2",
+                "sc_stair_system_connections_treadCleat7_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -3950,6 +5197,92 @@
               "id": "sc_stair_system_connections_treadCleat7_2_e4",
               "from": "sc_stair_system_connections_treadCleat7_2_v4",
               "to": "sc_stair_system_connections_treadCleat7_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat7_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat7_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat7_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat7_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat7_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat7_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat7_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat7_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat7_2_e1_sc_stair_system_connections_treadCleat7_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_2_e1",
+                "sc_stair_system_connections_treadCleat7_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat7_2_e2_sc_stair_system_connections_treadCleat7_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_2_e2",
+                "sc_stair_system_connections_treadCleat7_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat7_2_e3_sc_stair_system_connections_treadCleat7_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_2_e3",
+                "sc_stair_system_connections_treadCleat7_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat7_2_e4_sc_stair_system_connections_treadCleat7_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_2_e1",
+                "sc_stair_system_connections_treadCleat7_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat7_2_e1_sc_stair_system_connections_treadCleat7_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_2_e1",
+                "sc_stair_system_connections_treadCleat7_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat7_2_e1_sc_stair_system_connections_treadCleat7_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_2_e1",
+                "sc_stair_system_connections_treadCleat7_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat7_2_e2_sc_stair_system_connections_treadCleat7_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_2_e2",
+                "sc_stair_system_connections_treadCleat7_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat7_2_e2_sc_stair_system_connections_treadCleat7_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat7_2_e2",
+                "sc_stair_system_connections_treadCleat7_2_e4"
+              ]
             }
           ]
         }
@@ -4055,6 +5388,92 @@
               "from": "sc_stair_system_connections_treadCleat8_1_v4",
               "to": "sc_stair_system_connections_treadCleat8_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat8_1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat8_1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat8_1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat8_1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat8_1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat8_1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat8_1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat8_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat8_1_e1_sc_stair_system_connections_treadCleat8_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_1_e1",
+                "sc_stair_system_connections_treadCleat8_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat8_1_e2_sc_stair_system_connections_treadCleat8_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_1_e2",
+                "sc_stair_system_connections_treadCleat8_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat8_1_e3_sc_stair_system_connections_treadCleat8_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_1_e3",
+                "sc_stair_system_connections_treadCleat8_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat8_1_e4_sc_stair_system_connections_treadCleat8_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_1_e1",
+                "sc_stair_system_connections_treadCleat8_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat8_1_e1_sc_stair_system_connections_treadCleat8_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_1_e1",
+                "sc_stair_system_connections_treadCleat8_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat8_1_e1_sc_stair_system_connections_treadCleat8_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_1_e1",
+                "sc_stair_system_connections_treadCleat8_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat8_1_e2_sc_stair_system_connections_treadCleat8_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_1_e2",
+                "sc_stair_system_connections_treadCleat8_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat8_1_e2_sc_stair_system_connections_treadCleat8_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_1_e2",
+                "sc_stair_system_connections_treadCleat8_1_e4"
+              ]
+            }
           ]
         }
       },
@@ -4159,6 +5578,92 @@
               "from": "sc_stair_system_connections_treadCleat8_2_v4",
               "to": "sc_stair_system_connections_treadCleat8_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat8_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat8_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat8_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat8_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_treadCleat8_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_treadCleat8_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_treadCleat8_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_treadCleat8_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat8_2_e1_sc_stair_system_connections_treadCleat8_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_2_e1",
+                "sc_stair_system_connections_treadCleat8_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat8_2_e2_sc_stair_system_connections_treadCleat8_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_2_e2",
+                "sc_stair_system_connections_treadCleat8_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat8_2_e3_sc_stair_system_connections_treadCleat8_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_2_e3",
+                "sc_stair_system_connections_treadCleat8_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_treadCleat8_2_e4_sc_stair_system_connections_treadCleat8_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_2_e1",
+                "sc_stair_system_connections_treadCleat8_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat8_2_e1_sc_stair_system_connections_treadCleat8_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_2_e1",
+                "sc_stair_system_connections_treadCleat8_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat8_2_e1_sc_stair_system_connections_treadCleat8_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_2_e1",
+                "sc_stair_system_connections_treadCleat8_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_treadCleat8_2_e2_sc_stair_system_connections_treadCleat8_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_2_e2",
+                "sc_stair_system_connections_treadCleat8_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_treadCleat8_2_e2_sc_stair_system_connections_treadCleat8_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_treadCleat8_2_e2",
+                "sc_stair_system_connections_treadCleat8_2_e4"
+              ]
+            }
           ]
         }
       },
@@ -4261,6 +5766,92 @@
               "id": "sc_stair_system_connections_floor_mounting_surface_e4",
               "from": "sc_stair_system_connections_floor_mounting_surface_v4",
               "to": "sc_stair_system_connections_floor_mounting_surface_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_floor_mounting_surface_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_floor_mounting_surface_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_floor_mounting_surface_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_floor_mounting_surface_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_floor_mounting_surface_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_floor_mounting_surface_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_floor_mounting_surface_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_floor_mounting_surface_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floor_mounting_surface_e1_sc_stair_system_connections_floor_mounting_surface_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floor_mounting_surface_e1",
+                "sc_stair_system_connections_floor_mounting_surface_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floor_mounting_surface_e2_sc_stair_system_connections_floor_mounting_surface_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floor_mounting_surface_e2",
+                "sc_stair_system_connections_floor_mounting_surface_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floor_mounting_surface_e3_sc_stair_system_connections_floor_mounting_surface_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floor_mounting_surface_e3",
+                "sc_stair_system_connections_floor_mounting_surface_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floor_mounting_surface_e4_sc_stair_system_connections_floor_mounting_surface_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floor_mounting_surface_e1",
+                "sc_stair_system_connections_floor_mounting_surface_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_floor_mounting_surface_e1_sc_stair_system_connections_floor_mounting_surface_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_floor_mounting_surface_e1",
+                "sc_stair_system_connections_floor_mounting_surface_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_floor_mounting_surface_e1_sc_stair_system_connections_floor_mounting_surface_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_floor_mounting_surface_e1",
+                "sc_stair_system_connections_floor_mounting_surface_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_floor_mounting_surface_e2_sc_stair_system_connections_floor_mounting_surface_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_floor_mounting_surface_e2",
+                "sc_stair_system_connections_floor_mounting_surface_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_floor_mounting_surface_e2_sc_stair_system_connections_floor_mounting_surface_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_floor_mounting_surface_e2",
+                "sc_stair_system_connections_floor_mounting_surface_e4"
+              ]
             }
           ]
         }
@@ -4365,6 +5956,92 @@
               "from": "sc_stair_system_connections_top_slab_mounting_surface_v4",
               "to": "sc_stair_system_connections_top_slab_mounting_surface_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_top_slab_mounting_surface_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_top_slab_mounting_surface_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_top_slab_mounting_surface_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_top_slab_mounting_surface_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_top_slab_mounting_surface_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_top_slab_mounting_surface_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_top_slab_mounting_surface_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_top_slab_mounting_surface_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_top_slab_mounting_surface_e1_sc_stair_system_connections_top_slab_mounting_surface_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_top_slab_mounting_surface_e1",
+                "sc_stair_system_connections_top_slab_mounting_surface_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_top_slab_mounting_surface_e2_sc_stair_system_connections_top_slab_mounting_surface_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_top_slab_mounting_surface_e2",
+                "sc_stair_system_connections_top_slab_mounting_surface_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_top_slab_mounting_surface_e3_sc_stair_system_connections_top_slab_mounting_surface_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_top_slab_mounting_surface_e3",
+                "sc_stair_system_connections_top_slab_mounting_surface_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_top_slab_mounting_surface_e4_sc_stair_system_connections_top_slab_mounting_surface_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_top_slab_mounting_surface_e1",
+                "sc_stair_system_connections_top_slab_mounting_surface_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_top_slab_mounting_surface_e1_sc_stair_system_connections_top_slab_mounting_surface_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_top_slab_mounting_surface_e1",
+                "sc_stair_system_connections_top_slab_mounting_surface_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_top_slab_mounting_surface_e1_sc_stair_system_connections_top_slab_mounting_surface_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_top_slab_mounting_surface_e1",
+                "sc_stair_system_connections_top_slab_mounting_surface_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_top_slab_mounting_surface_e2_sc_stair_system_connections_top_slab_mounting_surface_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_top_slab_mounting_surface_e2",
+                "sc_stair_system_connections_top_slab_mounting_surface_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_top_slab_mounting_surface_e2_sc_stair_system_connections_top_slab_mounting_surface_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_top_slab_mounting_surface_e2",
+                "sc_stair_system_connections_top_slab_mounting_surface_e4"
+              ]
+            }
           ]
         }
       },
@@ -4466,6 +6143,92 @@
               "id": "sc_stair_system_connections_floorBasePlate1_e4",
               "from": "sc_stair_system_connections_floorBasePlate1_v4",
               "to": "sc_stair_system_connections_floorBasePlate1_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_floorBasePlate1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_floorBasePlate1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_floorBasePlate1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_floorBasePlate1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_floorBasePlate1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_floorBasePlate1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_floorBasePlate1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_floorBasePlate1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floorBasePlate1_e1_sc_stair_system_connections_floorBasePlate1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate1_e1",
+                "sc_stair_system_connections_floorBasePlate1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floorBasePlate1_e2_sc_stair_system_connections_floorBasePlate1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate1_e2",
+                "sc_stair_system_connections_floorBasePlate1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floorBasePlate1_e3_sc_stair_system_connections_floorBasePlate1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate1_e3",
+                "sc_stair_system_connections_floorBasePlate1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floorBasePlate1_e4_sc_stair_system_connections_floorBasePlate1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate1_e1",
+                "sc_stair_system_connections_floorBasePlate1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_floorBasePlate1_e1_sc_stair_system_connections_floorBasePlate1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate1_e1",
+                "sc_stair_system_connections_floorBasePlate1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_floorBasePlate1_e1_sc_stair_system_connections_floorBasePlate1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate1_e1",
+                "sc_stair_system_connections_floorBasePlate1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_floorBasePlate1_e2_sc_stair_system_connections_floorBasePlate1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate1_e2",
+                "sc_stair_system_connections_floorBasePlate1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_floorBasePlate1_e2_sc_stair_system_connections_floorBasePlate1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate1_e2",
+                "sc_stair_system_connections_floorBasePlate1_e4"
+              ]
             }
           ]
         }
@@ -4569,6 +6332,92 @@
               "from": "sc_stair_system_connections_topSlabBracket1_v4",
               "to": "sc_stair_system_connections_topSlabBracket1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_topSlabBracket1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_topSlabBracket1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_topSlabBracket1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_topSlabBracket1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_topSlabBracket1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_topSlabBracket1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_topSlabBracket1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_topSlabBracket1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_topSlabBracket1_e1_sc_stair_system_connections_topSlabBracket1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket1_e1",
+                "sc_stair_system_connections_topSlabBracket1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_topSlabBracket1_e2_sc_stair_system_connections_topSlabBracket1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket1_e2",
+                "sc_stair_system_connections_topSlabBracket1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_topSlabBracket1_e3_sc_stair_system_connections_topSlabBracket1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket1_e3",
+                "sc_stair_system_connections_topSlabBracket1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_topSlabBracket1_e4_sc_stair_system_connections_topSlabBracket1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket1_e1",
+                "sc_stair_system_connections_topSlabBracket1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_topSlabBracket1_e1_sc_stair_system_connections_topSlabBracket1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket1_e1",
+                "sc_stair_system_connections_topSlabBracket1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_topSlabBracket1_e1_sc_stair_system_connections_topSlabBracket1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket1_e1",
+                "sc_stair_system_connections_topSlabBracket1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_topSlabBracket1_e2_sc_stair_system_connections_topSlabBracket1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket1_e2",
+                "sc_stair_system_connections_topSlabBracket1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_topSlabBracket1_e2_sc_stair_system_connections_topSlabBracket1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket1_e2",
+                "sc_stair_system_connections_topSlabBracket1_e4"
+              ]
+            }
           ]
         }
       },
@@ -4670,6 +6519,92 @@
               "id": "sc_stair_system_connections_floorBasePlate2_e4",
               "from": "sc_stair_system_connections_floorBasePlate2_v4",
               "to": "sc_stair_system_connections_floorBasePlate2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_floorBasePlate2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_floorBasePlate2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_floorBasePlate2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_floorBasePlate2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_floorBasePlate2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_floorBasePlate2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_floorBasePlate2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_floorBasePlate2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floorBasePlate2_e1_sc_stair_system_connections_floorBasePlate2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate2_e1",
+                "sc_stair_system_connections_floorBasePlate2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floorBasePlate2_e2_sc_stair_system_connections_floorBasePlate2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate2_e2",
+                "sc_stair_system_connections_floorBasePlate2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floorBasePlate2_e3_sc_stair_system_connections_floorBasePlate2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate2_e3",
+                "sc_stair_system_connections_floorBasePlate2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_floorBasePlate2_e4_sc_stair_system_connections_floorBasePlate2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate2_e1",
+                "sc_stair_system_connections_floorBasePlate2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_floorBasePlate2_e1_sc_stair_system_connections_floorBasePlate2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate2_e1",
+                "sc_stair_system_connections_floorBasePlate2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_floorBasePlate2_e1_sc_stair_system_connections_floorBasePlate2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate2_e1",
+                "sc_stair_system_connections_floorBasePlate2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_floorBasePlate2_e2_sc_stair_system_connections_floorBasePlate2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate2_e2",
+                "sc_stair_system_connections_floorBasePlate2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_floorBasePlate2_e2_sc_stair_system_connections_floorBasePlate2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_floorBasePlate2_e2",
+                "sc_stair_system_connections_floorBasePlate2_e4"
+              ]
             }
           ]
         }
@@ -4773,6 +6708,92 @@
               "from": "sc_stair_system_connections_topSlabBracket2_v4",
               "to": "sc_stair_system_connections_topSlabBracket2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_topSlabBracket2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_topSlabBracket2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_topSlabBracket2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_topSlabBracket2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_topSlabBracket2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_topSlabBracket2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_topSlabBracket2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_topSlabBracket2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_topSlabBracket2_e1_sc_stair_system_connections_topSlabBracket2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket2_e1",
+                "sc_stair_system_connections_topSlabBracket2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_topSlabBracket2_e2_sc_stair_system_connections_topSlabBracket2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket2_e2",
+                "sc_stair_system_connections_topSlabBracket2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_topSlabBracket2_e3_sc_stair_system_connections_topSlabBracket2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket2_e3",
+                "sc_stair_system_connections_topSlabBracket2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_topSlabBracket2_e4_sc_stair_system_connections_topSlabBracket2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket2_e1",
+                "sc_stair_system_connections_topSlabBracket2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_topSlabBracket2_e1_sc_stair_system_connections_topSlabBracket2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket2_e1",
+                "sc_stair_system_connections_topSlabBracket2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_topSlabBracket2_e1_sc_stair_system_connections_topSlabBracket2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket2_e1",
+                "sc_stair_system_connections_topSlabBracket2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_topSlabBracket2_e2_sc_stair_system_connections_topSlabBracket2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket2_e2",
+                "sc_stair_system_connections_topSlabBracket2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_topSlabBracket2_e2_sc_stair_system_connections_topSlabBracket2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_topSlabBracket2_e2",
+                "sc_stair_system_connections_topSlabBracket2_e4"
+              ]
+            }
           ]
         }
       },
@@ -4873,6 +6894,92 @@
               "id": "sc_stair_system_connections_postBase1_e4",
               "from": "sc_stair_system_connections_postBase1_v4",
               "to": "sc_stair_system_connections_postBase1_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase1_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase1_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase1_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase1_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase1_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase1_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase1_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase1_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase1_e1_sc_stair_system_connections_postBase1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase1_e1",
+                "sc_stair_system_connections_postBase1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase1_e2_sc_stair_system_connections_postBase1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase1_e2",
+                "sc_stair_system_connections_postBase1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase1_e3_sc_stair_system_connections_postBase1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase1_e3",
+                "sc_stair_system_connections_postBase1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase1_e4_sc_stair_system_connections_postBase1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase1_e1",
+                "sc_stair_system_connections_postBase1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase1_e1_sc_stair_system_connections_postBase1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase1_e1",
+                "sc_stair_system_connections_postBase1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase1_e1_sc_stair_system_connections_postBase1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase1_e1",
+                "sc_stair_system_connections_postBase1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase1_e2_sc_stair_system_connections_postBase1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase1_e2",
+                "sc_stair_system_connections_postBase1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase1_e2_sc_stair_system_connections_postBase1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase1_e2",
+                "sc_stair_system_connections_postBase1_e4"
+              ]
             }
           ]
         }
@@ -4975,6 +7082,92 @@
               "from": "sc_stair_system_connections_postBase2_v4",
               "to": "sc_stair_system_connections_postBase2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase2_e1_sc_stair_system_connections_postBase2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase2_e1",
+                "sc_stair_system_connections_postBase2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase2_e2_sc_stair_system_connections_postBase2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase2_e2",
+                "sc_stair_system_connections_postBase2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase2_e3_sc_stair_system_connections_postBase2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase2_e3",
+                "sc_stair_system_connections_postBase2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase2_e4_sc_stair_system_connections_postBase2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase2_e1",
+                "sc_stair_system_connections_postBase2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase2_e1_sc_stair_system_connections_postBase2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase2_e1",
+                "sc_stair_system_connections_postBase2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase2_e1_sc_stair_system_connections_postBase2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase2_e1",
+                "sc_stair_system_connections_postBase2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase2_e2_sc_stair_system_connections_postBase2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase2_e2",
+                "sc_stair_system_connections_postBase2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase2_e2_sc_stair_system_connections_postBase2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase2_e2",
+                "sc_stair_system_connections_postBase2_e4"
+              ]
+            }
           ]
         }
       },
@@ -5075,6 +7268,92 @@
               "id": "sc_stair_system_connections_postBase3_e4",
               "from": "sc_stair_system_connections_postBase3_v4",
               "to": "sc_stair_system_connections_postBase3_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase3_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase3_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase3_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase3_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase3_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase3_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase3_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase3_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase3_e1_sc_stair_system_connections_postBase3_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase3_e1",
+                "sc_stair_system_connections_postBase3_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase3_e2_sc_stair_system_connections_postBase3_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase3_e2",
+                "sc_stair_system_connections_postBase3_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase3_e3_sc_stair_system_connections_postBase3_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase3_e3",
+                "sc_stair_system_connections_postBase3_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase3_e4_sc_stair_system_connections_postBase3_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase3_e1",
+                "sc_stair_system_connections_postBase3_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase3_e1_sc_stair_system_connections_postBase3_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase3_e1",
+                "sc_stair_system_connections_postBase3_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase3_e1_sc_stair_system_connections_postBase3_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase3_e1",
+                "sc_stair_system_connections_postBase3_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase3_e2_sc_stair_system_connections_postBase3_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase3_e2",
+                "sc_stair_system_connections_postBase3_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase3_e2_sc_stair_system_connections_postBase3_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase3_e2",
+                "sc_stair_system_connections_postBase3_e4"
+              ]
             }
           ]
         }
@@ -5177,6 +7456,92 @@
               "from": "sc_stair_system_connections_postBase4_v4",
               "to": "sc_stair_system_connections_postBase4_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase4_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase4_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase4_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase4_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase4_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase4_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase4_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase4_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase4_e1_sc_stair_system_connections_postBase4_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase4_e1",
+                "sc_stair_system_connections_postBase4_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase4_e2_sc_stair_system_connections_postBase4_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase4_e2",
+                "sc_stair_system_connections_postBase4_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase4_e3_sc_stair_system_connections_postBase4_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase4_e3",
+                "sc_stair_system_connections_postBase4_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase4_e4_sc_stair_system_connections_postBase4_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase4_e1",
+                "sc_stair_system_connections_postBase4_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase4_e1_sc_stair_system_connections_postBase4_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase4_e1",
+                "sc_stair_system_connections_postBase4_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase4_e1_sc_stair_system_connections_postBase4_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase4_e1",
+                "sc_stair_system_connections_postBase4_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase4_e2_sc_stair_system_connections_postBase4_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase4_e2",
+                "sc_stair_system_connections_postBase4_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase4_e2_sc_stair_system_connections_postBase4_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase4_e2",
+                "sc_stair_system_connections_postBase4_e4"
+              ]
+            }
           ]
         }
       },
@@ -5278,6 +7643,92 @@
               "from": "sc_stair_system_connections_postBase5_v4",
               "to": "sc_stair_system_connections_postBase5_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase5_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase5_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase5_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase5_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase5_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase5_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase5_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase5_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase5_e1_sc_stair_system_connections_postBase5_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase5_e1",
+                "sc_stair_system_connections_postBase5_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase5_e2_sc_stair_system_connections_postBase5_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase5_e2",
+                "sc_stair_system_connections_postBase5_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase5_e3_sc_stair_system_connections_postBase5_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase5_e3",
+                "sc_stair_system_connections_postBase5_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase5_e4_sc_stair_system_connections_postBase5_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase5_e1",
+                "sc_stair_system_connections_postBase5_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase5_e1_sc_stair_system_connections_postBase5_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase5_e1",
+                "sc_stair_system_connections_postBase5_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase5_e1_sc_stair_system_connections_postBase5_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase5_e1",
+                "sc_stair_system_connections_postBase5_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase5_e2_sc_stair_system_connections_postBase5_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase5_e2",
+                "sc_stair_system_connections_postBase5_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase5_e2_sc_stair_system_connections_postBase5_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase5_e2",
+                "sc_stair_system_connections_postBase5_e4"
+              ]
+            }
           ]
         }
       },
@@ -5378,6 +7829,92 @@
               "id": "sc_stair_system_connections_postBase6_e4",
               "from": "sc_stair_system_connections_postBase6_v4",
               "to": "sc_stair_system_connections_postBase6_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase6_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase6_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase6_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase6_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_connections_postBase6_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_connections_postBase6_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_connections_postBase6_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_connections_postBase6_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase6_e1_sc_stair_system_connections_postBase6_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase6_e1",
+                "sc_stair_system_connections_postBase6_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase6_e2_sc_stair_system_connections_postBase6_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase6_e2",
+                "sc_stair_system_connections_postBase6_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase6_e3_sc_stair_system_connections_postBase6_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase6_e3",
+                "sc_stair_system_connections_postBase6_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_connections_postBase6_e4_sc_stair_system_connections_postBase6_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase6_e1",
+                "sc_stair_system_connections_postBase6_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase6_e1_sc_stair_system_connections_postBase6_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase6_e1",
+                "sc_stair_system_connections_postBase6_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase6_e1_sc_stair_system_connections_postBase6_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase6_e1",
+                "sc_stair_system_connections_postBase6_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_connections_postBase6_e2_sc_stair_system_connections_postBase6_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase6_e2",
+                "sc_stair_system_connections_postBase6_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_connections_postBase6_e2_sc_stair_system_connections_postBase6_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_connections_postBase6_e2",
+                "sc_stair_system_connections_postBase6_e4"
+              ]
             }
           ]
         }
@@ -5493,6 +8030,92 @@
               "from": "sc_stair_system_treads_tread_1_2_v4",
               "to": "sc_stair_system_treads_tread_1_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_1_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_1_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_1_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_1_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_1_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_1_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_1_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_1_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_1_2_e1_sc_stair_system_treads_tread_1_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_1_2_e1",
+                "sc_stair_system_treads_tread_1_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_1_2_e2_sc_stair_system_treads_tread_1_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_1_2_e2",
+                "sc_stair_system_treads_tread_1_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_1_2_e3_sc_stair_system_treads_tread_1_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_1_2_e3",
+                "sc_stair_system_treads_tread_1_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_1_2_e4_sc_stair_system_treads_tread_1_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_1_2_e1",
+                "sc_stair_system_treads_tread_1_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_1_2_e1_sc_stair_system_treads_tread_1_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_1_2_e1",
+                "sc_stair_system_treads_tread_1_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_1_2_e1_sc_stair_system_treads_tread_1_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_1_2_e1",
+                "sc_stair_system_treads_tread_1_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_1_2_e2_sc_stair_system_treads_tread_1_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_1_2_e2",
+                "sc_stair_system_treads_tread_1_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_1_2_e2_sc_stair_system_treads_tread_1_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_1_2_e2",
+                "sc_stair_system_treads_tread_1_2_e4"
+              ]
+            }
           ]
         }
       },
@@ -5606,6 +8229,92 @@
               "id": "sc_stair_system_treads_tread_2_2_e4",
               "from": "sc_stair_system_treads_tread_2_2_v4",
               "to": "sc_stair_system_treads_tread_2_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_2_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_2_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_2_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_2_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_2_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_2_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_2_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_2_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_2_2_e1_sc_stair_system_treads_tread_2_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_2_2_e1",
+                "sc_stair_system_treads_tread_2_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_2_2_e2_sc_stair_system_treads_tread_2_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_2_2_e2",
+                "sc_stair_system_treads_tread_2_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_2_2_e3_sc_stair_system_treads_tread_2_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_2_2_e3",
+                "sc_stair_system_treads_tread_2_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_2_2_e4_sc_stair_system_treads_tread_2_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_2_2_e1",
+                "sc_stair_system_treads_tread_2_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_2_2_e1_sc_stair_system_treads_tread_2_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_2_2_e1",
+                "sc_stair_system_treads_tread_2_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_2_2_e1_sc_stair_system_treads_tread_2_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_2_2_e1",
+                "sc_stair_system_treads_tread_2_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_2_2_e2_sc_stair_system_treads_tread_2_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_2_2_e2",
+                "sc_stair_system_treads_tread_2_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_2_2_e2_sc_stair_system_treads_tread_2_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_2_2_e2",
+                "sc_stair_system_treads_tread_2_2_e4"
+              ]
             }
           ]
         }
@@ -5721,6 +8430,92 @@
               "from": "sc_stair_system_treads_tread_3_2_v4",
               "to": "sc_stair_system_treads_tread_3_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_3_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_3_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_3_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_3_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_3_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_3_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_3_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_3_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_3_2_e1_sc_stair_system_treads_tread_3_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_3_2_e1",
+                "sc_stair_system_treads_tread_3_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_3_2_e2_sc_stair_system_treads_tread_3_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_3_2_e2",
+                "sc_stair_system_treads_tread_3_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_3_2_e3_sc_stair_system_treads_tread_3_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_3_2_e3",
+                "sc_stair_system_treads_tread_3_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_3_2_e4_sc_stair_system_treads_tread_3_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_3_2_e1",
+                "sc_stair_system_treads_tread_3_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_3_2_e1_sc_stair_system_treads_tread_3_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_3_2_e1",
+                "sc_stair_system_treads_tread_3_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_3_2_e1_sc_stair_system_treads_tread_3_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_3_2_e1",
+                "sc_stair_system_treads_tread_3_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_3_2_e2_sc_stair_system_treads_tread_3_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_3_2_e2",
+                "sc_stair_system_treads_tread_3_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_3_2_e2_sc_stair_system_treads_tread_3_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_3_2_e2",
+                "sc_stair_system_treads_tread_3_2_e4"
+              ]
+            }
           ]
         }
       },
@@ -5834,6 +8629,92 @@
               "id": "sc_stair_system_treads_tread_4_2_e4",
               "from": "sc_stair_system_treads_tread_4_2_v4",
               "to": "sc_stair_system_treads_tread_4_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_4_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_4_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_4_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_4_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_4_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_4_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_4_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_4_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_4_2_e1_sc_stair_system_treads_tread_4_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_4_2_e1",
+                "sc_stair_system_treads_tread_4_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_4_2_e2_sc_stair_system_treads_tread_4_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_4_2_e2",
+                "sc_stair_system_treads_tread_4_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_4_2_e3_sc_stair_system_treads_tread_4_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_4_2_e3",
+                "sc_stair_system_treads_tread_4_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_4_2_e4_sc_stair_system_treads_tread_4_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_4_2_e1",
+                "sc_stair_system_treads_tread_4_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_4_2_e1_sc_stair_system_treads_tread_4_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_4_2_e1",
+                "sc_stair_system_treads_tread_4_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_4_2_e1_sc_stair_system_treads_tread_4_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_4_2_e1",
+                "sc_stair_system_treads_tread_4_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_4_2_e2_sc_stair_system_treads_tread_4_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_4_2_e2",
+                "sc_stair_system_treads_tread_4_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_4_2_e2_sc_stair_system_treads_tread_4_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_4_2_e2",
+                "sc_stair_system_treads_tread_4_2_e4"
+              ]
             }
           ]
         }
@@ -5949,6 +8830,92 @@
               "from": "sc_stair_system_treads_tread_5_2_v4",
               "to": "sc_stair_system_treads_tread_5_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_5_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_5_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_5_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_5_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_5_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_5_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_5_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_5_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_5_2_e1_sc_stair_system_treads_tread_5_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_5_2_e1",
+                "sc_stair_system_treads_tread_5_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_5_2_e2_sc_stair_system_treads_tread_5_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_5_2_e2",
+                "sc_stair_system_treads_tread_5_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_5_2_e3_sc_stair_system_treads_tread_5_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_5_2_e3",
+                "sc_stair_system_treads_tread_5_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_5_2_e4_sc_stair_system_treads_tread_5_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_5_2_e1",
+                "sc_stair_system_treads_tread_5_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_5_2_e1_sc_stair_system_treads_tread_5_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_5_2_e1",
+                "sc_stair_system_treads_tread_5_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_5_2_e1_sc_stair_system_treads_tread_5_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_5_2_e1",
+                "sc_stair_system_treads_tread_5_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_5_2_e2_sc_stair_system_treads_tread_5_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_5_2_e2",
+                "sc_stair_system_treads_tread_5_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_5_2_e2_sc_stair_system_treads_tread_5_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_5_2_e2",
+                "sc_stair_system_treads_tread_5_2_e4"
+              ]
+            }
           ]
         }
       },
@@ -6062,6 +9029,92 @@
               "id": "sc_stair_system_treads_tread_6_2_e4",
               "from": "sc_stair_system_treads_tread_6_2_v4",
               "to": "sc_stair_system_treads_tread_6_2_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_6_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_6_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_6_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_6_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_6_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_6_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_6_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_6_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_6_2_e1_sc_stair_system_treads_tread_6_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_6_2_e1",
+                "sc_stair_system_treads_tread_6_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_6_2_e2_sc_stair_system_treads_tread_6_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_6_2_e2",
+                "sc_stair_system_treads_tread_6_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_6_2_e3_sc_stair_system_treads_tread_6_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_6_2_e3",
+                "sc_stair_system_treads_tread_6_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_6_2_e4_sc_stair_system_treads_tread_6_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_6_2_e1",
+                "sc_stair_system_treads_tread_6_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_6_2_e1_sc_stair_system_treads_tread_6_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_6_2_e1",
+                "sc_stair_system_treads_tread_6_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_6_2_e1_sc_stair_system_treads_tread_6_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_6_2_e1",
+                "sc_stair_system_treads_tread_6_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_6_2_e2_sc_stair_system_treads_tread_6_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_6_2_e2",
+                "sc_stair_system_treads_tread_6_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_6_2_e2_sc_stair_system_treads_tread_6_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_6_2_e2",
+                "sc_stair_system_treads_tread_6_2_e4"
+              ]
             }
           ]
         }
@@ -6177,6 +9230,92 @@
               "from": "sc_stair_system_treads_tread_7_2_v4",
               "to": "sc_stair_system_treads_tread_7_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_7_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_7_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_7_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_7_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_7_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_7_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_7_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_7_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_7_2_e1_sc_stair_system_treads_tread_7_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_7_2_e1",
+                "sc_stair_system_treads_tread_7_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_7_2_e2_sc_stair_system_treads_tread_7_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_7_2_e2",
+                "sc_stair_system_treads_tread_7_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_7_2_e3_sc_stair_system_treads_tread_7_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_7_2_e3",
+                "sc_stair_system_treads_tread_7_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_7_2_e4_sc_stair_system_treads_tread_7_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_7_2_e1",
+                "sc_stair_system_treads_tread_7_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_7_2_e1_sc_stair_system_treads_tread_7_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_7_2_e1",
+                "sc_stair_system_treads_tread_7_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_7_2_e1_sc_stair_system_treads_tread_7_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_7_2_e1",
+                "sc_stair_system_treads_tread_7_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_7_2_e2_sc_stair_system_treads_tread_7_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_7_2_e2",
+                "sc_stair_system_treads_tread_7_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_7_2_e2_sc_stair_system_treads_tread_7_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_7_2_e2",
+                "sc_stair_system_treads_tread_7_2_e4"
+              ]
+            }
           ]
         }
       },
@@ -6291,10 +9430,97 @@
               "from": "sc_stair_system_treads_tread_8_2_v4",
               "to": "sc_stair_system_treads_tread_8_2_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_8_2_e1",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_8_2_e1"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_8_2_e2",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_8_2_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_stair_system_treads_tread_8_2_e3",
+              "type": "horizontal",
+              "edgeId": "sc_stair_system_treads_tread_8_2_e3"
+            },
+            {
+              "id": "rel_vertical_sc_stair_system_treads_tread_8_2_e4",
+              "type": "vertical",
+              "edgeId": "sc_stair_system_treads_tread_8_2_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_8_2_e1_sc_stair_system_treads_tread_8_2_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_8_2_e1",
+                "sc_stair_system_treads_tread_8_2_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_8_2_e2_sc_stair_system_treads_tread_8_2_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_8_2_e2",
+                "sc_stair_system_treads_tread_8_2_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_8_2_e3_sc_stair_system_treads_tread_8_2_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_8_2_e3",
+                "sc_stair_system_treads_tread_8_2_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_stair_system_treads_tread_8_2_e4_sc_stair_system_treads_tread_8_2_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_8_2_e1",
+                "sc_stair_system_treads_tread_8_2_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_8_2_e1_sc_stair_system_treads_tread_8_2_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_8_2_e1",
+                "sc_stair_system_treads_tread_8_2_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_8_2_e1_sc_stair_system_treads_tread_8_2_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_8_2_e1",
+                "sc_stair_system_treads_tread_8_2_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_stair_system_treads_tread_8_2_e2_sc_stair_system_treads_tread_8_2_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_8_2_e2",
+                "sc_stair_system_treads_tread_8_2_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_stair_system_treads_tread_8_2_e2_sc_stair_system_treads_tread_8_2_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_stair_system_treads_tread_8_2_e2",
+                "sc_stair_system_treads_tread_8_2_e4"
+              ]
+            }
           ]
         }
       }
     },
+    "sketches": {},
     "holePatterns": {
       "sc_stair_system_connections_treadCleat1_1_pattern": {
         "id": "sc_stair_system_connections_treadCleat1_1_pattern",
@@ -7156,8 +10382,8 @@
         ],
         "detachedObjectIds": [],
         "transform": {
-          "kind": "standard-hardware",
-          "family": "standard-hardware",
+          "kind": "stair-hardware",
+          "family": "stair-hardware",
           "plateCount": 28,
           "fastenerCount": 26
         },
@@ -11047,99 +14273,7 @@
             "railProfile": "DEMO_RHS_60X40X4"
           },
           "connections": {
-            "family": "standard-hardware",
-            "weldSize": 6,
-            "treadFastenerRef": "M12_8_8",
-            "anchorFastenerRef": "M16_8_8",
-            "postAnchorFastenerRef": "M12_8_8",
-            "treadCleatThickness": 8,
-            "floorBasePlateThickness": 14,
-            "slabBracketThickness": 14,
-            "postBasePlateThickness": 10,
-            "showMountingSurfaces": true,
-            "mountingSurfaceMaterial": "CONCRETE",
-            "floorSurfaceLength": 720,
-            "floorSurfaceWidth": 1500,
-            "floorSurfaceThickness": 120,
-            "topSlabSurfaceWidth": 1500,
-            "topSlabSurfaceHeight": 620,
-            "topSlabSurfaceThickness": 160
-          },
-          "sections": {
-            "strategy": "none",
-            "maxWeightKg": 1000,
-            "manualStations": []
-          },
-          "compliance": {
-            "rulePack": "uk-part-k",
-            "category": "utility",
-            "headroom": 2000
-          }
-        },
-        "parameters": {
-          "route": {
-            "modules": [
-              {
-                "id": "flight_1",
-                "type": "flight.straight"
-              }
-            ]
-          },
-          "levels": {
-            "ffl1": 0,
-            "ffl2": 1440,
-            "slab1ToFfl1": 120,
-            "slab2ToFfl2": 160
-          },
-          "geometry": {
-            "maxStepHeight": 180,
-            "going": 280,
-            "width": 900
-          },
-          "landings": {
-            "family": "plate-landing",
-            "length": 1200,
-            "entryExtensionLength": 0,
-            "exitExtensionLength": 0,
-            "thickness": 10,
-            "frameProfile": "DEMO_I_200X100X8X12"
-          },
-          "treads": {
-            "family": "grating-tread",
-            "thickness": 12,
-            "depth": 260,
-            "overlap": 20,
-            "woodThickness": 32,
-            "woodNosing": 25,
-            "woodMaterial": "OAK_TIMBER",
-            "woodFinish": "clear-sealed-oak",
-            "closedRisers": false,
-            "finish": "shop-primer"
-          },
-          "supports": {
-            "family": "twin-stringer",
-            "profile": "DEMO_RHS_100X50X5",
-            "columnProfile": "DEMO_I_200X100X8X12",
-            "sideOffset": 0,
-            "maxSegmentLength": 6000
-          },
-          "railings": {
-            "family": "post-and-rail",
-            "sides": "both",
-            "height": 1000,
-            "postSpacing": 1200,
-            "curvePostSpacing": 450,
-            "sideInset": 70,
-            "infill": "mid-rails",
-            "panelThickness": 12,
-            "panelMaterial": "LAMINATED_GLASS",
-            "panelFastenerRef": "M12_8_8",
-            "wallBracketFastenerRef": "M12_8_8",
-            "postProfile": "DEMO_SHS_50X50X4",
-            "railProfile": "DEMO_RHS_60X40X4"
-          },
-          "connections": {
-            "family": "standard-hardware",
+            "family": "stair-hardware",
             "weldSize": 6,
             "treadFastenerRef": "M12_8_8",
             "anchorFastenerRef": "M16_8_8",
@@ -11271,6 +14405,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -11317,12 +14452,6 @@
             "family": "path-flight"
           }
         },
-        "parameters": {
-          "meta": {
-            "parent": "sc_stair_system",
-            "family": "path-flight"
-          }
-        },
         "parentInstanceId": "sc_stair_system",
         "parentRole": "flight1",
         "childComponentRoles": {},
@@ -11348,6 +14477,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -11428,12 +14558,6 @@
             "family": "twin-stringer"
           }
         },
-        "parameters": {
-          "meta": {
-            "parent": "sc_stair_system",
-            "family": "twin-stringer"
-          }
-        },
         "parentInstanceId": "sc_stair_system",
         "parentRole": "support",
         "childComponentRoles": {},
@@ -11466,6 +14590,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -11800,12 +14925,6 @@
             "family": "grating-tread"
           }
         },
-        "parameters": {
-          "meta": {
-            "parent": "sc_stair_system",
-            "family": "grating-tread"
-          }
-        },
         "parentInstanceId": "sc_stair_system",
         "parentRole": "treads",
         "childComponentRoles": {},
@@ -11863,6 +14982,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -11910,7 +15030,7 @@
             "railProfile": "DEMO_RHS_60X40X4"
           },
           "connections": {
-            "family": "standard-hardware",
+            "family": "stair-hardware",
             "weldSize": 6,
             "treadFastenerRef": "M12_8_8",
             "anchorFastenerRef": "M16_8_8",
@@ -12048,12 +15168,6 @@
             "family": "post-and-rail"
           }
         },
-        "parameters": {
-          "meta": {
-            "parent": "sc_stair_system",
-            "family": "post-and-rail"
-          }
-        },
         "parentInstanceId": "sc_stair_system",
         "parentRole": "railing",
         "childComponentRoles": {},
@@ -12168,6 +15282,7 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
@@ -12176,16 +15291,16 @@
       },
       "sc_stair_system_connections": {
         "id": "sc_stair_system_connections",
-        "type": "standard-hardware",
+        "type": "stair-hardware",
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "standard-hardware",
+          "id": "stair-hardware",
           "version": "0.1.0"
         },
         "inputs": {
           "connections": {
-            "family": "standard-hardware",
+            "family": "stair-hardware",
             "weldSize": 6,
             "treadFastenerRef": "M12_8_8",
             "anchorFastenerRef": "M16_8_8",
@@ -12262,13 +15377,7 @@
         "referenceParameters": {
           "meta": {
             "parent": "sc_stair_system",
-            "family": "standard-hardware"
-          }
-        },
-        "parameters": {
-          "meta": {
-            "parent": "sc_stair_system",
-            "family": "standard-hardware"
+            "family": "stair-hardware"
           }
         },
         "parentInstanceId": "sc_stair_system",
@@ -12587,14 +15696,93 @@
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
+        "suppressedPatternPositions": {},
         "status": "generated",
         "health": "ok",
         "diagnostics": [],
-        "definition": "standard-hardware",
+        "definition": "stair-hardware",
         "version": 1
       }
     },
-    "relations": {}
+    "relations": {},
+    "gridSystems": {
+      "main_grid": {
+        "id": "main_grid",
+        "name": "Main Grid",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axes": {
+          "x": [
+            {
+              "id": "grid_1",
+              "label": "1",
+              "position": 0
+            },
+            {
+              "id": "grid_2",
+              "label": "2",
+              "position": 6000
+            }
+          ],
+          "y": [
+            {
+              "id": "grid_a",
+              "label": "A",
+              "position": 0
+            },
+            {
+              "id": "grid_b",
+              "label": "B",
+              "position": 5000
+            }
+          ]
+        },
+        "type": "orthogonal-grid-system",
+        "axisX": [
+          1,
+          0,
+          0
+        ],
+        "axisY": [
+          0,
+          1,
+          0
+        ],
+        "axisZ": [
+          0,
+          0,
+          1
+        ],
+        "levelIds": [
+          "level_base",
+          "level_connection",
+          "level_top"
+        ]
+      }
+    },
+    "levels": {
+      "level_base": {
+        "id": "level_base",
+        "name": "Base",
+        "elevation": 0,
+        "type": "datum-level"
+      },
+      "level_connection": {
+        "id": "level_connection",
+        "name": "Connection Level",
+        "elevation": 1500,
+        "type": "datum-level"
+      },
+      "level_top": {
+        "id": "level_top",
+        "name": "Top",
+        "elevation": 3000,
+        "type": "datum-level"
+      }
+    }
   },
   "migrationHistory": [
     {

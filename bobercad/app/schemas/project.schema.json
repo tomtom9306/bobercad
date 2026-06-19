@@ -11,8 +11,6 @@
     "settings",
     "libraries",
     "projectTree",
-    "gridSystems",
-    "levels",
     "objectIndex",
     "modelDefaults",
     "model"
@@ -38,18 +36,6 @@
     },
     "projectTree": {
       "$ref": "#/$defs/projectTree"
-    },
-    "gridSystems": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/gridSystem"
-      }
-    },
-    "levels": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/level"
-      }
     },
     "phases": {
       "type": "object",
@@ -147,7 +133,9 @@
             "center",
             "radius",
             "startAngle",
-            "endAngle"
+            "endAngle",
+            "axisX",
+            "axisY"
           ],
           "properties": {
             "type": {
@@ -200,7 +188,10 @@
             "radius",
             "startAngle",
             "endAngle",
-            "height"
+            "height",
+            "axisX",
+            "axisY",
+            "axisZ"
           ],
           "properties": {
             "type": {
@@ -416,18 +407,26 @@
     },
     "tolerances": {
       "type": "object",
+      "required": [
+        "coincident",
+        "snap",
+        "connectionGap"
+      ],
       "properties": {
         "coincident": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "snap": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "connectionGap": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "modelingConvention": {
       "type": "object",
@@ -561,14 +560,20 @@
       "type": "object",
       "required": [
         "id",
+        "type",
         "name",
         "origin",
-        "rotation",
+        "axisX",
+        "axisY",
+        "axisZ",
         "axes"
       ],
       "properties": {
         "id": {
           "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
         },
         "name": {
           "type": "string"
@@ -576,8 +581,14 @@
         "origin": {
           "$ref": "#/$defs/vec3"
         },
-        "rotation": {
-          "type": "number"
+        "axisX": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisY": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisZ": {
+          "$ref": "#/$defs/vec3"
         },
         "axes": {
           "type": "object",
@@ -596,6 +607,12 @@
             }
           },
           "additionalProperties": true
+        },
+        "levelIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
         }
       },
       "additionalProperties": true
@@ -624,12 +641,16 @@
       "type": "object",
       "required": [
         "id",
+        "type",
         "name",
         "elevation"
       ],
       "properties": {
         "id": {
           "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string"
         },
         "name": {
           "type": "string"
@@ -670,7 +691,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "modelDefaults": {
       "type": "object",
@@ -701,17 +722,37 @@
     "model": {
       "type": "object",
       "required": [
+        "workPoints",
+        "referencePlanes",
+        "groups",
+        "interfaces",
+        "connectionZones",
+        "assemblies",
         "members",
         "plates",
+        "sketches",
         "holePatterns",
         "objectPatterns",
         "features",
+        "trimJoints",
         "fastenerGroups",
         "welds",
         "smartComponentInstances",
-        "assemblies"
+        "relations"
       ],
       "properties": {
+        "gridSystems": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/gridSystem"
+          }
+        },
+        "levels": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/level"
+          }
+        },
         "workPoints": {
           "type": "object",
           "additionalProperties": {
@@ -840,6 +881,9 @@
         "point": {
           "$ref": "#/$defs/vec3"
         },
+        "type": {
+          "type": "string"
+        },
         "role": {
           "type": "string"
         },
@@ -849,17 +893,29 @@
         "gridRefs": {
           "type": "object",
           "properties": {
+            "gridSystemId": {
+              "$ref": "#/$defs/id"
+            },
             "x": {
-              "type": "string"
+              "$ref": "#/$defs/id"
             },
             "y": {
-              "type": "string"
+              "$ref": "#/$defs/id"
             },
             "level": {
               "$ref": "#/$defs/id"
+            },
+            "xAxisId": {
+              "$ref": "#/$defs/id"
+            },
+            "yAxisId": {
+              "$ref": "#/$defs/id"
+            },
+            "levelId": {
+              "$ref": "#/$defs/id"
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "referencePlaneId": {
           "$ref": "#/$defs/id"
@@ -868,7 +924,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "referencePlane": {
       "type": "object",
@@ -904,6 +960,12 @@
         },
         "extents": {
           "type": "object",
+          "required": [
+            "xMin",
+            "xMax",
+            "yMin",
+            "yMax"
+          ],
           "properties": {
             "xMin": {
               "type": "number"
@@ -918,12 +980,21 @@
               "type": "number"
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "notes": {
           "type": "string"
         }
       },
+      "allOf": [
+        {
+          "not": {
+            "required": [
+              "size"
+            ]
+          }
+        }
+      ],
       "additionalProperties": true
     },
     "group": {
@@ -1034,7 +1105,13 @@
           "$ref": "#/$defs/id"
         },
         "type": {
-          "type": "string"
+          "enum": [
+            "component-scope",
+            "member-end-face",
+            "member-web",
+            "planar-face",
+            "plate-face"
+          ]
         },
         "ownerId": {
           "$ref": "#/$defs/id"
@@ -1058,16 +1135,19 @@
           "type": "object",
           "properties": {
             "width": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "height": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "length": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "memberEnd": {
           "enum": [
@@ -1084,12 +1164,99 @@
           ]
         },
         "faceRef": {
-          "type": "string"
+          "enum": [
+            "section.y-plus",
+            "section.y-minus",
+            "section.z-plus",
+            "section.z-minus",
+            "web.left",
+            "web.right",
+            "web-center-plane",
+            "connection-secondary-facing-section-face"
+          ]
         },
         "notes": {
           "type": "string"
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "member-end-face"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "memberEnd"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "member-web"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "faceRef"
+            ],
+            "properties": {
+              "faceRef": {
+                "const": "web-center-plane"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "planar-face"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "faceRef"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "plate-face"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "origin",
+              "normal",
+              "localAxisY",
+              "localAxisZ"
+            ]
+          }
+        }
+      ],
       "additionalProperties": true
     },
     "connectionZone": {
@@ -1124,6 +1291,7 @@
         },
         "interfaceIds": {
           "type": "array",
+          "minItems": 1,
           "items": {
             "$ref": "#/$defs/id"
           }
@@ -1375,10 +1543,12 @@
           "type": "string"
         },
         "holeDiameter": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "positions": {
           "type": "array",
+          "minItems": 1,
           "items": {
             "$ref": "#/$defs/vec2"
           }
@@ -1588,7 +1758,8 @@
           "additionalProperties": true
         },
         "diameter": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "depth": {
           "type": "number",
@@ -1598,10 +1769,12 @@
           "type": "object",
           "properties": {
             "length": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "width": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "orientation": {
               "type": "number"
@@ -1654,6 +1827,14 @@
         },
         "offsets": {
           "type": "object",
+          "required": [
+            "xMinus",
+            "xPlus",
+            "yMinus",
+            "yPlus",
+            "zMinus",
+            "zPlus"
+          ],
           "properties": {
             "xMinus": {
               "type": "number",
@@ -1743,6 +1924,57 @@
             },
             "required": [
               "type"
+            ]
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "properties": {
+                "type": {
+                  "const": "boolean-part"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "body"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "boolean-part"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "dimensions"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "position"
+                  ]
+                }
+              }
             ]
           }
         }
@@ -1855,16 +2087,148 @@
             "required": [
               "referencePlaneIds",
               "removedRegionKeys"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "memberBId"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "memberBEnd"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "miterMode"
+                  ]
+                }
+              }
             ]
           },
           "else": {
             "required": [
               "memberBId"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "referencePlaneIds"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "removedRegionKeys"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "end-butt-1",
+                  "end-butt-2",
+                  "end-butt-both",
+                  "profile-cope",
+                  "plane-trim"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "miterMode"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "end-butt-1"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "memberBEnd"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "end-butt-2"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "memberAEnd"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "profile-cope"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "memberAEnd"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "memberBEnd"
+                  ]
+                }
+              }
             ]
           }
         }
       ],
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "trimJoint": {
       "type": "object",
@@ -1945,10 +2309,25 @@
         },
         "assembly": {
           "type": "object",
+          "properties": {
+            "length": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "gripLength": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "nutOffset": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
           "additionalProperties": true
         },
         "participants": {
           "type": "array",
+          "minItems": 1,
           "items": {
             "$ref": "#/$defs/id"
           }
@@ -1986,11 +2365,23 @@
           "type": "string"
         },
         "size": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
-        "length": {},
+        "length": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "const": "profile-perimeter"
+            }
+          ]
+        },
         "participants": {
           "type": "array",
+          "minItems": 1,
           "items": {
             "$ref": "#/$defs/id"
           }
@@ -2043,7 +2434,23 @@
         "id",
         "type",
         "kind",
-        "sourceComponent"
+        "sourceComponent",
+        "inputs",
+        "referenceParameters",
+        "parentInstanceId",
+        "parentRole",
+        "childComponentRoles",
+        "objectRoles",
+        "outputs",
+        "ownedObjectIds",
+        "managedFields",
+        "fieldOverrides",
+        "detachedObjectIds",
+        "suppressedRoles",
+        "suppressedPatternPositions",
+        "status",
+        "health",
+        "diagnostics"
       ],
       "properties": {
         "id": {
@@ -2172,10 +2579,6 @@
           "type": "object",
           "additionalProperties": true
         },
-        "parameters": {
-          "type": "object",
-          "additionalProperties": true
-        },
         "authoring": {
           "$ref": "#/$defs/authoring"
         },
@@ -2186,7 +2589,7 @@
           "$ref": "#/$defs/tracking"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "weldRun": {
       "type": "object",
@@ -2210,7 +2613,7 @@
         },
         "size": {
           "type": "number",
-          "minimum": 0
+          "exclusiveMinimum": 0
         }
       },
       "additionalProperties": true
@@ -2219,7 +2622,8 @@
       "type": "object",
       "required": [
         "vertices",
-        "edges"
+        "edges",
+        "relations"
       ],
       "properties": {
         "type": {
@@ -2368,7 +2772,8 @@
         "angle",
         "radius",
         "direction",
-        "flangeLength"
+        "flangeLength",
+        "relief"
       ],
       "properties": {
         "id": {
@@ -2389,7 +2794,8 @@
           "type": "number"
         },
         "radius": {
-          "type": "number"
+          "type": "number",
+          "minimum": 0
         },
         "direction": {
           "enum": [
@@ -2409,6 +2815,10 @@
     },
     "plateBendRelief": {
       "type": "object",
+      "required": [
+        "mode",
+        "type"
+      ],
       "properties": {
         "mode": {
           "enum": [
@@ -2558,13 +2968,16 @@
           "type": "array",
           "prefixItems": [
             {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           ],
           "items": false
@@ -2577,18 +2990,95 @@
           }
         },
         "depth": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "radius": {
-          "type": "number"
-        },
-        "diameter": {
-          "type": "number"
-        },
-        "axis": {
-          "$ref": "#/$defs/vec3"
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       },
+      "allOf": [
+        {
+          "not": {
+            "required": [
+              "diameter"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "axis"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "box"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "center",
+              "axisX",
+              "axisY",
+              "axisZ",
+              "size"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "polygonal-prism"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "center",
+              "axisX",
+              "axisY",
+              "axisZ",
+              "outline",
+              "depth"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "cylinder"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "center",
+              "axisX",
+              "axisY",
+              "axisZ",
+              "radius",
+              "depth"
+            ]
+          }
+        }
+      ],
       "additionalProperties": true
     },
     "librarySource": {
@@ -2609,7 +3099,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "authoring": {
       "type": "object",

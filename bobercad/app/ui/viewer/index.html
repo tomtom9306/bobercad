@@ -4,23 +4,60 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Bobercad Viewer</title>
-    <link rel="stylesheet" href="./style.css?v=authoring-quick-list-4">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./style.css?v=tooltip-clean-1">
   </head>
   <body>
-    <canvas id="view"></canvas>
-    <div id="hud">
-      <div id="title">Loading</div>
-      <div id="meta"></div>
-      <button id="reset" type="button">Reset</button>
+    <div class="bc-workspace-shell" aria-label="Bobercad workspace">
+      <canvas id="view"></canvas>
+      <header class="bc-topbar">
+        <div class="bc-brand" aria-label="Bobercad">
+          <span class="bc-brand-mark" aria-hidden="true">B</span>
+          <span class="bc-brand-name">Bobercad</span>
+        </div>
+        <nav class="bc-app-menu" aria-label="Application menu">
+          <button id="topbar-file-open" class="bc-topbar-menu-button" type="button">File</button>
+          <button id="workspace-customize-open" class="bc-topbar-menu-button" type="button">Settings</button>
+        </nav>
+        <nav id="feature-navbar" class="bc-feature-navbar" aria-label="Feature navigation"></nav>
+        <div class="bc-topbar-actions">
+          <button id="command-palette-open" type="button">Search</button>
+        </div>
+      </header>
+      <div class="bc-viewer-settings-band" aria-label="Viewer settings">
+        <button id="reset" class="bc-icon-button bc-viewer-overlay-action" type="button" title="Reset view" aria-label="Reset view">Reset view</button>
+        <div id="viewer-settings-strip" class="bc-viewer-settings-strip" aria-label="Viewer settings"></div>
+      </div>
+      <div class="bc-toolbar-band" aria-label="Modeling tools">
+        <div id="modeling-toolbar" aria-label="Modeling toolbar"></div>
+      </div>
+      <aside class="bc-left-dock" aria-label="Data and library dock">
+        <aside id="library-panel" hidden>
+          <section id="project-files-panel" aria-label="Project files"></section>
+          <section id="project-data-panel" aria-label="Project data"></section>
+          <section id="model-browser" aria-label="Project model browser"></section>
+          <section id="smart-component-library" aria-label="Smart Component library"></section>
+        </aside>
+      </aside>
+      <aside class="bc-right-dock" aria-label="Properties dock">
+        <aside class="bc-inspector-slot" data-inspector-context-panel="properties" hidden></aside>
+        <aside class="bc-inspector-slot" data-inspector-context-panel="feature" hidden></aside>
+        <aside class="bc-inspector-slot" data-inspector-context-panel="trim" hidden></aside>
+        <aside class="bc-inspector-slot" data-inspector-context-panel="component" hidden></aside>
+      </aside>
+      <div class="bc-floating-layer" aria-label="Floating edit panels">
+        <aside id="member-transform-panel" hidden></aside>
+      </div>
+      <div id="nav-cube" class="bc-nav-cube" aria-label="View orientation"></div>
+      <footer class="bc-statusbar">
+        <div id="modeling-status">Ready</div>
+        <div id="hud" class="bc-project-summary" aria-label="Project summary">
+          <div id="title">Loading</div>
+          <div id="meta"></div>
+        </div>
+      </footer>
+      <div id="command-palette" hidden></div>
     </div>
-    <div id="modeling-toolbar" aria-label="Modeling toolbar"></div>
-    <div id="modeling-status">Ready</div>
-    <aside id="member-transform-panel" hidden></aside>
-    <aside id="object-editor" hidden></aside>
-    <aside id="feature-editor" hidden></aside>
-    <aside id="trim-joint-editor" hidden></aside>
-    <aside id="library-panel" hidden></aside>
-    <aside id="custom-panel" hidden></aside>
-    <script type="module" src="./main.mjs?v=unified-snap-manager-9"></script>
+    <script type="module" src="./viewer-runtime.mjs?v=tooltip-clean-1"></script>
   </body>
 </html>

@@ -1,5 +1,5 @@
-import { finiteNumber, finitePositiveNumber, v } from "../core/math.mjs?v=csg-number-dry-1";
-import { signedArea2d, triangulateFace } from "./polygon.mjs?v=polygon-ear-clipping-1";
+import { cleanVec2Loop, finiteNumber, finitePositiveNumber, v } from "../core/math.mjs";
+import { signedArea2d, triangulateFace } from "./polygon.mjs";
 
 let settings = null;
 
@@ -13,8 +13,15 @@ export function geometryError(message) {
   throw new Error(`Geometry evaluator: ${message}`);
 }
 
+function requiredObject(value, owner = "object") {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    geometryError(`${owner} must be an object`);
+  }
+  return value;
+}
+
 export function requiredVector(source, key, owner = "object") {
-  const value = source?.[key];
+  const value = requiredObject(source, owner)[key];
   if (!v.isVec3(value)) {
     geometryError(`${owner} missing valid ${key}`);
   }
@@ -22,23 +29,33 @@ export function requiredVector(source, key, owner = "object") {
 }
 
 export function requiredNumber(source, key, owner = "object") {
-  const value = source?.[key];
+  const value = requiredObject(source, owner)[key];
   if (!finiteNumber(value)) geometryError(`${owner} missing valid ${key}`);
   return value;
 }
 
 export function requiredArray(source, key, owner = "object") {
-  const value = source?.[key];
+  const value = requiredObject(source, owner)[key];
   if (!Array.isArray(value)) geometryError(`${owner} missing valid ${key}`);
   return value;
 }
 
 export function projectCoincidentTolerance(project) {
-  const tolerances = project.settings?.tolerances;
-  if (!tolerances) geometryError(`${project.project?.id || "project"} missing settings.tolerances`);
+  const root = requiredObject(project, "project");
+  const projectMeta = root.project === undefined ? {} : requiredObject(root.project, "project.project");
+  const settingsObject = requiredObject(root.settings, `${projectMeta.id || "project"} settings`);
+  const tolerances = requiredObject(settingsObject.tolerances, `${projectMeta.id || "project"} settings.tolerances`);
   const value = requiredNumber(tolerances, "coincident", "project settings.tolerances");
   if (value <= 0) geometryError("project settings.tolerances.coincident must be positive");
   return value;
+}
+
+function circleSegments() {
+  const render = requiredObject(requiredObject(settings, "geometry settings").render, "geometry settings.render");
+  const curves = requiredObject(render.curves, "geometry settings.render.curves");
+  const segments = curves.circleSegments;
+  if (!Number.isInteger(segments) || segments < 3) geometryError("geometry settings.render.curves.circleSegments must be an integer >= 3");
+  return segments;
 }
 
 function requiredBasis(source, owner = "object") {
@@ -47,6 +64,13 @@ function requiredBasis(source, owner = "object") {
     y: requiredVector(source, "axisY", owner),
     z: requiredVector(source, "axisZ", owner)
   };
+}
+
+function requiredUnitAxis(axis, label) {
+  if (!v.isVec3(axis)) geometryError(`${label} must be a finite [x, y, z] vector`);
+  const length = v.len(axis);
+  if (length <= CSG_EPSILON) geometryError(`${label} cannot be zero length`);
+  return v.mul(axis, 1 / length);
 }
 
 function csgPlaneFromPoints(a, b, c) {
@@ -63,9 +87,10 @@ function csgClonePolygon(polygon) {
 }
 
 export function csgCleanPoints(points) {
+  if (!Array.isArray(points)) geometryError("polygon points must be an array");
   const cleaned = [];
   for (const point of points) {
-    if (!Array.isArray(point) || point.some((value) => !finiteNumber(value))) geometryError("polygon contains an invalid point");
+    if (!v.isVec3(point)) geometryError("polygon point must be a finite [x, y, z] point");
     const previous = cleaned[cleaned.length - 1];
     if (previous && v.len(v.sub(previous, point)) <= CSG_EPSILON) continue;
     cleaned.push(point);
@@ -197,7 +222,14 @@ function csgNodeFromPolygons(polygons) {
   return new CsgNode(polygons.map(csgClonePolygon));
 }
 
+function requiredPolygonArray(polygons, label) {
+  if (!Array.isArray(polygons)) geometryError(`${label} polygons must be an array`);
+  return polygons;
+}
+
 export function csgSubtract(aPolygons, bPolygons) {
+  aPolygons = requiredPolygonArray(aPolygons, "left CSG");
+  bPolygons = requiredPolygonArray(bPolygons, "right CSG");
   if (!bPolygons.length) return aPolygons;
   const a = csgNodeFromPolygons(aPolygons);
   const b = csgNodeFromPolygons(bPolygons);
@@ -213,6 +245,8 @@ export function csgSubtract(aPolygons, bPolygons) {
 }
 
 export function csgUnion(aPolygons, bPolygons) {
+  aPolygons = requiredPolygonArray(aPolygons, "left CSG");
+  bPolygons = requiredPolygonArray(bPolygons, "right CSG");
   if (!bPolygons.length) return aPolygons;
   const a = csgNodeFromPolygons(aPolygons);
   const b = csgNodeFromPolygons(bPolygons);
@@ -226,6 +260,8 @@ export function csgUnion(aPolygons, bPolygons) {
 }
 
 export function csgIntersect(aPolygons, bPolygons) {
+  aPolygons = requiredPolygonArray(aPolygons, "left CSG");
+  bPolygons = requiredPolygonArray(bPolygons, "right CSG");
   if (!aPolygons.length || !bPolygons.length) return [];
   const a = csgNodeFromPolygons(aPolygons);
   const b = csgNodeFromPolygons(bPolygons);
@@ -240,7 +276,13 @@ export function csgIntersect(aPolygons, bPolygons) {
 }
 
 export function ccwPoints(points) {
-  const clean = csgCleanPoints(points);
+  const clean = cleanVec2Loop(points, {
+    tolerance: CSG_EPSILON,
+    label: "polygon point",
+    minPoints: 3,
+    minMessage: "polygon requires at least three distinct points",
+    fail: geometryError
+  });
   return signedArea2d(clean) >= 0 ? clean : [...clean].reverse();
 }
 
@@ -266,10 +308,9 @@ export function csgExtrudedRingPolygons(back, front, shared = {}) {
 }
 
 export function prismPolygons(center, axisX, axisY, axisZ, depth, outline, shared = {}) {
-  const x = v.norm(axisX);
-  const y = v.norm(axisY);
-  const z = v.norm(axisZ);
-  if (v.len(x) <= CSG_EPSILON || v.len(y) <= CSG_EPSILON || v.len(z) <= CSG_EPSILON) geometryError("cutter basis contains zero-length axis");
+  const x = requiredUnitAxis(axisX, "prism axisX");
+  const y = requiredUnitAxis(axisY, "prism axisY");
+  const z = requiredUnitAxis(axisZ, "prism axisZ");
   if (!finitePositiveNumber(depth)) geometryError("prism depth must be a positive number");
   if (!Array.isArray(outline) || outline.length < 3) geometryError("prism outline must contain at least three points");
   const handedness = v.dot(v.cross(x, y), z);
@@ -300,10 +341,10 @@ export function cutBodyPolygons(body, shared = {}) {
     return prismPolygons(center, basis.x, basis.y, basis.z, requiredNumber(body, "depth", "polygonal-prism body"), requiredArray(body, "outline", "polygonal-prism body"), shared);
   }
   if (body.type === "cylinder") {
-    const radius = body.radius !== undefined ? requiredNumber(body, "radius", "cylinder body") : requiredNumber(body, "diameter", "cylinder body") / 2;
+    const radius = requiredNumber(body, "radius", "cylinder body");
     if (radius <= 0) geometryError("cylinder radius must be positive");
     const depth = requiredNumber(body, "depth", "cylinder body");
-    const segments = settings.render.curves.circleSegments;
+    const segments = circleSegments();
     const outline = [];
     for (let i = 0; i < segments; i += 1) {
       const angle = i / segments * Math.PI * 2;
@@ -316,11 +357,11 @@ export function cutBodyPolygons(body, shared = {}) {
 
 export function slotOutline2d(length, width, angle) {
   if (!finiteNumber(angle)) geometryError("slot-hole orientation must be a valid angle");
-  if (length <= 0 || width <= 0) geometryError("slot-hole length and width must be positive");
+  if (!finitePositiveNumber(length) || !finitePositiveNumber(width)) geometryError("slot-hole length and width must be positive");
   if (length < width) geometryError("slot-hole length must be greater than or equal to width");
   const radius = width / 2;
   const straight = Math.max(0, length - width) / 2;
-  const segments = Math.max(8, Math.floor(settings.render.curves.circleSegments / 2));
+  const segments = Math.max(8, Math.floor(circleSegments() / 2));
   const local = [];
   for (let i = 0; i <= segments; i += 1) {
     const a = Math.PI / 2 + i / segments * Math.PI;

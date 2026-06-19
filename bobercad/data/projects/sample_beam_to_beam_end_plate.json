@@ -80,7 +80,7 @@
     "frames": {
       "libraryId": "starter-frame-library",
       "version": "0.1.0",
-      "path": "../libraries/model-library/model-register.json"
+      "path": "../libraries/frames/frame-register.json"
     },
     "smartComponents": {
       "libraryId": "starter-smart-component-library",
@@ -113,61 +113,6 @@
         "name": "Beam To Beam Connection Zone",
         "children": []
       }
-    }
-  },
-  "gridSystems": {
-    "connection_grid": {
-      "id": "connection_grid",
-      "name": "Connection Test Grid",
-      "origin": [
-        0,
-        0,
-        0
-      ],
-      "rotation": 0,
-      "axes": {
-        "x": [
-          {
-            "id": "grid_x_left",
-            "label": "L",
-            "position": -1000
-          },
-          {
-            "id": "grid_x_connection",
-            "label": "C",
-            "position": 0
-          },
-          {
-            "id": "grid_x_right",
-            "label": "R",
-            "position": 1000
-          }
-        ],
-        "y": [
-          {
-            "id": "grid_y_supported_start",
-            "label": "S",
-            "position": -1100
-          },
-          {
-            "id": "grid_y_main",
-            "label": "M",
-            "position": 0
-          }
-        ]
-      }
-    }
-  },
-  "levels": {
-    "level_beam_center": {
-      "id": "level_beam_center",
-      "name": "Supporting Beam Center",
-      "elevation": 0
-    },
-    "level_top_flush": {
-      "id": "level_top_flush",
-      "name": "Flush Top Of Steel",
-      "elevation": 150
     }
   },
   "phases": {
@@ -209,11 +154,11 @@
     },
     "if_main_beam_web": {
       "collection": "interfaces",
-      "type": "member-web-plane"
+      "type": "planar-face"
     },
     "if_supported_beam_end": {
       "collection": "interfaces",
-      "type": "member-end-plane"
+      "type": "member-end-face"
     },
     "if_end_plate_back": {
       "collection": "interfaces",
@@ -294,6 +239,18 @@
     "cut_test_trim": {
       "collection": "trimJoints",
       "type": "member-trim"
+    },
+    "connection_grid": {
+      "collection": "gridSystems",
+      "type": "orthogonal-grid-system"
+    },
+    "level_beam_center": {
+      "collection": "levels",
+      "type": "datum-level"
+    },
+    "level_top_flush": {
+      "collection": "levels",
+      "type": "datum-level"
     }
   },
   "modelDefaults": {
@@ -417,11 +374,11 @@
           0
         ],
         "role": "supporting-beam-start",
-        "gridSystemId": "connection_grid",
         "gridRefs": {
-          "x": "L",
-          "y": "M",
-          "level": "level_beam_center"
+          "gridSystemId": "connection_grid",
+          "xAxisId": "grid_x_left",
+          "yAxisId": "grid_y_main",
+          "levelId": "level_beam_center"
         }
       },
       "wp_main_beam_end": {
@@ -432,11 +389,11 @@
           0
         ],
         "role": "supporting-beam-end",
-        "gridSystemId": "connection_grid",
         "gridRefs": {
-          "x": "R",
-          "y": "M",
-          "level": "level_beam_center"
+          "gridSystemId": "connection_grid",
+          "xAxisId": "grid_x_right",
+          "yAxisId": "grid_y_main",
+          "levelId": "level_beam_center"
         }
       },
       "wp_supported_beam_start": {
@@ -447,11 +404,11 @@
           50
         ],
         "role": "supported-beam-start",
-        "gridSystemId": "connection_grid",
         "gridRefs": {
-          "x": "C",
-          "y": "S",
-          "level": "level_top_flush"
+          "gridSystemId": "connection_grid",
+          "xAxisId": "grid_x_connection",
+          "yAxisId": "grid_y_supported_start",
+          "levelId": "level_top_flush"
         }
       },
       "wp_supported_beam_end": {
@@ -462,11 +419,11 @@
           50
         ],
         "role": "supported-beam-end-at-end-plate",
-        "gridSystemId": "connection_grid",
         "gridRefs": {
-          "x": "C",
-          "y": "M",
-          "level": "level_top_flush"
+          "gridSystemId": "connection_grid",
+          "xAxisId": "grid_x_connection",
+          "yAxisId": "grid_y_main",
+          "levelId": "level_top_flush"
         }
       },
       "wp_connection_center": {
@@ -476,7 +433,10 @@
           -14,
           25
         ],
-        "role": "end-plate-center"
+        "role": "end-plate-center",
+        "gridRefs": {
+          "gridSystemId": "connection_grid"
+        }
       }
     },
     "referencePlanes": {
@@ -489,6 +449,7 @@
           -4,
           25
         ],
+        "station": 1000,
         "normal": [
           0,
           -1,
@@ -637,7 +598,7 @@
     "interfaces": {
       "if_main_beam_web": {
         "id": "if_main_beam_web",
-        "type": "member-web-plane",
+        "type": "planar-face",
         "ownerId": "main_beam",
         "role": "supporting-beam-web-near-face",
         "origin": [
@@ -645,6 +606,7 @@
           -4,
           25
         ],
+        "station": 1000,
         "normal": [
           0,
           -1,
@@ -668,7 +630,7 @@
       },
       "if_supported_beam_end": {
         "id": "if_supported_beam_end",
-        "type": "member-end-plane",
+        "type": "member-end-face",
         "ownerId": "supported_beam",
         "role": "supported-beam-end",
         "origin": [
@@ -809,7 +771,19 @@
         "display": {
           "color": "#7f9db9"
         },
-        "assemblyId": "asm_beam_to_beam"
+        "assemblyId": "asm_beam_to_beam",
+        "layoutAxis": {
+          "start": [
+            -1000,
+            0,
+            0
+          ],
+          "end": [
+            1000,
+            0,
+            0
+          ]
+        }
       },
       "supported_beam": {
         "id": "supported_beam",
@@ -838,7 +812,19 @@
         "display": {
           "color": "#587c93"
         },
-        "assemblyId": "asm_beam_to_beam"
+        "assemblyId": "asm_beam_to_beam",
+        "layoutAxis": {
+          "start": [
+            0,
+            -1100,
+            50
+          ],
+          "end": [
+            0,
+            -20,
+            50
+          ]
+        }
       },
       "cut_test_beam": {
         "id": "cut_test_beam",
@@ -869,6 +855,18 @@
         "authoring": {
           "source": "manual-cut-type-test",
           "notes": "Standalone member used only to test Tekla-style cut feature types in the active project."
+        },
+        "layoutAxis": {
+          "start": [
+            -900,
+            650,
+            450
+          ],
+          "end": [
+            900,
+            650,
+            450
+          ]
         }
       }
     },
@@ -881,6 +879,22 @@
           -14,
           25
         ],
+        "normal": [
+          0,
+          -1,
+          0
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "thickness": 12,
         "featureIds": [
           "holes_end_plate_1"
         ],
@@ -955,10 +969,97 @@
               "from": "end_plate_1_v4",
               "to": "end_plate_1_v1"
             }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_end_plate_1_e1",
+              "type": "horizontal",
+              "edgeId": "end_plate_1_e1"
+            },
+            {
+              "id": "rel_vertical_end_plate_1_e2",
+              "type": "vertical",
+              "edgeId": "end_plate_1_e2"
+            },
+            {
+              "id": "rel_horizontal_end_plate_1_e3",
+              "type": "horizontal",
+              "edgeId": "end_plate_1_e3"
+            },
+            {
+              "id": "rel_vertical_end_plate_1_e4",
+              "type": "vertical",
+              "edgeId": "end_plate_1_e4"
+            },
+            {
+              "id": "rel_perpendicular_end_plate_1_e1_end_plate_1_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "end_plate_1_e1",
+                "end_plate_1_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_end_plate_1_e2_end_plate_1_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "end_plate_1_e2",
+                "end_plate_1_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_end_plate_1_e3_end_plate_1_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "end_plate_1_e3",
+                "end_plate_1_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_end_plate_1_e4_end_plate_1_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "end_plate_1_e1",
+                "end_plate_1_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_end_plate_1_e1_end_plate_1_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "end_plate_1_e1",
+                "end_plate_1_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_end_plate_1_e1_end_plate_1_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "end_plate_1_e1",
+                "end_plate_1_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_end_plate_1_e2_end_plate_1_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "end_plate_1_e2",
+                "end_plate_1_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_end_plate_1_e2_end_plate_1_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "end_plate_1_e2",
+                "end_plate_1_e4"
+              ]
+            }
           ]
         }
       }
     },
+    "sketches": {},
     "holePatterns": {
       "hp_end_plate_m16_2x3": {
         "id": "hp_end_plate_m16_2x3",
@@ -1400,12 +1501,6 @@
           "boltRows": 3,
           "boltColumns": 2
         },
-        "parameters": {
-          "supportedBeamTopFlushWithMainBeamTop": true,
-          "topFlangeNotched": true,
-          "boltRows": 3,
-          "boltColumns": 2
-        },
         "parentInstanceId": null,
         "parentRole": null,
         "childComponentRoles": {},
@@ -1428,7 +1523,85 @@
             "id": "beam_to_beam_end_plate_m16_2x3",
             "version": "0.1.0"
           }
-        }
+        },
+        "outputs": {}
+      }
+    },
+    "relations": {},
+    "gridSystems": {
+      "connection_grid": {
+        "id": "connection_grid",
+        "name": "Connection Test Grid",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axes": {
+          "x": [
+            {
+              "id": "grid_x_left",
+              "label": "L",
+              "position": -1000
+            },
+            {
+              "id": "grid_x_connection",
+              "label": "C",
+              "position": 0
+            },
+            {
+              "id": "grid_x_right",
+              "label": "R",
+              "position": 1000
+            }
+          ],
+          "y": [
+            {
+              "id": "grid_y_supported_start",
+              "label": "S",
+              "position": -1100
+            },
+            {
+              "id": "grid_y_main",
+              "label": "M",
+              "position": 0
+            }
+          ]
+        },
+        "type": "orthogonal-grid-system",
+        "axisX": [
+          1,
+          0,
+          0
+        ],
+        "axisY": [
+          0,
+          1,
+          0
+        ],
+        "axisZ": [
+          0,
+          0,
+          1
+        ],
+        "levelIds": [
+          "level_beam_center",
+          "level_top_flush"
+        ]
+      }
+    },
+    "levels": {
+      "level_beam_center": {
+        "id": "level_beam_center",
+        "name": "Supporting Beam Center",
+        "elevation": 0,
+        "type": "datum-level"
+      },
+      "level_top_flush": {
+        "id": "level_top_flush",
+        "name": "Flush Top Of Steel",
+        "elevation": 150,
+        "type": "datum-level"
       }
     }
   }

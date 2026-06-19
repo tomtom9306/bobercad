@@ -1,16 +1,72 @@
-import { finiteNumber, projectPointToPlane, v } from "../core/math.mjs?v=member-evaluator-number-dry-1";
-import { arrayValues, uniqueValues } from "../core/model.mjs?v=geometry-api-array-values-dry-1";
+import { finiteNumber, projectPointToPlane, v } from "../core/math.mjs";
+import { uniqueValues } from "../core/model.mjs";
 
 const UP = [0, 0, 1];
 const EPSILON = 1e-9;
 const CONNECTION_FACING_FACE = "connection-secondary-facing-section-face";
+const SECTION_FACE_REFS = new Set([
+  "section.y-plus",
+  "section.y-minus",
+  "section.z-plus",
+  "section.z-minus",
+  "web.left",
+  "web.right",
+  "web-center-plane"
+]);
 
 function fail(message) {
   throw new Error(`member evaluator: ${message}`);
 }
 
+function requiredArray(value, label) {
+  if (!Array.isArray(value)) fail(`${label} must be an array`);
+  return value;
+}
+
+function requiredObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${label} must be an object`);
+  return value;
+}
+
+function requiredVec3(value, label) {
+  if (!v.isVec3(value)) fail(`${label} must be a finite [x, y, z] point`);
+  return value;
+}
+
+function requiredVec2(value, label) {
+  if (!Array.isArray(value) || value.length !== 2 || value.some((item) => !finiteNumber(item))) {
+    fail(`${label} must be a finite [y, z] point`);
+  }
+  return value;
+}
+
+function optionalObject(value, label) {
+  if (value === undefined) return {};
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${label} must be an object`);
+  return value;
+}
+
+function optionalVec3(value, label) {
+  if (value === undefined) return undefined;
+  return requiredVec3(value, label);
+}
+
+function optionReferencePoint(options, label) {
+  const point = options.referencePoint;
+  if (point === undefined) return undefined;
+  return requiredVec3(point, label);
+}
+
 function sectionSolidPoints(profile) {
-  const points = arrayValues(profile.section?.contours).flatMap((contour) => contour.role === "solid" ? arrayValues(contour.points) : []);
+  const points = [];
+  for (const [contourIndex, source] of requiredArray(profile.section?.contours, `${profile.id}.section.contours`).entries()) {
+    const contour = requiredObject(source, `${profile.id}.section.contours[${contourIndex}]`);
+    if (contour.role !== "solid") continue;
+    const contourId = contour.id || contour.role;
+    for (const [pointIndex, point] of requiredArray(contour.points, `${profile.id}.${contourId}.points`).entries()) {
+      points.push(requiredVec2(point, `${profile.id}.${contourId}.points[${pointIndex}]`));
+    }
+  }
   if (!points.length) fail(`${profile.id}: profile must contain solid contour points`);
   return points;
 }
@@ -34,9 +90,9 @@ function orderedBounds(bounds) {
 }
 
 function lineValue(spec, stationRatio, fallback, label) {
-  if (spec === undefined || spec === null) return fallback;
+  if (spec === undefined) return fallback;
   if (finiteNumber(spec)) return spec;
-  if (typeof spec !== "object") fail(`${label} must be a number or station value object`);
+  if (!spec || typeof spec !== "object" || Array.isArray(spec)) fail(`${label} must be a number or station value object`);
   if (spec.type && spec.type !== "linear" && spec.type !== "constant") fail(`${label}: unsupported value type ${spec.type}`);
   if (spec.type === "constant") {
     if (!finiteNumber(spec.value)) fail(`${label}.value must be a finite number`);
@@ -46,14 +102,22 @@ function lineValue(spec, stationRatio, fallback, label) {
   return spec.start + (spec.end - spec.start) * stationRatio;
 }
 
+function memberRotation(member) {
+  if (!finiteNumber(member.rotation)) fail(`${member.id}: rotation must be a finite number`);
+  return member.rotation;
+}
+
 function memberLine(member) {
-  const path = member.path;
-  if (path !== undefined) {
-    if (path.type !== "line") fail(`${member.id}: only line member paths are supported by the strict evaluator`);
-    if (!Array.isArray(path.start) || !Array.isArray(path.end)) fail(`${member.id}: line path must define start/end`);
-    return { start: path.start, end: path.end };
-  }
-  return { start: member.start, end: member.end };
+  return {
+    start: requiredVec3(member.start, `${member.id}.start`),
+    end: requiredVec3(member.end, `${member.id}.end`)
+  };
+}
+
+function checkedMemberStation(station, length, label) {
+  if (!finiteNumber(station)) fail(`${label} must be a finite station`);
+  if (station < -EPSILON || station > length + EPSILON) fail(`${label} must be between 0 and ${length}`);
+  return Math.min(length, Math.max(0, station));
 }
 
 function baseFrameFromAxis(member, x) {
@@ -72,24 +136,23 @@ function baseFrameFromAxis(member, x) {
 
 function sectionTransformAt(member, station, length) {
   const ratio = length > EPSILON ? station / length : 0;
-  const placement = member.sectionPlacement || {};
-  const taper = member.shapeModifiers?.taper || {};
-  const roll = (member.rotation || 0) + lineValue(placement.roll, ratio, 0, `${member.id}.sectionPlacement.roll`);
-  const scaleY = lineValue(taper.scaleY ?? (taper.startScaleY !== undefined || taper.endScaleY !== undefined ? {
-    start: taper.startScaleY ?? 1,
-    end: taper.endScaleY ?? 1
-  } : undefined), ratio, 1, `${member.id}.shapeModifiers.taper.scaleY`);
-  const scaleZ = lineValue(taper.scaleZ ?? (taper.startScaleZ !== undefined || taper.endScaleZ !== undefined ? {
-    start: taper.startScaleZ ?? 1,
-    end: taper.endScaleZ ?? 1
-  } : undefined), ratio, 1, `${member.id}.shapeModifiers.taper.scaleZ`);
+  const placement = member.sectionPlacement === undefined ? {} : member.sectionPlacement;
+  if (!placement || typeof placement !== "object" || Array.isArray(placement)) fail(`${member.id}.sectionPlacement must be an object`);
+  const shapeModifiers = member.shapeModifiers === undefined ? {} : member.shapeModifiers;
+  if (!shapeModifiers || typeof shapeModifiers !== "object" || Array.isArray(shapeModifiers)) fail(`${member.id}.shapeModifiers must be an object`);
+  const taper = shapeModifiers.taper === undefined ? {} : shapeModifiers.taper;
+  if (!taper || typeof taper !== "object" || Array.isArray(taper)) fail(`${member.id}.shapeModifiers.taper must be an object`);
+  const offset = optionalObject(placement.offset, `${member.id}.sectionPlacement.offset`);
+  const roll = memberRotation(member) + lineValue(placement.roll, ratio, 0, `${member.id}.sectionPlacement.roll`);
+  const scaleY = lineValue(taper.scaleY, ratio, 1, `${member.id}.shapeModifiers.taper.scaleY`);
+  const scaleZ = lineValue(taper.scaleZ, ratio, 1, `${member.id}.shapeModifiers.taper.scaleZ`);
   if (Math.abs(scaleY) <= EPSILON || Math.abs(scaleZ) <= EPSILON) fail(`${member.id}: section scale cannot be zero`);
   return {
     roll,
     scaleY,
     scaleZ,
-    offsetY: lineValue(placement.offset?.y, ratio, 0, `${member.id}.sectionPlacement.offset.y`),
-    offsetZ: lineValue(placement.offset?.z, ratio, 0, `${member.id}.sectionPlacement.offset.z`)
+    offsetY: lineValue(offset.y, ratio, 0, `${member.id}.sectionPlacement.offset.y`),
+    offsetZ: lineValue(offset.z, ratio, 0, `${member.id}.sectionPlacement.offset.z`)
   };
 }
 
@@ -171,53 +234,10 @@ export function memberFrame(member) {
   return { x: frame.x, y: frame.y, z: frame.z };
 }
 
-function vectorForWorldFace(faceRef) {
-  const vectors = {
-    "x-plus": [1, 0, 0],
-    "x-minus": [-1, 0, 0],
-    "y-plus": [0, 1, 0],
-    "y-minus": [0, -1, 0],
-    "z-plus": [0, 0, 1],
-    "z-minus": [0, 0, -1],
-    "positive-x-face": [1, 0, 0],
-    "negative-x-face": [-1, 0, 0],
-    "positive-y-face": [0, 1, 0],
-    "negative-y-face": [0, -1, 0],
-    "positive-z-face": [0, 0, 1],
-    "negative-z-face": [0, 0, -1]
-  };
-  return vectors[faceRef] || null;
-}
-
 function canonicalFaceRef(faceRef, member) {
   if (faceRef === CONNECTION_FACING_FACE) return faceRef;
-  const aliases = {
-    "section.y-plus": "section.y-plus",
-    "section.y-minus": "section.y-minus",
-    "section.z-plus": "section.z-plus",
-    "section.z-minus": "section.z-minus",
-    "web.left": "web.left",
-    "web.right": "web.right",
-    "web-center-plane": "web-center-plane"
-  };
-  if (aliases[faceRef]) return aliases[faceRef];
-
-  const world = vectorForWorldFace(faceRef);
-  if (!world) fail(`${member.id}: unsupported interface faceRef ${faceRef}`);
-
-  const baseFrame = memberFrame({ ...member, rotation: 0, sectionPlacement: undefined });
-  const candidates = [
-    ["section.y-plus", baseFrame.y],
-    ["section.y-minus", v.mul(baseFrame.y, -1)],
-    ["section.z-plus", baseFrame.z],
-    ["section.z-minus", v.mul(baseFrame.z, -1)]
-  ];
-  const [best] = candidates.reduce((current, candidate) => {
-    const score = v.dot(candidate[1], world);
-    return score > current[1] ? [candidate[0], score] : current;
-  }, [null, -Infinity]);
-  if (!best) fail(`${member.id}: cannot map world faceRef ${faceRef} to a section face`);
-  return best;
+  if (SECTION_FACE_REFS.has(faceRef)) return faceRef;
+  fail(`${member.id}: unsupported interface faceRef ${faceRef}`);
 }
 
 function secondaryFacingFace(iface, member, profile, frame, referencePoint) {
@@ -246,17 +266,18 @@ function secondaryFacingFace(iface, member, profile, frame, referencePoint) {
 
 function stationForInterface(iface, member, options = {}) {
   const frame = memberFrameAt(member, 0);
+  const referencePoint = optionReferencePoint(options, `${iface.id}: referencePoint`);
   if (iface.memberEnd === "start") return 0;
   if (iface.memberEnd === "end") return frame.length;
+  if (iface.memberEnd !== undefined) fail(`${iface.id}: memberEnd must be start or end`);
   if (iface.stationReference === "connection-secondary-interface-origin") {
-    if (!Array.isArray(options.referencePoint)) fail(`${iface.id}: stationReference requires a connection reference point`);
-    return v.dot(v.sub(options.referencePoint, memberLine(member).start), frame.x);
+    if (!referencePoint) fail(`${iface.id}: stationReference requires a connection reference point`);
+    return checkedMemberStation(v.dot(v.sub(referencePoint, memberLine(member).start), frame.x), frame.length, `${iface.id}.stationReference`);
   }
-  if (finiteNumber(iface.station)) return iface.station;
-  if (options.preferReferencePoint && Array.isArray(options.referencePoint)) {
-    return v.dot(v.sub(options.referencePoint, memberLine(member).start), frame.x);
+  if (iface.station !== undefined) return checkedMemberStation(iface.station, frame.length, `${iface.id}.station`);
+  if (options.preferReferencePoint && referencePoint) {
+    return checkedMemberStation(v.dot(v.sub(referencePoint, memberLine(member).start), frame.x), frame.length, `${iface.id}.referencePoint station`);
   }
-  if (Array.isArray(iface.origin)) return v.dot(v.sub(iface.origin, memberLine(member).start), frame.x);
   fail(`${iface.id}: member interface must define memberEnd or station`);
 }
 
@@ -277,6 +298,14 @@ function faceAxes(normal, frame) {
 function sizeAlong(axis, dimensions) {
   const item = dimensions.reduce((best, candidate) => Math.abs(v.dot(axis, candidate.axis)) > Math.abs(v.dot(axis, best.axis)) ? candidate : best, dimensions[0]);
   return item.size;
+}
+
+function explicitPositiveExtent(iface, key) {
+  const extents = iface.extents === undefined ? undefined : optionalObject(iface.extents, `${iface.id}.extents`);
+  const value = extents?.[key];
+  if (value === undefined) return undefined;
+  if (!finiteNumber(value) || value <= EPSILON) fail(`${iface.id}.extents.${key} must be positive`);
+  return value;
 }
 
 function sideFaceExtents(face, frame, bounds, web) {
@@ -333,11 +362,13 @@ function resolveSectionFace(iface, member, profile, options = {}) {
   const web = sectionWebBoundsAt(member, profile, station, frame.length);
   const face = resolveMemberFaceRef(iface, member, profile, options);
   const normal = faceNormal(face, frame);
+  const referencePoint = optionReferencePoint(options, `${iface.id}: referencePoint`);
+  const ifaceOrigin = optionalVec3(iface.origin, `${iface.id}.origin`);
   let origin = faceOrigin(face, frame, bounds, web);
-  if ((iface.stationReference === "connection-secondary-interface-origin" || options.preferReferencePoint) && Array.isArray(options.referencePoint)) {
-    origin = projectPointToPlane(options.referencePoint, origin, normal);
-  } else if (Array.isArray(iface.origin)) {
-    origin = projectPointToPlane(iface.origin, origin, normal);
+  if ((iface.stationReference === "connection-secondary-interface-origin" || options.preferReferencePoint) && referencePoint) {
+    origin = projectPointToPlane(referencePoint, origin, normal);
+  } else if (ifaceOrigin) {
+    origin = projectPointToPlane(ifaceOrigin, origin, normal);
   }
   const { axes, extents } = sideFaceExtents(face, frame, bounds, web);
   return {
@@ -357,6 +388,7 @@ function resolveMemberEndInterface(iface, member, profile) {
   const bounds = sectionBoundsAt(member, profile, station, frame.length);
   const end = iface.memberEnd;
   if (end !== "start" && end !== "end") fail(`${iface.id}: member-end interface must set memberEnd`);
+  const length = explicitPositiveExtent(iface, "length");
   return {
     ...iface,
     origin: frame.origin,
@@ -364,6 +396,7 @@ function resolveMemberEndInterface(iface, member, profile) {
     localAxisY: frame.y,
     localAxisZ: frame.z,
     extents: {
+      ...(length === undefined ? {} : { length }),
       width: bounds.maxY - bounds.minY,
       height: bounds.maxZ - bounds.minZ
     }
@@ -375,11 +408,13 @@ function resolveMemberWebInterface(iface, member, profile, options = {}) {
   const frame = memberFrameAt(member, station);
   const web = sectionWebBoundsAt(member, profile, station, frame.length);
   const normal = frame.y;
+  const referencePoint = optionReferencePoint(options, `${iface.id}: referencePoint`);
+  const ifaceOrigin = optionalVec3(iface.origin, `${iface.id}.origin`);
   let origin = frame.origin;
-  if ((iface.stationReference === "connection-secondary-interface-origin" || options.preferReferencePoint) && Array.isArray(options.referencePoint)) {
-    origin = projectPointToPlane(options.referencePoint, origin, normal);
-  } else if (Array.isArray(iface.origin) && !iface.memberEnd) {
-    origin = projectPointToPlane(iface.origin, origin, normal);
+  if ((iface.stationReference === "connection-secondary-interface-origin" || options.preferReferencePoint) && referencePoint) {
+    origin = projectPointToPlane(referencePoint, origin, normal);
+  } else if (ifaceOrigin && !iface.memberEnd) {
+    origin = projectPointToPlane(ifaceOrigin, origin, normal);
   }
   return {
     ...iface,
@@ -396,8 +431,14 @@ function resolveMemberWebInterface(iface, member, profile, options = {}) {
 }
 
 export function evaluateMemberInterface(iface, member, profile, options = {}) {
-  if (iface.memberEnd && (iface.type.includes("end") || !iface.faceRef)) return resolveMemberEndInterface(iface, member, profile);
-  if (iface.faceRef === "web-center-plane" || iface.type === "member-web") return resolveMemberWebInterface(iface, member, profile, options);
-  if (iface.faceRef) return resolveSectionFace(iface, member, profile, options);
-  fail(`${iface.id}: member interface must define faceRef or memberEnd`);
+  if (iface.type === "member-end-face") return resolveMemberEndInterface(iface, member, profile);
+  if (iface.type === "member-web") {
+    if (iface.faceRef !== "web-center-plane") fail(`${iface.id}: member-web interface must use web-center-plane`);
+    return resolveMemberWebInterface(iface, member, profile, options);
+  }
+  if (iface.type === "planar-face") {
+    if (!iface.faceRef) fail(`${iface.id}: planar-face interface must define faceRef`);
+    return resolveSectionFace(iface, member, profile, options);
+  }
+  fail(`${iface.id}: unsupported member interface type ${iface.type || "missing"}`);
 }

@@ -42,7 +42,7 @@ bobercad
 |-- scripts
 |   |-- check_repo.js
 |   |-- check_repo_structure.js
-|   |-- check_viewer_geometry.js
+|   |-- check_viewer_runtime.js
 |   |-- export_bobercad_ai_review.js
 |   `-- validate_json_schema.js
 |
@@ -55,7 +55,7 @@ bobercad
     |   |   |-- material-library.schema.json
     |   |   |-- profile-library.schema.json
     |   |   |-- fastener-library.schema.json
-    |   |   |-- model-library.schema.json
+    |   |   |-- frame-library.schema.json
     |   |   |-- smart-component.schema.json
     |   |   `-- smart-component-register.schema.json
     |   |
@@ -66,7 +66,7 @@ bobercad
     |   |   |   |-- project
     |   |   |   |   |-- members.mjs
     |   |   |   |   |-- objects.mjs
-    |   |   |   |   |-- plates.mjs
+    |   |   |   |   |-- plate-sketch-relations-and-bends.mjs
     |   |   |   |   `-- snap-solver.mjs
     |   |   |   |
     |   |   |   |-- geometry
@@ -74,7 +74,7 @@ bobercad
     |   |   |   |
     |   |   |   `-- connections
     |   |   |       |-- connection-api.mjs
-    |   |   |       |-- builders.mjs
+    |   |   |       |-- semantic-builders.mjs
     |   |   |       |-- checks.mjs
     |   |   |       `-- geometry.mjs
     |   |   |
@@ -89,12 +89,12 @@ bobercad
     |   |   |   `-- polygon.mjs
     |   |   |
     |   |   |-- store
-    |   |   |   `-- project-store.mjs
+    |   |   |   `-- project-command-store.mjs
     |   |   |
     |   |   `-- modules
     |   |       `-- smart-components
-    |   |           |-- parameters.mjs
-    |   |           |-- smart-component-generator.mjs
+    |   |           |-- smart-component-parameters-and-definition.mjs
+    |   |           |-- smart-component-runtime.mjs
     |   |           |-- smart-component-recipe.mjs
     |   |           `-- smart-component-registry.mjs
     |   |
@@ -103,20 +103,20 @@ bobercad
     |   |   |   `-- README.md
     |   |   |
     |   |   |-- scene
-    |   |   |   |-- build-scene.mjs
+    |   |   |   |-- scene-geometry-builder.mjs
     |   |   |   `-- plate-bend-geometry.mjs
     |   |   |
     |   |   |-- interaction
-    |   |   |   |-- member-edit-controller.mjs
+    |   |   |   |-- member-transform-edit-controller.mjs
     |   |   |   |-- selection-controller.mjs
     |   |   |   |-- snap-manager.mjs
     |   |   |   |-- snap-profiles.mjs
-    |   |   |   |-- snap-providers.mjs
+    |   |   |   |-- snap-candidate-providers.mjs
     |   |   |   `-- snap-selection-manager.mjs
     |   |   |
     |   |   `-- webgl
     |   |       |-- camera.mjs
-    |   |       `-- webgl-renderer.mjs
+    |   |       `-- webgl-viewer-runtime.mjs
     |   |
     |   `-- ui
     |       `-- viewer
@@ -124,9 +124,9 @@ bobercad
     |           |-- README.md
     |           |-- style.css
     |           |-- viewer-settings.json
-    |           |-- main.mjs
+    |           |-- viewer-runtime.mjs
     |           |-- panels
-    |           |   `-- property-panel.mjs
+    |           |   `-- inspector-panel.mjs
     |
     `-- data
         |-- libraries
@@ -148,16 +148,16 @@ bobercad
         |   |       `-- starter-fasteners
         |   |           `-- config.json
         |   |
-        |   |-- model-library
-        |   |   |-- model-register.json
-        |   |   `-- models
+        |   |-- frames
+        |   |   |-- frame-register.json
+        |   |   `-- frame-libraries
         |   |       `-- starter-frames
         |   |           `-- config.json
         |   |
         |   `-- smart-components
         |       |-- smart-component-register.json
-        |       |-- smart-component-library-ui.mjs
-        |       |-- smart-component-ui.mjs
+        |       |-- member-pick-smart-component-library-ui.mjs
+        |       |-- smart-component-parameter-ui.mjs
         |       |-- parameter-values.mjs
         |       |
         |       `-- components
@@ -232,7 +232,7 @@ ui/panels      generic project/property panels
 ui/dimensions  dimension edit state and commits
 ```
 
-Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The Smart Component register points to `data/libraries/smart-components/smart-component-library-ui.mjs` for library-level tools. Component-specific fields come from Smart Component config, not custom viewer files.
+Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The Smart Component register points to `data/libraries/smart-components/member-pick-smart-component-library-ui.mjs` for library-level tools. Component-specific fields come from Smart Component config, not custom viewer files.
 
 API rule:
 
@@ -249,8 +249,8 @@ Smart Component libraries keep parametric authoring definitions out of app core.
 ```text
 bobercad/bobercad/data/libraries/smart-components
 |-- smart-component-register.json
-|-- smart-component-library-ui.mjs
-|-- smart-component-ui.mjs
+|-- member-pick-smart-component-library-ui.mjs
+|-- smart-component-parameter-ui.mjs
 `-- components
     |-- connections
     |   `-- one-folder-per-connection-kind

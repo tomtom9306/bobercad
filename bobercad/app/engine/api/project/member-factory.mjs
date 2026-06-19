@@ -1,12 +1,17 @@
-import { v } from "../../core/math.mjs";
+import { finiteNumber, v } from "../../core/math.mjs";
 import { nextObjectId } from "./objects.mjs";
-import { vec3 } from "./members.mjs?v=vec3-dry-1";
+import { vec3 } from "./members.mjs";
 
 const EPSILON = 1e-9;
 const definedObject = (fields) => Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
 
 function fail(message) {
   throw new Error(`member factory: ${message}`);
+}
+
+function requiredObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${label} must be an object`);
+  return value;
 }
 
 function titleCase(value) {
@@ -17,34 +22,83 @@ function markPrefix(type) {
   return type === "column" ? "C" : "B";
 }
 
+function memberDefaultEntries(project) {
+  project = requiredObject(project, "project");
+  const modelDefaults = optionalObject(project.modelDefaults, {}, "modelDefaults");
+  const collections = optionalObject(modelDefaults.collections, {}, "modelDefaults.collections");
+  const defaults = optionalObject(collections.members, {}, "modelDefaults.collections.members");
+  for (const [key, value] of Object.entries(defaults)) {
+    requiredObject(value, `modelDefaults.collections.members.${key}`);
+  }
+  return defaults;
+}
+
 function typeDefaults(project, type) {
-  const defaults = project.modelDefaults?.collections?.members || {};
+  const defaults = memberDefaultEntries(project);
   const preferredKeys = type === "column"
     ? ["column", "supporting-column", "primary-column"]
     : ["beam", "supported-beam", "supporting-beam", "primary-beam"];
   for (const key of preferredKeys) {
-    if (defaults[key]) return { key, defaults: defaults[key] };
+    if (defaults[key]) return defaults[key];
   }
-  const entry = Object.entries(defaults).find(([key, value]) => key !== "*" && value?.profile);
-  return entry ? { key: entry[0], defaults: entry[1] } : { key: type, defaults: {} };
+  return {};
 }
 
 function projectDefaultMaterial(project) {
-  return project.modelDefaults?.collections?.members?.["*"]?.material || "S355";
+  const material = memberDefaultEntries(project)["*"]?.material;
+  return optionalString(material, undefined, "modelDefaults.collections.members.*.material");
 }
 
-function defaultProfileId(project, profiles, type) {
-  const typeDefault = typeDefaults(project, type).defaults;
-  if (typeDefault.profile) return typeDefault.profile;
-  const ids = Object.keys(profiles || {});
-  if (!ids.length) fail("no profiles are available");
-  return ids[0];
+function defaultProfileId(project, type) {
+  const typeDefault = typeDefaults(project, type);
+  if (typeDefault.profile !== undefined) return optionalString(typeDefault.profile, undefined, `${type}: modelDefaults.collections.members profile`);
+  fail(`${type}: modelDefaults.collections.members profile is required`);
+}
+
+function optionalFiniteNumber(value, fallback, label) {
+  if (value === undefined) return fallback;
+  if (!finiteNumber(value)) fail(`${label} must be a finite number`);
+  return value;
+}
+
+function optionalObject(value, fallback, label) {
+  if (value === undefined) return fallback;
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${label} must be an object`);
+  return value;
+}
+
+function optionalString(value, fallback, label) {
+  if (value === undefined) return fallback;
+  if (typeof value !== "string" || !value.trim()) fail(`${label} must be a non-empty string`);
+  return value;
+}
+
+function optionalEndpoint(value, fallback, label) {
+  const endpoint = optionalString(value, fallback, label);
+  if (endpoint !== undefined && endpoint !== "start" && endpoint !== "end") fail(`${label} must be start or end`);
+  return endpoint;
+}
+
+function optionalPositiveInteger(value, fallback, label) {
+  if (value === undefined) return fallback;
+  if (!Number.isInteger(value) || value <= 0) fail(`${label} must be a positive integer`);
+  return value;
+}
+
+function setOptionalString(target, key, value, label) {
+  if (value !== undefined) target[key] = optionalString(value, undefined, label);
+}
+
+function setOptionalObject(target, key, value, label) {
+  if (value !== undefined) target[key] = requiredObject(value, label);
 }
 
 function existingMemberNumber(project, type) {
   const prefix = type === "column" ? "column" : "beam";
   let max = 0;
-  for (const id of Object.keys(project.model?.members || {})) {
+  const members = requiredObject(requiredObject(project, "project").model, "project.model").members;
+  requiredObject(members, "project.model.members");
+  for (const id of Object.keys(members)) {
     const match = id.match(new RegExp(`^${prefix}_(\\d+)$`));
     if (match) max = Math.max(max, Number(match[1]));
   }
@@ -52,23 +106,33 @@ function existingMemberNumber(project, type) {
 }
 
 function snapRef(snap) {
-  if (!snap) return null;
+  if (snap === undefined || snap === null) return null;
+  if (typeof snap !== "object" || Array.isArray(snap)) fail("snap reference must be an object");
+  if (snap.sources !== undefined && !Array.isArray(snap.sources)) fail("snap reference sources must be an array");
+  if (Array.isArray(snap.sources) && !snap.sources.length) fail("snap reference sources cannot be empty");
   const ref = {
-    type: snap.type,
-    objectId: snap.objectId || undefined,
-    axis: snap.axis || undefined,
-    endpoint: snap.endpoint || undefined,
-    label: snap.label || undefined,
+    type: optionalString(snap.type, undefined, "snap reference type"),
+    objectId: optionalString(snap.objectId, undefined, "snap reference objectId"),
+    axis: optionalString(snap.axis, undefined, "snap reference axis"),
+    endpoint: optionalEndpoint(snap.endpoint, undefined, "snap reference endpoint"),
+    label: optionalString(snap.label, undefined, "snap reference label"),
     sources: Array.isArray(snap.sources)
-      ? snap.sources.map((source) => definedObject({
-          type: source.type,
-          objectId: source.objectId,
-          axis: source.axis,
-          label: source.label
-        }))
+      ? snap.sources.map((source) => {
+        if (!source || typeof source !== "object" || Array.isArray(source)) fail("snap reference source must be an object");
+        const next = definedObject({
+          type: optionalString(source.type, undefined, "snap reference source type"),
+          objectId: optionalString(source.objectId, undefined, "snap reference source objectId"),
+          axis: optionalString(source.axis, undefined, "snap reference source axis"),
+          label: optionalString(source.label, undefined, "snap reference source label")
+        });
+        if (!Object.keys(next).length) fail("snap reference source must include at least one field");
+        return next;
+      })
       : undefined
   };
-  return definedObject(ref);
+  const next = definedObject(ref);
+  if (!Object.keys(next).length) fail("snap reference must include at least one field");
+  return next;
 }
 
 function authoringSnapRefs(startSnap, endSnap) {
@@ -80,7 +144,17 @@ function authoringSnapRefs(startSnap, endSnap) {
   return Object.keys(refs).length ? refs : null;
 }
 
-export function createMemberObject(project, profiles, options = {}) {
+function layoutAxisObject(value, start, end, label) {
+  if (value === undefined) return { start, end };
+  const axis = requiredObject(value, label);
+  return {
+    start: vec3(axis.start, `${label}.start`),
+    end: vec3(axis.end, `${label}.end`)
+  };
+}
+
+export function createMemberObject(project, options = {}) {
+  options = optionalObject(options, {}, "member options");
   const type = options.type === "column" ? "column" : options.type === "beam" ? "beam" : null;
   if (!type) fail(`unsupported member type ${options.type}`);
 
@@ -88,12 +162,24 @@ export function createMemberObject(project, profiles, options = {}) {
   const end = vec3(options.end, `${type} end`);
   if (v.len(v.sub(end, start)) <= EPSILON) fail(`${type} cannot have zero length`);
 
-  const number = options.number || existingMemberNumber(project, type);
-  const id = options.id || nextObjectId(project, `${type}_${number}`);
-  const mark = options.mark || `${markPrefix(type)}${number}`;
-  const profile = options.profile || options.profileId || defaultProfileId(project, profiles, type);
-  const material = options.material || projectDefaultMaterial(project);
-  const modelType = options.memberType || type;
+  const number = options.number === undefined
+    ? existingMemberNumber(project, type)
+    : optionalPositiveInteger(options.number, undefined, `${type} number`);
+  const id = options.id === undefined
+    ? nextObjectId(project, `${type}_${number}`)
+    : optionalString(options.id, undefined, `${type} id`);
+  const mark = optionalString(options.mark, `${markPrefix(type)}${number}`, `${type} mark`);
+  const profile = options.profile === undefined
+    ? defaultProfileId(project, type)
+    : optionalString(options.profile, undefined, `${type} profile`);
+  const material = options.material === undefined
+    ? projectDefaultMaterial(project)
+    : optionalString(options.material, undefined, `${type} material`);
+  const modelType = optionalString(options.memberType, type, `${type} memberType`);
+  const fabrication = optionalObject(options.fabrication, {}, `${type} fabrication`);
+  const display = optionalObject(options.display, {}, `${type} display`);
+  const bim = optionalObject(options.bim, {}, `${type} bim`);
+  const bimPropertySets = optionalObject(bim.propertySets, {}, `${type} bim.propertySets`);
   const defaultBim = {
     name: `${titleCase(type)} ${mark}`,
     propertySets: {
@@ -109,52 +195,54 @@ export function createMemberObject(project, profiles, options = {}) {
     material,
     start,
     end,
-    rotation: options.rotation || 0,
-    cardinalPoint: options.cardinalPoint || "middle-center",
+    layoutAxis: layoutAxisObject(options.layoutAxis, start, end, `${type} layoutAxis`),
+    rotation: optionalFiniteNumber(options.rotation, 0, `${type} rotation`),
+    cardinalPoint: optionalString(options.cardinalPoint, "middle-center", `${type} cardinalPoint`),
     fabrication: {
-      ...(options.fabrication || {}),
-      partMark: options.fabrication?.partMark || mark
+      ...fabrication,
+      partMark: optionalString(fabrication.partMark, mark, `${type} fabrication.partMark`)
     },
     display: {
       color: type === "column" ? "#406b85" : "#3f657d",
-      ...(options.display || {})
+      ...display
     },
     bim: {
       ...defaultBim,
-      ...(options.bim || {}),
+      ...bim,
       propertySets: {
         ...defaultBim.propertySets,
-        ...(options.bim?.propertySets || {})
+        ...bimPropertySets
       }
     },
     authoring: {
-      source: options.source || "viewer-command",
+      source: optionalString(options.source, "viewer-command", `${type} source`),
       command: type === "column" ? "create-column" : "create-beam"
     }
   };
 
   const snapRefs = authoringSnapRefs(options.startSnap, options.endSnap);
   if (snapRefs) member.authoring.snapRefs = snapRefs;
-  if (options.startPointRef) member.startPointRef = options.startPointRef;
-  if (options.endPointRef) member.endPointRef = options.endPointRef;
-  if (options.layoutAxis) member.layoutAxis = options.layoutAxis;
-  if (options.centerline) member.centerline = options.centerline;
-  if (options.sectionPlacement) member.sectionPlacement = options.sectionPlacement;
-  if (options.shapeModifiers) member.shapeModifiers = options.shapeModifiers;
-  if (options.placementIntent) member.placementIntent = options.placementIntent;
-  if (options.assemblyId) member.assemblyId = options.assemblyId;
+  setOptionalString(member, "startPointRef", options.startPointRef, `${type} startPointRef`);
+  setOptionalString(member, "endPointRef", options.endPointRef, `${type} endPointRef`);
+  setOptionalObject(member, "centerline", options.centerline, `${type} centerline`);
+  setOptionalObject(member, "sectionPlacement", options.sectionPlacement, `${type} sectionPlacement`);
+  setOptionalObject(member, "shapeModifiers", options.shapeModifiers, `${type} shapeModifiers`);
+  setOptionalObject(member, "placementIntent", options.placementIntent, `${type} placementIntent`);
+  setOptionalString(member, "assemblyId", options.assemblyId, `${type} assemblyId`);
   return member;
 }
 
 export function createPreviewMember(project, profiles, options = {}) {
-  return createMemberObject(project, profiles, {
+  options = optionalObject(options, {}, "preview member options");
+  const display = optionalObject(options.display, {}, "preview member display");
+  return createMemberObject(project, {
     ...options,
     id: `preview_${options.type === "column" ? "column" : "beam"}`,
     mark: "PREVIEW",
     display: {
-      ...(options.display || {}),
+      ...display,
       transparent: true,
-      opacity: options.display?.opacity ?? 0.32,
+      opacity: display.opacity ?? 0.32,
       edgeColor: "#2563eb"
     },
     source: "viewer-command-preview"

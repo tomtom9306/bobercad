@@ -1,6 +1,6 @@
-import { arrayValues, flattenIds, uniqueTruthy as unique } from "../../core/model.mjs?v=array-values-dry-1";
-import { objectCollection } from "./objects.mjs?v=array-values-dry-1";
-import { trimJointOperations, trimJointParticipants, trimOperationReferencePlaneIds } from "./trim-operations.mjs?v=geometry-api-array-values-dry-1";
+import { flattenIds, uniqueTruthy as unique } from "../../core/model.mjs";
+import { objectCollection } from "./objects.mjs";
+import { trimJointOperations, trimJointParticipants, trimOperationReferencePlaneIds, trimOperationUsesMemberB } from "./trim-operations.mjs";
 
 const RENDER_COLLECTIONS = new Set(["members", "plates", "features", "trimJoints", "fastenerGroups", "welds"]);
 
@@ -8,7 +8,64 @@ function fail(message) {
   throw new Error(`project dependencies: ${message}`);
 }
 
+function plainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function requiredSmartComponentInstance(instance) {
+  if (!plainObject(instance)) fail("Smart Component instance must be an object");
+  return instance;
+}
+
+function requiredObject(value, label) {
+  if (!plainObject(value)) fail(`${label} must be an object`);
+  return value;
+}
+
+function optionalInputObject(instance, key) {
+  const inputs = requiredObject(requiredSmartComponentInstance(instance).inputs, `${instance.id}.inputs`);
+  const value = inputs[key];
+  if (value === undefined) return null;
+  return requiredObject(value, `${instance.id}.inputs.${key}`);
+}
+
+function optionalInputString(instance, key) {
+  const inputs = requiredObject(requiredSmartComponentInstance(instance).inputs, `${instance.id}.inputs`);
+  const value = inputs[key];
+  if (value === undefined) return null;
+  if (typeof value !== "string" || !value) fail(`${instance.id}.inputs.${key} must be a non-empty string`);
+  return value;
+}
+
+function optionalMemberInputId(instance, key) {
+  const input = optionalInputObject(instance, key);
+  const value = input?.memberId;
+  if (value === undefined) return null;
+  if (typeof value !== "string" || !value) fail(`${instance.id}.inputs.${key}.memberId must be a non-empty string`);
+  return value;
+}
+
+function requiredStringArray(value, label) {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item)) fail(`${label} must be an array of non-empty strings`);
+  return value;
+}
+
+function modelCollection(project, collection) {
+  if (!plainObject(project)) fail("project must be an object");
+  if (!plainObject(project.model)) fail("project model must be an object");
+  const values = project.model[collection];
+  if (values === undefined) fail(`model.${collection} must be an object`);
+  if (!plainObject(values)) fail(`model.${collection} must be an object`);
+  return values;
+}
+
 function filterProjectIds(project, ids, options = {}) {
+  if (!Array.isArray(ids)) fail("dependency ids must be an array");
+  requiredStringArray(ids, "dependency ids");
+  if (!options || typeof options !== "object" || Array.isArray(options)) fail("dependency options must be an object");
+  if (options.collections !== undefined && !(options.collections instanceof Set) && !Array.isArray(options.collections)) {
+    fail("dependency options collections must be an array or set");
+  }
   const collections = options.renderableOnly
     ? RENDER_COLLECTIONS
     : options.collections instanceof Set
@@ -23,20 +80,32 @@ function filterProjectIds(project, ids, options = {}) {
   });
 }
 
+function projectObjectExists(project, objectId, collection, options = {}) {
+  if (typeof objectId !== "string" || !objectId) fail(`${collection} id must be a non-empty string`);
+  const indexedCollection = objectCollection(project, objectId);
+  if (!indexedCollection) {
+    if (options.includeMissing) return false;
+    fail(`${collection} not found: ${objectId}`);
+  }
+  if (indexedCollection !== collection) fail(`${objectId} belongs to ${indexedCollection}, not ${collection}`);
+  return true;
+}
+
 export function smartComponentDetachedObjectIds(instance) {
-  const ids = instance.detachedObjectIds;
-  if (ids === undefined) return [];
-  if (!Array.isArray(ids)) fail(`${instance.id}: detachedObjectIds must be an array`);
-  return ids;
+  instance = requiredSmartComponentInstance(instance);
+  return requiredStringArray(instance.detachedObjectIds, `${instance.id}.detachedObjectIds`);
 }
 
 export function smartComponentOwnedObjectIds(instance) {
-  const owned = arrayValues(instance.ownedObjectIds);
-  return unique([...owned, ...flattenIds(instance.objectRoles)]);
+  instance = requiredSmartComponentInstance(instance);
+  const owned = requiredStringArray(instance.ownedObjectIds, `${instance.id}.ownedObjectIds`);
+  const roles = instance.objectRoles;
+  if (!plainObject(roles)) fail(`${instance.id}: objectRoles must be an object`);
+  return unique([...owned, ...flattenIds(roles)]);
 }
 
 export function smartComponentObjectIds(project, instance, options = {}) {
-  if (!instance) return [];
+  instance = requiredSmartComponentInstance(instance);
   const seen = options.seenSmartComponentIds instanceof Set ? options.seenSmartComponentIds : new Set();
   if (seen.has(instance.id)) fail(`${instance.id}: cyclic Smart Component object ownership`);
   seen.add(instance.id);
@@ -46,56 +115,57 @@ export function smartComponentObjectIds(project, instance, options = {}) {
     ...smartComponentDetachedObjectIds(instance)
   ];
   const childIds = directIds.flatMap((objectId) => {
-    const child = objectId !== instance.id ? project.model?.smartComponentInstances?.[objectId] : null;
+    const child = objectId !== instance.id ? modelCollection(project, "smartComponentInstances")[objectId] : null;
     return child ? smartComponentObjectIds(project, child, { ...options, seenSmartComponentIds: seen }) : [];
   });
   return filterProjectIds(project, [...directIds, ...childIds], options);
 }
 
 export function smartComponentRoot(project, instance) {
-  let current = instance || null;
+  let current = requiredSmartComponentInstance(instance);
   const seen = new Set();
-  while (current?.parentInstanceId) {
+  while (current.parentInstanceId) {
     if (seen.has(current.id)) fail(`${current.id}: cyclic Smart Component parent chain`);
     seen.add(current.id);
-    const parent = project.model?.smartComponentInstances?.[current.parentInstanceId];
-    if (!parent) break;
+    const parent = modelCollection(project, "smartComponentInstances")[current.parentInstanceId];
+    if (!parent) fail(`${current.id}: parent Smart Component not found: ${current.parentInstanceId}`);
     current = parent;
   }
   return current;
 }
 
 export function smartComponentForObject(project, objectId) {
-  return Object.values(project.model?.smartComponentInstances || {}).find((instance) => (
+  return Object.values(modelCollection(project, "smartComponentInstances")).find((instance) => (
     smartComponentReferencesObject(instance, objectId)
   )) || null;
 }
 
 export function smartComponentRootForObject(project, objectId) {
-  return smartComponentRoot(project, smartComponentForObject(project, objectId));
+  const instance = smartComponentForObject(project, objectId);
+  return instance ? smartComponentRoot(project, instance) : null;
 }
 
 function instanceMemberIds(instance) {
   return unique([
-    instance.inputs?.main?.memberId,
-    instance.inputs?.secondary?.memberId
+    optionalMemberInputId(instance, "main"),
+    optionalMemberInputId(instance, "secondary")
   ]);
 }
 
 export function smartComponentMainMemberId(instance) {
-  return instance?.inputs?.main?.memberId || null;
+  return optionalMemberInputId(instance, "main");
 }
 
 export function smartComponentSecondaryMemberId(instance) {
-  return instance?.inputs?.secondary?.memberId || null;
+  return optionalMemberInputId(instance, "secondary");
 }
 
 export function smartComponentConnectionZoneId(instance) {
-  return instance?.inputs?.connectionZoneId || null;
+  return optionalInputString(instance, "connectionZoneId");
 }
 
 export function affectedSmartComponentsForMember(project, memberId) {
-  return Object.values(project.model?.smartComponentInstances || {}).filter((instance) => (
+  return Object.values(modelCollection(project, "smartComponentInstances")).filter((instance) => (
     instanceMemberIds(instance).includes(memberId)
   ));
 }
@@ -105,40 +175,53 @@ export function affectedSmartComponentIdsForMember(project, memberId) {
 }
 
 function featureSourceMemberId(feature) {
-  return feature?.source?.memberId || feature?.cut?.source?.memberId || null;
+  feature = requiredObject(feature, "feature");
+  if (feature.source === undefined) return null;
+  const source = requiredObject(feature.source, `${feature.id || "feature"}.source`);
+  if (source.memberId === undefined) return null;
+  if (typeof source.memberId !== "string" || !source.memberId) fail(`${feature.id || "feature"}.source.memberId must be a non-empty string`);
+  return source.memberId;
+}
+
+function featureOwnerId(feature) {
+  feature = requiredObject(feature, "feature");
+  if (typeof feature.ownerId !== "string" || !feature.ownerId) fail(`${feature.id || "feature"}.ownerId must be a non-empty string`);
+  return feature.ownerId;
 }
 
 function trimJointsUsingReferencePlane(project, referencePlaneId) {
-  return Object.values(project.model?.trimJoints || {}).filter((trimJoint) => (
+  return Object.values(modelCollection(project, "trimJoints")).filter((trimJoint) => (
     trimJointOperations(trimJoint).some((operation) => trimOperationReferencePlaneIds(operation).includes(referencePlaneId))
   ));
 }
 
 function memberSourceFeatureObjectIds(project, memberId) {
   const ids = [];
-  for (const feature of Object.values(project.model?.features || {})) {
+  for (const feature of Object.values(modelCollection(project, "features"))) {
     if (featureSourceMemberId(feature) !== memberId) continue;
-    ids.push(feature.id, feature.ownerId);
+    ids.push(feature.id, featureOwnerId(feature));
   }
   return ids;
 }
 
 function trimJointObjectIds(project, trimJoint, options = {}) {
-  return filterProjectIds(project, [
+  const ids = [
     trimJoint.id,
-    ...trimJointParticipants(trimJoint).map((participant) => participant.memberId),
-    ...trimJointOperations(trimJoint).flatMap((operation) => [
-      operation.memberAId,
-      operation.memberBId,
-      ...trimOperationReferencePlaneIds(operation)
-    ])
-  ], options);
+    ...trimJointParticipants(trimJoint).map((participant) => participant.memberId)
+  ];
+  for (const operation of trimJointOperations(trimJoint)) {
+    ids.push(operation.memberAId);
+    if (trimOperationUsesMemberB(operation.type)) ids.push(operation.memberBId);
+    ids.push(...trimOperationReferencePlaneIds(operation));
+  }
+  return filterProjectIds(project, ids, options);
 }
 
 export function memberDependencyObjectIds(project, memberId, options = {}) {
+  if (!projectObjectExists(project, memberId, "members", options)) return filterProjectIds(project, [memberId], options);
   const ids = options.includeMember === false ? [] : [memberId];
   ids.push(...memberSourceFeatureObjectIds(project, memberId));
-  for (const trimJoint of Object.values(project.model?.trimJoints || {})) {
+  for (const trimJoint of Object.values(modelCollection(project, "trimJoints"))) {
     if (!trimJointParticipants(trimJoint).some((participant) => participant.memberId === memberId)
       && !trimJointOperations(trimJoint).some((operation) => operation.memberAId === memberId || operation.memberBId === memberId)) continue;
     ids.push(...trimJointObjectIds(project, trimJoint, options));
@@ -151,12 +234,14 @@ export function memberDependencyObjectIds(project, memberId, options = {}) {
 }
 
 export function featureDependencyObjectIds(project, featureId, options = {}) {
-  const feature = project.model?.features?.[featureId];
-  const ids = [featureId];
-  if (feature?.ownerId) ids.push(feature.ownerId);
-  ids.push(featureSourceMemberId(feature));
-  for (const instance of Object.values(project.model?.smartComponentInstances || {})) {
-    if (!smartComponentReferencesObject(instance, featureId) && !smartComponentReferencesObject(instance, feature?.ownerId)) continue;
+  if (!projectObjectExists(project, featureId, "features", options)) return filterProjectIds(project, [featureId], options);
+  const feature = modelCollection(project, "features")[featureId];
+  const ownerId = featureOwnerId(feature);
+  const ids = [featureId, ownerId];
+  const sourceMemberId = featureSourceMemberId(feature);
+  if (sourceMemberId) ids.push(sourceMemberId);
+  for (const instance of Object.values(modelCollection(project, "smartComponentInstances"))) {
+    if (!smartComponentReferencesObject(instance, featureId) && !smartComponentReferencesObject(instance, ownerId)) continue;
     if (options.includeSmartComponentMembers) ids.push(...instanceMemberIds(instance));
     ids.push(...smartComponentObjectIds(project, instance, options));
   }
@@ -164,6 +249,7 @@ export function featureDependencyObjectIds(project, featureId, options = {}) {
 }
 
 export function referencePlaneDependencyObjectIds(project, referencePlaneId, options = {}) {
+  if (!projectObjectExists(project, referencePlaneId, "referencePlanes", options)) return filterProjectIds(project, [referencePlaneId], options);
   const ids = [referencePlaneId];
   for (const trimJoint of trimJointsUsingReferencePlane(project, referencePlaneId)) {
     ids.push(...trimJointObjectIds(project, trimJoint, { ...options, includeMissing: true }));
@@ -172,8 +258,9 @@ export function referencePlaneDependencyObjectIds(project, referencePlaneId, opt
 }
 
 export function trimJointDependencyObjectIds(project, trimJointId, options = {}) {
-  const trimJoint = project.model?.trimJoints?.[trimJointId];
-  return trimJoint ? trimJointObjectIds(project, trimJoint, options) : filterProjectIds(project, [trimJointId], options);
+  if (!projectObjectExists(project, trimJointId, "trimJoints", options)) return filterProjectIds(project, [trimJointId], options);
+  const trimJoint = modelCollection(project, "trimJoints")[trimJointId];
+  return trimJointObjectIds(project, trimJoint, options);
 }
 
 export function affectedObjectIdsForMemberChange(beforeProject, afterProject, memberId, options = {}) {

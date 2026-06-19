@@ -27,7 +27,7 @@ The stair gallery exposed issues that the previous visual QA accepted too easily
 - Stair support generation that emits one semantic rolled member for curved/winder/spiral/helical stringers instead of many straight segment members.
 - Viewer support for rendering semantic curved/helix members without changing project JSON into meshes.
 - Shared reusable connection builders/components replacing stair-only connection modules where practical in this pass.
-- Stricter QA checks in `scripts/qa_stair_variants.mjs`.
+- Stricter QA checks in `tools/qa/qa_stair_variants.mjs`.
 - Regenerated stair samples, including `sample_stair_all_variants.json`.
 - Fresh screenshot QA for the gallery and individual variants.
 
@@ -37,7 +37,7 @@ Completion requires all of:
 
 ```powershell
 node .\scripts\generate_stair_samples.mjs
-node .\scripts\qa_stair_variants.mjs --run-id all-variants-0005-final
+node .\tools\qa\qa_stair_variants.mjs --run-id all-variants-0005-final
 node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_stair_all_variants.json
 node .\scripts\check_repo.js
 ```

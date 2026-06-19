@@ -71,6 +71,16 @@ function requiredInput(ctx, path, label) {
   return value;
 }
 
+function requiredArrayInput(ctx, path, label) {
+  const value = requiredInput(ctx, path, label);
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) {
+    ctx.error("stair-tread-input-invalid", `${label} must be an array.`, { parameterPaths: [path] });
+    return undefined;
+  }
+  return value;
+}
+
 function treadRole(index) {
   return `tread${index + 1}`;
 }
@@ -149,10 +159,7 @@ function outlineBounds(outline) {
 export function buildTreadSet(ctx, options = {}) {
   const family = options.family || "plate-tread";
   const capabilities = treadCapabilities(family);
-  const frames = ctx.requiredInput("layout.treads", {
-    code: "stair-tread-layout-missing",
-    message: "Solved tread layout is required to generate stair treads."
-  }) || [];
+  const frames = requiredArrayInput(ctx, "layout.treads", "Solved tread layout");
   const defaultWidth = requiredPositiveInput(ctx, "geometry.width", "Stair width");
   const thickness = requiredPositiveInput(ctx, "treads.thickness", "Tread thickness");
   const defaultDepth = requiredPositiveInput(ctx, "treads.depth", "Tread depth");
@@ -167,10 +174,10 @@ export function buildTreadSet(ctx, options = {}) {
   const woodMaterial = capabilities.timberBoard ? requiredInput(ctx, "treads.woodMaterial", "Timber material") : undefined;
   const woodFinish = capabilities.timberBoard ? requiredInput(ctx, "treads.woodFinish", "Timber finish") : undefined;
   const rise = requiredPositiveInput(ctx, "geometry.rise", "Stair rise");
-  if (!Array.isArray(frames) || !defaultWidth || !thickness || !defaultDepth || closedRisers === undefined || !material || !finish || !rise) return;
+  const noTreadZones = requiredArrayInput(ctx, "layout.noTreadZones", "No-tread zones");
+  if (!frames || !defaultWidth || !thickness || !defaultDepth || closedRisers === undefined || !material || !finish || !rise || !noTreadZones) return;
   if (capabilities.timberBoard && (!woodThickness || woodOverhang === undefined || !woodMaterial || !woodFinish)) return;
   if (capabilities.trayLips && !frontLip) return;
-  const noTreadZones = Array.isArray(ctx.input("layout.noTreadZones")) ? ctx.input("layout.noTreadZones") : [];
   const noTreadZoneAllowance = {
     forward: capabilities.timberBoard ? woodOverhang : 0,
     backward: 0
@@ -213,12 +220,10 @@ export function buildTreadSet(ctx, options = {}) {
     const steelWidth = capabilities.timberBoard ? woodWidth : footprintWidth;
     const steelDepth = capabilities.timberBoard ? woodDepth : depth;
     const steelCenter = add(frame.origin, mul(tangent, woodPlanOffset));
-    const tread = ctx.plate.create(role, {
+    const tread = ctx.part.plate(role, {
       type: capabilities.timberBoard ? "timber-backing-plate" : options.plateType || family,
       thickness,
-      width: steelWidth,
-      height: steelDepth,
-      outline: footprint || undefined,
+      ...(footprint ? { outline: footprint } : { width: steelWidth, height: steelDepth }),
       material,
       center: add(steelCenter, mul(normal, -thickness / 2)),
       normal,
@@ -255,7 +260,7 @@ export function buildTreadSet(ctx, options = {}) {
     treadIds.push(tread.id);
 
     if (capabilities.trayLips && !footprint) {
-      const frontPlate = ctx.plate.create(registerRole(ctx, frontPlateRole(index), `_front_plate_${index + 1}`), {
+      const frontPlate = ctx.part.plate(registerRole(ctx, frontPlateRole(index), `_front_plate_${index + 1}`), {
         type: `${family}-front-plate`,
         thickness,
         width: steelWidth,
@@ -299,12 +304,10 @@ export function buildTreadSet(ctx, options = {}) {
       const woodCenter = footprint
         ? add(frame.origin, mul(normal, woodThickness / 2 + 2))
         : add(add(frame.origin, mul(normal, woodThickness / 2 + 2)), mul(tangent, woodPlanOffset));
-      const wood = ctx.plate.create(registerRole(ctx, woodRole(index), `_wood_tread_${index + 1}`), {
+      const wood = ctx.part.plate(registerRole(ctx, woodRole(index), `_wood_tread_${index + 1}`), {
         type: "timber-tread-board",
         thickness: woodThickness,
-        width: woodWidth,
-        height: woodDepth,
-        outline: footprint || undefined,
+        ...(footprint ? { outline: footprint } : { width: woodWidth, height: woodDepth }),
         material: woodMaterial,
         center: woodCenter,
         normal,
@@ -342,7 +345,7 @@ export function buildTreadSet(ctx, options = {}) {
     if (capabilities.risers && frameClosedRisers && index > 0) {
       const riser = registerRole(ctx, riserRole(index), `_riser_${index + 1}`);
       const center = add(frame.origin, mul(tangent, -depth / 2));
-      const plate = ctx.plate.create(riser, {
+      const plate = ctx.part.plate(riser, {
         type: "rectangular-plate",
         thickness,
         width,

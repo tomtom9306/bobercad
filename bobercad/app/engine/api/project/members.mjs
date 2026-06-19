@@ -1,4 +1,4 @@
-import { clamp, distance3, finiteVec3, sameVec3, v } from "../../core/math.mjs?v=distance3-dry-1";
+import { distance3, finiteVec3, sameVec3, v } from "../../core/math.mjs";
 
 const EPSILON = 1e-9;
 
@@ -15,25 +15,37 @@ export function almostSamePoint(a, b, tolerance = EPSILON) {
 }
 
 export function memberCenter(member) {
-  return v.mul(v.add(member.start, member.end), 0.5);
+  return v.mul(
+    v.add(vec3(member.start, `${member.id || "member"}.start`), vec3(member.end, `${member.id || "member"}.end`)),
+    0.5
+  );
 }
 
-export function memberPointAtEnd(member, memberEnd, fallback = null) {
-  if (memberEnd === "start") return member.start;
-  if (memberEnd === "end") return member.end;
-  return fallback;
+export function memberPointAtEnd(member, memberEnd) {
+  if (memberEnd === "start") return vec3(member.start, `${member.id || "member"}.start`);
+  if (memberEnd === "end") return vec3(member.end, `${member.id || "member"}.end`);
+  fail(`${member.id || "member"} memberEnd must be start or end`);
+}
+
+function stationReferenceAxis(member, source) {
+  if (source === null || source === undefined) return { start: member.start, end: member.end };
+  if (!source || typeof source !== "object" || Array.isArray(source)) fail(`${member.id || "member"} station source must be an object`);
+  if (source.type === "member-axis") return { start: member.start, end: member.end };
+  if (source.type === "layout-axis") return memberLayoutAxis(member);
+  fail(`${member.id || "member"} station source type is unsupported: ${source.type || "missing"}`);
 }
 
 export function memberStationAtPoint(member, point, source = null) {
-  const referenceAxis = source?.type === "layout-axis" && member.layoutAxis
-    ? memberLayoutAxis(member)
-    : { start: member.start, end: member.end };
+  const referenceAxis = stationReferenceAxis(member, source);
+  const targetPoint = vec3(point, `${member.id || "member"} station point`);
   const axis = v.sub(referenceAxis.end, referenceAxis.start);
   const referenceLength = distance3(referenceAxis.start, referenceAxis.end);
-  const physicalLength = memberAxisData(member)?.length || 0;
-  if (referenceLength <= EPSILON || physicalLength <= EPSILON) return 0;
-  const ratio = clamp(v.dot(v.sub(point, referenceAxis.start), axis) / (referenceLength * referenceLength), 0, 1);
-  return ratio * physicalLength;
+  if (referenceLength <= EPSILON) fail(`${member.id || "member"} station reference axis cannot have zero length`);
+  const physicalAxis = memberAxisData(member);
+  if (!physicalAxis) fail(`${member.id || "member"} physical axis is required for stationing`);
+  const ratio = v.dot(v.sub(targetPoint, referenceAxis.start), axis) / (referenceLength * referenceLength);
+  if (ratio < -EPSILON || ratio > 1 + EPSILON) fail(`${member.id || "member"} station point is outside the reference axis`);
+  return Math.min(1, Math.max(0, ratio)) * physicalAxis.length;
 }
 
 export function memberById(project, memberId) {
@@ -54,10 +66,19 @@ export function memberAxisData(member) {
 }
 
 export function memberLayoutAxis(member) {
-  const axis = member.layoutAxis || {};
+  if (member.layoutAxis === undefined) {
+    return {
+      start: vec3(member.start, `${member.id || "member"}.start`),
+      end: vec3(member.end, `${member.id || "member"}.end`)
+    };
+  }
+  if (!member.layoutAxis || typeof member.layoutAxis !== "object" || Array.isArray(member.layoutAxis)) {
+    fail(`${member.id || "member"} layoutAxis must be an object`);
+  }
+  if (member.layoutAxis.start === undefined || member.layoutAxis.end === undefined) fail(`${member.id || "member"} layoutAxis must define start and end`);
   return {
-    start: vec3(axis.start || member.start, `${member.id || "member"}.layoutAxis.start`),
-    end: vec3(axis.end || member.end, `${member.id || "member"}.layoutAxis.end`)
+    start: vec3(member.layoutAxis.start, `${member.id || "member"}.layoutAxis.start`),
+    end: vec3(member.layoutAxis.end, `${member.id || "member"}.layoutAxis.end`)
   };
 }
 
@@ -90,8 +111,9 @@ export function setMemberPhysicalEndpoint(member, endpoint, point) {
   const nextPoint = vec3(point, `member ${key}`);
   const previousPoint = vec3(member[key], `member ${key}`);
   const next = { ...member, [key]: nextPoint };
-  if (member.layoutAxis && almostSamePoint(member.layoutAxis[key], previousPoint)) {
-    next.layoutAxis = { ...memberLayoutAxis(member), [key]: nextPoint };
+  if (member.layoutAxis) {
+    const layoutAxis = memberLayoutAxis(member);
+    if (almostSamePoint(layoutAxis[key], previousPoint)) next.layoutAxis = { ...layoutAxis, [key]: nextPoint };
   }
   if (almostSamePoint(next.start, next.end)) fail(`${member.id || "member"} cannot have zero length`);
   return next;

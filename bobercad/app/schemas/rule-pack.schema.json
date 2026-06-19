@@ -5,6 +5,7 @@
   "description": "Validates reusable compliance rule-pack metadata. Rule functions live in library code and return diagnostics only.",
   "type": "object",
   "required": [
+    "$schema",
     "id",
     "title",
     "jurisdiction",
@@ -13,7 +14,8 @@
   ],
   "properties": {
     "$schema": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "id": {
       "type": "string",
@@ -24,13 +26,17 @@
       "minLength": 1
     },
     "jurisdiction": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "edition": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "applicableComponentKinds": {
       "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "minLength": 1
@@ -38,6 +44,7 @@
     },
     "sourceReferences": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
         "required": [
@@ -51,16 +58,12 @@
           },
           "url": {
             "type": "string",
-            "minLength": 1
+            "pattern": "^https?://"
           }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
-    },
-    "parameters": {
-      "type": "object",
-      "additionalProperties": true
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

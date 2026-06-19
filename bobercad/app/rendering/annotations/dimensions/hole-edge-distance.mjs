@@ -1,4 +1,4 @@
-import { basisAxis, basisBoundsCoordinate, dimensionOffset, distance, edgeDistanceEditTransform, featureBasis, finite, interfaceAxis, interfaceByRole, interfaceEdgeOnBasis, linePlane, makeDimension, patternLayoutBasis, patternPositionsInBasis, plateBasis, plateBoundsInBasis, plateSupportEdge, positionInBasis, positionPoint, rawInterfaceByRole, roleObject, signedEdgeDistance, sortedCoordinateValues, truthyValues } from "../dimension-context.mjs?v=unified-dimension-overlay-1";
+import { basisAxis, basisBoundsCoordinate, dimensionOffset, distance, edgeDistanceEditTransform, featureBasis, finite, interfaceAxis, interfaceByRole, interfaceEdgeOnBasis, linePlane, makeDimension, patternLayoutBasis, patternPositionsInBasis, plateBasis, plateBoundsInBasis, plateSupportEdge, positionInBasis, positionPoint, rawInterfaceByRole, roleObject, signedEdgeDistance, sortedCoordinateValues, truthyValues } from "../dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
 
 function nearestPatternHole(positions, values, axisIndex, otherIndex, edge) {
   const holeValue = edge === "max" ? values[values.length - 1] : values[0];

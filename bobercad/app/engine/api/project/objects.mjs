@@ -1,5 +1,3 @@
-import { arrayValues, uniqueTruthy } from "../../core/model.mjs?v=array-values-dry-1";
-
 const MODEL_COLLECTIONS = new Set([
   "members",
   "plates",
@@ -11,72 +9,121 @@ const MODEL_COLLECTIONS = new Set([
   "interfaces",
   "connectionZones",
   "assemblies",
+  "gridSystems",
+  "levels",
   "workPoints",
   "referencePlanes",
   "trimJoints",
   "groups",
   "objectPatterns",
-  "relations"
+  "relations",
+  "smartComponentInstances"
 ]);
 
 function fail(message) {
   throw new Error(`object api: ${message}`);
 }
 
+function plainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function requiredObject(value, label) {
+  if (!plainObject(value)) fail(`${label} must be an object`);
+  return value;
+}
+
+function requiredId(value, label) {
+  if (typeof value !== "string" || !value.trim()) fail(`${label} must be a non-empty string`);
+  return value;
+}
+
+function requiredIdList(values, label) {
+  if (!Array.isArray(values)) fail(`${label} must be an array`);
+  for (const [index, value] of values.entries()) requiredId(value, `${label}[${index}]`);
+  return values;
+}
+
+function projectModel(project) {
+  return requiredObject(requiredObject(project, "project").model, "project.model");
+}
+
+function projectObjectIndex(project) {
+  return requiredObject(requiredObject(project, "project").objectIndex, "project.objectIndex");
+}
+
+function modelCollection(project, collection) {
+  if (!MODEL_COLLECTIONS.has(collection)) fail(`unsupported collection ${collection}`);
+  const model = projectModel(project);
+  return requiredObject(model[collection], `project.model.${collection}`);
+}
+
 export function cleanId(value) {
-  return String(value || "")
+  if (typeof value !== "string") fail("id must be a string");
+  return value
     .trim()
     .replace(/[^A-Za-z0-9_:-]+/g, "_")
     .replace(/^_+|_+$/g, "");
 }
 
-export function appendUniqueId(values = [], id) {
-  return uniqueTruthy([...arrayValues(values), id]);
+export function appendUniqueId(values, id) {
+  return [...new Set([...requiredIdList(values, "id list"), requiredId(id, "id")])];
 }
 
 export function objectCollection(project, objectId) {
-  const indexed = project.objectIndex?.[objectId]?.collection;
-  if (indexed && project.model?.[indexed]?.[objectId]) return indexed;
-  for (const [collection, objects] of Object.entries(project.model || {})) {
-    if (objects && typeof objects === "object" && !Array.isArray(objects) && objects[objectId]) return collection;
-  }
-  return null;
+  if (typeof objectId !== "string" || !objectId) return null;
+  const entry = projectObjectIndex(project)[objectId];
+  if (entry === undefined) return null;
+  if (!plainObject(entry)) fail(`objectIndex.${objectId} must be an object`);
+  const indexed = entry.collection;
+  if (typeof indexed !== "string" || !indexed) fail(`objectIndex.${objectId}.collection must be a non-empty string`);
+  if (!MODEL_COLLECTIONS.has(indexed)) fail(`objectIndex.${objectId}.collection is unsupported: ${indexed}`);
+  const collection = modelCollection(project, indexed);
+  if (!collection[objectId]) fail(`objectIndex.${objectId} points to missing model.${indexed}.${objectId}`);
+  return indexed;
 }
 
 export function nextObjectId(project, preferredId) {
-  const base = cleanId(preferredId) || "object";
-  if (!project.objectIndex?.[base] && !objectCollection(project, base)) return base;
+  const base = cleanId(preferredId);
+  if (!base) fail("preferred id must contain at least one id-safe character");
+  const objectIndex = projectObjectIndex(project);
+  if (!objectIndex[base]) return base;
   let index = 2;
-  while (project.objectIndex?.[`${base}_${index}`] || objectCollection(project, `${base}_${index}`)) index += 1;
+  while (objectIndex[`${base}_${index}`]) index += 1;
   return `${base}_${index}`;
 }
 
 export function addIndexedObject(project, collection, object) {
   if (!MODEL_COLLECTIONS.has(collection)) fail(`unsupported collection ${collection}`);
-  if (!object?.id) fail("object id is required");
-  project.model ||= {};
-  project.model[collection] ||= {};
-  if (project.model[collection][object.id] || project.objectIndex?.[object.id]) fail(`object already exists: ${object.id}`);
-  project.model[collection][object.id] = object;
-  project.objectIndex ||= {};
-  project.objectIndex[object.id] = {
+  object = requiredObject(object, "object");
+  const objectId = requiredId(object.id, "object id");
+  const objectType = requiredId(object.type, `${objectId}: object type`);
+  const objects = modelCollection(project, collection);
+  const objectIndex = projectObjectIndex(project);
+  if (objects[objectId] || objectIndex[objectId]) fail(`object already exists: ${objectId}`);
+  objects[objectId] = object;
+  objectIndex[objectId] = {
     collection,
-    type: object.type || collection.replace(/s$/, "")
+    type: objectType
   };
   return object;
 }
 
 export function removeIndexedObject(project, objectId) {
   const collection = objectCollection(project, objectId);
-  if (collection) delete project.model[collection][objectId];
-  if (project.objectIndex) delete project.objectIndex[objectId];
+  if (!collection) fail(`object not found: ${objectId}`);
+  delete projectModel(project)[collection][objectId];
+  delete projectObjectIndex(project)[objectId];
 }
 
-function removeObjectReferences(value, deletedIds, options = {}) {
-  const deleted = deletedIds instanceof Set ? deletedIds : new Set(uniqueTruthy(deletedIds));
-  const shouldPruneArray = typeof options.shouldPruneArray === "function"
-    ? options.shouldPruneArray
-    : (key) => key.endsWith("Ids");
+function removeObjectReferences(value, deletedIds, options) {
+  if (!options || typeof options !== "object" || Array.isArray(options)) fail("remove options must be an object");
+  if (typeof options.shouldPruneArray !== "function") {
+    fail("remove options shouldPruneArray must be a function");
+  }
+  if (!(deletedIds instanceof Set)) fail("deletedIds must be a set");
+  const deleted = deletedIds;
+  const { shouldPruneArray } = options;
   if (Array.isArray(value)) return value.filter((item) => !deleted.has(item)).map((item) => removeObjectReferences(item, deleted, options));
   if (!value || typeof value !== "object") return value;
   for (const [key, child] of Object.entries(value)) {
@@ -90,9 +137,12 @@ function removeObjectReferences(value, deletedIds, options = {}) {
 }
 
 export function removeProjectObjects(project, objectIds, options = {}) {
-  const deletedIds = new Set(uniqueTruthy(objectIds));
+  const ids = objectIds instanceof Set ? [...objectIds] : objectIds;
+  const deletedIds = new Set(requiredIdList(ids, "objectIds"));
   if (!deletedIds.size) return project;
+  if (!options || typeof options !== "object" || Array.isArray(options)) fail("remove options must be an object");
+  if (typeof options.shouldPruneArray !== "function") fail("remove options shouldPruneArray must be a function");
   for (const objectId of deletedIds) removeIndexedObject(project, objectId);
-  removeObjectReferences(project.model, deletedIds, options);
+  removeObjectReferences(projectModel(project), deletedIds, options);
   return project;
 }
