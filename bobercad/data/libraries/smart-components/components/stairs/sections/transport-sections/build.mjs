@@ -1,7 +1,16 @@
-import { flattenIds, uniqueTruthy as unique } from "../../../../../../../app/engine/core/model.mjs";
-import { createSection, estimateObjects, splitByMaxWeight, sectionSchedule } from "../../../../../../../app/engine/api/model/transport-sectioning.mjs";
-
 const SECTION_STRATEGIES = new Set(["max-weight", "manual-stations", "landings"]);
+
+function flattenIds(value) {
+  if (value === undefined || value === null) return [];
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(flattenIds);
+  if (typeof value === "object") return Object.values(value).flatMap(flattenIds);
+  return [];
+}
+
+function unique(values) {
+  return [...new Set((Array.isArray(values) ? values : []).filter(Boolean))];
+}
 
 function sourceOwnedIds(ctx, instance, componentId) {
   if (!Array.isArray(instance.ownedObjectIds)) {
@@ -22,7 +31,7 @@ function sourceOwnedIds(ctx, instance, componentId) {
 function ownedIds(ctx, componentIds) {
   let missing = false;
   const ids = unique(componentIds.flatMap((id) => {
-    const instance = ctx.project.model.smartComponentInstances[id];
+    const instance = ctx.componentInstance(id);
     if (instance) {
       const sourceIds = sourceOwnedIds(ctx, instance, id);
       if (sourceIds) return sourceIds;
@@ -35,7 +44,7 @@ function ownedIds(ctx, componentIds) {
     missing = true;
     return [];
   })).filter((id) => {
-    const collection = ctx.project.objectIndex?.[id]?.collection;
+    const collection = ctx.objectCollection(id);
     return collection === "members" || collection === "plates";
   });
   if (!missing && !ids.length) {
@@ -80,18 +89,6 @@ function requiredNumberInput(ctx, path, label) {
   return null;
 }
 
-function splitByCount(project, libraries, objectIds, sectionCount, idPrefix, metadata = {}) {
-  const estimates = estimateObjects(project, libraries, objectIds);
-  const count = Math.max(1, Math.min(sectionCount, estimates.length));
-  const sections = [];
-  for (let index = 0; index < count; index += 1) {
-    const start = Math.floor(estimates.length * index / count);
-    const end = Math.floor(estimates.length * (index + 1) / count);
-    sections.push(createSection(`${idPrefix}_${index + 1}`, estimates.slice(start, end), metadata));
-  }
-  return sections;
-}
-
 export function build(ctx) {
   const sourceComponentIds = requiredArrayInput(ctx, "sections.sourceComponentIds", "Source component ids");
   const strategy = requiredStringInput(ctx, "sections.strategy", "Sectioning strategy");
@@ -107,21 +104,20 @@ export function build(ctx) {
     });
     return;
   }
-  const libraries = { profiles: ctx.profiles, materials: ctx.materials };
   const idPrefix = `${ctx.instanceId}_transport_section`;
   const sections = strategy === "max-weight"
-    ? splitByMaxWeight(ctx.project, libraries, objectIds, { maxWeightKg, idPrefix })
+    ? ctx.transportSections(objectIds, { strategy, maxWeightKg, idPrefix })
     : strategy === "manual-stations"
-      ? splitByCount(ctx.project, libraries, objectIds, manualStations.length + 1, idPrefix, { strategy, manualStations })
-      : splitByCount(ctx.project, libraries, objectIds, Math.max(2, sourceComponentIds.length - 1), idPrefix, { strategy });
-  const schedule = sectionSchedule(sections);
+      ? ctx.transportSections(objectIds, { strategy, sectionCount: manualStations.length + 1, idPrefix, metadata: { strategy, manualStations } })
+      : ctx.transportSections(objectIds, { strategy, sectionCount: Math.max(2, sourceComponentIds.length - 1), idPrefix, metadata: { strategy } });
+  const schedule = ctx.transportSectionSchedule(sections);
   const assemblyIds = [];
 
   for (const [index, section] of sections.entries()) {
     const role = `transportSection${index + 1}`;
     ctx.generatedRole(role, `_transport_section_${index + 1}`);
-    const memberIds = section.objectIds.filter((id) => ctx.project.objectIndex?.[id]?.collection === "members");
-    const plateIds = section.objectIds.filter((id) => ctx.project.objectIndex?.[id]?.collection === "plates");
+    const memberIds = section.objectIds.filter((id) => ctx.objectCollection(id) === "members");
+    const plateIds = section.objectIds.filter((id) => ctx.objectCollection(id) === "plates");
     const assembly = ctx.assembly.create(role, {
       type: "transport-section",
       name: `Transport section ${index + 1}`,

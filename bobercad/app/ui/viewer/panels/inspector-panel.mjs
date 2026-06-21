@@ -1,18 +1,16 @@
-import { WORLD_AXIS_DIRECTIONS, WORLD_AXIS_IDS, finiteNumber, finitePositiveNumber } from "../../../engine/core/math.mjs?v=world-axis-dry-1";
-import { arrayValues, jsonClone as clone, truthyValues } from "../../../engine/core/model.mjs?v=ui-array-values-dry-1";
-import { axisRelationLabel } from "../../../engine/api/project/axis-relations.mjs?v=array-values-dry-1";
-import { memberAxisData, memberCenter } from "../../../engine/api/project/members.mjs?v=generated-properties-1";
-import { plateBends, plateOutline as sketchPlateOutline, plateSketchDefinitionStatus, plateSketchRelationActionPreview, plateSketchRelationHealth, sketchAngleRelationMode, sketchConstructionEdges, sketchConstructionVertices, sketchDefinitionStatus, sketchDistanceRelationMode, sketchEdges, sketchLengthRelationMode, sketchRelationBadge, sketchRelationEdgeIds, sketchRelationKey, sketchRelationLabel, sketchRelationVertexIds, sketchRelations, sketchVertices } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs?v=plate-relation-preflight-1";
-import { trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd } from "../../../engine/api/project/trim-operations.mjs?v=generated-trim-properties-1";
-import { reconcilePlaneTrimRemovedRegionKeys } from "../../../engine/api/model/trim-region-keys.mjs?v=generated-trim-properties-1";
-import { setPath } from "../../../engine/modules/smart-components/smart-component-parameters-and-definition.mjs?v=smart-component-quick-properties-1";
-import { parameterFieldDescriptor, uiQuickParameterEntries } from "../../../../data/libraries/smart-components/parameter-values.mjs?v=smart-component-generated-fields-1";
-import { MODELING_TOOLBAR_COMMANDS } from "../../commands/command-registry.mjs?v=top-nav-commands-1";
-import { trimOperationLabel, trimOperationSupportsGap } from "../../commands/trim-operation-metadata.mjs?v=generated-trim-properties-1";
+import { WORLD_AXIS_DIRECTIONS, WORLD_AXIS_IDS, bounds3, finiteNumber, finitePositiveNumber } from "../../../engine/core/math.mjs";
+import { arrayValues, jsonClone as clone, truthyValues } from "../../../engine/core/model.mjs";
+import { axisRelationLabel } from "../../../engine/api/project/axis-relations.mjs";
+import { memberAxisData, memberCenter } from "../../../engine/api/project/members.mjs";
+import { plateBends, plateOutline as sketchPlateOutline, plateSketchDefinitionStatus, sketchConstructionEdges, sketchDefinitionStatus, sketchEdges } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd } from "../../../engine/api/project/trim-operations.mjs";
+import { reconcilePlaneTrimRemovedRegionKeys } from "../../../engine/api/model/trim-region-keys.mjs";
+import { setPath } from "../../../engine/modules/smart-components/smart-component-parameters-and-definition.mjs";
+import { MODELING_TOOLBAR_COMMANDS } from "../../commands/command-registry.mjs";
+import { trimOperationLabel, trimOperationSupportsGap } from "../../commands/trim-operation-metadata.mjs";
 import {
   inspectorActiveToolContext,
   inspectorActiveToolSections,
-  inspectorEmptySelectionContext,
   inspectorFormatNumber,
   inspectorMemberAdvancedSections,
   inspectorMemberContext,
@@ -23,19 +21,21 @@ import {
   inspectorObjectGeneratedBySection,
   inspectorObjectIdentitySection,
   inspectorObjectPropertySections,
-  inspectorPrimaryActions,
-  inspectorSelectionQuickActions,
+  inspectorSceneContext,
+  inspectorScenePropertySections,
   inspectorSmartComponentContext,
   inspectorSmartComponentDiagnosticsSummary,
   inspectorSmartComponentPropertySections,
   inspectorSupportObjectPropertySections
-} from "../../commands/inspector-property-metadata.mjs?v=inspector-property-metadata-1";
-import { button, createPanelMessageState, quickActions, text } from "./panel-elements.mjs?v=panel-primitives-1";
-import { generatedPropertiesPanel } from "./generated-properties-panel.mjs?v=generic-status-fields-1";
-import { bindGeneratedPropertySections } from "./generated-property-bindings.mjs?v=generated-property-bindings-1";
-import { createInspectorPropertyBindings } from "./inspector-property-bindings.mjs?v=plate-relation-fields-1";
+} from "../../commands/inspector-property-metadata.mjs";
+import { createPanelMessageState } from "./panel-elements.mjs";
+import { generatedPropertiesPanel } from "./generated-properties-panel.mjs";
+import { bindGeneratedPropertySections } from "./generated-property-bindings.mjs";
+import { createInspectorPropertyBindings } from "./inspector-property-bindings.mjs";
+import { sceneCollectionCounts, sceneReferencePoints } from "./inspector-scene-metrics.mjs";
+import { createPlateSketchInspector } from "./contributions/plate-sketch-inspector.mjs";
+import { smartComponentQuickParameterFields } from "./contributions/smart-component-properties.mjs";
 
-const SMART_COMPONENT_QUICK_PARAMETER_LIMIT = 6;
 const MODELING_TOOL_COMMAND_BY_ID = new Map(MODELING_TOOLBAR_COMMANDS.map((command) => [command.id, command]));
 const DEFAULT_CUSTOM_PROFILE_POINTS = "-50 -100\n50 -100\n50 100\n-50 100";
 
@@ -93,24 +93,6 @@ function globalAxisSource(axis) {
   };
 }
 
-function sameSketchPoint(a, b, tolerance = 1e-6) {
-  return Array.isArray(a) && Array.isArray(b)
-    && Math.abs((a[0] || 0) - (b[0] || 0)) <= tolerance
-    && Math.abs((a[1] || 0) - (b[1] || 0)) <= tolerance;
-}
-
-function sketchVertexPointMap(sketch) {
-  return new Map([...sketchVertices(sketch), ...sketchConstructionVertices(sketch)].map((vertex) => [vertex.id, vertex.point]));
-}
-
-function sketchEdgePoints(sketch, edgeId) {
-  const edge = [...sketchEdges(sketch), ...sketchConstructionEdges(sketch)].find((item) => item.id === edgeId);
-  const vertexMap = sketchVertexPointMap(sketch);
-  const from = edge ? vertexMap.get(edge.from) : null;
-  const to = edge ? vertexMap.get(edge.to) : null;
-  return from && to ? { from, to } : null;
-}
-
 export function mountEditorUi({
   panel,
   app = null,
@@ -131,8 +113,10 @@ export function mountEditorUi({
   let selectedSmartComponentId = null;
   let selectedObjectId = null;
   let selectedObjectDetail = null;
+  let sceneSelected = true;
+  let gridEditorEmpty = false;
   const memberCustomProfileDrafts = new Map();
-  const panelMessage = createPanelMessageState(() => render(), "Pick a member, Smart Component, trim, or cut object.");
+  const panelMessage = createPanelMessageState(() => render());
   const setMessage = panelMessage.set;
   const showError = (error) => setMessage(error.message, "error");
 
@@ -141,19 +125,22 @@ export function mountEditorUi({
   const clearObjectWindow = () => onObjectCleared?.();
   const clearMemberEditSilently = () => memberEdit?.clear({ notify: false });
   const clearCurrentSelection = (options = {}) => {
-    setSelectedState();
+    setSelectedState({ scene: true });
+    gridEditorEmpty = false;
     if (!options.fromMemberEdit) clearMemberEditSilently();
     selection.clear();
     clearObjectWindow();
-    if (options.silent) render();
-    else setMessage("Selection cleared.");
+    panelMessage.clear({ render: false });
+    render();
   };
 
-  const setSelectedState = ({ memberId = null, smartComponentId = null, objectId = null, objectDetail = null } = {}) => {
+  const setSelectedState = ({ memberId = null, smartComponentId = null, objectId = null, objectDetail = null, scene = false } = {}) => {
     selectedMemberId = memberId;
     selectedSmartComponentId = smartComponentId;
     selectedObjectId = objectId;
     selectedObjectDetail = objectDetail;
+    sceneSelected = Boolean(scene);
+    gridEditorEmpty = false;
   };
 
   const applyProjectChange = (nextProject, options = {}) => {
@@ -175,6 +162,15 @@ export function mountEditorUi({
     else selection.select([memberId]);
     clearObjectWindow();
     setMessage(`Selected ${memberId}.`, "ok");
+  };
+
+  const selectScene = (options = {}) => {
+    setSelectedState({ scene: true });
+    clearMemberEditSilently();
+    selection.clear();
+    clearObjectWindow();
+    panelMessage.clear({ render: false });
+    if (options.render !== false) render();
   };
 
   const selectSmartComponent = (smartComponentId, options = {}) => {
@@ -207,6 +203,15 @@ export function mountEditorUi({
     selection.select([objectId]);
     if (options.notify !== false) onObjectSelected?.(objectId, detail || {});
     setMessage(`Selected ${objectId}.`, "ok");
+  };
+
+  const openGridEditor = () => {
+    setSelectedState();
+    clearMemberEditSilently();
+    selection.clear();
+    clearObjectWindow();
+    gridEditorEmpty = true;
+    setMessage("Grid editor opened.", "ok");
   };
 
   const beginMemberPick = () => {
@@ -291,8 +296,31 @@ export function mountEditorUi({
   };
 
   const {
-    bindActionButtons,
-    bindQuickActions,
+    plateEditor,
+    inferPlateSketchRelations,
+    createPlateFromSketch,
+    setPlateSketchRelationValue,
+    selectPlateSketchRelation,
+    setPlateSketchRelationMode,
+    resolvePlateSketchRelation,
+    removePlateSketchRelation,
+    addPlateSketchRelationFromPayload,
+    addPlateSketchConstructionLineFromPayload,
+    fixPlateSketchUnderDefinedEntities,
+    removePlateSketchFixedRelations
+  } = createPlateSketchInspector({
+    api,
+    selection,
+    applyProjectChange,
+    selectObject,
+    setSelectedObjectState: (objectId, objectDetail = {}) => setSelectedState({ objectId, objectDetail }),
+    getSelectedObjectId: () => selectedObjectId,
+    getSelectedObjectDetail: () => selectedObjectDetail,
+    setMessage,
+    showError
+  });
+
+  const {
     generatedReferenceBindings,
     generatedActiveToolBindings,
     generatedMemberBindings,
@@ -319,7 +347,7 @@ export function mountEditorUi({
       clear: () => clearCurrentSelection(),
       selectSmartComponent: (smartComponentId) => selectSmartComponent(smartComponentId),
       openFeatureEditor: (objectId) => onObjectSelected?.(objectId, { inspectorPanel: "feature" }),
-      openTrimEditor: (objectId, detail) => onObjectSelected?.(objectId, { ...(detail || {}), inspectorPanel: "trim" }),
+      openTrimEditor: (objectId, detail) => onObjectSelected?.(objectId, { ...(detail || {}), inspectorPanel: "properties" }),
       selectObjectDetail: (objectId, detail) => selectObject(objectId, detail)
     },
     activeTool: {
@@ -373,6 +401,13 @@ export function mountEditorUi({
       clearAlignment: () => clearMemberAlignment()
     },
     support: {
+      addGridSystem: () => addGridSystem(),
+      updateGridSystem: (patch) => updateGridSystem(patch),
+      addGridAxis: (axisGroup) => addGridAxis(axisGroup),
+      removeGridAxis: (axisGroup, axisId) => removeGridAxis(axisGroup, axisId),
+      updateGridLevel: (levelId, patch) => updateGridLevel(levelId, patch),
+      addGridLevel: (gridSystemId) => addGridLevel(gridSystemId),
+      updateLevel: (patch) => updateLevel(patch),
       updateWorkPoint: (patch) => updateWorkPoint(patch),
       updateReferencePlane: (patch) => updateReferencePlane(patch),
       updateInterface: (patch) => updateInterface(patch),
@@ -420,7 +455,7 @@ export function mountEditorUi({
       fixPlateSketchUnderDefinedEntities: (payload) => fixPlateSketchUnderDefinedEntities(payload),
       removePlateSketchFixedRelations: (payload) => removePlateSketchFixedRelations(payload),
       selectObjectDetail: (objectId, detail) => selectObject(objectId, detail),
-      openTrimEditor: (objectId, detail) => onObjectSelected?.(objectId, { ...(detail || {}), inspectorPanel: "trim" }),
+      openTrimEditor: (objectId, detail) => onObjectSelected?.(objectId, { ...(detail || {}), inspectorPanel: "properties" }),
       openFeatureEditor: (objectId) => onObjectSelected?.(objectId, { inspectorPanel: "feature" })
     }
   });
@@ -436,36 +471,6 @@ export function mountEditorUi({
       return null;
     }
   };
-
-  const selectionQuickActions = () => {
-    const project = api.project();
-    const actions = inspectorSelectionQuickActions({
-      memberId: selectedMemberId,
-      smartComponentId: selectedSmartComponentId,
-      objectId: selectedObjectId,
-      objectDetail: selectedObjectDetail || {},
-      entry: selectedObjectId ? project.objectIndex?.[selectedObjectId] : null,
-      rootSmartComponent: selectedObjectId ? api.smartComponentRootForObject(selectedObjectId) : null
-    });
-    return quickActions(bindQuickActions(actions), { label: "Selection quick actions" });
-  };
-
-  const inspectorActionButton = (action) => button(
-    action.label,
-    [
-      "bc-button",
-      action.primary ? "bc-button-primary" : "",
-      action.danger ? "bc-button-danger" : ""
-    ].filter(Boolean).join(" "),
-    action.onClick,
-    {
-      icon: action.icon,
-      title: action.title,
-      pressed: action.pressed,
-      disabled: action.disabled,
-      disabledReason: action.disabledReason
-    }
-  );
 
   const updateMember = (operation) => {
     if (!selectedMemberId) return;
@@ -496,6 +501,54 @@ export function mountEditorUi({
   const updateWeld = (patch) => updateSelectedObject((objectId) => api.updateWeld(objectId, patch), "Weld updated.");
 
   const updateWorkPoint = (patch) => updateSelectedObject((objectId) => api.updateWorkPoint(objectId, patch), "Work point updated.");
+
+  const addGridSystem = () => {
+    try {
+      const result = api.createGridSystem({ name: "Grid" });
+      applyProjectChange(result.project);
+      selectObject(result.gridSystemId);
+      setMessage(`Grid system created: ${result.gridSystemId}.`, "ok");
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const updateGridSystem = (patch) => updateSelectedObject((objectId) => api.updateGridSystem(objectId, patch), "Grid system updated.");
+
+  const addGridAxis = (axisGroup) => updateSelectedObject((objectId) => api.addGridAxis(objectId, axisGroup), "Grid axis added.");
+
+  const removeGridAxis = (axisGroup, axisId) => updateSelectedObject((objectId) => api.removeGridAxis(objectId, axisGroup, axisId), "Grid axis removed.");
+
+  const updateLevel = (patch) => updateSelectedObject((objectId) => api.updateLevel(objectId, patch), "Level updated.");
+
+  const updateGridLevel = (levelId, patch) => {
+    if (!levelId) return;
+    try {
+      applyProjectChange(api.updateLevel(levelId, patch));
+      if (selectedObjectId) selection.select([selectedObjectId]);
+      setMessage("Level updated.", "ok");
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const addGridLevel = (gridSystemId = selectedObjectId) => {
+    try {
+      const elevations = Object.values(api.project().model?.levels || {})
+        .map((level) => Number(level.elevation))
+        .filter(Number.isFinite);
+      const elevation = elevations.length ? Math.max(...elevations) + 3000 : 0;
+      const result = api.createLevel({ name: "Level", elevation });
+      applyProjectChange(result.project);
+      if (gridSystemId && api.project().model?.gridSystems?.[gridSystemId]) {
+        setSelectedState({ objectId: gridSystemId, objectDetail: selectedObjectDetail });
+        selection.select([gridSystemId]);
+      }
+      setMessage(`Level created: ${result.levelId}.`, "ok");
+    } catch (error) {
+      showError(error);
+    }
+  };
 
   const updateReferencePlane = (patch) => updateSelectedObject((objectId) => api.setReferencePlane(objectId, patch), "Reference plane updated.");
 
@@ -565,372 +618,6 @@ export function mountEditorUi({
     if (!trimOperationUsesMemberEnd(type, "memberA")) patch.memberAEnd = undefined;
     if (!trimOperationUsesMemberEnd(type, "memberB")) patch.memberBEnd = undefined;
     updateSelectedObject((trimJointId) => api.updateTrimJointOperation(trimJointId, operationId, patch), `${trimOperationLabel(type)} selected.`);
-  };
-
-  function inferPlateSketchRelations(plateId = selectedObjectId) {
-    if (!plateId) return;
-    try {
-      applyProjectChange(api.inferPlateSketchRelations(plateId));
-      selection.select([plateId]);
-      setMessage("Plate updated.", "ok");
-    } catch (error) {
-      showError(error);
-    }
-  }
-
-  function createPlateFromSketch(sketchId) {
-    if (!sketchId) return;
-    try {
-      const result = api.createPlateFromSketch(sketchId, {
-        id: `${sketchId}_plate`,
-        thickness: 8
-      });
-      setSelectedState({ objectId: result.plateId, objectDetail: {} });
-      applyProjectChange(result.project);
-      selection.select([result.plateId]);
-      setMessage(`Created ${result.plateId}.`, "ok");
-    } catch (error) {
-      showError(error);
-    }
-  }
-
-  const updatePlateAndSelectRelation = (operation, relationId, message = "Plate updated.") => {
-    if (!selectedObjectId) return;
-    const plateId = selectedObjectId;
-    try {
-      const nextProject = operation(plateId);
-      applyProjectChange(nextProject);
-      const nextRelation = sketchRelations(nextProject.model?.plates?.[plateId]?.sketch)
-        .find((relation) => relation.id === relationId);
-      selectObject(plateId, nextRelation ? { relationId: nextRelation.id } : {});
-      setMessage(message, "ok");
-    } catch (error) {
-      showError(error);
-    }
-  };
-
-  const updatePlateAndSelectSketchDetail = (operation, detail = {}, message = "Plate updated.") => {
-    if (!selectedObjectId) return;
-    const plateId = selectedObjectId;
-    try {
-      const nextProject = operation(plateId);
-      applyProjectChange(nextProject);
-      selectObject(plateId, detail || {});
-      setMessage(message, "ok");
-    } catch (error) {
-      showError(error);
-    }
-  };
-
-  const updatePlateAndSelectRelationPatch = (operation, relationPatch, message = "Plate updated.", plateId = selectedObjectId) => {
-    if (!plateId || !relationPatch) return;
-    try {
-      const nextProject = operation(plateId);
-      applyProjectChange(nextProject);
-      selection.select([plateId]);
-      const nextPlate = nextProject.model?.plates?.[plateId];
-      const relationKey = sketchRelationKey(relationPatch);
-      const nextRelation = nextPlate
-        ? sketchRelations(nextPlate.sketch).find((relation) => sketchRelationKey(relation) === relationKey)
-        : null;
-      selectObject(plateId, nextRelation ? { relationId: nextRelation.id } : {});
-      setMessage(message, "ok");
-    } catch (error) {
-      showError(error);
-    }
-  };
-
-  const sketchRelationRemoveLabel = (relation) => (relation?.type === "fixed" ? "Unfix" : "Remove");
-  const sketchRelationRemoveMessage = (relation) => (relation?.type === "fixed" ? "Sketch entity unfixed." : "Sketch relation removed.");
-
-  const currentPlateSketchRelation = (plateId, relationId) => {
-    if (!plateId || !relationId) return null;
-    const plate = api.project().model?.plates?.[plateId];
-    return sketchRelations(plate?.sketch).find((relation) => relation.id === relationId) || null;
-  };
-
-  const relationPayloadPlateId = (payload = {}) => payload.objectId || selectedObjectId;
-
-  const relationFromPayload = (payload = {}) => (
-    currentPlateSketchRelation(relationPayloadPlateId(payload), payload.relationId)
-    || payload.relation
-    || null
-  );
-
-  const setPlateSketchRelationValue = (value, commit = {}) => {
-    const relation = relationFromPayload(commit);
-    if (!relation) return;
-    if (relation.type === "length") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchEdgeLength(plateId, relation.edgeId, value, { mode: "driving" }),
-        relation.id,
-        "Sketch dimension updated."
-      );
-    } else if (relation.type === "angle") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchEdgeAngle(plateId, relation.edgeIds, value, { mode: "driving", targetEdgeId: relation.edgeIds?.[1] }),
-        relation.id,
-        "Sketch dimension updated."
-      );
-    } else if (relation.type === "distance") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchPointDistance(plateId, relation.vertexIds, value, { mode: "driving", targetVertexId: relation.vertexIds?.[1] }),
-        relation.id,
-        "Sketch dimension updated."
-      );
-    }
-  };
-
-  const selectPlateSketchRelation = (payload = {}) => {
-    const plateId = relationPayloadPlateId(payload);
-    if (plateId && payload.relationId) selectObject(plateId, { relationId: payload.relationId });
-  };
-
-  const setPlateSketchRelationMode = (payload = {}) => {
-    const relation = relationFromPayload(payload);
-    const nextMode = payload.mode;
-    if (!relation || !["driving", "driven"].includes(nextMode)) return;
-    if (relation.type === "length") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchEdgeLengthMode(plateId, relation.edgeId, nextMode),
-        relation.id,
-        `Sketch dimension set ${nextMode}.`
-      );
-    } else if (relation.type === "angle") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchEdgeAngleMode(plateId, relation.edgeIds, nextMode),
-        relation.id,
-        `Sketch dimension set ${nextMode}.`
-      );
-    } else if (relation.type === "distance") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchPointDistanceMode(plateId, relation.vertexIds, nextMode),
-        relation.id,
-        `Sketch dimension set ${nextMode}.`
-      );
-    }
-  };
-
-  const resolvePlateSketchRelation = (payload = {}) => {
-    const relation = relationFromPayload(payload);
-    if (!relation) return;
-    resolveSketchRelation(
-      relation,
-      payload.relationMode || sketchRelationMode(relation),
-      payload.healthStatus || sketchRelationHealthStatus(null),
-      payload.detail || {}
-    );
-  };
-
-  const removePlateSketchRelation = (payload = {}) => {
-    const relation = relationFromPayload(payload);
-    if (!relation) return;
-    updatePlateAndSelectSketchDetail(
-      (plateId) => api.removePlateSketchRelation(plateId, relation.id),
-      payload.detail || {},
-      sketchRelationRemoveMessage(relation)
-    );
-  };
-
-  const addPlateSketchRelationFromPayload = (payload = {}) => {
-    const relation = payload.relation;
-    const plateId = payload.objectId || selectedObjectId;
-    if (!plateId || !relation) return;
-    if (relation.type === "length") {
-      updatePlateAndSelectRelationPatch(
-        (plateId) => api.setPlateSketchEdgeLengthMode(plateId, relation.edgeId, "driving"),
-        { type: "length", edgeId: relation.edgeId },
-        "Plate updated.",
-        plateId
-      );
-      return;
-    }
-    if (relation.type === "angle") {
-      updatePlateAndSelectRelationPatch(
-        (plateId) => api.setPlateSketchEdgeAngleMode(plateId, relation.edgeIds, "driving"),
-        { type: "angle", edgeIds: relation.edgeIds },
-        "Plate updated.",
-        plateId
-      );
-      return;
-    }
-    if (relation.type === "distance") {
-      updatePlateAndSelectRelationPatch(
-        (plateId) => api.setPlateSketchPointDistanceMode(plateId, relation.vertexIds, "driving"),
-        { type: "distance", vertexIds: relation.vertexIds },
-        "Plate updated.",
-        plateId
-      );
-      return;
-    }
-    updatePlateAndSelectRelationPatch(
-      (plateId) => api.upsertPlateSketchRelation(plateId, relation),
-      relation,
-      "Plate updated.",
-      plateId
-    );
-  };
-
-  const addPlateSketchConstructionLineFromPayload = (payload = {}) => {
-    const plateId = payload.objectId || selectedObjectId;
-    const { from, to } = payload;
-    if (!plateId || !Array.isArray(from) || !Array.isArray(to)) return;
-    try {
-      const nextProject = api.addPlateSketchConstructionLine(plateId, from, to);
-      applyProjectChange(nextProject);
-      const nextEdges = sketchConstructionEdges(nextProject.model?.plates?.[plateId]?.sketch);
-      const nextVertexMap = sketchVertexPointMap(nextProject.model?.plates?.[plateId]?.sketch);
-      const newEdge = [...nextEdges].reverse().find((edge) => {
-        const edgeFrom = nextVertexMap.get(edge.from);
-        const edgeTo = nextVertexMap.get(edge.to);
-        return (sameSketchPoint(edgeFrom, from) && sameSketchPoint(edgeTo, to))
-          || (sameSketchPoint(edgeFrom, to) && sameSketchPoint(edgeTo, from));
-      });
-      selectObject(plateId, newEdge ? { edgeIds: [newEdge.id] } : {});
-      setMessage("Plate updated.", "ok");
-    } catch (error) {
-      showError(error);
-    }
-  };
-
-  const fixPlateSketchUnderDefinedEntities = (payload = {}) => {
-    updatePlateAndSelectSketchDetail(
-      (plateId) => api.fixPlateSketchUnderDefinedEntities(plateId),
-      payload.detail || {},
-      "Under-defined sketch entities fixed."
-    );
-  };
-
-  const removePlateSketchFixedRelations = (payload = {}) => {
-    updatePlateAndSelectSketchDetail(
-      (plateId) => api.removePlateSketchFixedRelations(plateId),
-      payload.detail || {},
-      "Fixed sketch relations removed."
-    );
-  };
-
-  const sketchRelationMode = (relation) => (
-    relation.type === "angle"
-      ? sketchAngleRelationMode(relation)
-      : relation.type === "distance"
-        ? sketchDistanceRelationMode(relation)
-        : sketchLengthRelationMode(relation)
-  );
-
-  const sketchRelationHealthStatus = (health) => health?.status === "driven" ? "reference" : health?.status;
-
-  const sketchRelationTargetText = (relation, relationMode = sketchRelationMode(relation)) => (
-    relation.type === "length"
-      ? `${relation.edgeId} (${relationMode === "driven" ? `reference ${relation.value} mm` : "driving"})`
-      : relation.type === "angle"
-        ? `${(relation.edgeIds || []).join(" + ")} (${relationMode === "driven" ? `reference ${relation.value} deg` : "driving"})`
-      : relation.type === "distance"
-        ? `${(relation.vertexIds || []).join(" + ")} (${relationMode === "driven" ? `reference ${relation.value} mm` : "driving"})`
-      : relation.type === "point-on-line"
-        ? `${relation.vertexId} on ${relation.edgeId}`
-      : relation.type === "midpoint"
-        ? `${relation.vertexId} midpoint ${relation.edgeId}`
-      : relation.type === "symmetric"
-        ? `${(relation.vertexIds || []).join(" + ")} about ${relation.edgeId}`
-      : relation.edgeId || (relation.edgeIds || []).join(" + ") || (relation.vertexIds || []).join(" + ") || "-"
-  );
-
-  const sketchRelationEntityText = (relation) => {
-    const vertices = sketchRelationVertexIds(relation);
-    const edges = sketchRelationEdgeIds(relation);
-    return [
-      vertices.length ? `vertices ${vertices.join(", ")}` : "",
-      edges.length ? `edges ${edges.join(", ")}` : ""
-    ].filter(Boolean).join("; ") || "-";
-  };
-
-  const sketchRelationStatusText = (health, relationMode) => {
-    const status = sketchRelationHealthStatus(health);
-    if (status === "conflicted") return "Conflicted";
-    if (status === "redundant") return "Redundant";
-    if (status === "reference") return "Reference";
-    if (relationMode === "driven") return "Reference";
-    return "OK";
-  };
-
-  const sketchRelationSortWeight = (relation, relationHealth) => {
-    const status = sketchRelationHealthStatus(relationHealth[relation.id]);
-    if (status === "conflicted") return 0;
-    if (status === "redundant") return 1;
-    if (status === "reference") return 3;
-    return 2;
-  };
-
-  const sketchRelationGroupStatus = (relation, relationHealth) => {
-    const status = sketchRelationHealthStatus(relationHealth[relation.id]);
-    if (status === "conflicted" || status === "redundant" || status === "reference") return status;
-    return sketchRelationMode(relation) === "driven" ? "reference" : "driving";
-  };
-
-  const sketchRelationGroupLabel = (status) => {
-    if (status === "conflicted") return "Conflicted relations";
-    if (status === "redundant") return "Redundant relations";
-    if (status === "reference") return "Reference dimensions";
-    return "Driving / active relations";
-  };
-
-  const groupedSketchRelations = (relations, relationHealth) => {
-    const buckets = new Map();
-    for (const relation of sortedSketchRelations(relations, relationHealth)) {
-      const status = sketchRelationGroupStatus(relation, relationHealth);
-      if (!buckets.has(status)) buckets.set(status, []);
-      buckets.get(status).push(relation);
-    }
-    return ["conflicted", "redundant", "driving", "reference"]
-      .filter((status) => buckets.has(status))
-      .map((status) => ({ status, label: sketchRelationGroupLabel(status), relations: buckets.get(status) }));
-  };
-
-  const sortedSketchRelations = (relations, relationHealth) => relations
-    .map((relation, index) => ({ relation, index, weight: sketchRelationSortWeight(relation, relationHealth) }))
-    .sort((a, b) => a.weight - b.weight || a.index - b.index)
-    .map((item) => item.relation);
-
-  const resolveSketchRelation = (relation, relationMode, healthStatus, relationDetail = {}) => {
-    if (healthStatus === "conflicted") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.solvePlateSketchRelation(plateId, relation.id),
-        relation.id,
-        "Sketch relation resolved."
-      );
-      return;
-    }
-    if (healthStatus === "redundant" && relationMode === "driving") {
-      if (relation.type === "length") {
-        updatePlateAndSelectRelation(
-          (plateId) => api.setPlateSketchEdgeLengthMode(plateId, relation.edgeId, "driven"),
-          relation.id,
-          "Sketch relation converted to reference."
-        );
-        return;
-      }
-      if (relation.type === "angle") {
-        updatePlateAndSelectRelation(
-          (plateId) => api.setPlateSketchEdgeAngleMode(plateId, relation.edgeIds, "driven"),
-          relation.id,
-          "Sketch relation converted to reference."
-        );
-        return;
-      }
-      if (relation.type === "distance") {
-        updatePlateAndSelectRelation(
-          (plateId) => api.setPlateSketchPointDistanceMode(plateId, relation.vertexIds, "driven"),
-          relation.id,
-          "Sketch relation converted to reference."
-        );
-        return;
-      }
-    }
-    updatePlateAndSelectSketchDetail(
-      (plateId) => api.removePlateSketchRelation(plateId, relation.id),
-      relationDetail,
-      "Sketch relation removed."
-    );
   };
 
   const removeMemberRelation = (relationId) => {
@@ -1013,500 +700,59 @@ export function mountEditorUi({
     }
   };
 
-  const plateEditor = (plate) => {
-    const definition = plateSketchDefinitionStatus(plate);
-    const fields = [];
-    const outlineEdges = sketchEdges(plate.sketch);
-    const constructionEdges = sketchConstructionEdges(plate.sketch);
-    const edgeById = new Map([...outlineEdges, ...constructionEdges].map((edge, index) => [edge.id, { edge, index }]));
-    const relations = sketchRelations(plate.sketch);
-    const fixedRelations = relations.filter((relation) => relation.type === "fixed");
-    const relationHealth = plateSketchRelationHealth(plate);
-    const activeRelationId = selectedObjectId === plate.id ? selectedObjectDetail?.relationId || null : null;
-    const activeRelation = activeRelationId ? sketchRelations(plate.sketch).find((relation) => relation.id === activeRelationId) || null : null;
-    const activeEdgeIds = selectedObjectId === plate.id ? arrayValues(selectedObjectDetail?.edgeIds).filter(Boolean).slice(0, 2) : [];
-    const activeVertexIds = selectedObjectId === plate.id ? arrayValues(selectedObjectDetail?.vertexIds).filter(Boolean).slice(0, 2) : [];
-    const constructionEdgeIds = new Set(constructionEdges.map((edge) => edge.id));
-    const canConstrainVertexToEdge = (vertexId, edgeId) => {
-      const edge = edgeById.get(edgeId)?.edge;
-      return Boolean(edge && edge.from !== vertexId && edge.to !== vertexId);
-    };
-
-    const relationSelectionDetail = (relation) => {
-      const edgeIds = sketchRelationEdgeIds(relation).filter(Boolean);
-      const vertexIds = new Set(sketchRelationVertexIds(relation).filter(Boolean));
-      for (const edgeId of edgeIds) {
-        const edge = edgeById.get(edgeId)?.edge;
-        if (!edge) continue;
-        if (edge.from) vertexIds.add(edge.from);
-        if (edge.to) vertexIds.add(edge.to);
-      }
-      return { edgeIds, vertexIds: [...vertexIds] };
-    };
-
-    const underDefinedInspector = () => {
-      const underEdges = arrayValues(definition.underDefinedEdgeIds).filter(Boolean);
-      const underVertices = arrayValues(definition.underDefinedVertexIds).filter(Boolean);
-      if (!underEdges.length && !underVertices.length) return null;
-      const rowDescriptor = (id, detail, relation) => ({
-        id,
-        label: id,
-        actions: [
-          {
-            label: "Select",
-            action: "object.plate.relations.toggle",
-            title: `Select ${id} in the 3D sketch overlay.`,
-            payload: { objectId: plate.id, detail }
-          },
-          {
-            label: "Fix",
-            action: "object.plate.sketchRelation.add",
-            title: "Fix this entity at its current sketch position.",
-            payload: { objectId: plate.id, relation }
-          }
-        ]
-      });
-      return {
-        type: "statusListCard",
-        title: "Under-defined entities",
-        status: "redundant",
-        actions: [{
-          label: "Fix remaining",
-          primary: true,
-          action: "object.plate.sketchUnderDefined.fixRemaining",
-          title: `Fix ${underEdges.length} edge${underEdges.length === 1 ? "" : "s"} and ${underVertices.length} ${underVertices.length === 1 ? "vertex" : "vertices"} at their current sketch positions.`,
-          payload: { objectId: plate.id, detail: {} }
-        }],
-        groups: [
-          underEdges.length ? {
-            label: "Edges",
-            value: underEdges.length,
-            rows: underEdges.slice(0, 8).map((edgeId) => rowDescriptor(edgeId, { edgeIds: [edgeId] }, { type: "fixed", edgeId })),
-            moreText: underEdges.length > 8 ? `+${underEdges.length - 8} more edges` : ""
-          } : null,
-          underVertices.length ? {
-            label: "Vertices",
-            value: underVertices.length,
-            rows: underVertices.slice(0, 8).map((vertexId) => rowDescriptor(vertexId, { vertexIds: [vertexId] }, { type: "fixed", vertexId })),
-            moreText: underVertices.length > 8 ? `+${underVertices.length - 8} more vertices` : ""
-          } : null
-        ].filter(Boolean),
-        diagnostic: "Select an entity to inspect it, or Fix it at its current sketch position."
-      };
-    };
-
-    const relationRemoveLabel = sketchRelationRemoveLabel;
-    const relationRemoveMessage = sketchRelationRemoveMessage;
-
-    const sketchRelationValueDescriptor = (relation, relationMode) => {
-      if (!["length", "angle", "distance"].includes(relation.type) || relationMode === "driven") return {};
-      const unit = relation.type === "angle" ? "deg" : "mm";
-      return {
-        value: relation.value,
-        valueLabel: `${sketchRelationLabel(relation)} ${unit}`,
-        valueTitle: `Driving ${sketchRelationLabel(relation).toLowerCase()} (${unit})`,
-        options: { min: 0, minExclusive: true },
-        commit: {
-          action: "object.plate.sketchRelation.value.set",
-          objectId: plate.id,
-          relationId: relation.id,
-          relation: clone(relation)
-        }
-      };
-    };
-
-    const relationModeToggleAction = (relation, relationMode) => {
-      if (!["length", "angle", "distance"].includes(relation.type)) return null;
-      const nextMode = relationMode === "driven" ? "driving" : "driven";
-      return {
-        label: relationMode === "driven" ? "Make Driving" : "Make Driven",
-        action: "object.plate.sketchRelation.mode.set",
-        payload: {
-          objectId: plate.id,
-          relationId: relation.id,
-          relation: clone(relation),
-          mode: nextMode
-        }
-      };
-    };
-
-    const relationResolveAction = (relation, relationMode, healthStatus) => (
-      healthStatus === "conflicted" || healthStatus === "redundant"
-        ? {
-          label: "Resolve",
-          primary: true,
-          action: "object.plate.sketchRelation.resolve",
-          title: healthStatus === "conflicted"
-            ? "Try to move sketch geometry so this relation is satisfied."
-            : healthStatus === "redundant" && relationMode === "driving" && ["length", "angle", "distance"].includes(relation.type)
-              ? "Convert this redundant driving dimension to reference."
-              : "Remove this relation to resolve the sketch issue.",
-          payload: {
-            objectId: plate.id,
-            relationId: relation.id,
-            relation: clone(relation),
-            relationMode,
-            healthStatus,
-            detail: relationSelectionDetail(relation)
-          }
-        }
-        : null
-    );
-
-    const relationStatusRowDescriptor = (relation, options = {}) => {
-      const relationMode = sketchRelationMode(relation);
-      const target = sketchRelationTargetText(relation, relationMode);
-      const health = relationHealth[relation.id];
-      const healthStatus = sketchRelationHealthStatus(health);
-      const healthText = options.healthText === false || !healthStatus || healthStatus === "ok" ? "" : ` - ${healthStatus}`;
-      const isSelectedRelation = relation.id === activeRelationId;
-      const detail = relationSelectionDetail(relation);
-      return {
-        type: "statusRow",
-        relationId: relation.id,
-        label: `${sketchRelationBadge(relation)} ${sketchRelationLabel(relation)} ${target}${healthText}`,
-        compact: options.compact === true,
-        status: healthStatus,
-        selected: isSelectedRelation,
-        diagnostic: options.diagnostic === false ? "" : health?.message && healthStatus !== "ok" ? health.message : "",
-        title: health?.message || "",
-        ...(options.value === false ? {} : sketchRelationValueDescriptor(relation, relationMode)),
-        actions: [
-          {
-            label: options.selectLabel || (isSelectedRelation ? "Selected" : "Select"),
-            primary: isSelectedRelation,
-            action: "object.plate.sketchRelation.select",
-            title: "Select this relation in the 3D sketch overlay.",
-            payload: { objectId: plate.id, relationId: relation.id }
-          },
-          options.modeToggle === false ? null : relationModeToggleAction(relation, relationMode),
-          relationResolveAction(relation, relationMode, healthStatus),
-          {
-            label: relationRemoveLabel(relation),
-            danger: true,
-            action: "object.plate.sketchRelation.remove",
-            payload: {
-              objectId: plate.id,
-              relationId: relation.id,
-              relation: clone(relation),
-              detail
-            }
-          }
-        ].filter(Boolean)
-      };
-    };
-
-    const relationStatusGroupFields = (relationGroups, rowDescriptor) => relationGroups.flatMap((group) => [
-      { type: "statusGroupTitle", label: `${group.label} (${group.relations.length})`, status: group.status },
-      ...group.relations.map(rowDescriptor)
-    ]);
-
-    const relationStatusListFields = () => relationStatusGroupFields(
-      groupedSketchRelations(relations, relationHealth),
-      (relation) => relationStatusRowDescriptor(relation)
-    );
-
-    const selectedEntityRelationStatusFields = (relationGroups) => relationStatusGroupFields(
-      relationGroups,
-      (relation) => relationStatusRowDescriptor(relation, {
-        compact: true,
-        value: false,
-        modeToggle: false,
-        healthText: false,
-        diagnostic: false,
-        selectLabel: "Select"
-      })
-    );
-
-    const relationEntityActionGroups = (relation) => {
-      const detail = relationSelectionDetail(relation);
-      return [
-        detail.edgeIds.length ? {
-          label: "Edges",
-          actions: detail.edgeIds.slice(0, 8).map((edgeId) => ({
-            label: edgeId,
-            action: "object.plate.relations.toggle",
-            title: `Select ${edgeId} in the 3D sketch overlay.`,
-            payload: { objectId: plate.id, detail: { edgeIds: [edgeId] } }
-          }))
-        } : null,
-        detail.vertexIds.length ? {
-          label: "Vertices",
-          actions: detail.vertexIds.slice(0, 8).map((vertexId) => ({
-            label: vertexId,
-            action: "object.plate.relations.toggle",
-            title: `Select ${vertexId} in the 3D sketch overlay.`,
-            payload: { objectId: plate.id, detail: { vertexIds: [vertexId] } }
-          }))
-        } : null
-      ].filter(Boolean);
-    };
-
-    const selectedRelationCardDescriptor = (relation) => {
-      const relationMode = sketchRelationMode(relation);
-      const health = relationHealth[relation.id];
-      const healthStatus = sketchRelationHealthStatus(health);
-      return {
-        type: "summaryCard",
-        title: `${sketchRelationBadge(relation)} ${sketchRelationLabel(relation)}`,
-        status: healthStatus,
-        diagnostic: health?.message || "",
-        readouts: [
-          { label: "Status", value: sketchRelationStatusText(health, relationMode) },
-          { label: "Target", value: sketchRelationTargetText(relation, relationMode) },
-          { label: "Entities", value: sketchRelationEntityText(relation) }
-        ],
-        ...sketchRelationValueDescriptor(relation, relationMode),
-        actionGroups: [
-          ...relationEntityActionGroups(relation),
-          {
-            actions: [
-              {
-                label: "Locate",
-                action: "object.plate.sketchRelation.select",
-                title: "Keep this relation selected in the 3D sketch overlay.",
-                payload: { objectId: plate.id, relationId: relation.id }
-              },
-              relationModeToggleAction(relation, relationMode),
-              relationResolveAction(relation, relationMode, healthStatus),
-              {
-                label: relationRemoveLabel(relation),
-                danger: true,
-                action: "object.plate.sketchRelation.remove",
-                payload: {
-                  objectId: plate.id,
-                  relationId: relation.id,
-                  relation: clone(relation),
-                  detail: relationSelectionDetail(relation)
-                }
-              }
-            ].filter(Boolean)
-          }
-        ]
-      };
-    };
-
-    const selectedRelationInspector = (relation) => {
-      if (!relation) return null;
-      return selectedRelationCardDescriptor(relation);
-    };
-
-    const existingRelationForAction = (relation) => {
-      const key = sketchRelationKey(relation);
-      return relations.find((item) => sketchRelationKey(item) === key) || null;
-    };
-
-    const relationActionPreview = (relation) => {
-      try {
-        return plateSketchRelationActionPreview(plate, relation);
-      } catch (error) {
-        return {
-          relation: null,
-          health: {
-            status: "conflicted",
-            severity: "error",
-            message: error?.message || "Relation cannot be evaluated."
-          },
-          definition: null
-        };
-      }
-    };
-
-    const relationActionStatusSuffix = (status) => {
-      if (status === "conflicted") return "conflict";
-      if (status === "redundant") return "redundant";
-      if (status === "reference") return "reference";
-      return "";
-    };
-
-    const relationActionDescriptor = (relation, label = null) => {
-      const actionLabel = label || sketchRelationLabel(relation);
-      const existingRelation = existingRelationForAction(relation);
-      if (existingRelation) {
-        return {
-          label: `${actionLabel} (existing)`,
-          status: "existing",
-          action: "object.plate.sketchRelation.select",
-          title: "This relation already exists. Select it to edit, resolve, convert, or remove it.",
-          payload: { objectId: plate.id, relationId: existingRelation.id }
-        };
-      }
-      const preview = relationActionPreview(relation);
-      const previewStatus = sketchRelationHealthStatus(preview.health);
-      const suffix = relationActionStatusSuffix(previewStatus);
-      const title = preview.health?.message
-        || (preview.definition?.status && preview.definition.status !== definition.status
-          ? `Sketch will become ${preview.definition.label.toLowerCase()}.`
-          : "");
-      return {
-        label: suffix ? `${actionLabel} (${suffix})` : actionLabel,
-        status: previewStatus,
-        action: "object.plate.sketchRelation.add",
-        title,
-        payload: { objectId: plate.id, relation: clone(relation) }
-      };
-    };
-
-    const constructionLineActionDescriptor = (from, to) => ({
-      label: "Construction line",
-      action: "object.plate.sketchConstructionLine.add",
-      payload: { objectId: plate.id, from: clone(from), to: clone(to) }
-    });
-
-    const selectedEntityRelationActions = () => {
-      const actions = [];
-      if (activeVertexIds.length === 2 && activeEdgeIds.length === 1) {
-        actions.push(relationActionDescriptor({ type: "symmetric", vertexIds: activeVertexIds, edgeId: activeEdgeIds[0] }));
-        return actions;
-      }
-      if (activeVertexIds.length === 2) {
-        const vertexMap = sketchVertexPointMap(plate.sketch);
-        const first = vertexMap.get(activeVertexIds[0]);
-        const second = vertexMap.get(activeVertexIds[1]);
-        actions.push(
-          relationActionDescriptor({ type: "distance", vertexIds: activeVertexIds }, "Distance"),
-          relationActionDescriptor({ type: "coincident", vertexIds: activeVertexIds }),
-          relationActionDescriptor({ type: "horizontal-points", vertexIds: activeVertexIds }),
-          relationActionDescriptor({ type: "vertical-points", vertexIds: activeVertexIds }),
-          ...(first && second ? [constructionLineActionDescriptor(first, second)] : [])
-        );
-        return actions;
-      }
-      if (activeVertexIds.length === 1 && activeEdgeIds.length === 1) {
-        if (canConstrainVertexToEdge(activeVertexIds[0], activeEdgeIds[0])) {
-          actions.push(
-            relationActionDescriptor({ type: "point-on-line", vertexId: activeVertexIds[0], edgeId: activeEdgeIds[0] }),
-            relationActionDescriptor({ type: "midpoint", vertexId: activeVertexIds[0], edgeId: activeEdgeIds[0] })
-          );
-        }
-        return actions;
-      }
-      if (activeVertexIds.length === 1) {
-        actions.push(relationActionDescriptor({ type: "fixed", vertexId: activeVertexIds[0] }));
-        return actions;
-      }
-      if (activeEdgeIds.length === 2) {
-        actions.push(
-          relationActionDescriptor({ type: "parallel", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
-          relationActionDescriptor({ type: "collinear", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
-          relationActionDescriptor({ type: "perpendicular", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
-          relationActionDescriptor({ type: "equal-length", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
-          relationActionDescriptor({ type: "angle", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }, "Angle")
-        );
-        return actions;
-      }
-      if (activeEdgeIds.length === 1) {
-        const edgePoints = sketchEdgePoints(plate.sketch, activeEdgeIds[0]);
-        actions.push(
-          relationActionDescriptor({ type: "horizontal", edgeId: activeEdgeIds[0] }),
-          relationActionDescriptor({ type: "vertical", edgeId: activeEdgeIds[0] }),
-          relationActionDescriptor({ type: "fixed", edgeId: activeEdgeIds[0] }),
-          relationActionDescriptor({ type: "length", edgeId: activeEdgeIds[0] }, "Length"),
-          ...(constructionEdgeIds.has(activeEdgeIds[0]) || !edgePoints ? [] : [constructionLineActionDescriptor(edgePoints.from, edgePoints.to)])
-        );
-      }
-      return actions;
-    };
-
-    const selectedEntityRelations = () => {
-      const edgeIds = new Set(activeEdgeIds);
-      const vertexIds = new Set(activeVertexIds);
-      for (const edgeId of activeEdgeIds) {
-        const edge = edgeById.get(edgeId)?.edge;
-        if (!edge) continue;
-        if (edge.from) vertexIds.add(edge.from);
-        if (edge.to) vertexIds.add(edge.to);
-      }
-      if (activeVertexIds.length) {
-        const activeVertexSet = new Set(activeVertexIds);
-        for (const { edge } of edgeById.values()) {
-          if (activeVertexSet.has(edge.from) || activeVertexSet.has(edge.to)) edgeIds.add(edge.id);
-        }
-      }
-      if (!edgeIds.size && !vertexIds.size) return [];
-      return sketchRelations(plate.sketch).filter((relation) => (
-        sketchRelationEdgeIds(relation).some((edgeId) => edgeIds.has(edgeId))
-        || sketchRelationVertexIds(relation).some((vertexId) => vertexIds.has(vertexId))
-      ));
-    };
-
-    const selectedEntityInspector = () => {
-      if (activeRelation || (!activeEdgeIds.length && !activeVertexIds.length)) return null;
-      const actions = selectedEntityRelationActions();
-      const existingRelations = selectedEntityRelations();
-      const relationGroups = groupedSketchRelations(existingRelations, relationHealth);
-      return {
-        type: "nestedFieldCard",
-        title: "Selected sketch entities",
-        readouts: [
-          { label: "Edges", value: activeEdgeIds.length ? activeEdgeIds.join(", ") : "-" },
-          { label: "Vertices", value: activeVertexIds.length ? activeVertexIds.join(", ") : "-" }
-        ],
-        messages: [
-          { value: actions.length ? "Add relation" : "No panel relation actions for this selection." },
-          { value: existingRelations.length ? "Relations on selected entities" : "No existing relations on selected entities." }
-        ],
-        fields: [
-          {
-            type: "actionRow",
-            label: "Add relation",
-            actions: [
-              ...actions,
-              {
-                label: "Clear selection",
-                action: "object.plate.relations.toggle",
-                payload: { objectId: plate.id, detail: { clearSketchSelection: true } }
-              }
-            ]
-          },
-          ...selectedEntityRelationStatusFields(relationGroups)
-        ]
-      };
-    };
-
-    const underDefined = underDefinedInspector();
-    if (underDefined) fields.push(underDefined);
-    const inspector = selectedRelationInspector(activeRelation);
-    if (inspector) fields.push(inspector);
-    const entityInspector = selectedEntityInspector();
-    if (entityInspector) fields.push(entityInspector);
-    if (fixedRelations.length) {
-      fields.push({
-        type: "action",
-        label: `Unfix all (${fixedRelations.length})`,
-        icon: "relation",
-        action: "object.plate.sketchRelations.unfixAll",
-        payload: { objectId: plate.id, detail: {} },
-        title: "Remove every fixed sketch relation and leave dimensional/geometric relations intact."
-      });
-    }
-    if (!relations.length) {
-      fields.push({ type: "message", state: "help", value: "No sketch relations." });
-    } else {
-      fields.push(...relationStatusListFields());
-    }
-
-    fields.push({ label: "Outline vertices", value: String(sketchPlateOutline(plate).length) });
-    return {
-      id: "inspector.properties.object.plate.relations",
-      label: "Sketch Relations",
-      level: "advanced",
-      open: true,
-      fields
-    };
-  };
-
   const activePropertiesPanel = () => {
     if (selectedMemberId) return memberPropertiesPanel();
     if (selectedSmartComponentId) return smartComponentPropertiesPanel();
     if (selectedObjectId) return objectPropertiesPanel();
+    if (gridEditorEmpty) return gridEditorEmptyPropertiesPanel();
     const activeTool = activeToolPropertiesPanel();
     if (activeTool) return activeTool;
+    if (sceneSelected) return scenePropertiesPanel();
+    return null;
+  };
+
+  const scenePropertiesPanel = () => {
+    const project = api.project();
+    const points = sceneReferencePoints(project);
+    const bounds = points.length ? bounds3(points) : null;
     return generatedPropertiesPanel({
-      context: inspectorEmptySelectionContext(),
-      emptyMessage: "Pick a member, Smart Component, trim, cut object, plate, fastener, or weld."
+      context: inspectorSceneContext({ project, pointCount: points.length }),
+      sections: bindGeneratedPropertySections(inspectorScenePropertySections({
+        project,
+        bounds,
+        counts: sceneCollectionCounts(project),
+        pointCount: points.length
+      }), generatedReferenceBindings())
     });
   };
+
+  const gridEditorEmptyPropertiesPanel = () => generatedPropertiesPanel({
+    context: {
+      title: "Grid Editor",
+      subtitle: "No grid systems are defined in this project.",
+      icon: "grid"
+    },
+    sections: bindGeneratedPropertySections([
+      {
+        id: "inspector.properties.gridEditor.empty",
+        label: "Grid Systems",
+        fields: [
+          {
+            type: "message",
+            state: "help",
+            value: "Create the first grid system here, then edit axes and levels in this panel."
+          },
+          {
+            type: "action",
+            label: "Add Grid System",
+            icon: "grid",
+            action: "gridSystem.add"
+          }
+        ]
+      }
+    ], generatedSupportObjectBindings()),
+    emptyMessage: "No grid systems are defined in this project."
+  });
 
   const activeToolPropertiesPanel = () => {
     const commandState = app?.commandState?.() || {};
@@ -1653,23 +899,6 @@ export function mountEditorUi({
     );
   };
 
-  const smartComponentQuickParameterField = (smartComponent, definition, path) => {
-    const parameters = smartComponent.referenceParameters || {};
-    return parameterFieldDescriptor(definition, parameters, path, {
-      api,
-      labelFor: inspectorMetadataLabel,
-      catalogOptions: (spec, value) => spec.kind === "catalogRef"
-        ? catalogOptions(api, spec.catalog, String(value || ""))
-        : null,
-      commit: { action: "smartComponent.parameter.set", smartComponentId: smartComponent.id }
-    });
-  };
-
-  const smartComponentQuickParameterFields = (smartComponent, definition) => {
-    const entries = uiQuickParameterEntries(definition, smartComponent.referenceParameters || {}, { limit: SMART_COMPONENT_QUICK_PARAMETER_LIMIT });
-    return entries.map(({ path }) => smartComponentQuickParameterField(smartComponent, definition, path)).filter(Boolean);
-  };
-
   const smartComponentCapabilities = () => ({
     resetObjectOverrides: typeof api.resetSmartComponentObjectOverrides === "function",
     detachObject: typeof api.detachSmartComponentObject === "function",
@@ -1706,7 +935,13 @@ export function mountEditorUi({
         smartComponent,
         definition,
         diagnosticsSummary,
-        quickParameterFields: smartComponentQuickParameterFields(smartComponent, definition),
+        quickParameterFields: smartComponentQuickParameterFields({
+          api,
+          smartComponent,
+          definition,
+          labelFor: inspectorMetadataLabel,
+          catalogOptions: (catalog, currentId) => catalogOptions(api, catalog, String(currentId || ""))
+        }),
         liveRoleOptions: smartComponentLiveRoleOptions(selectedSmartComponentId),
         objectIndex: smartComponentObjectIndex(),
         capabilities: smartComponentCapabilities()
@@ -1785,8 +1020,16 @@ export function mountEditorUi({
       collection: entry.collection,
       object,
       actions: {
+        project: api.project(),
         objectIndex: api.project().objectIndex,
         updateWorkPoint,
+        addGridSystem,
+        updateGridSystem,
+        addGridAxis,
+        removeGridAxis,
+        updateGridLevel,
+        addGridLevel,
+        updateLevel,
         updateReferencePlane,
         updateInterface,
         updateConnectionZone,
@@ -1805,26 +1048,21 @@ export function mountEditorUi({
   };
 
   function render() {
-    if (selectedMemberId && !api.project().model.members?.[selectedMemberId]) setSelectedState();
-    if (selectedSmartComponentId && !api.project().model.smartComponentInstances?.[selectedSmartComponentId]) setSelectedState();
-    if (selectedObjectId && !api.project().objectIndex?.[selectedObjectId]) setSelectedState();
+    if (selectedMemberId && !api.project().model.members?.[selectedMemberId]) setSelectedState({ scene: true });
+    if (selectedSmartComponentId && !api.project().model.smartComponentInstances?.[selectedSmartComponentId]) setSelectedState({ scene: true });
+    if (selectedObjectId && !api.project().objectIndex?.[selectedObjectId]) setSelectedState({ scene: true });
 
-    const title = text("div", "bc-inspector-title", "Inspector");
-    const actions = document.createElement("div");
-    const message = panelMessage.element();
+    const message = panelMessage.hasMessage() ? panelMessage.element() : null;
 
     panel.classList.add("bc-inspector");
-    actions.className = "bc-action-row";
 
-    actions.append(...bindActionButtons(inspectorPrimaryActions()).map(inspectorActionButton));
-    const quickActionRow = selectionQuickActions();
     const properties = activePropertiesPanel();
 
     panel.hidden = false;
-    panel.replaceChildren(...[title, actions, quickActionRow, properties, message].filter(Boolean));
+    panel.replaceChildren(...[properties, message].filter(Boolean));
   }
 
-  api.subscribe(render);
+  const unsubscribe = api.subscribe(render);
   render();
   return {
     refresh() {
@@ -1836,13 +1074,19 @@ export function mountEditorUi({
     selectMember,
     selectSmartComponent,
     selectObject,
+    selectScene,
+    openGridEditor,
     selectedState() {
       return {
         memberId: selectedMemberId,
         smartComponentId: selectedSmartComponentId,
         objectId: selectedObjectId,
-        objectDetail: selectedObjectDetail
+        objectDetail: selectedObjectDetail,
+        scene: sceneSelected
       };
+    },
+    destroy() {
+      unsubscribe();
     }
   };
 }

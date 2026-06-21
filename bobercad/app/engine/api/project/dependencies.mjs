@@ -3,6 +3,7 @@ import { objectCollection } from "./objects.mjs";
 import { trimJointOperations, trimJointParticipants, trimOperationReferencePlaneIds, trimOperationUsesMemberB } from "./trim-operations.mjs";
 
 const RENDER_COLLECTIONS = new Set(["members", "plates", "features", "trimJoints", "fastenerGroups", "welds"]);
+const PROJECT_DEPENDENCY_INDEX = new WeakMap();
 
 function fail(message) {
   throw new Error(`project dependencies: ${message}`);
@@ -91,6 +92,56 @@ function projectObjectExists(project, objectId, collection, options = {}) {
   return true;
 }
 
+function pushIndexedValue(map, key, value) {
+  if (!key) return;
+  const values = map.get(key);
+  if (values) values.push(value);
+  else map.set(key, [value]);
+}
+
+function indexedValues(map, key) {
+  return map.get(key) || [];
+}
+
+function projectDependencyIndex(project) {
+  let cached = PROJECT_DEPENDENCY_INDEX.get(project);
+  if (cached) return cached;
+  const index = {
+    smartComponentsByMemberId: new Map(),
+    smartComponentsByObjectId: new Map(),
+    featuresBySourceMemberId: new Map(),
+    trimJointsByMemberId: new Map(),
+    trimJointsByReferencePlaneId: new Map()
+  };
+  for (const instance of Object.values(modelCollection(project, "smartComponentInstances"))) {
+    for (const memberId of instanceMemberIds(instance)) pushIndexedValue(index.smartComponentsByMemberId, memberId, instance);
+    for (const objectId of unique([
+      instance.id,
+      ...smartComponentOwnedObjectIds(instance),
+      ...smartComponentDetachedObjectIds(instance)
+    ])) {
+      pushIndexedValue(index.smartComponentsByObjectId, objectId, instance);
+    }
+  }
+  for (const feature of Object.values(modelCollection(project, "features"))) {
+    pushIndexedValue(index.featuresBySourceMemberId, featureSourceMemberId(feature), feature);
+  }
+  for (const trimJoint of Object.values(modelCollection(project, "trimJoints"))) {
+    const memberIds = [];
+    for (const participant of trimJointParticipants(trimJoint)) memberIds.push(participant.memberId);
+    for (const operation of trimJointOperations(trimJoint)) {
+      memberIds.push(operation.memberAId);
+      if (trimOperationUsesMemberB(operation.type)) memberIds.push(operation.memberBId);
+      for (const referencePlaneId of trimOperationReferencePlaneIds(operation)) {
+        pushIndexedValue(index.trimJointsByReferencePlaneId, referencePlaneId, trimJoint);
+      }
+    }
+    for (const memberId of unique(memberIds)) pushIndexedValue(index.trimJointsByMemberId, memberId, trimJoint);
+  }
+  PROJECT_DEPENDENCY_INDEX.set(project, index);
+  return index;
+}
+
 export function smartComponentDetachedObjectIds(instance) {
   instance = requiredSmartComponentInstance(instance);
   return requiredStringArray(instance.detachedObjectIds, `${instance.id}.detachedObjectIds`);
@@ -165,9 +216,7 @@ export function smartComponentConnectionZoneId(instance) {
 }
 
 export function affectedSmartComponentsForMember(project, memberId) {
-  return Object.values(modelCollection(project, "smartComponentInstances")).filter((instance) => (
-    instanceMemberIds(instance).includes(memberId)
-  ));
+  return indexedValues(projectDependencyIndex(project).smartComponentsByMemberId, memberId);
 }
 
 export function affectedSmartComponentIdsForMember(project, memberId) {
@@ -190,15 +239,12 @@ function featureOwnerId(feature) {
 }
 
 function trimJointsUsingReferencePlane(project, referencePlaneId) {
-  return Object.values(modelCollection(project, "trimJoints")).filter((trimJoint) => (
-    trimJointOperations(trimJoint).some((operation) => trimOperationReferencePlaneIds(operation).includes(referencePlaneId))
-  ));
+  return indexedValues(projectDependencyIndex(project).trimJointsByReferencePlaneId, referencePlaneId);
 }
 
 function memberSourceFeatureObjectIds(project, memberId) {
   const ids = [];
-  for (const feature of Object.values(modelCollection(project, "features"))) {
-    if (featureSourceMemberId(feature) !== memberId) continue;
+  for (const feature of indexedValues(projectDependencyIndex(project).featuresBySourceMemberId, memberId)) {
     ids.push(feature.id, featureOwnerId(feature));
   }
   return ids;
@@ -221,9 +267,7 @@ export function memberDependencyObjectIds(project, memberId, options = {}) {
   if (!projectObjectExists(project, memberId, "members", options)) return filterProjectIds(project, [memberId], options);
   const ids = options.includeMember === false ? [] : [memberId];
   ids.push(...memberSourceFeatureObjectIds(project, memberId));
-  for (const trimJoint of Object.values(modelCollection(project, "trimJoints"))) {
-    if (!trimJointParticipants(trimJoint).some((participant) => participant.memberId === memberId)
-      && !trimJointOperations(trimJoint).some((operation) => operation.memberAId === memberId || operation.memberBId === memberId)) continue;
+  for (const trimJoint of indexedValues(projectDependencyIndex(project).trimJointsByMemberId, memberId)) {
     ids.push(...trimJointObjectIds(project, trimJoint, options));
   }
   for (const instance of affectedSmartComponentsForMember(project, memberId)) {
@@ -240,8 +284,11 @@ export function featureDependencyObjectIds(project, featureId, options = {}) {
   const ids = [featureId, ownerId];
   const sourceMemberId = featureSourceMemberId(feature);
   if (sourceMemberId) ids.push(sourceMemberId);
-  for (const instance of Object.values(modelCollection(project, "smartComponentInstances"))) {
-    if (!smartComponentReferencesObject(instance, featureId) && !smartComponentReferencesObject(instance, ownerId)) continue;
+  const instances = unique([
+    ...indexedValues(projectDependencyIndex(project).smartComponentsByObjectId, featureId),
+    ...indexedValues(projectDependencyIndex(project).smartComponentsByObjectId, ownerId)
+  ]);
+  for (const instance of instances) {
     if (options.includeSmartComponentMembers) ids.push(...instanceMemberIds(instance));
     ids.push(...smartComponentObjectIds(project, instance, options));
   }

@@ -1,4 +1,4 @@
-import { atValue, dimensionOffset, longestPlateEdge, makeDimension, pickedEdgeOffset, plateBasis, plateBounds, platePoint, roleObject } from "../dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
+import { atValue, dimensionOffset, longestPlateEdge, makeDimension, pickedEdgeOffset, plateBasis, plateBounds, platePoint, roleObject } from "../dimension-geometry-and-label-context.mjs";
 
 function longestEdgeDimension(ctx, spec, plate, basis, axis, n) {
   const edge = spec.reference.edgePick === "longest" ? longestPlateEdge(plate, axis) : null;

@@ -4,15 +4,18 @@ export function createTrimCreateController({
   onProjectChange,
   onTrimCreated,
   onCommandEnd,
+  onPickProgress,
   onStatusChange
 }) {
   let active = false;
 
   function start() {
     active = true;
+    onPickProgress?.([]);
     selection.beginMemberPick({
       count: 2,
       onPick: (memberIds) => {
+        onPickProgress?.(memberIds);
         onStatusChange?.(memberIds.length === 1 ? "Trim: pick second member" : "Trim: creating");
       },
       onComplete: (memberIds) => {

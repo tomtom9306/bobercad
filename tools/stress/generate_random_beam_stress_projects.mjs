@@ -162,8 +162,6 @@ function projectPrefix(outputDir, label, count) {
         zone_stress: { id: "zone_stress", type: "zone", name: "Stress Zone", children: [] }
       }
     },
-    gridSystems: {},
-    levels: {},
     phases: { phase_stress: { id: "phase_stress", name: "Stress Test" } },
     lots: { lot_stress: { id: "lot_stress", name: "Stress Lot" } }
   };
@@ -217,7 +215,7 @@ async function generateDataset(dataset) {
   await write(stream, "  },\n");
   await write(stream, `  "modelDefaults": ${JSON.stringify(modelDefaults(), null, 2).replace(/\n/g, "\n  ")},\n`);
   await write(stream, '  "model": {\n');
-  await write(stream, '    "workPoints": {},\n    "referencePlanes": {},\n    "groups": {},\n    "interfaces": {},\n    "connectionZones": {},\n    "assemblies": {},\n    "members": {\n');
+  await write(stream, '    "gridSystems": {},\n    "levels": {},\n    "workPoints": {},\n    "referencePlanes": {},\n    "groups": {},\n    "interfaces": {},\n    "connectionZones": {},\n    "assemblies": {},\n    "members": {\n');
 
   for (let index = 0; index < count; index += 1) {
     const member = makeMember(index, count, rng);

@@ -92,8 +92,8 @@
   top: calc(var(--bc-space-3) + var(--bc-space-2));
   left: calc(var(--bc-side-dock-tab-rail-width) + var(--bc-space-2));
   right: auto;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 
 .bc-right-dock[data-workspace-panel-dock="left"]:has(.bc-inspector-dock-shell:not([hidden])) > .bc-dock-pin-toggle {

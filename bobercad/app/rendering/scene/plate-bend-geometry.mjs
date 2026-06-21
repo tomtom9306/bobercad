@@ -1,6 +1,6 @@
-import { clamp, distance2, finiteNumber, finiteNumberOr, v } from "../../engine/core/math.mjs?v=distance2-dry-1";
-import { orderedSketchLoop, plateBends, plateOutline, sketchEdgePoints, sketchEdges, sketchVertexPointMap } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs?v=plate-outline-relation-safety-1";
-import { signedArea2d } from "../../engine/geometry/polygon.mjs?v=signed-area-1";
+import { clamp, distance2, finiteNumber, finiteNumberOr, v } from "../../engine/core/math.mjs";
+import { orderedSketchLoop, plateBends, plateOutline, sketchEdgePoints, sketchEdges, sketchVertexPointMap } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { signedArea2d } from "../../engine/geometry/polygon.mjs";
 
 function bendTargetKey(target) {
   if (target?.parentBendId) return `bend:${target.parentBendId}:${target.parentEdge || "outer"}`;

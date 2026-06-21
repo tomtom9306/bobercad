@@ -231,20 +231,22 @@ Bent plates add stored bend operations:
 
 This stores semantic fabrication geometry, not meshes.
 
-## 6. Improve Grid Systems For Large Structures
+## 6. Datum Systems For Large Structures
 
-Keep `gridSystems`, `workPoints`, and `referencePlanes` as the main placement tools for AI-generated large frames.
+Keep `model.gridSystems`, `model.levels`, `model.workPoints`, and `model.referencePlanes` as the main placement tools for AI-generated large frames. Grid systems and levels are normal indexed model collections, not top-level project metadata.
 
-Add or formalize:
+The datum model supports:
 
 - multiple grid systems
-- local grid coordinate systems
+- local grid coordinate systems with explicit `axisX`, `axisY`, and `axisZ`
+- named datum levels with `elevation`
 - grid intersections as stored `workPoints`
+- stable work-point `gridRefs` using `gridSystemId`, `xAxisId`, `yAxisId`, and `levelId`
 - bay zones
 - roof slope planes as stored `referencePlanes`
 - floor and elevation planes as stored `referencePlanes`
 
-Members still keep explicit `start` and `end`. Work point refs are review and authoring metadata only.
+Members still keep explicit `start` and `end`. Work point refs and grid refs are review and authoring metadata only; moving a grid or level must explicitly write any changed member coordinates.
 
 ## 7. Add A Smart Component Library
 

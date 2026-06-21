@@ -4,18 +4,18 @@ import {
   dataPanelLinkRow,
   dataPanelSearch,
   dataPanelSection
-} from "../design-system/ui-elements.mjs?v=project-files-panel-1";
+} from "../design-system/ui-elements.mjs";
 import {
   dataLibraryDescriptor,
   dataLibraryFallbackSpec,
   dataSourceDescriptor,
   sortDataLibraryEntries
-} from "../commands/data-surface-metadata.mjs?v=data-surface-metadata-1";
+} from "../commands/data-surface-metadata.mjs";
 import {
   PROJECT_DATA_PANEL_SPEC,
   projectDataActionTitle,
   projectDataRowActionSpec
-} from "../commands/project-data-metadata.mjs?v=project-data-metadata-1";
+} from "../commands/project-data-metadata.mjs";
 
 const PROJECT_FILES_PANEL_SPEC = Object.freeze({
   title: "Files",

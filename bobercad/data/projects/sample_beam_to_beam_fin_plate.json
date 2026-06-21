@@ -231,6 +231,26 @@
     "level_top_flush": {
       "collection": "levels",
       "type": "datum-level"
+    },
+    "wp_main_beam_start": {
+      "collection": "workPoints",
+      "type": "workPoints"
+    },
+    "wp_main_beam_end": {
+      "collection": "workPoints",
+      "type": "workPoints"
+    },
+    "wp_supported_beam_start": {
+      "collection": "workPoints",
+      "type": "workPoints"
+    },
+    "wp_supported_beam_end": {
+      "collection": "workPoints",
+      "type": "workPoints"
+    },
+    "wp_connection_center": {
+      "collection": "workPoints",
+      "type": "workPoints"
     }
   },
   "modelDefaults": {
@@ -646,7 +666,6 @@
           "connection_beam_to_beam_fin_plate_1_fin_plate"
         ],
         "featureIds": [
-          "connection_beam_to_beam_fin_plate_1_beam_gap_trim",
           "connection_beam_to_beam_fin_plate_1_holes_plate",
           "connection_beam_to_beam_fin_plate_1_holes_secondary"
         ],

@@ -1,6 +1,6 @@
-import { applyCommandState, compactShortcut, topbarMenuButton } from "../design-system/ui-elements.mjs?v=command-state-1";
-import { createIcon } from "../icons/icon-registry.mjs?v=model-grid-navbar-1";
-import { COMMAND_PALETTE_SHORTCUT, COMMAND_PALETTE_SPEC } from "../commands/command-palette-metadata.mjs?v=command-palette-metadata-1";
+import { applyCommandState, compactShortcut, topbarMenuButton } from "../design-system/ui-elements.mjs";
+import { createIcon } from "../icons/icon-registry.mjs";
+import { COMMAND_PALETTE_SHORTCUT, COMMAND_PALETTE_SPEC } from "../commands/command-palette-metadata.mjs";
 export const COMMAND_RECENTS_STORAGE_KEY = "bobercad.ui.command-palette.recents.v1";
 const MAX_RECENT_COMMANDS = 6;
 

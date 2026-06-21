@@ -1,4 +1,4 @@
-import { finiteNumber, v } from "../../engine/core/math.mjs?v=unified-dimension-overlay-1";
+import { finiteNumber, v } from "../../engine/core/math.mjs";
 
 const EPSILON = 1e-6;
 const DEFAULT_COLOR = "#111827";

@@ -1,4 +1,4 @@
-import { uniqueTruthy } from "../../engine/core/model.mjs?v=unique-dry-1";
+import { uniqueTruthy } from "../../engine/core/model.mjs";
 
 export const DEFAULT_SNAP_SCOPE = Object.freeze({
   members: true,
@@ -25,6 +25,7 @@ const COLLECTION_SCOPE = Object.freeze({
   trimJoints: "trimJoints",
   workPoints: "workPoints",
   referencePlanes: "referencePlanes",
+  levels: "grids",
   gridSystems: "grids"
 });
 

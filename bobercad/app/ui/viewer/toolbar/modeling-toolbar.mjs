@@ -1,8 +1,8 @@
-import { shortcutSetting } from "../../../rendering/interaction/keyboard-shortcuts.mjs?v=truthy-values-dry-1";
-import { MODELING_TOOLBAR_COMMANDS } from "../../commands/command-registry.mjs?v=top-nav-commands-1";
-import { createSnapSettingsControl } from "../../controls/snap-settings-control.mjs?v=snap-settings-control-1";
-import { applyCommandState, iconButton, toolbarGroup, toolbarSeparator } from "../../design-system/ui-elements.mjs?v=command-state-1";
-import { createIcon } from "../../icons/icon-registry.mjs?v=nav-cube-1";
+import { shortcutSetting } from "../../../rendering/interaction/keyboard-shortcuts.mjs";
+import { MODELING_TOOLBAR_COMMANDS } from "../../commands/command-registry.mjs";
+import { createSnapSettingsControl } from "../../controls/snap-settings-control.mjs";
+import { applyCommandState, iconButton, toolbarGroup, toolbarSeparator } from "../../design-system/ui-elements.mjs";
+import { createIcon } from "../../icons/icon-registry.mjs";
 
 export function mountModelingToolbar({
   toolbar,

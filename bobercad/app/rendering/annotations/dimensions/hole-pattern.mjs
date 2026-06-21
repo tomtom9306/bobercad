@@ -1,5 +1,5 @@
-import { uniqueValues } from "../../../engine/core/model.mjs?v=array-values-dry-1";
-import { averageVec3, dimensionOffset, featureBasis, makeNote, paramValue, parameterLabel, positionPoint, roleObject, v } from "../dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
+import { uniqueValues } from "../../../engine/core/model.mjs";
+import { averageVec3, dimensionOffset, featureBasis, makeNote, paramValue, parameterLabel, positionPoint, roleObject, v } from "../dimension-geometry-and-label-context.mjs";
 
 const roundedUniqueCount = (values) => uniqueValues(values.map((value) => Math.round(value / 0.001))).length;
 

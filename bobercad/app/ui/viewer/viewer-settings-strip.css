@@ -196,6 +196,11 @@
   color: var(--bc-color-accent-strong);
 }
 
+.bc-viewer-settings-band:has(.bc-viewer-settings-menu[open]),
+.bc-viewer-settings-strip:has(.bc-viewer-settings-menu[open]) {
+  overflow: visible;
+}
+
 .bc-viewer-settings-menu[open] .bc-viewer-settings-menu-chevron {
   transform: rotate(180deg);
 }
@@ -207,9 +212,9 @@
   z-index: calc(var(--bc-z-toolbar) + 1);
   display: grid;
   gap: var(--bc-space-1);
-  min-width: 176px;
+  width: min(232px, calc(100vw - 24px));
   box-sizing: border-box;
-  padding: var(--bc-space-1);
+  padding: var(--bc-space-2);
   border: 1px solid color-mix(in srgb, var(--bc-color-border) 76%, transparent);
   border-radius: var(--bc-radius-2);
   background: color-mix(in srgb, var(--bc-color-surface-solid) 96%, transparent);
@@ -219,14 +224,15 @@
 
 .bc-viewer-settings-menu-option {
   display: grid;
-  grid-template-columns: 16px 16px minmax(0, 1fr);
+  grid-template-columns: 18px 18px minmax(0, 1fr);
   align-items: center;
   gap: var(--bc-space-2);
-  min-height: calc(var(--bc-control-tile-size) - 2px);
+  min-height: var(--bc-control-tile-size);
   box-sizing: border-box;
-  padding: 0 var(--bc-space-2);
-  border-radius: var(--bc-radius-1);
-  color: var(--bc-color-text-muted);
+  padding: 0 var(--bc-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--bc-radius-2);
+  color: var(--bc-color-text);
   font: var(--bc-font-weight-semibold) var(--bc-font-size-12) / 1 var(--bc-font-family);
   cursor: pointer;
   user-select: none;
@@ -234,7 +240,17 @@
 
 .bc-viewer-settings-menu-option:hover,
 .bc-viewer-settings-menu-option:focus-within {
-  background: var(--bc-color-hover);
+  border-color: color-mix(in srgb, var(--bc-color-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--bc-color-active) 58%, transparent);
+  color: var(--bc-color-accent-strong);
+}
+
+.bc-viewer-settings-menu-option[data-command-active="true"] {
+  background: color-mix(in srgb, var(--bc-color-active) 18%, transparent);
+  color: var(--bc-color-text);
+}
+
+.bc-viewer-settings-menu-option[data-command-active="true"] .bc-icon {
   color: var(--bc-color-accent-strong);
 }
 
@@ -244,6 +260,7 @@
 }
 
 .bc-viewer-settings-menu-checkbox {
+  justify-self: center;
   width: 14px;
   height: 14px;
   margin: 0;
@@ -251,11 +268,15 @@
 }
 
 .bc-viewer-settings-menu-option .bc-icon {
-  width: 14px;
-  height: 14px;
+  grid-area: auto;
+  justify-self: center;
+  width: 15px;
+  height: 15px;
+  color: var(--bc-color-text-muted);
 }
 
 .bc-viewer-settings-menu-option-label {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

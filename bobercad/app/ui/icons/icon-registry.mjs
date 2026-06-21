@@ -484,7 +484,7 @@ const ICONS = {
       <path d="M8 4h8" />
       <path d="M9 4l1 7-3 3v2h10v-2l-3-3 1-7" />
       <path d="M12 16v5" />
-      <path d="M5 5l14 14" />
+      <path d="M5 5l14 14" stroke-width="2.7" />
     </svg>
   `,
   "chevron-up": `

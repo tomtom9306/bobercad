@@ -1,5 +1,5 @@
-import { finiteNumber, finitePositiveNumber, v } from "../../engine/core/math.mjs?v=render-number-dry-1";
-import { pointFromPlaneCoordinates } from "../../engine/api/project/work-plane.mjs?v=plane-coordinates-dry-1";
+import { finiteNumber, finitePositiveNumber, v } from "../../engine/core/math.mjs";
+import { pointFromPlaneCoordinates } from "../../engine/api/project/work-plane.mjs";
 
 const DEFAULT_EXTENTS = { xMin: -120, xMax: 120, yMin: -90, yMax: 90 };
 const MIN_PLANE_DISPLAY_SIZE = 20;

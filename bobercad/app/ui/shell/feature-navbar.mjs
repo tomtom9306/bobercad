@@ -1,5 +1,5 @@
-import { applyCommandState, applyTooltip, compactShortcut } from "../design-system/ui-elements.mjs?v=tooltip-clean-1";
-import { createIcon } from "../icons/icon-registry.mjs?v=model-grid-navbar-1";
+import { applyCommandState, applyTooltip, compactShortcut } from "../design-system/ui-elements.mjs";
+import { createIcon } from "../icons/icon-registry.mjs";
 import {
   COMMAND_GROUP_ORDER,
   commandGroupIcon,
@@ -8,7 +8,7 @@ import {
   commandRibbonSectionLabel,
   commandRibbonSectionOrder,
   inferCommandRibbonSection
-} from "../commands/command-group-metadata.mjs?v=ribbon-section-metadata-1";
+} from "../commands/command-group-metadata.mjs";
 
 const FEATURE_NAVBAR_SURFACE = "feature-navbar";
 

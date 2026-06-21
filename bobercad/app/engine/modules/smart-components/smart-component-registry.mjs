@@ -1,11 +1,10 @@
 import { defineSmartComponent } from "./smart-component-parameters-and-definition.mjs";
 import { buildSmartComponentRecipe } from "./smart-component-recipe.mjs";
-import { mountParameterSmartComponentUi } from "../../../../data/libraries/smart-components/smart-component-parameter-ui.mjs";
+import { registerConnectionPrimitiveOperations } from "../../api/model/connection-primitive-manifest.mjs";
 
 const definitions = new Map();
 const presets = new Map();
 let loaded = false;
-let libraryUi = null;
 const registerUrl = new URL("../../../../data/libraries/smart-components/smart-component-register.json", import.meta.url);
 
 async function loadJson(url) {
@@ -64,14 +63,14 @@ function registerSmartComponentDefinition(definition) {
 }
 
 export function smartComponentCatalog() {
-  return { smartComponents: Object.fromEntries(presets), definitions: Object.fromEntries(definitions), customUi: libraryUi };
+  return { smartComponents: Object.fromEntries(presets), definitions: Object.fromEntries(definitions) };
 }
 
 export async function loadSmartComponentDefinitions() {
   if (loaded) return smartComponentCatalog();
 
+  registerConnectionPrimitiveOperations();
   const register = registryObject(await loadJson(registerUrl), "register");
-  libraryUi = await import(new URL(registryString(register.libraryUi, "register.libraryUi"), registerUrl).href);
   const nextDefinitions = await Promise.all(registryArray(register.components, "register.components").map(async (componentPath) => {
     registryString(componentPath, "register.components entry");
     const base = new URL(componentPath.endsWith("/") ? componentPath : `${componentPath}/`, registerUrl);
@@ -83,8 +82,7 @@ export async function loadSmartComponentDefinitions() {
     if (typeof build !== "function") throw new Error(`${config.type}: missing recipe or build.mjs`);
     return defineSmartComponent({
       ...config,
-      build,
-      customUi: { mountSmartComponentUi: mountParameterSmartComponentUi }
+      build
     });
   }));
 

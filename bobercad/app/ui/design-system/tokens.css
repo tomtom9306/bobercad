@@ -63,8 +63,6 @@
   --bc-shell-toolbar-top-offset: calc(var(--bc-shell-topbar-height) + var(--bc-viewer-settings-band-height) + var(--bc-space-8));
   --bc-shell-toolbar-top-offset-mobile: calc(var(--bc-shell-topbar-height-mobile) + var(--bc-viewer-settings-band-height) + var(--bc-space-8));
   --bc-shell-toolbar-bottom-offset: calc(var(--bc-statusbar-height) + var(--bc-space-5));
-  --bc-shell-toolbar-max-height-offset: calc(var(--bc-shell-topbar-height) + var(--bc-viewer-settings-band-height) + var(--bc-statusbar-height) + var(--bc-space-12) + var(--bc-space-5));
-  --bc-shell-toolbar-available-height: calc(100vh - var(--bc-shell-toolbar-max-height-offset));
   --bc-shell-dock-top-offset: var(--bc-shell-topbar-height);
   --bc-shell-dock-top-offset-mobile: var(--bc-shell-topbar-height-mobile);
   --bc-shell-dock-screen-margin: 36px;
@@ -73,8 +71,6 @@
   --bc-shell-floating-dock-max-height: calc(100vh - 180px);
   --bc-shell-floating-dock-top-offset: 168px;
   --bc-shell-floating-dock-tall-height: min(56vh, 520px);
-  --bc-shell-inspector-wide-min-width: 640px;
-  --bc-nav-cube-toolbar-clearance: 132px;
   --bc-nav-cube-surface-size: 112px;
   --bc-nav-cube-stage-size: 108px;
   --bc-nav-cube-model-size: 66px;

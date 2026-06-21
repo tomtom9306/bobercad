@@ -35,40 +35,6 @@
   background: var(--bc-color-active);
 }
 
-.bc-toolbar-drag-handle {
-  display: none;
-  place-items: center;
-  width: 28px;
-  height: var(--bc-control-height);
-  box-sizing: border-box;
-  border: 1px solid var(--bc-color-border);
-  border-radius: var(--bc-radius-2);
-  background: var(--bc-color-surface);
-  color: var(--bc-color-text-muted);
-  cursor: grab;
-}
-
-.bc-toolbar-band-customizing .bc-toolbar-drag-handle:not([hidden]) {
-  display: inline-grid;
-}
-
-.bc-toolbar-drag-handle:hover,
-.bc-toolbar-drag-handle:focus-visible,
-.bc-toolbar-drag-handle.is-dragging {
-  border-color: var(--bc-color-border-strong);
-  background: var(--bc-color-hover);
-  color: var(--bc-color-accent-strong);
-  outline: 0;
-}
-
-.bc-toolbar-drag-handle.is-dragging {
-  cursor: grabbing;
-}
-
-.bc-toolbar-drag-handle .bc-icon {
-  width: 16px;
-  height: 16px;
-}
 .bc-toolbar-group {
   display: inline-flex;
   align-items: center;

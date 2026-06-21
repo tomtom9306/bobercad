@@ -1,5 +1,5 @@
-import { applyTooltip } from "../design-system/ui-elements.mjs?v=left-dock-tabs-1";
-import { createIcon } from "../icons/icon-registry.mjs?v=left-dock-tabs-1";
+import { applyTooltip } from "../design-system/ui-elements.mjs";
+import { createIcon } from "../icons/icon-registry.mjs";
 
 function validPanels(panels = []) {
   return panels

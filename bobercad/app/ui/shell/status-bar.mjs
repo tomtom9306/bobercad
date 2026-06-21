@@ -1,8 +1,8 @@
-import { applyTooltip, segmentedControl } from "../design-system/ui-elements.mjs?v=bottom-interaction-strip-1";
-import { createIcon } from "../icons/icon-registry.mjs?v=bottom-interaction-strip-1";
-import { BOTTOM_STRIP_DEFAULT_ITEM_IDS, BOTTOM_STRIP_ITEM_SPECS, normalizeBottomStripHiddenItemIds, normalizeBottomStripItemIds } from "../commands/bottom-strip-metadata.mjs?v=bottom-strip-metadata-1";
-import { SNAP_SCOPE_MODES, normalizeSnapStrength, snapStrengthLabel } from "../commands/snap-metadata.mjs?v=snap-metadata-1";
-import { createSnapSettingsControl } from "../controls/snap-settings-control.mjs?v=snap-settings-control-1";
+import { applyTooltip, segmentedControl } from "../design-system/ui-elements.mjs";
+import { createIcon } from "../icons/icon-registry.mjs";
+import { BOTTOM_STRIP_DEFAULT_ITEM_IDS, BOTTOM_STRIP_ITEM_SPECS, normalizeBottomStripHiddenItemIds, normalizeBottomStripItemIds } from "../commands/bottom-strip-metadata.mjs";
+import { SNAP_SCOPE_MODES, normalizeSnapStrength, snapStrengthLabel } from "../commands/snap-metadata.mjs";
+import { createSnapSettingsControl } from "../controls/snap-settings-control.mjs";
 
 export function mountStatusBar({
   root,

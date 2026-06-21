@@ -1,6 +1,6 @@
 import { v } from "../../../engine/core/math.mjs";
-import { memberAxisData } from "../../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
-import { memberFrameAt } from "../../../engine/geometry/member-evaluator.mjs?v=geometry-api-array-values-dry-1";
+import { memberAxisData } from "../../../engine/api/project/members.mjs";
+import { memberFrameAt } from "../../../engine/geometry/member-evaluator.mjs";
 
 const AXIS_IDS = ["x", "y", "z"];
 

@@ -1,6 +1,6 @@
-import { clamp, finiteNumber, finiteNumberOr, finitePositiveInteger } from "../../engine/core/math.mjs?v=integer-number-dry-1";
-import { arrayValues } from "../../engine/core/model.mjs?v=webgl-array-values-dry-1";
-import { labelRotation } from "./label-rotation.mjs?v=label-rotation-dry-1";
+import { clamp, finiteNumber, finiteNumberOr, finitePositiveInteger } from "../../../engine/core/math.mjs";
+import { arrayValues } from "../../../engine/core/model.mjs";
+import { labelRotation } from "../../../rendering/webgl/label-rotation.mjs";
 
 const HOVER_COLOR = "#2563eb";
 

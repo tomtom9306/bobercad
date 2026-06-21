@@ -1,5 +1,8 @@
-import { jsonClone as clone } from "../../../app/engine/core/model.mjs?v=json-clone-dry-1";
-import { optionalPath, requiredPath } from "../../../app/engine/modules/smart-components/smart-component-parameters-and-definition.mjs?v=smart-config-array-values-dry-1";
+import { jsonClone as clone } from "../../core/model.mjs";
+import { optionalPath, requiredPath, setPath } from "../../modules/smart-components/smart-component-parameters-and-definition.mjs";
+
+export { optionalPath, requiredPath, setPath };
+export const cloneParameterValue = clone;
 
 export const QUICK_PARAMETER_KINDS = new Set(["number", "positiveNumber", "nonNegativeNumber", "positiveInteger", "numberList", "boolean", "catalogRef", "enum", "text"]);
 export const GENERATED_PARAMETER_FIELD_KINDS = new Set([...QUICK_PARAMETER_KINDS]);

@@ -1,4 +1,4 @@
-import { bounds2, bounds3, clamp, finiteNumber, finiteNumberOr, validVec3Points, v } from "../../engine/core/math.mjs?v=camera-bounds2-dry-2";
+import { bounds2, bounds3, clamp, finiteNumber, finiteNumberOr, validVec3Points, v } from "../../engine/core/math.mjs";
 
 function wrapAngle(value) {
   const fullTurn = Math.PI * 2;

@@ -1,5 +1,5 @@
-import { clamp, closestAxisPoints, finiteNumber, finitePositiveNumber, screenDistance, uniqueVec3Points, v } from "../../engine/core/math.mjs?v=world-axis-dry-1";
-import { arrayValues, jsonClone } from "../../engine/core/model.mjs?v=interaction-array-values-dry-1";
+import { clamp, closestAxisPoints, finiteNumber, finitePositiveNumber, screenDistance, uniqueVec3Points, v } from "../../engine/core/math.mjs";
+import { arrayValues, jsonClone } from "../../engine/core/model.mjs";
 import {
   memberById,
   memberAxisData,
@@ -7,10 +7,10 @@ import {
   moveMemberWithLayout,
   setMemberLayoutEndpoint,
   setMemberPhysicalEndpoint
-} from "../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
+} from "../../engine/api/project/members.mjs";
 import {
   affectedObjectIdsForMemberChange
-} from "../../engine/api/project/dependencies.mjs?v=array-values-dry-1";
+} from "../../engine/api/project/dependencies.mjs";
 import {
   axisForRelation,
   axisRelationForEndpoint,
@@ -18,14 +18,14 @@ import {
   axisRelationLabel,
   memberAlignmentRelation,
   projectPointToAxis
-} from "../../engine/api/project/axis-relations.mjs?v=array-values-dry-1";
+} from "../../engine/api/project/axis-relations.mjs";
 import {
   memberAxesForTarget,
   normalizeCoordinateSpace,
   vectorComponentsInAxes,
   vectorFromAxisComponents
-} from "../scene/authoring/member-axis-space.mjs?v=final-array-values-dry-1";
-import { memberAuthoringOverlay } from "../scene/authoring/member-overlays.mjs?v=plate-face-snap-2";
+} from "../scene/authoring/member-axis-space.mjs";
+import { memberAuthoringOverlay } from "../scene/authoring/member-overlays.mjs";
 import {
   axisScreenDistance,
   quantizeDegrees,
@@ -33,8 +33,8 @@ import {
   rotateMemberAroundAxis,
   signedScreenAngleDegrees,
   translationStepForScale
-} from "./manipulator-math.mjs?v=final-array-values-dry-1";
-import { pointOnViewRay } from "./pointer-plane-point.mjs?v=view-ray-dry-1";
+} from "./manipulator-math.mjs";
+import { pointOnViewRay } from "./pointer-plane-point.mjs";
 
 function handleEndpoint(kind) {
   if (typeof kind !== "string") return null;
@@ -64,11 +64,6 @@ function localSnapOptions(project, member) {
     radius: Math.max(20000, length * 2.5),
     maxMemberCandidates: 2000
   };
-}
-
-function perfMark(name, data = {}) {
-  if (typeof window === "undefined" || !window.__boberCadPerf?.events) return;
-  window.__boberCadPerf.events.push({ name, time: performance.now(), ...data });
 }
 
 function isMoveOperation(operation) {
@@ -198,7 +193,7 @@ function globalAxisGuidesForDrag(dragState) {
   return globalAxisOriginsForHandle(dragState.baseMember, dragState.handle);
 }
 
-export function createMemberEditController({ viewer, api, selection, snapManager, settings = {}, onLocalProjectChange, onMemberSelected, onCleared, onMessage, onTransformChange, autoRelationsEnabled = () => false }) {
+export function createMemberEditController({ viewer, api, selection, snapManager, settings = {}, onLocalProjectChange, onMemberSelected, onCleared, onMessage, onTransformChange, autoRelationsEnabled = () => false, perfMark = () => {}, now = () => Date.now() }) {
   let activeMemberId = null;
   let drag = null;
   let pendingTransform = null;
@@ -600,13 +595,13 @@ export function createMemberEditController({ viewer, api, selection, snapManager
   }
 
   function dragSnapAtCursor(screen, context = {}, event = null, rawPoint = null) {
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    const currentTime = now();
     const interval = dragSnapIntervalMs();
-    if (!forceNextDragSnap && interval > 0 && now - lastDragSnapTime < interval) return null;
+    if (!forceNextDragSnap && interval > 0 && currentTime - lastDragSnapTime < interval) return null;
     forceNextDragSnap = false;
-    const start = now;
+    const start = currentTime;
     const snap = snapAtCursor(screen, context, event, rawPoint);
-    const end = typeof performance !== "undefined" ? performance.now() : Date.now();
+    const end = now();
     lastDragSnapTime = end;
     lastDragSnapDurationMs = end - start;
     if (lastDragSnapDurationMs > 12) {

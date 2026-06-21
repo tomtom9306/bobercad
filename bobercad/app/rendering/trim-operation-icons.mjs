@@ -1,4 +1,4 @@
-import { safeHexColor as safeColor } from "./webgl/colors.mjs?v=hex-color-regex-dry-1";
+import { safeHexColor as safeColor } from "./webgl/colors.mjs";
 
 export const TRIM_OPERATION_TYPES = [
   { id: "end-butt-1", label: "Butt A to B", gap: true },

@@ -1,4 +1,4 @@
-import { smartComponentDetachedObjectIds, smartComponentOwnedObjectIds } from "../../engine/api/project/dependencies.mjs?v=array-values-dry-1";
+import { smartComponentDetachedObjectIds, smartComponentOwnedObjectIds } from "../../engine/api/project/dependencies.mjs";
 
 export const DEFAULT_GHOST_OPACITY = 0.01;
 

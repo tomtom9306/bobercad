@@ -1,4 +1,4 @@
-import { v } from "../../engine/core/math.mjs?v=vec3-dry-1";
+import { v } from "../../engine/core/math.mjs";
 
 export function labelRotation(label, projectPoint) {
   const axis = Array.isArray(label.labelLine) && label.labelLine.length === 2

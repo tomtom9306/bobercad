@@ -1,11 +1,11 @@
-import { createIcon } from "../../icons/icon-registry.mjs?v=smart-component-lifecycle-1";
+import { createIcon } from "../../icons/icon-registry.mjs";
 import {
   disclosureSection as designDisclosureSection,
   field as designField,
   propertiesPanelShell as designPropertiesPanelShell,
   readout as designReadout,
   segmentedControl
-} from "../../design-system/ui-elements.mjs?v=panel-design-primitives-1";
+} from "../../design-system/ui-elements.mjs";
 
 const CUSTOM_NUMBER_CHOICE = "__custom";
 
@@ -50,6 +50,7 @@ export function createPanelMessageState(render, initialMessage = "", initialStat
   return {
     set,
     clear: (options = {}) => set("", "", options),
+    hasMessage: () => Boolean(messageText),
     element() {
       const message = text("div", "bc-message", messageText);
       message.dataset.state = messageState;

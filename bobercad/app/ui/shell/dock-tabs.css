@@ -172,8 +172,8 @@
   top: calc(var(--bc-space-3) + var(--bc-space-2));
   right: calc(var(--bc-side-dock-tab-rail-width) + var(--bc-space-2));
   left: auto;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 
 .bc-left-dock:has(#library-panel:not([hidden])) .bc-data-header-icon {

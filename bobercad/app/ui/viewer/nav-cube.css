@@ -40,10 +40,6 @@
   bottom: auto;
 }
 
-.bc-toolbar-band[data-toolbar-dock="right"] ~ .bc-nav-cube {
-  --bc-nav-cube-right-offset: calc(var(--bc-space-6) + var(--bc-nav-cube-toolbar-clearance));
-}
-
 .bc-right-dock:not([data-authoring-active="true"])[data-workspace-panel-visible="true"][data-workspace-panel-dock="right"][data-workspace-panel-side-dock="true"][data-workspace-panel-pinned="true"] ~ .bc-nav-cube[data-overlay-corner="bottom-right"],
 .bc-right-dock:not([data-authoring-active="true"])[data-workspace-panel-visible="true"][data-workspace-panel-dock="right"][data-workspace-panel-side-dock="true"][data-workspace-panel-revealed="true"] ~ .bc-nav-cube[data-overlay-corner="bottom-right"],
 .bc-right-dock:not([data-authoring-active="true"])[data-workspace-panel-visible="true"][data-workspace-panel-dock="right"][data-workspace-panel-side-dock="true"][data-workspace-panel-pinned="true"] ~ .bc-nav-cube[data-overlay-corner="top-right"],
@@ -249,10 +245,6 @@
     --bc-nav-cube-left-offset: var(--bc-space-4);
     --bc-nav-cube-top-offset: var(--bc-shell-toolbar-top-offset-mobile);
     --bc-nav-cube-bottom-offset: calc(var(--bc-space-4) + var(--bc-statusbar-height));
-  }
-
-  .bc-toolbar-band[data-toolbar-dock="right"] ~ .bc-nav-cube {
-    --bc-nav-cube-right-offset: var(--bc-space-4);
   }
 
   .bc-right-dock:not([data-authoring-active="true"])[data-workspace-panel-visible="true"][data-workspace-panel-dock="right"][data-workspace-panel-side-dock="true"][data-workspace-panel-pinned="true"] ~ .bc-nav-cube[data-overlay-corner="bottom-right"],

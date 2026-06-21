@@ -1,13 +1,14 @@
-import { distance3, finiteNumber, finiteNumberOr, v } from "../../engine/core/math.mjs?v=world-axis-dry-1";
-import { arrayValues } from "../../engine/core/model.mjs?v=interaction-array-values-dry-1";
-import { createPreviewMember } from "../../engine/api/project/member-factory.mjs?v=member-snap-ref-defined-object-dry-1";
-import { memberAxisData, memberById, memberStationAtPoint } from "../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
-import { activeWorkPlane, rayPlaneIntersection } from "../../engine/api/project/work-plane.mjs?v=finite-point-api-dry-1";
-import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs?v=geometry-api-array-values-dry-1";
-import { memberCreationOverlay } from "../scene/authoring/member-overlays.mjs?v=plate-face-snap-2";
-import { coordinateSpaceLabel as axisGuideModeLabel, normalizeCoordinateSpace as normalizeAxisGuideMode } from "../scene/authoring/member-axis-space.mjs?v=final-array-values-dry-1";
-import { matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs?v=truthy-values-dry-1";
-import { pointOnViewRay } from "./pointer-plane-point.mjs?v=view-ray-dry-1";
+import { distance3, finiteNumber, finiteNumberOr, v } from "../../engine/core/math.mjs";
+import { arrayValues } from "../../engine/core/model.mjs";
+import { createPreviewMember } from "../../engine/api/project/member-factory.mjs";
+import { memberAxisData, memberById, memberStationAtPoint } from "../../engine/api/project/members.mjs";
+import { activeWorkPlane, rayPlaneIntersection } from "../../engine/api/project/work-plane.mjs";
+import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs";
+import { memberCreationOverlay } from "../scene/authoring/member-overlays.mjs";
+import { coordinateSpaceLabel as axisGuideModeLabel, normalizeCoordinateSpace as normalizeAxisGuideMode } from "../scene/authoring/member-axis-space.mjs";
+import { matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs";
+import { pointOnViewRay } from "./pointer-plane-point.mjs";
+import { createPointerFrameScheduler } from "./pointer-frame-scheduler.mjs";
 
 const NUMBER_KEYS = new Set(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-", ",", "@"]);
 const MIN_MEMBER_LENGTH = 1e-6;
@@ -88,9 +89,7 @@ export function createMemberCreateController({
 }) {
   const authoringSettings = settings.authoring || {};
   const shortcuts = settings.shortcuts?.memberCreate || {};
-  const requestPointerFrame = typeof requestAnimationFrame === "function"
-    ? requestAnimationFrame
-    : (callback) => setTimeout(callback, 0);
+  const pointerScheduler = createPointerFrameScheduler();
   const state = {
     active: false,
     type: null,
@@ -109,8 +108,6 @@ export function createMemberCreateController({
     axisGuideModeLabel: normalizeAxisGuideMode(authoringSettings.axisGuideMode),
     activeReferenceMemberIds: []
   };
-  let pendingPointer = null;
-  let pointerFramePending = false;
 
   function profileCatalog() {
     try {
@@ -276,9 +273,7 @@ export function createMemberCreateController({
         workPlane: activePlane,
         projectToPlane: false,
         includeLines: true,
-        includeSurfaceTargets: state.start ? "edges" : "corners",
         includeGlobalAxes: state.start ? false : true,
-        snapVisibilityRequirePrecise: false,
         maxIntersectionSources: state.start ? 24 : undefined
       }
     });
@@ -344,8 +339,7 @@ export function createMemberCreateController({
 
   function start(type) {
     state.active = true;
-    pendingPointer = null;
-    pointerFramePending = false;
+    pointerScheduler.clear();
     state.type = type === "column" ? "column" : "beam";
     state.start = null;
     state.startSnap = null;
@@ -370,8 +364,7 @@ export function createMemberCreateController({
 
   function cancel() {
     state.active = false;
-    pendingPointer = null;
-    pointerFramePending = false;
+    pointerScheduler.clear();
     state.type = null;
     state.start = null;
     state.startReference = null;
@@ -425,23 +418,16 @@ export function createMemberCreateController({
 
   function pointerMove(pointer) {
     if (!state.active) return false;
-    pendingPointer = pointer;
-    if (pointerFramePending) return true;
-    pointerFramePending = true;
-    requestPointerFrame(() => {
-      pointerFramePending = false;
-      const nextPointer = pendingPointer;
-      pendingPointer = null;
+    return pointerScheduler.schedule(pointer, (nextPointer) => {
       if (!state.active || !nextPointer) return;
       snapManager?.resetCycle?.();
       setPointerState(nextPointer);
     });
-    return true;
   }
 
   function pointerDown(pointer) {
     if (!state.active) return false;
-    pendingPointer = null;
+    pointerScheduler.clear();
     const result = setPointerState(pointer);
     if (!result.point) return true;
     if (!state.start) {

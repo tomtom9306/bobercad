@@ -1,77 +1,20 @@
-﻿import { clamp, finiteNumber, finiteNumberOr, screenDistance, v } from "../../engine/core/math.mjs?v=integer-number-dry-1";
-import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs?v=polygon-ear-clipping-1";
-import { arrayValues, sameIdSet, truthyValues, uniqueTruthy } from "../../engine/core/model.mjs?v=webgl-array-values-dry-1";
-import { libraryProfileById } from "../../engine/api/project/profiles.mjs?v=profile-api-dry-1";
-import { memberFrame } from "../../engine/geometry/member-geometry.mjs?v=geometry-api-array-values-dry-1";
-import { trimOperationIconMarkup, trimOperationLabel } from "../trim-operation-icons.mjs?v=plane-region-hard-1";
-import { createCamera } from "./camera.mjs?v=nav-cube-2";
-import { createDimensionOverlayUi } from "./dimension-label-editor-ui.mjs?v=dimension-button-dry-1";
-import { hexToRgb, hexToRgba } from "./colors.mjs?v=hex-color-regex-dry-1";
-import { labelRotation } from "./label-rotation.mjs?v=authoring-label-rotation-1";
-import { createTextLabelRenderer } from "./text-label-renderer.mjs?v=dimensions-on-top-1";
-import { isActiveSmartComponentObject } from "../scene/scene-object-visibility.mjs?v=array-values-dry-1";
-
-const COLOR_FRAGMENT_SHADER = `
-  precision mediump float;
-  varying vec4 vColor;
-  void main() {
-    gl_FragColor = vColor;
-  }
-`;
-
-const VIEW_VERTEX_SHADER = `
-  uniform float uYaw;
-  uniform float uPitch;
-  uniform float uScale;
-  uniform vec2 uPan;
-  uniform vec2 uViewport;
-  uniform vec3 uPivot;
-  uniform float uDepthHalf;
-
-  vec3 cameraRotate(vec3 point) {
-    float cy = cos(uYaw);
-    float sy = sin(uYaw);
-    float cp = cos(uPitch);
-    float sp = sin(uPitch);
-    float x = cy * point.x - sy * point.y;
-    float y = sy * point.x + cy * point.y;
-    return vec3(x, cp * y - sp * point.z, sp * y + cp * point.z);
-  }
-
-  vec4 clipPosition(vec3 view) {
-    float screenX = uViewport.x * 0.5 + uPan.x + view.x * uScale;
-    float screenY = uViewport.y * 0.5 + uPan.y - view.y * uScale;
-    float depth = clamp(-view.z / uDepthHalf, -1.0, 1.0);
-    return vec4(screenX / uViewport.x * 2.0 - 1.0, 1.0 - screenY / uViewport.y * 2.0, depth, 1.0);
-  }
-`;
-
-function normalizeDisplayMode(mode) {
-  return ["shaded", "wireframe", "xray"].includes(mode) ? mode : "shaded";
-}
-
-function cameraAnglesForDirection(direction) {
-  const d = v.safeNorm(direction, [-1, -1, -0.62]);
-  const pitch = Math.acos(clamp(-d[2], -1, 1));
-  const horizontal = Math.hypot(d[0], d[1]);
-  const yaw = horizontal <= 1e-9 ? 0 : Math.atan2(-d[0], -d[1]);
-  return { yaw, pitch };
-}
-
-function cameraAnglesForOrientation(orientation) {
-  const directions = {
-    front: [1, 0, 0],
-    back: [-1, 0, 0],
-    right: [0, -1, 0],
-    left: [0, 1, 0],
-    top: [0, 0, -1],
-    bottom: [0, 0, 1],
-    iso: [-1, -1, -0.62]
-  };
-  return cameraAnglesForDirection(directions[orientation] || directions.iso);
-}
-
+import { clamp, finiteNumber, finiteNumberOr, screenDistance, v } from "../../engine/core/math.mjs";
+import { arrayValues, sameIdSet } from "../../engine/core/model.mjs";
+import { createCamera } from "./camera.mjs";
+import { createWebglPicker } from "./webgl-picker.mjs";
+import { memberOnlyHighlightChange as isMemberOnlyHighlightChange } from "./webgl-highlight-policy.mjs";
+import { cameraAnglesForOrientation, cameraStateFor, cloneSceneItem, cloneScenePoint, normalizeDisplayMode } from "./webgl-view-state.mjs";
+import { createWebglObjectPreviewController } from "./webgl-object-preview.mjs";
+import { createWebglPickColorState } from "./webgl-pick-color-state.mjs";
+import { createWebglRenderOrchestrator } from "./webgl-render-orchestrator.mjs";
+import { attachWebglViewerControls } from "./webgl-viewer-controls.mjs";
+import { isActiveSmartComponentObject } from "../scene/scene-object-visibility.mjs";
 export function createWebglViewer(canvas, reset, settings, options = {}) {
+  const domRuntime = options.domRuntime;
+  const createDimensionOverlayUi = options.dimensionOverlayFactory;
+  if (!domRuntime || typeof createDimensionOverlayUi !== "function") {
+    throw new Error("createWebglViewer requires UI-owned domRuntime and dimensionOverlayFactory ports");
+  }
   const WORLD_ORIGIN = Object.freeze([0, 0, 0]);
   const qaCapture = !!options.qaCapture;
   const gl = canvas.getContext("webgl", { antialias: true, preserveDrawingBuffer: qaCapture });
@@ -80,15 +23,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
   const camera = createCamera(settings);
   let drag = null;
   let authoringAutoPanFrame = null;
-  let renderer = null;
-  let staticSceneRenderer = null;
-  let staticSceneCache = null;
-  let memberInstanceRenderer = null;
-  let memberInstanceCache = null;
-  let memberInstanceLookup = null;
-  let pickObjectByColorId = new Map();
-  let pickColorIdByObjectKey = new Map();
-  let nextPickColorId = 1;
   let pickHandler = null;
   let pickHandlerOptions = {};
   let clickHandler = null;
@@ -105,14 +39,37 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
   let lastCanvasPointer = null;
   let dimensionOverlay = { lines: [], labels: [] };
   let dimensionPlacementHandler = null;
-  let objectPreview = null;
   let authoringPreviewScene = null;
-  let projectedSceneTriangles = null;
   let frameDrawPending = false;
   let displayMode = normalizeDisplayMode(settings.render?.displayMode);
   let viewOrientation = "iso";
-  const dimensionTextRenderer = gl ? createTextLabelRenderer(gl, canvas, settings) : null;
-
+  let pickerApi = null;
+  let renderRuntime = null;
+  const pickColors = createWebglPickColorState();
+  function invalidateScenePickCache() {
+    pickerApi?.invalidateScenePickCache();
+  }
+  function invalidateMemberInstanceLookup() {
+    pickerApi?.invalidateMemberInstanceLookup();
+  }
+  function invalidateStaticSceneCache() {
+    renderRuntime?.invalidateStaticSceneCache();
+  }
+  function invalidateMemberInstanceCache() {
+    renderRuntime?.invalidateMemberInstanceCache();
+  }
+  function invalidateRenderableCaches() {
+    renderRuntime?.invalidateRenderableCaches();
+  }
+  function draw() {
+    renderRuntime?.draw();
+  }
+  function pickSceneGpu(...args) {
+    return renderRuntime?.pickSceneGpu(...args) || null;
+  }
+  function hitTestDimensionLabel(x, y) {
+    return renderRuntime?.hitTestDimensionLabel(x, y) || null;
+  }
   function requestDraw() {
     if (frameDrawPending) return;
     frameDrawPending = true;
@@ -121,18 +78,15 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       draw();
     });
   }
-
   function notifyDetailScaleChange() {
     if (!detailScaleChangeHandler) return;
     detailScaleChangeHandler(camera.screenScale());
   }
-
   function clearPendingDetailScaleChange() {
     if (!detailScaleChangeTimer) return;
-    window.clearTimeout(detailScaleChangeTimer);
+    domRuntime.clearTimer(detailScaleChangeTimer);
     detailScaleChangeTimer = null;
   }
-
   function scheduleDetailScaleChange(delayMs = 0) {
     clearPendingDetailScaleChange();
     if (!detailScaleChangeHandler) return;
@@ -140,7 +94,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       notifyDetailScaleChange();
       return;
     }
-    detailScaleChangeTimer = window.setTimeout(() => {
+    detailScaleChangeTimer = domRuntime.setTimer(() => {
       detailScaleChangeTimer = null;
       if (drag) {
         scheduleDetailScaleChange(delayMs);
@@ -149,7 +103,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       notifyDetailScaleChange();
     }, delayMs);
   }
-
   function requestWheelZoom(deltaY, x, y) {
     const direction = Math.sign(deltaY) || 1;
     if (!pendingWheelZoom || Math.sign(pendingWheelZoom.deltaY) !== direction) {
@@ -175,7 +128,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       draw();
     });
   }
-
   const dimensionUi = createDimensionOverlayUi({
     canvas,
     settings,
@@ -183,34 +135,62 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     screenScale: () => camera.screenScale(),
     requestDraw
   });
-  const authoringLabelLayer = document.createElement("div");
-  authoringLabelLayer.className = "authoring-label-layer";
-  document.body.appendChild(authoringLabelLayer);
-  const calloutLayer = document.createElement("div");
-  calloutLayer.className = "scene-callout-layer";
-  document.body.appendChild(calloutLayer);
   let highlightedObjectIds = new Set();
-  const highlight = {
-    edge: "#38bdf8"
-  };
   const detailPixelThreshold = finiteNumber(settings.render.lod?.detailPixelThreshold)
     ? settings.render.lod.detailPixelThreshold
     : 24;
-
-
-  function shadedRgba(color, points, opacity = 1) {
-    const rgb = hexToRgb(color);
-    const n = faceNormal(points);
-    const light = v.norm(settings.render.lighting.direction);
-    const shade = settings.render.lighting.ambient + Math.max(0, v.dot(n, light)) * settings.render.lighting.diffuse;
-    return [
-      Math.round(rgb[0] * shade),
-      Math.round(rgb[1] * shade),
-      Math.round(rgb[2] * shade),
-      Math.round(255 * opacity)
-    ];
-  }
-
+  const objectPreviewController = createWebglObjectPreviewController({
+    getScene: () => scene,
+    invalidateRenderableCaches,
+    invalidateMemberInstanceLookup,
+    invalidateScenePickCache,
+    requestDraw
+  });
+  pickerApi = createWebglPicker({
+    canvas,
+    camera,
+    getScene: () => scene,
+    lodDetailVisible,
+    shouldDrawSceneItem,
+    shouldUseGpuPick,
+    pickSceneGpu,
+    hasWebgl: () => Boolean(gl)
+  });
+  const {
+    pickScene,
+    fastClickPick,
+    preciseOrbitAnchor,
+    pickCursorDepth,
+    snapVisibilityAt
+  } = pickerApi;
+  renderRuntime = createWebglRenderOrchestrator({
+    gl,
+    canvas,
+    settings,
+    camera,
+    getScene: () => scene,
+    getDisplayMode: () => displayMode,
+    getHighlightedObjectIds: () => highlightedObjectIds,
+    getAuthoringOverlay: () => authoringOverlay,
+    getAuthoringHoveredHandle: () => authoringHoveredHandle,
+    getDimensionOverlay: () => dimensionOverlay,
+    getAuthoringPreviewScene: () => authoringPreviewScene,
+    objectPreview: objectPreviewController,
+    dimensionUi,
+    pickColorForItem: pickColors.colorForItem,
+    pickObjectFromPixel: pickColors.objectFromPixel,
+    invalidateScenePickCache,
+    shouldDrawSceneItem,
+    lodDetailVisible,
+    useHighlightOverlay,
+    projectPoint,
+    projectOffsetPoint,
+    isAuthoringHovered,
+    axisHandleSegment,
+    projectedRotationArc,
+    renderAuthoringLabels,
+    renderSceneCallouts
+  });
   function lodDetailVisible(objectId) {
     if (!objectId) return true;
     const detail = scene?.lodDetails?.[objectId];
@@ -218,545 +198,25 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     if (isActiveSmartComponentObject(scene, objectId) || highlightedObjectIds.has(objectId)) return true;
     return detail.radius * camera.screenScale() >= detailPixelThreshold;
   }
-
   function isObjectPreviewed(item) {
-    return Boolean(item?.objectId && objectPreview?.objectIds?.has(item.objectId));
+    return objectPreviewController.isPreviewed(item);
   }
-
   function shouldDrawSceneItem(item) {
     if (isObjectPreviewed(item)) return false;
     return !item?.lodDetailObjectId || lodDetailVisible(item.lodDetailObjectId);
   }
-
-  function resetPickObjects() {
-    pickObjectByColorId = new Map();
-    pickColorIdByObjectKey = new Map();
-    nextPickColorId = 1;
-  }
-
-  function pickObjectKey(item) {
-    if (!item?.collection || !item?.objectId) return null;
-    return truthyValues([
-      item.collection,
-      item.objectId,
-      item.operationId ? `operation:${item.operationId}` : null,
-      item.regionKey ? `region:${item.regionKey}` : null,
-      item.referencePlaneId ? `plane:${item.referencePlaneId}` : null,
-      item.componentKind ? `kind:${item.componentKind}` : null,
-      item.positionIndex !== undefined ? `position:${item.positionIndex}` : null
-    ]).join(":");
-  }
-
-  function encodePickColorId(id) {
-    return [
-      ((id >> 16) & 255) / 255,
-      ((id >> 8) & 255) / 255,
-      (id & 255) / 255,
-      1
-    ];
-  }
-
-  function pickColorForItem(item) {
-    const key = pickObjectKey(item);
-    if (!key) return [0, 0, 0, 1];
-    let id = pickColorIdByObjectKey.get(key);
-    if (!id) {
-      id = nextPickColorId;
-      nextPickColorId += 1;
-      pickColorIdByObjectKey.set(key, id);
-      pickObjectByColorId.set(id, {
-        collection: item.collection,
-        objectId: item.objectId,
-        ...(item.memberId ? { memberId: item.memberId } : {}),
-        ...(item.ownerMemberId ? { ownerMemberId: item.ownerMemberId } : {}),
-        ...(item.operationId ? { operationId: item.operationId } : {}),
-        ...(item.regionKey ? { regionKey: item.regionKey } : {}),
-        ...(item.referencePlaneId ? { referencePlaneId: item.referencePlaneId } : {}),
-        ...(item.componentKind ? { componentKind: item.componentKind } : {}),
-        ...(item.positionIndex !== undefined ? { positionIndex: item.positionIndex } : {})
-      });
-    }
-    return encodePickColorId(id);
-  }
-
-  function pickObjectFromPixel(pixel) {
-    const id = (pixel[0] << 16) | (pixel[1] << 8) | pixel[2];
-    return id ? pickObjectByColorId.get(id) || null : null;
-  }
-
   function shouldUseGpuPick() {
     return (scene?.faces?.length || 0) + (scene?.memberInstances?.length || 0) > 25000;
   }
-
-  function isLargeScene() {
-    return (scene?.faces?.length || 0) + (scene?.lines?.length || 0) + (scene?.memberInstances?.length || 0) > 25000;
-  }
-
-  function objectCollection(objectId) {
-    return scene?.project?.objectIndex?.[objectId]?.collection || null;
-  }
-
-  function memberOnlyHighlightChange(nextObjectIds = []) {
-    if (!isLargeScene()) return false;
-    const ids = uniqueTruthy([...highlightedObjectIds, ...nextObjectIds]);
-    return ids.length > 0 && ids.every((id) => objectCollection(id) === "members");
-  }
-
   function useHighlightOverlay() {
     return highlightedObjectIds.size > 0;
   }
-
-  function highlightedObjectIdsForOverlay() {
-    const suppressed = new Set(arrayValues(authoringOverlay?.suppressHighlightObjectIds));
-    if (!suppressed.size) return highlightedObjectIds;
-    return new Set([...highlightedObjectIds].filter((objectId) => !suppressed.has(objectId)));
-  }
-
-  function compileShader(type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
-    return shader;
-  }
-
-  function createProgram(vertexSource, fragmentSource) {
-    const program = gl.createProgram();
-    gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vertexSource));
-    gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fragmentSource));
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
-    return program;
-  }
-
-  function viewUniformLocations(program) {
-    return {
-      yaw: gl.getUniformLocation(program, "uYaw"),
-      pitch: gl.getUniformLocation(program, "uPitch"),
-      scale: gl.getUniformLocation(program, "uScale"),
-      pan: gl.getUniformLocation(program, "uPan"),
-      viewport: gl.getUniformLocation(program, "uViewport"),
-      pivot: gl.getUniformLocation(program, "uPivot"),
-      depthHalf: gl.getUniformLocation(program, "uDepthHalf")
-    };
-  }
-
-  function initRenderer() {
-    if (renderer) return renderer;
-    if (!gl) throw new Error("WebGL is required for depth-correct viewing");
-
-    const program = createProgram(`
-      attribute vec3 aPosition;
-      attribute vec4 aColor;
-      varying vec4 vColor;
-      void main() {
-        gl_Position = vec4(aPosition, 1.0);
-        vColor = aColor;
-      }
-    `, COLOR_FRAGMENT_SHADER);
-
-    renderer = {
-      program,
-      position: gl.getAttribLocation(program, "aPosition"),
-      color: gl.getAttribLocation(program, "aColor"),
-      positionBuffer: gl.createBuffer(),
-      colorBuffer: gl.createBuffer()
-    };
-    return renderer;
-  }
-
-  function initStaticSceneRenderer() {
-    if (staticSceneRenderer) return staticSceneRenderer;
-    if (!gl) throw new Error("WebGL is required for scene rendering");
-
-    const program = createProgram(`
-      precision highp float;
-      attribute vec3 aWorldPosition;
-      attribute vec4 aColor;
-      varying vec4 vColor;
-      ${VIEW_VERTEX_SHADER}
-
-      void main() {
-        vec3 view = cameraRotate(aWorldPosition - uPivot);
-        gl_Position = clipPosition(view);
-        vColor = aColor;
-      }
-    `, COLOR_FRAGMENT_SHADER);
-
-    staticSceneRenderer = {
-      program,
-      position: gl.getAttribLocation(program, "aWorldPosition"),
-      color: gl.getAttribLocation(program, "aColor"),
-      uniforms: viewUniformLocations(program)
-    };
-    return staticSceneRenderer;
-  }
-
-  function initMemberInstanceRenderer() {
-    if (memberInstanceRenderer) return memberInstanceRenderer;
-    if (!gl) throw new Error("WebGL is required for member instancing");
-    const instancing = gl.getExtension("ANGLE_instanced_arrays");
-    if (!instancing) return null;
-
-    const program = createProgram(`
-      precision highp float;
-      attribute vec3 aLocalPosition;
-      attribute vec3 aLocalNormal;
-      attribute vec3 aStart;
-      attribute vec3 aAxisX;
-      attribute vec3 aAxisY;
-      attribute vec3 aAxisZ;
-      attribute float aLength;
-      attribute vec4 aColor;
-      uniform vec3 uLight;
-      uniform float uAmbient;
-      uniform float uDiffuse;
-      varying vec4 vColor;
-      ${VIEW_VERTEX_SHADER}
-
-      void main() {
-        vec3 world = aStart
-          + aAxisX * (aLocalPosition.x * aLength)
-          + aAxisY * aLocalPosition.y
-          + aAxisZ * aLocalPosition.z;
-        vec3 view = cameraRotate(world - uPivot);
-        vec3 normal = normalize(aAxisX * aLocalNormal.x + aAxisY * aLocalNormal.y + aAxisZ * aLocalNormal.z);
-        float shade = uAmbient + max(0.0, dot(normal, normalize(uLight))) * uDiffuse;
-        gl_Position = clipPosition(view);
-        vColor = vec4(aColor.rgb * shade, aColor.a);
-      }
-    `, COLOR_FRAGMENT_SHADER);
-
-    memberInstanceRenderer = {
-      program,
-      instancing,
-      localPosition: gl.getAttribLocation(program, "aLocalPosition"),
-      localNormal: gl.getAttribLocation(program, "aLocalNormal"),
-      start: gl.getAttribLocation(program, "aStart"),
-      axisX: gl.getAttribLocation(program, "aAxisX"),
-      axisY: gl.getAttribLocation(program, "aAxisY"),
-      axisZ: gl.getAttribLocation(program, "aAxisZ"),
-      length: gl.getAttribLocation(program, "aLength"),
-      color: gl.getAttribLocation(program, "aColor"),
-      uniforms: {
-        ...viewUniformLocations(program),
-        light: gl.getUniformLocation(program, "uLight"),
-        ambient: gl.getUniformLocation(program, "uAmbient"),
-        diffuse: gl.getUniformLocation(program, "uDiffuse")
-      }
-    };
-    return memberInstanceRenderer;
-  }
-
-  function clipPoint(point) {
-    return camera.clipPoint(point, scene, canvas);
-  }
-
-  function barycentric(point, a, b, c) {
-    const v0x = b.x - a.x;
-    const v0y = b.y - a.y;
-    const v1x = c.x - a.x;
-    const v1y = c.y - a.y;
-    const v2x = point.x - a.x;
-    const v2y = point.y - a.y;
-    const denominator = v0x * v1y - v1x * v0y;
-    if (Math.abs(denominator) < 0.000001) return null;
-    const u = (v2x * v1y - v1x * v2y) / denominator;
-    const vValue = (v0x * v2y - v2x * v0y) / denominator;
-    const w = 1 - u - vValue;
-    return u >= -0.0001 && vValue >= -0.0001 && w >= -0.0001 ? [w, u, vValue] : null;
-  }
-
-  function interpolatePoint(points, weights) {
-    return [
-      points[0][0] * weights[0] + points[1][0] * weights[1] + points[2][0] * weights[2],
-      points[0][1] * weights[0] + points[1][1] * weights[1] + points[2][1] * weights[2],
-      points[0][2] * weights[0] + points[1][2] * weights[1] + points[2][2] * weights[2]
-    ];
-  }
-
-  function invalidateScenePickCache() {
-    projectedSceneTriangles = null;
-  }
-
-  function invalidateMemberInstanceLookup() {
-    memberInstanceLookup = null;
-  }
-
-  function memberInstancesForPick(objectIds = null) {
-    if (!scene?.memberInstances?.length) return [];
-    if (!objectIds) return scene.memberInstances;
-    if (!memberInstanceLookup) {
-      memberInstanceLookup = new Map();
-      for (const instance of scene.memberInstances) {
-        const bucket = memberInstanceLookup.get(instance.objectId) || [];
-        bucket.push(instance);
-        memberInstanceLookup.set(instance.objectId, bucket);
-      }
-    }
-    const instances = [];
-    for (const objectId of objectIds) instances.push(...(memberInstanceLookup.get(objectId) || []));
-    return instances;
-  }
-
-  function scenePickTriangles(options = {}) {
-    const filteredIds = options.objectIds ? new Set(options.objectIds) : null;
-    const componentKind = options.componentKind || null;
-    const cacheable = !filteredIds && !componentKind;
-    if (cacheable && projectedSceneTriangles) return projectedSceneTriangles;
-    if (!scene) return [];
-    const triangles = [];
-    for (const face of scene.faces) {
-      if (filteredIds && !filteredIds.has(face.objectId)) continue;
-      if (componentKind && face.componentKind !== componentKind) continue;
-      if (!shouldDrawSceneItem(face)) continue;
-      for (const triangle of triangulateFace(face.points)) {
-        const projected = triangle.map((point) => camera.projectPoint(point, scene, canvas));
-        const xs = projected.map((point) => point.x);
-        const ys = projected.map((point) => point.y);
-        triangles.push({
-          face,
-          triangle,
-          projected,
-          minX: Math.min(...xs),
-          maxX: Math.max(...xs),
-          minY: Math.min(...ys),
-          maxY: Math.max(...ys)
-        });
-      }
-    }
-    if (cacheable) projectedSceneTriangles = triangles;
-    return triangles;
-  }
-
-  function pickMemberInstance(x, y, options = {}) {
-    if (!scene?.memberInstances?.length) return null;
-    const cursor = { x, y };
-    const objectIds = options.objectIds ? new Set(options.objectIds) : null;
-    let best = null;
-
-    for (const instance of memberInstancesForPick(objectIds)) {
-      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
-      const a = camera.projectPoint(instance.start, scene, canvas);
-      const b = camera.projectPoint(v.add(instance.start, v.mul(instance.axisX, instance.length)), scene, canvas);
-      const t = screenLineParameter(cursor, a, b);
-      const closestScreen = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-      const distance = screenDistance(cursor, closestScreen);
-      const radiusPx = instance.profileRadius * camera.screenScale();
-      const threshold = clamp(radiusPx, 6, 16);
-      if (distance > threshold) continue;
-      const depth = a.depth + (b.depth - a.depth) * t;
-      if (!best || depth < best.depth || (depth === best.depth && distance < best.distance)) {
-        best = {
-          depth,
-          distance,
-          point: v.add(instance.start, v.mul(instance.axisX, instance.length * t)),
-          face: {
-            collection: instance.collection,
-            objectId: instance.objectId
-          }
-        };
-      }
-    }
-
-    return best;
-  }
-
   function cameraState(reason = "camera") {
-    return {
-      ...camera.viewAngles(),
-      orientation: viewOrientation,
-      reason
-    };
+    return cameraStateFor(camera, viewOrientation, reason);
   }
-
   function notifyCameraChange(reason = "camera") {
     cameraChangeHandler?.(cameraState(reason));
   }
-
-  function pickMemberInstanceGeometry(x, y, options = {}) {
-    if (!scene?.memberInstances?.length) return null;
-    const cursor = { x, y };
-    const objectIds = options.objectIds ? new Set(options.objectIds) : null;
-    let best = null;
-
-    for (const instance of memberInstancesForPick(objectIds)) {
-      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
-      const positions = scene.memberInstanceGeometries?.[instance.profileId]?.positions;
-      if (!Array.isArray(positions) || positions.length < 9) continue;
-      for (let index = 0; index <= positions.length - 9; index += 9) {
-        const triangle = [
-          memberInstancePoint(instance, positions[index], positions[index + 1], positions[index + 2]),
-          memberInstancePoint(instance, positions[index + 3], positions[index + 4], positions[index + 5]),
-          memberInstancePoint(instance, positions[index + 6], positions[index + 7], positions[index + 8])
-        ];
-        const projected = triangle.map((point) => camera.projectPoint(point, scene, canvas));
-        const minX = Math.min(projected[0].x, projected[1].x, projected[2].x);
-        const maxX = Math.max(projected[0].x, projected[1].x, projected[2].x);
-        const minY = Math.min(projected[0].y, projected[1].y, projected[2].y);
-        const maxY = Math.max(projected[0].y, projected[1].y, projected[2].y);
-        if (x < minX || x > maxX || y < minY || y > maxY) continue;
-        const weights = barycentric(cursor, projected[0], projected[1], projected[2]);
-        if (!weights) continue;
-        const depth = projected[0].depth * weights[0] + projected[1].depth * weights[1] + projected[2].depth * weights[2];
-        if (!best || depth < best.depth) {
-          const normal = faceNormal(triangle);
-          best = {
-            depth,
-            point: interpolatePoint(triangle, weights),
-            normal,
-            triangle,
-            face: {
-              collection: instance.collection,
-              objectId: instance.objectId,
-              normal
-            }
-          };
-        }
-      }
-    }
-
-    return best;
-  }
-
-  function pickScene(x, y, options = {}) {
-    if (!scene) return null;
-    const filteredPick = Boolean(options.objectIds || options.componentKind);
-    if (!options.forceCpu && shouldUseGpuPick() && !filteredPick) return pickSceneGpu(x, y, options);
-    const cursor = { x, y };
-    const objectIds = options.objectIds ? new Set(options.objectIds) : null;
-    let best = null;
-    for (const item of scenePickTriangles({ objectIds, componentKind: options.componentKind })) {
-      const { face, projected, triangle } = item;
-      if (options.includeTransparent === false && (face.opacity ?? 1) < 1) continue;
-      if (x < item.minX || x > item.maxX || y < item.minY || y > item.maxY) continue;
-      const weights = barycentric(cursor, projected[0], projected[1], projected[2]);
-      if (!weights) continue;
-      const depth = projected[0].depth * weights[0] + projected[1].depth * weights[1] + projected[2].depth * weights[2];
-      if (!best || depth < best.depth) {
-        const normal = faceNormal(triangle);
-        best = {
-          depth,
-          point: interpolatePoint(triangle, weights),
-          normal,
-          triangle,
-          face: {
-            ...face,
-            normal
-          }
-        };
-      }
-    }
-    if (options.includeInstances === false) return best;
-    const memberHit = options.preciseInstances === true
-      ? pickMemberInstanceGeometry(x, y, { objectIds })
-      : pickMemberInstance(x, y, { objectIds });
-    if (!memberHit) return best;
-    if (!best || memberHit.depth < best.depth) return memberHit;
-    return best;
-  }
-
-  function pickOrbitAnchor(x, y) {
-    const coarse = shouldUseGpuPick() ? pickSceneGpu(x, y, { includeTransparent: false }) : null;
-    if (coarse?.face?.objectId) {
-      const precise = pickScene(x, y, {
-        forceCpu: true,
-        includeTransparent: false,
-        objectIds: [coarse.face.objectId]
-      });
-      return precise || coarse;
-    }
-    return pickScene(x, y, { forceCpu: true, includeTransparent: false });
-  }
-
-  function fastClickPick(x, y) {
-    if (!shouldUseGpuPick()) return pickOrbitAnchor(x, y);
-    return pickSceneGpu(x, y, { includeTransparent: false });
-  }
-
-  function preciseOrbitAnchor(x, y, coarseFace = null) {
-    if (!shouldUseGpuPick()) return pickOrbitAnchor(x, y);
-    if (coarseFace?.objectId) {
-      const precise = pickScene(x, y, {
-        forceCpu: true,
-        includeTransparent: false,
-        objectIds: [coarseFace.objectId]
-      });
-      return precise || { depth: 0, point: null, face: coarseFace };
-    }
-    return null;
-  }
-
-  function pickCursorDepth(x, y, options = {}) {
-    if (options.forceGpu !== true && !shouldUseGpuPick()) {
-      return pickScene(x, y, { forceCpu: true, includeTransparent: false });
-    }
-    const coarse = gl ? pickSceneGpu(x, y, { includeTransparent: false }) : null;
-    if (options.forceGpu === true) return coarse || null;
-    if (!coarse?.face?.objectId) return pickScene(x, y, { forceCpu: true, includeTransparent: false });
-    const precise = pickScene(x, y, {
-      forceCpu: true,
-      includeTransparent: false,
-      objectIds: [coarse.face.objectId],
-      preciseInstances: true
-    });
-    return precise || coarse;
-  }
-
-  function preciseVisibilityHit(hit, screen) {
-    return hit?.face?.objectId && v.isVec3(hit.point)
-      ? { ...hit, screen }
-      : null;
-  }
-
-  function snapVisibilityAt(screen, options = {}) {
-    if (!scene || !finiteNumber(screen?.x) || !finiteNumber(screen?.y)) return null;
-    const radiusPx = clamp(Math.floor(finiteNumberOr(options.radiusPx, 0)), 0, 4);
-    const requirePrecise = options.requirePrecise === true;
-    const offsets = radiusPx > 0
-      ? [[0, 0], [-radiusPx, 0], [radiusPx, 0], [0, -radiusPx], [0, radiusPx]]
-      : [[0, 0]];
-    for (const [dx, dy] of offsets) {
-      const sample = { x: screen.x + dx, y: screen.y + dy };
-      if (gl && options.forceCpu !== true) {
-        const gpuHit = pickSceneGpu(sample.x, sample.y, {
-          includeTransparent: options.includeTransparent !== false,
-          includeInstances: options.includeInstances !== false
-        });
-        if (gpuHit?.face?.objectId) {
-          if (!requirePrecise) return { ...gpuHit, screen: sample };
-          const preciseHit = pickScene(sample.x, sample.y, {
-            forceCpu: true,
-            includeTransparent: options.includeTransparent !== false,
-            includeInstances: options.includeInstances !== false,
-            objectIds: [gpuHit.face.objectId],
-            preciseInstances: true
-          });
-          const precise = preciseVisibilityHit(preciseHit, sample);
-          if (precise) return precise;
-          if (!requirePrecise) return { ...gpuHit, screen: sample };
-        }
-      }
-      const staticHit = pickScene(sample.x, sample.y, {
-        forceCpu: true,
-        includeTransparent: options.includeTransparent !== false,
-        includeInstances: false
-      });
-      const preciseStatic = preciseVisibilityHit(staticHit, sample);
-      if (preciseStatic) return preciseStatic;
-      if (options.includeInstances === false) continue;
-      const instanceHit = pickScene(sample.x, sample.y, {
-        forceCpu: true,
-        includeTransparent: options.includeTransparent !== false,
-        includeInstances: true,
-        preciseInstances: true
-      });
-      const preciseInstance = preciseVisibilityHit(instanceHit, sample);
-      if (preciseInstance) return preciseInstance;
-    }
-    return null;
-  }
-
   function canvasPointer(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const screen = {
@@ -769,13 +229,11 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       inside: screen.x >= 0 && screen.y >= 0 && screen.x <= rect.width && screen.y <= rect.height
     };
   }
-
   function authoringPointerState() {
     if (!drag || drag.mode !== "authoring") return null;
     const { rect, screen } = canvasPointer(drag.x, drag.y);
     return { rect, screen };
   }
-
   function authoringEdgePan(screen, rect) {
     const margin = settings.authoring?.autoPanEdgePx || 72;
     const maxStep = settings.authoring?.autoPanMaxStepPx || 18;
@@ -791,12 +249,10 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       : screen.y > rect.height - margin ? -edgeStep(rect.height - screen.y) : 0;
     return Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01 ? { dx, dy } : null;
   }
-
   function authoringHitAt(screen, rect) {
     if (screen.x < 0 || screen.y < 0 || screen.x > rect.width || screen.y > rect.height) return null;
     return pickCursorDepth(screen.x, screen.y);
   }
-
   function pointerStateFromEvent(event, options = {}) {
     const { rect, screen, inside } = canvasPointer(event.clientX, event.clientY);
     if (inside) lastCanvasPointer = { screen, time: Date.now() };
@@ -807,7 +263,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       hit: inside && includeHit ? pickCursorDepth(screen.x, screen.y, { forceGpu: options.forceGpuHit === true }) : null
     };
   }
-
   function currentPointerState() {
     if (!scene || !lastCanvasPointer?.screen) return null;
     if (currentPointerMaxAgeMs > 0 && Date.now() - (lastCanvasPointer.time || 0) > currentPointerMaxAgeMs) return null;
@@ -819,13 +274,11 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       hit: pickCursorDepth(screen.x, screen.y)
     };
   }
-
   function stopAuthoringAutoPan() {
     if (authoringAutoPanFrame === null) return;
     cancelAnimationFrame(authoringAutoPanFrame);
     authoringAutoPanFrame = null;
   }
-
   function scheduleAuthoringAutoPan() {
     if (authoringAutoPanFrame !== null) return;
     authoringAutoPanFrame = requestAnimationFrame(() => {
@@ -851,20 +304,16 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       scheduleAuthoringAutoPan();
     });
   }
-
   function authoringPanGesture(event) {
     return Boolean(event.shiftKey || (event.buttons & 2) || (event.buttons & 4));
   }
-
   function projectPoint(point) {
     return scene ? camera.projectPoint(point, scene, canvas) : null;
   }
-
   function pointInCaptureRange(point, options = {}) {
     if (!v.isVec3(options.center) || !finiteNumber(options.radius)) return true;
     return v.len(v.sub(point, options.center)) <= options.radius;
   }
-
   function captureItemPoints(item, options = {}) {
     const itemPoints = arrayValues(item.points);
     const points = itemPoints.length || Array.isArray(item.points)
@@ -875,7 +324,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     const filtered = points.filter((point) => pointInCaptureRange(point, options));
     return filtered.length ? points : [];
   }
-
   function objectPoints(objectIds = [], options = {}) {
     if (!scene) return [];
     const ids = new Set(objectIds);
@@ -885,30 +333,23 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       if (!ids.has(item.objectId)) continue;
       points.push(...captureItemPoints(item, options));
     }
-    if (objectPreview) {
-      for (const item of previewCaptureItems()) {
+    if (objectPreviewController.get()) {
+      for (const item of objectPreviewController.captureItems()) {
         if (!ids.has(item.objectId)) continue;
         points.push(...captureItemPoints(item, options));
       }
     }
     return points;
   }
-
-  function clonePoint(point) {
-    return Array.isArray(point) ? [...point] : point;
+  function evaluatedSnapEdges(options = {}) {
+    if (!scene) return [];
+    const ids = new Set(arrayValues(options.objectIds).map(String).filter(Boolean));
+    return arrayValues(scene.lines)
+      .filter((line) => line.snapRole === "member-evaluated-edge")
+      .filter((line) => !ids.size || ids.has(line.objectId))
+      .filter((line) => !isObjectPreviewed(line) && shouldDrawSceneItem(line))
+      .map(cloneSceneItem);
   }
-
-  function cloneSceneItem(item) {
-    return {
-      ...item,
-      points: arrayValues(item.points).map(clonePoint),
-      start: clonePoint(item.start),
-      axisX: clonePoint(item.axisX),
-      axisY: clonePoint(item.axisY),
-      axisZ: clonePoint(item.axisZ)
-    };
-  }
-
   function authoringOverlaySnapshot() {
     return {
       faceCount: arrayValues(authoringOverlay?.faces).length,
@@ -920,7 +361,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
         text: label.text || "",
         className: label.className || "",
         title: label.title || "",
-        point: clonePoint(label.point),
+        point: cloneScenePoint(label.point),
         screenOffsetPx: label.screenOffsetPx ? { ...label.screenOffsetPx } : null
       })),
       handleKinds: arrayValues(authoringOverlay?.handles).map((handle) => handle.kind || handle.type || ""),
@@ -931,285 +372,17 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       }))
     };
   }
-
   function updateAuthoringOverlayDebugState() {
-    if (typeof document === "undefined" || !document.documentElement) return;
-    const snapshot = authoringOverlaySnapshot();
-    document.documentElement.dataset.authoringOverlay = JSON.stringify({
-      lines: snapshot.lineCount,
-      faces: snapshot.faceCount,
-      handles: snapshot.handleCount,
-      labels: snapshot.labelCount,
-      quickLists: snapshot.quickListCount,
-      handleKinds: snapshot.handleKinds,
-      labelTexts: snapshot.labels.map((label) => label.text),
-      quickListItems: snapshot.quickLists.flatMap((quickList) => quickList.items)
-    });
+    domRuntime.setAuthoringOverlayDebugState(authoringOverlaySnapshot());
   }
-
-  function previewDelta() {
-    return objectPreview?.delta || [0, 0, 0];
-  }
-
-  function previewOpacity(fallback = 1) {
-    return finiteNumberOr(objectPreview?.opacity, fallback);
-  }
-
-  function previewPoint(point) {
-    return v.add(point, previewDelta());
-  }
-
-  function clonePreviewMember(member) {
-    if (!member?.id || !v.isVec3(member.start) || !v.isVec3(member.end)) return null;
-    return {
-      ...member,
-      start: [...member.start],
-      end: [...member.end]
-    };
-  }
-
-  function memberPreviewTransform(baseMember, draftMember) {
-    if (!baseMember || !draftMember) return null;
-    const baseLength = v.len(v.sub(baseMember.end, baseMember.start));
-    const draftLength = v.len(v.sub(draftMember.end, draftMember.start));
-    if (!finiteNumber(baseLength) || !finiteNumber(draftLength) || baseLength <= 1e-6 || draftLength <= 1e-6) return null;
-    return {
-      baseStart: baseMember.start,
-      baseFrame: memberFrame(baseMember),
-      baseLength,
-      draftStart: draftMember.start,
-      draftFrame: memberFrame(draftMember),
-      draftLength
-    };
-  }
-
-  function transformMemberPreviewPoint(point, transform) {
-    if (!transform || !v.isVec3(point)) return null;
-    const offset = v.sub(point, transform.baseStart);
-    const baseStation = v.dot(offset, transform.baseFrame.x);
-    const station = baseStation / transform.baseLength * transform.draftLength;
-    const y = v.dot(offset, transform.baseFrame.y);
-    const z = v.dot(offset, transform.baseFrame.z);
-    return v.add(transform.draftStart, v.add(
-      v.mul(transform.draftFrame.x, station),
-      v.add(v.mul(transform.draftFrame.y, y), v.mul(transform.draftFrame.z, z))
-    ));
-  }
-
-  function previewPointForItem(item, point) {
-    const transform = item?.objectId ? objectPreview?.memberTransforms?.get(item.objectId) : null;
-    return transformMemberPreviewPoint(point, transform) || previewPoint(point);
-  }
-
-  function transformedPreviewInstance(instance) {
-    const draft = objectPreview?.memberDrafts?.get(instance.objectId);
-    if (draft) {
-      const length = v.len(v.sub(draft.end, draft.start));
-      if (finiteNumber(length) && length > 1e-6) {
-        const frame = memberFrame(draft);
-        return {
-          ...instance,
-          start: [...draft.start],
-          axisX: frame.x,
-          axisY: frame.y,
-          axisZ: frame.z,
-          length,
-          opacity: previewOpacity(instance.opacity ?? 1)
-        };
-      }
-    }
-    return { ...instance, start: previewPoint(instance.start), opacity: previewOpacity(instance.opacity ?? 1) };
-  }
-
-  function previewCaptureItems() {
-    if (!objectPreview) return [];
-    const transformedFaces = objectPreview.faces.map((face) => ({
-      ...face,
-      points: face.points.map((point) => previewPointForItem(face, point))
-    }));
-    const transformedLines = objectPreview.lines.map((line) => ({
-      ...line,
-      points: line.points.map((point) => previewPointForItem(line, point))
-    }));
-    const transformedInstances = objectPreview.memberInstances.map(transformedPreviewInstance);
-    return [...transformedFaces, ...transformedLines, ...transformedInstances];
-  }
-
-  function beginObjectPreview(objectIds = []) {
-    if (!scene) return false;
-    const ids = new Set(uniqueTruthy([...objectIds]));
-    if (!ids.size) return false;
-    if (sameIdSet(objectPreview?.objectIds, ids)) return true;
-    const isPreviewItem = (item) => item?.objectId && ids.has(item.objectId);
-    const memberBases = new Map();
-    for (const id of ids) {
-      const member = clonePreviewMember(scene.project?.model?.members?.[id]);
-      if (member) memberBases.set(id, member);
-    }
-    objectPreview = {
-      objectIds: ids,
-      delta: [0, 0, 0],
-      opacity: null,
-      faces: arrayValues(scene.faces).filter(isPreviewItem).map(cloneSceneItem),
-      lines: arrayValues(scene.lines).filter(isPreviewItem).map(cloneSceneItem),
-      memberInstances: arrayValues(scene.memberInstances).filter(isPreviewItem).map(cloneSceneItem),
-      memberBases,
-      memberDrafts: new Map(),
-      memberTransforms: new Map()
-    };
-    invalidateRenderableCaches();
-    requestDraw();
-    return true;
-  }
-
-  function updateMemberMovePreview(member, options = {}) {
-    if (!member?.id) return false;
-    const ids = new Set(uniqueTruthy([member.id, ...arrayValues(options.objectIds)]));
-    if (!beginObjectPreview(ids)) return false;
-    const delta = v.isVec3(options.delta)
-      ? options.delta
-      : [0, 0, 0];
-    objectPreview.delta = [...delta];
-    objectPreview.opacity = finiteNumberOr(options.opacity, null);
-    const draftMember = {
-      ...member,
-      start: [...member.start],
-      end: [...member.end]
-    };
-    objectPreview.memberDrafts.set(member.id, draftMember);
-    const transform = memberPreviewTransform(objectPreview.memberBases.get(member.id), draftMember);
-    if (transform) objectPreview.memberTransforms.set(member.id, transform);
-    else objectPreview.memberTransforms.delete(member.id);
-    requestDraw();
-    return true;
-  }
-
-  function clearObjectPreview() {
-    if (!objectPreview) return;
-    objectPreview = null;
-    invalidateRenderableCaches();
-    requestDraw();
-  }
-
-  function translateSceneObjects(objectIds = [], delta = null) {
-    if (!scene || !objectIds.length || !v.isVec3(delta)) return false;
-    const ids = new Set(objectIds);
-    const movedPoints = new WeakSet();
-    let changed = false;
-    const movePoint = (point) => {
-      if (!Array.isArray(point) || movedPoints.has(point)) return;
-      point[0] += delta[0];
-      point[1] += delta[1];
-      point[2] += delta[2];
-      movedPoints.add(point);
-      changed = true;
-    };
-
-    for (const item of [...arrayValues(scene.faces), ...arrayValues(scene.lines)]) {
-      if (!ids.has(item.objectId)) continue;
-      for (const point of arrayValues(item.points)) movePoint(point);
-    }
-    for (const instance of arrayValues(scene.memberInstances)) {
-      if (!ids.has(instance.objectId)) continue;
-      movePoint(instance.start);
-    }
-    for (const objectId of ids) {
-      const detail = scene.lodDetails?.[objectId];
-      if (detail?.center) detail.center = v.add(detail.center, delta);
-    }
-    return changed;
-  }
-
-  function updateMemberInstance(member, options = {}) {
-    if (!scene || !member?.id) return false;
-    const translateObjectIds = arrayValues(options.translateObjectIds);
-    const translatedObjects = translateSceneObjects(translateObjectIds, options.delta);
-    const translatedMemberDetail = translatedObjects && translateObjectIds.includes(member.id);
-    const instance = arrayValues(scene.memberInstances).find((item) => item.objectId === member.id);
-    if (!instance) {
-      if (translatedObjects) {
-        invalidateRenderableCaches();
-        requestDraw();
-      }
-      return translatedObjects;
-    }
-    const length = v.len(v.sub(member.end, member.start));
-    if (!finiteNumber(length) || length <= 1e-6) return false;
-    const frame = memberFrame(member);
-
-    if (options.project) scene.project = options.project;
-    if (scene.project?.model?.members?.[member.id]) scene.project.model.members[member.id] = member;
-    instance.start = [...member.start];
-    instance.axisX = frame.x;
-    instance.axisY = frame.y;
-    instance.axisZ = frame.z;
-    instance.length = length;
-    if (scene.lodDetails && !translatedMemberDetail) delete scene.lodDetails[member.id];
-
-    invalidateRenderableCaches();
-    requestDraw();
-    return true;
-  }
-
-  function replaceSceneObjects(patchScene, objectIds = []) {
-    const idValues = objectIds && typeof objectIds[Symbol.iterator] === "function" ? [...objectIds] : [];
-    if (!scene || !patchScene || !idValues.length) return false;
-    const ids = new Set(uniqueTruthy(idValues));
-    if (!ids.size) return false;
-    const isPatchedObject = (item) => item?.objectId && ids.has(item.objectId);
-    const appendPatched = (target, source = []) => {
-      for (const item of source) {
-        if (isPatchedObject(item)) target.push(item);
-      }
-    };
-
-    scene.faces = arrayValues(scene.faces).filter((item) => !isPatchedObject(item));
-    scene.lines = arrayValues(scene.lines).filter((item) => !isPatchedObject(item));
-    scene.callouts = arrayValues(scene.callouts).filter((item) => !isPatchedObject(item));
-    scene.memberInstances = arrayValues(scene.memberInstances).filter((item) => !isPatchedObject(item));
-
-    appendPatched(scene.faces, patchScene.faces);
-    appendPatched(scene.lines, patchScene.lines);
-    appendPatched(scene.callouts, patchScene.callouts);
-    appendPatched(scene.memberInstances, patchScene.memberInstances);
-    invalidateMemberInstanceLookup();
-
-    scene.memberInstanceGeometries = {
-      ...(scene.memberInstanceGeometries || {}),
-      ...(patchScene.memberInstanceGeometries || {})
-    };
-    scene.lodDetails = scene.lodDetails || {};
-    for (const objectId of ids) delete scene.lodDetails[objectId];
-    for (const [objectId, detail] of Object.entries(patchScene.lodDetails || {})) {
-      if (ids.has(objectId)) scene.lodDetails[objectId] = detail;
-    }
-
-    scene.project = patchScene.project || scene.project;
-    scene.activeSmartComponentId = patchScene.activeSmartComponentId ?? scene.activeSmartComponentId;
-    scene.activeTrimJointId = patchScene.activeTrimJointId ?? scene.activeTrimJointId;
-    scene.activeTrimOperationId = patchScene.activeTrimOperationId ?? scene.activeTrimOperationId;
-    scene.activeSmartComponentObjectIds = patchScene.activeSmartComponentObjectIds || scene.activeSmartComponentObjectIds;
-    scene.generatedSmartComponentObjectIds = patchScene.generatedSmartComponentObjectIds || scene.generatedSmartComponentObjectIds;
-    projectedSceneTriangles = null;
-    invalidateRenderableCaches();
-    requestDraw();
-    return true;
-  }
-
-  function hideDimensionsBehindGeometry() {
-    return false;
-  }
-
   function hasDimensionOverlay() {
     return Boolean(arrayValues(dimensionOverlay.lines).length || arrayValues(dimensionOverlay.labels).length);
   }
-
   function fallbackAxisScreen(axisId) {
     if (axisId === "z") return { x: 0, y: -1 };
     if (axisId === "y") return { x: 0.62, y: -0.78 };
     return { x: 1, y: 0 };
   }
-
   function projectedAxisHandle(handle) {
     const origin = projectPoint(handle.point);
     if (!origin) return null;
@@ -1233,7 +406,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       scalePxPerWorld
     };
   }
-
   function projectedDragAxes(handle) {
     if (!handle?.dragAxes) return null;
     const xAxis = projectedAxisHandle({ point: handle.point, axis: handle.dragAxes.x, axisId: "x" });
@@ -1244,7 +416,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       y: { unit: yAxis.unit, scalePxPerWorld: yAxis.scalePxPerWorld }
     };
   }
-
   function axisHandleSegment(handle) {
     const projected = projectedAxisHandle(handle);
     if (!projected) return null;
@@ -1262,7 +433,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       }
     };
   }
-
   function rotationPlaneBasis(axis) {
     const normal = v.norm(axis || [0, 0, 1]);
     let seed = Math.abs(v.dot(normal, [0, 0, 1])) > 0.92 ? [0, 1, 0] : [0, 0, 1];
@@ -1277,13 +447,11 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       w: v.norm(v.cross(normal, u))
     };
   }
-
   function rotationArcAngles(handle) {
     const axisOffset = handle.axisId === "x" ? -0.55 : handle.axisId === "y" ? 0.2 : 0.95;
     const arc = Math.PI * 1.55;
     return { startAngle: axisOffset, endAngle: axisOffset + arc, arc };
   }
-
   function rotationHandleCenter(handle) {
     const projected = projectedAxisHandle(handle);
     if (!projected) return null;
@@ -1295,7 +463,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     const screen = projectPoint(centerPoint);
     return screen ? { point: centerPoint, screen } : null;
   }
-
   function projectedRotationArc(handle, segments = 36) {
     const center = rotationHandleCenter(handle);
     if (!center) return null;
@@ -1314,7 +481,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     }
     return points.length >= 2 ? { center: center.screen, points } : null;
   }
-
   function screenPolylineDistance(point, points) {
     let best = Infinity;
     for (let index = 1; index < points.length; index += 1) {
@@ -1322,7 +488,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     }
     return best;
   }
-
   function authoringHandleKey(handle) {
     if (!handle) return "";
     return [
@@ -1337,11 +502,9 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       handle.coordinateSpace || ""
     ].join(":");
   }
-
   function isAuthoringHovered(handle) {
     return authoringHandleKey(handle) === authoringHandleKey(authoringHoveredHandle);
   }
-
   function updateAuthoringHover(event) {
     if (!scene || drag) return false;
     const { screen, inside } = canvasPointer(event.clientX, event.clientY);
@@ -1354,14 +517,12 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     requestDraw();
     return Boolean(next);
   }
-
   function clearAuthoringHover() {
     if (!authoringHoveredHandle) return;
     authoringHoveredHandle = null;
     canvas.classList.remove("authoring-hover");
     requestDraw();
   }
-
   function pickAuthoringHandle(x, y) {
     if (!scene || !authoringOverlay?.handles?.length) return null;
     const cursor = { x, y };
@@ -1383,7 +544,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
         }
         continue;
       }
-
       if (handle.type === "rotation-ring") {
         const arc = projectedRotationArc(handle);
         if (!arc) continue;
@@ -1392,7 +552,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
         if (!best || distance < best.distance) best = { ...handle, distance, screen: arc.center };
         continue;
       }
-
       if ((handle.kind === "plate-sketch-edge" || handle.kind === "plate-sketch-construction-edge") && Array.isArray(handle.points) && handle.points.length >= 2) {
         const start = projectPoint(handle.points[0]);
         const end = projectPoint(handle.points[1]);
@@ -1412,7 +571,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
         }
         continue;
       }
-
       const projected = projectOffsetPoint(handle.point, handle.screenOffsetPx);
       if (!projected) continue;
       const distance = screenDistance(projected, cursor);
@@ -1426,7 +584,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     }
     return best;
   }
-
   function screenLineParameter(point, a, b) {
     const abx = b.x - a.x;
     const aby = b.y - a.y;
@@ -1435,18 +592,16 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       ? 0
       : clamp(((point.x - a.x) * abx + (point.y - a.y) * aby) / lengthSq, 0, 1);
   }
-
   function screenLineDistance(point, a, b) {
     const abx = b.x - a.x;
     const aby = b.y - a.y;
     const t = screenLineParameter(point, a, b);
     return Math.hypot(point.x - (a.x + abx * t), point.y - (a.y + aby * t));
   }
-
   function pickDimension(x, y) {
     if (!scene || !dimensionUi.hasClickHandler()) return null;
     if (!hasDimensionOverlay()) return null;
-    const labelHit = dimensionTextRenderer?.hitTest(x, y);
+    const labelHit = hitTestDimensionLabel(x, y);
     if (labelHit?.smartComponentId) return labelHit;
     const cursor = { x, y };
     let best = null;
@@ -1460,7 +615,6 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     }
     return best;
   }
-
   function dimensionPlacementDelta(dimension, totalDx, totalDy) {
     if (!Array.isArray(dimension?.labelUpAxis)) return 0;
     const anchor = Array.isArray(dimension.point)
@@ -1480,11 +634,9 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     const unit = { x: axis.x / scale, y: axis.y / scale };
     return (totalDx * unit.x + totalDy * unit.y) / scale;
   }
-
   function clearDimensionHover(event) {
     dimensionUi.setHoveredDimensionId(null, event);
   }
-
   function updateDimensionHover(event) {
     if (!scene || drag) return;
     if (!hasDimensionOverlay()) return clearDimensionHover(event);
@@ -1492,180 +644,28 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     if (!inside) return clearDimensionHover(event);
     dimensionUi.setHoveredDimensionId(pickDimension(screen.x, screen.y)?.dimensionId || null, event);
   }
-
   function renderAuthoringLabels() {
-    authoringLabelLayer.replaceChildren();
-    for (const label of arrayValues(authoringOverlay?.labels)) {
-      if (label.draftingDimension) continue;
-      const projected = projectOffsetPoint(label.point, label.screenOffsetPx);
-      if (!projected) continue;
-      const node = document.createElement("div");
-      node.className = `authoring-label ${label.className || ""}`.trim();
-      node.textContent = label.text;
-      if (label.title) node.title = label.title;
-      if (label.color) node.style.color = label.color;
-      node.style.left = `${projected.x}px`;
-      node.style.top = `${projected.y}px`;
-      if (label.rotateWithLine || label.labelLine || label.labelAxis) {
-        node.style.transformOrigin = "50% 50%";
-        node.style.transform = `${label.transform || "translate(-50%, -50%)"} rotate(${labelRotation(label, projectPoint)}rad)`;
-      } else if (label.transform) {
-        node.style.transform = label.transform;
+    domRuntime.renderAuthoringLabels({
+      authoringOverlay,
+      hoveredHandle: authoringHoveredHandle,
+      projectOffsetPoint,
+      projectPoint,
+      onQuickListAction: ({ quickList, item, event }) => authoringHandler?.quickListAction?.({ quickList, item, event }),
+      onQuickListHandled: () => {
+        authoringHoveredHandle = null;
+        canvas.classList.remove("authoring-hover");
+        requestDraw();
       }
-      authoringLabelLayer.appendChild(node);
-    }
-    for (const quickList of arrayValues(authoringOverlay?.quickLists)) {
-      const projected = projectOffsetPoint(quickList.point, quickList.screenOffsetPx);
-      const items = arrayValues(quickList.items);
-      if (!projected || !items.length) continue;
-      const node = document.createElement("div");
-      node.className = `authoring-quick-list ${quickList.className || ""}`.trim();
-      node.style.left = `${projected.x}px`;
-      node.style.top = `${projected.y}px`;
-      if (quickList.title) {
-        const title = document.createElement("div");
-        title.className = "authoring-quick-list-title";
-        title.textContent = quickList.title;
-        node.appendChild(title);
-      }
-      const buttonRow = document.createElement("div");
-      buttonRow.className = "authoring-quick-list-items";
-      for (const item of items) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = `authoring-quick-list-item ${item.tone || ""}${item.disabled ? " disabled" : ""}`.trim();
-        button.disabled = Boolean(item.disabled);
-        button.title = item.title || item.label || item.text || "";
-        if (item.badge) {
-          const badge = document.createElement("span");
-          badge.className = "authoring-quick-list-badge";
-          badge.textContent = item.badge;
-          button.appendChild(badge);
-        }
-        const label = document.createElement("span");
-        label.className = "authoring-quick-list-label";
-        label.textContent = item.label || item.text || item.id || "Action";
-        button.appendChild(label);
-        button.addEventListener("pointerdown", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        });
-        button.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (button.disabled) return;
-          const handled = authoringHandler?.quickListAction?.({ quickList, item, event });
-          if (handled !== false) {
-            authoringHoveredHandle = null;
-            canvas.classList.remove("authoring-hover");
-            requestDraw();
-          }
-        });
-        buttonRow.appendChild(button);
-      }
-      node.appendChild(buttonRow);
-      authoringLabelLayer.appendChild(node);
-    }
-    if (authoringHoveredHandle?.point) {
-      const projected = authoringHoveredHandle.screen || projectOffsetPoint(authoringHoveredHandle.point, authoringHoveredHandle.screenOffsetPx);
-      if (projected) {
-        const node = document.createElement("div");
-        const axis = authoringHoveredHandle.axisLabel || String(authoringHoveredHandle.axisId || "").toUpperCase();
-        const space = authoringHoveredHandle.spaceLabel ? `${authoringHoveredHandle.spaceLabel} ` : "";
-        const action = authoringHoveredHandle.type === "rotation-ring" ? "rotate" : authoringHoveredHandle.type === "axis" ? "move" : "edit";
-        node.className = "authoring-label manipulator-hover";
-        node.textContent = authoringHoveredHandle.hoverLabel || (axis ? `${space}${axis} ${action}` : action);
-        node.style.left = `${projected.x}px`;
-        node.style.top = `${projected.y}px`;
-        authoringLabelLayer.appendChild(node);
-      }
-    }
+    });
   }
-
-  function clipFromScreen(x, y, depth = -1) {
-    return [
-      x / canvas.width * 2 - 1,
-      1 - y / canvas.height * 2,
-      depth
-    ];
-  }
-
-  function pushScreenLine(positionData, colorData, a, b, rgba, depth = -1) {
-    pushVertex(positionData, colorData, clipFromScreen(a.x, a.y, depth), rgba);
-    pushVertex(positionData, colorData, clipFromScreen(b.x, b.y, depth), rgba);
-  }
-
-  function pushScreenSquare(positionData, colorData, center, radius, rgba) {
-    const left = center.x - radius;
-    const right = center.x + radius;
-    const top = center.y - radius;
-    const bottom = center.y + radius;
-    pushScreenLine(positionData, colorData, { x: left, y: center.y }, { x: right, y: center.y }, rgba);
-    pushScreenLine(positionData, colorData, { x: center.x, y: top }, { x: center.x, y: bottom }, rgba);
-    pushScreenLine(positionData, colorData, { x: left, y: top }, { x: right, y: top }, rgba);
-    pushScreenLine(positionData, colorData, { x: right, y: top }, { x: right, y: bottom }, rgba);
-    pushScreenLine(positionData, colorData, { x: right, y: bottom }, { x: left, y: bottom }, rgba);
-    pushScreenLine(positionData, colorData, { x: left, y: bottom }, { x: left, y: top }, rgba);
-  }
-
-  function pushScreenDiamond(positionData, colorData, center, radius, rgba) {
-    const top = { x: center.x, y: center.y - radius };
-    const right = { x: center.x + radius, y: center.y };
-    const bottom = { x: center.x, y: center.y + radius };
-    const left = { x: center.x - radius, y: center.y };
-    pushScreenLine(positionData, colorData, top, right, rgba);
-    pushScreenLine(positionData, colorData, right, bottom, rgba);
-    pushScreenLine(positionData, colorData, bottom, left, rgba);
-    pushScreenLine(positionData, colorData, left, top, rgba);
-  }
-
-  function pushScreenCircle(positionData, colorData, center, radius, rgba) {
-    const segments = 14;
-    let previous = null;
-    for (let index = 0; index <= segments; index += 1) {
-      const angle = index / segments * Math.PI * 2;
-      const point = {
-        x: center.x + Math.cos(angle) * radius,
-        y: center.y + Math.sin(angle) * radius
-      };
-      if (previous) pushScreenLine(positionData, colorData, previous, point, rgba);
-      previous = point;
-    }
-  }
-
   function renderSceneCallouts() {
-    calloutLayer.replaceChildren();
-    if (!scene?.callouts?.length) return;
-    for (const callout of scene.callouts) {
-      if (!shouldDrawSceneItem(callout)) continue;
-      const projected = projectPoint(callout.point);
-      if (!projected) continue;
-      const node = document.createElement("button");
-      node.type = "button";
-      node.className = "scene-callout trim-callout";
-      if (callout.operationId) node.dataset.operationId = callout.operationId;
-      node.style.left = `${projected.x}px`;
-      node.style.top = `${projected.y}px`;
-      node.title = callout.label || trimOperationLabel(callout.iconType);
-      node.innerHTML = trimOperationIconMarkup(callout.iconType, callout.colors, { class: "trim-callout-icon" });
-      node.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-      node.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        clickHandler?.({
-          collection: callout.collection,
-          objectId: callout.objectId,
-          ...(callout.operationId ? { operationId: callout.operationId } : {}),
-          ...(callout.regionKey ? { regionKey: callout.regionKey } : {})
-        });
-      });
-      calloutLayer.appendChild(node);
-    }
+    domRuntime.renderSceneCallouts({
+      scene,
+      shouldDrawSceneItem,
+      projectPoint,
+      onClick: (hit) => clickHandler?.(hit)
+    });
   }
-
   function projectOffsetPoint(point, offset = null) {
     const projected = projectPoint(point);
     if (!projected) return null;
@@ -1674,1188 +674,15 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       y: projected.y + (offset?.y || 0)
     };
   }
-
-  function pushAxisHandle(positionData, colorData, handle) {
-    const segment = axisHandleSegment(handle);
-    if (!segment) return;
-    const hovered = isAuthoringHovered(handle);
-    const rgba = hexToRgba(hovered ? "#fef08a" : handle.color, hovered ? 1 : 0.92);
-    pushScreenLine(positionData, colorData, segment.start, segment.end, rgba);
-
-    const head = (handle.arrowHeadPx || 9) + (hovered ? 3 : 0);
-    const back = {
-      x: segment.end.x - segment.unit.x * head,
-      y: segment.end.y - segment.unit.y * head
-    };
-    const normal = { x: -segment.unit.y, y: segment.unit.x };
-    pushScreenLine(positionData, colorData, segment.end, {
-      x: back.x + normal.x * head * 0.55,
-      y: back.y + normal.y * head * 0.55
-    }, rgba);
-    pushScreenLine(positionData, colorData, segment.end, {
-      x: back.x - normal.x * head * 0.55,
-      y: back.y - normal.y * head * 0.55
-    }, rgba);
-  }
-
-  function pushRotationRing(positionData, colorData, handle) {
-    const arc = projectedRotationArc(handle);
-    if (!arc) return;
-    const hovered = isAuthoringHovered(handle);
-    const rgba = hexToRgba(hovered ? "#fef08a" : handle.color, hovered ? 1 : 0.86);
-    for (let index = 1; index < arc.points.length; index += 1) {
-      pushScreenLine(positionData, colorData, arc.points[index - 1], arc.points[index], rgba);
-    }
-    const tip = arc.points[arc.points.length - 1];
-    const previous = arc.points[arc.points.length - 2];
-    const dx = tip.x - previous.x;
-    const dy = tip.y - previous.y;
-    const length = Math.hypot(dx, dy);
-    if (length <= 1e-6) return;
-    const head = (handle.arrowHeadPx || 6) + (hovered ? 2 : 0);
-    const tangent = { x: dx / length, y: dy / length };
-    const normal = { x: -tangent.y, y: tangent.x };
-    const back = {
-      x: tip.x - tangent.x * head,
-      y: tip.y - tangent.y * head
-    };
-    pushScreenLine(positionData, colorData, tip, {
-      x: back.x + normal.x * head * 0.55,
-      y: back.y + normal.y * head * 0.55
-    }, rgba);
-    pushScreenLine(positionData, colorData, tip, {
-      x: back.x - normal.x * head * 0.55,
-      y: back.y - normal.y * head * 0.55
-    }, rgba);
-  }
-
-  function pushAuthoringHandle(positionData, colorData, handle) {
-    if (handle.visible === false) return;
-    if (handle.type === "axis") {
-      pushAxisHandle(positionData, colorData, handle);
-      return;
-    }
-    if (handle.type === "rotation-ring") {
-      pushRotationRing(positionData, colorData, handle);
-      return;
-    }
-    const projected = projectOffsetPoint(handle.point, handle.screenOffsetPx);
-    if (!projected) return;
-    const hovered = isAuthoringHovered(handle);
-    const hoverGrow = finiteNumberOr(handle.hoverRadiusAddPx, 3);
-    const radius = (handle.radius || 10) + (hovered ? hoverGrow : 0);
-    const color = hexToRgba(
-      hovered ? handle.hoverColor || "#fef08a" : handle.color,
-      hovered ? finiteNumberOr(handle.hoverOpacity, 1) : finiteNumberOr(handle.opacity, 1)
-    );
-    if (handle.type === "space-toggle") {
-      pushScreenDiamond(positionData, colorData, projected, radius, color);
-      return;
-    }
-    if (handle.type === "circle") {
-      pushScreenCircle(positionData, colorData, projected, radius, color);
-      return;
-    }
-    pushScreenSquare(positionData, colorData, projected, radius, color);
-  }
-
-  function pushVertex(positionData, colorData, point, rgba) {
-    positionData.push(point[0], point[1], point[2]);
-    colorData.push(rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3] / 255);
-  }
-
-  function uploadDynamicAttribute(buffer, location, size, data) {
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(location);
-    gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
-  }
-
-  function drawArrays(mode, positionData, colorData) {
-    if (!positionData.length) return;
-    const state = initRenderer();
-
-    gl.useProgram(state.program);
-    resetInstancedAttribs(state.position, state.color);
-    uploadDynamicAttribute(state.positionBuffer, state.position, 3, positionData);
-    uploadDynamicAttribute(state.colorBuffer, state.color, 4, colorData);
-    gl.drawArrays(mode, 0, positionData.length / 3);
-  }
-
-  function uploadBuffer(data, usage = gl.STATIC_DRAW) {
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, data instanceof Float32Array ? data : new Float32Array(data), usage);
-    return buffer;
-  }
-
-  function resetInstancedAttribs(...locations) {
-    if (!memberInstanceRenderer?.instancing) return;
-    for (const location of locations) {
-      if (location >= 0) memberInstanceRenderer.instancing.vertexAttribDivisorANGLE(location, 0);
-    }
-  }
-
-  function deleteRenderGroup(group) {
-    if (!group) return;
-    if (group.positionBuffer) gl.deleteBuffer(group.positionBuffer);
-    if (group.colorBuffer) gl.deleteBuffer(group.colorBuffer);
-    if (group.pickColorBuffer) gl.deleteBuffer(group.pickColorBuffer);
-  }
-
-  function invalidateStaticSceneCache() {
-    if (!staticSceneCache) return;
-    for (const group of [
-      ...arrayValues(staticSceneCache.opaqueFaces),
-      ...arrayValues(staticSceneCache.transparentFaces),
-      ...arrayValues(staticSceneCache.lines)
-    ]) {
-      deleteRenderGroup(group);
-    }
-    staticSceneCache = null;
-  }
-
-  function invalidateMemberInstanceCache() {
-    if (!memberInstanceCache) return;
-    const deleted = new Set();
-    const deleteOnce = (buffer) => {
-      if (!buffer || deleted.has(buffer)) return;
-      gl.deleteBuffer(buffer);
-      deleted.add(buffer);
-    };
-    for (const group of arrayValues(memberInstanceCache.staticGroups)) {
-      deleteOnce(group.localPositionBuffer);
-      deleteOnce(group.localNormalBuffer);
-      deleteOnce(group.startBuffer);
-      deleteOnce(group.axisXBuffer);
-      deleteOnce(group.axisYBuffer);
-      deleteOnce(group.axisZBuffer);
-      deleteOnce(group.lengthBuffer);
-      deleteOnce(group.colorBuffer);
-      deleteOnce(group.pickColorBuffer);
-    }
-    memberInstanceCache = null;
-  }
-
-  function invalidateRenderableCaches() {
-    invalidateStaticSceneCache();
-    invalidateMemberInstanceCache();
-  }
-
-  function appendWorldVertex(group, point, rgba, pickRgba = null) {
-    if (Array.isArray(group) && Array.isArray(point) && Array.isArray(rgba)) {
-      const positions = group;
-      const colors = point;
-      const worldPoint = rgba;
-      const color = pickRgba;
-      if (!Array.isArray(color)) return;
-      positions.push(worldPoint[0], worldPoint[1], worldPoint[2]);
-      colors.push(color[0] / 255, color[1] / 255, color[2] / 255, color[3] / 255);
-      return;
-    }
-    group.positions.push(point[0], point[1], point[2]);
-    group.colors.push(rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3] / 255);
-    if (pickRgba) group.pickColors.push(pickRgba[0], pickRgba[1], pickRgba[2], pickRgba[3]);
-  }
-
-  function renderGroupBucket(bucket, key = "__visible") {
-    let group = bucket.get(key);
-    if (!group) {
-      group = { lodDetailObjectId: null, positions: [], colors: [], pickColors: [] };
-      bucket.set(key, group);
-    }
-    return group;
-  }
-
-  function uploadRenderGroups(bucket, mode) {
-    return [...bucket.values()]
-      .filter((group) => group.positions.length)
-      .map((group) => ({
-        mode,
-        lodDetailObjectId: group.lodDetailObjectId,
-        vertexCount: group.positions.length / 3,
-        positionBuffer: uploadBuffer(new Float32Array(group.positions)),
-        colorBuffer: uploadBuffer(new Float32Array(group.colors)),
-        pickColorBuffer: group.pickColors.length ? uploadBuffer(new Float32Array(group.pickColors)) : null
-      }));
-  }
-
-  function buildStaticSceneCache() {
-    const opaqueFaces = new Map();
-    const transparentFaces = new Map();
-    const lineGroups = new Map();
-    const defaultEdgeColor = settings.render.edges.defaultColor;
-
-    for (const face of scene.faces) {
-      if (!shouldDrawSceneItem(face)) continue;
-      const surfaceGroup = renderGroupBucket((face.opacity ?? 1) >= 1 ? opaqueFaces : transparentFaces);
-      const rgba = shadedRgba(face.color, face.points, face.opacity ?? 1);
-      const pickRgba = pickColorForItem(face);
-      for (const triangle of triangulateFace(face.points)) {
-        for (const point of triangle) appendWorldVertex(surfaceGroup, point, rgba, pickRgba);
-      }
-
-      if (face.hideEdges) continue;
-      const edgeGroup = renderGroupBucket(lineGroups);
-      const edgeRgba = hexToRgba(defaultEdgeColor, face.opacity ?? 1);
-      for (let i = 0; i < face.points.length; i += 1) {
-        appendWorldVertex(edgeGroup, face.points[i], edgeRgba);
-        appendWorldVertex(edgeGroup, face.points[(i + 1) % face.points.length], edgeRgba);
-      }
-    }
-
-    for (const line of scene.lines) {
-      if (!shouldDrawSceneItem(line)) continue;
-      const lineGroup = renderGroupBucket(lineGroups);
-      const rgba = hexToRgba(line.color, line.opacity ?? 1);
-      appendWorldVertex(lineGroup, line.points[0], rgba);
-      appendWorldVertex(lineGroup, line.points[1], rgba);
-    }
-
-    return {
-      opaqueFaces: uploadRenderGroups(opaqueFaces, gl.TRIANGLES),
-      transparentFaces: uploadRenderGroups(transparentFaces, gl.TRIANGLES),
-      lines: uploadRenderGroups(lineGroups, gl.LINES)
-    };
-  }
-
-  function drawStaticRenderGroups(groups) {
-    if (!groups.length) return;
-    const state = prepareStaticSceneRenderer();
-
-    for (const group of groups) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
-      gl.enableVertexAttribArray(state.position);
-      gl.vertexAttribPointer(state.position, 3, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, group.colorBuffer);
-      gl.enableVertexAttribArray(state.color);
-      gl.vertexAttribPointer(state.color, 4, gl.FLOAT, false, 0, 0);
-      gl.drawArrays(group.mode, 0, group.vertexCount);
-    }
-  }
-
-  function drawWorldArrays(mode, positionData, colorData) {
-    if (!positionData.length) return;
-    const state = prepareStaticSceneRenderer();
-
-    if (!state.dynamicPositionBuffer) state.dynamicPositionBuffer = gl.createBuffer();
-    if (!state.dynamicColorBuffer) state.dynamicColorBuffer = gl.createBuffer();
-
-    uploadDynamicAttribute(state.dynamicPositionBuffer, state.position, 3, positionData);
-    uploadDynamicAttribute(state.dynamicColorBuffer, state.color, 4, colorData);
-    gl.drawArrays(mode, 0, positionData.length / 3);
-  }
-
-  function instanceRgba(instance) {
-    const rgba = hexToRgba(instance.color, instance.opacity ?? 1);
-    return [rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3] / 255];
-  }
-
-  function buildMemberInstanceCache() {
-    if (!scene?.memberInstances?.length) return { staticGroups: [] };
-
-    const geometryBuffers = new Map();
-    const geometryBufferFor = (profileId, geometry) => {
-      const existing = geometryBuffers.get(profileId);
-      if (existing) return existing;
-      const buffers = {
-        vertexCount: geometry.positions.length / 3,
-        localPositionBuffer: uploadBuffer(geometry.positions),
-        localNormalBuffer: uploadBuffer(geometry.normals)
-      };
-      geometryBuffers.set(profileId, buffers);
-      return buffers;
-    };
-
-    const appendInstanceData = (group, instance) => {
-      group.starts.push(...instance.start);
-      group.axesX.push(...instance.axisX);
-      group.axesY.push(...instance.axisY);
-      group.axesZ.push(...instance.axisZ);
-      group.lengths.push(instance.length);
-      group.colors.push(...instanceRgba(instance));
-      group.pickColors.push(...pickColorForItem(instance));
-    };
-
-    const makeDataGroup = (geometry) => ({
-      geometry,
-      starts: [],
-      axesX: [],
-      axesY: [],
-      axesZ: [],
-      lengths: [],
-      colors: [],
-      pickColors: []
-    });
-
-    const staticGroups = new Map();
-
-    for (const instance of scene.memberInstances) {
-      if (isObjectPreviewed(instance)) continue;
-      const geometry = scene.memberInstanceGeometries?.[instance.profileId];
-      if (!geometry?.positions?.length) continue;
-      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
-      const group = staticGroups.get(instance.profileId) || makeDataGroup(geometry);
-      appendInstanceData(group, instance);
-      staticGroups.set(instance.profileId, group);
-    }
-
-    const staticCaches = [...staticGroups.entries()].map(([profileId, group]) => ({
-      ...geometryBufferFor(profileId, group.geometry),
-      instanceCount: group.lengths.length,
-      startBuffer: uploadBuffer(group.starts),
-      axisXBuffer: uploadBuffer(group.axesX),
-      axisYBuffer: uploadBuffer(group.axesY),
-      axisZBuffer: uploadBuffer(group.axesZ),
-      lengthBuffer: uploadBuffer(group.lengths),
-      colorBuffer: uploadBuffer(group.colors),
-      pickColorBuffer: uploadBuffer(group.pickColors)
-    }));
-
-    return { staticGroups: staticCaches };
-  }
-
-  function bindAttribute(location, buffer, size, divisor = 0) {
-    if (location < 0) return;
-    const state = initMemberInstanceRenderer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.enableVertexAttribArray(location);
-    gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
-    state.instancing.vertexAttribDivisorANGLE(location, divisor);
-  }
-
-  function prepareStaticSceneRenderer() {
-    const state = initStaticSceneRenderer();
-    const view = camera.viewUniforms(scene, canvas);
-    gl.useProgram(state.program);
-    resetInstancedAttribs(state.position, state.color);
-    setViewUniforms(state, view);
-    return state;
-  }
-
-  function setViewUniforms(state, view) {
-    const { uniforms } = state;
-    gl.uniform1f(uniforms.yaw, view.yaw);
-    gl.uniform1f(uniforms.pitch, view.pitch);
-    gl.uniform1f(uniforms.scale, view.scale);
-    gl.uniform2fv(uniforms.pan, view.pan);
-    gl.uniform2fv(uniforms.viewport, view.viewport);
-    gl.uniform3fv(uniforms.pivot, view.pivot);
-    gl.uniform1f(uniforms.depthHalf, view.depthHalf);
-  }
-
-  function setLightingUniforms(state, ambient, diffuse) {
-    const { uniforms } = state;
-    gl.uniform3fv(uniforms.light, settings.render.lighting.direction);
-    gl.uniform1f(uniforms.ambient, ambient);
-    gl.uniform1f(uniforms.diffuse, diffuse);
-  }
-
-  function memberInstanceAttributeLocations(state) {
-    return [state.localPosition, state.localNormal, state.start, state.axisX, state.axisY, state.axisZ, state.length, state.color];
-  }
-
-  function bindMemberInstanceGroup(state, group, colorBuffer) {
-    bindAttribute(state.localPosition, group.localPositionBuffer, 3);
-    bindAttribute(state.localNormal, group.localNormalBuffer, 3);
-    bindAttribute(state.start, group.startBuffer, 3, 1);
-    bindAttribute(state.axisX, group.axisXBuffer, 3, 1);
-    bindAttribute(state.axisY, group.axisYBuffer, 3, 1);
-    bindAttribute(state.axisZ, group.axisZBuffer, 3, 1);
-    bindAttribute(state.length, group.lengthBuffer, 1, 1);
-    bindAttribute(state.color, colorBuffer, 4, 1);
-  }
-
-  function resetMemberInstanceDivisors(state) {
-    for (const location of memberInstanceAttributeLocations(state)) {
-      if (location >= 0) state.instancing.vertexAttribDivisorANGLE(location, 0);
-    }
-  }
-
-  function preparedMemberInstanceGroups() {
-    if (!scene?.memberInstances?.length) return null;
-    const state = initMemberInstanceRenderer();
-    if (!state) return null;
-    if (!memberInstanceCache) memberInstanceCache = buildMemberInstanceCache();
-    const groups = memberInstanceCache.staticGroups;
-    return groups.length ? { state, groups } : null;
-  }
-
-  function prepareMemberInstanceDraw(ambient, diffuse) {
-    const prepared = preparedMemberInstanceGroups();
-    if (!prepared) return null;
-    const view = camera.viewUniforms(scene, canvas);
-    gl.useProgram(prepared.state.program);
-    setViewUniforms(prepared.state, view);
-    setLightingUniforms(prepared.state, ambient, diffuse);
-    return prepared;
-  }
-
-  function drawMemberInstances() {
-    const prepared = prepareMemberInstanceDraw(settings.render.lighting.ambient, settings.render.lighting.diffuse);
-    if (!prepared) return;
-    const { state, groups } = prepared;
-
-    for (const group of groups) {
-      if (!group.instanceCount) continue;
-      bindMemberInstanceGroup(state, group, group.colorBuffer);
-      state.instancing.drawArraysInstancedANGLE(gl.TRIANGLES, 0, group.vertexCount, group.instanceCount);
-    }
-
-    resetMemberInstanceDivisors(state);
-  }
-
-  function appendMemberInstanceSurface(positionData, colorData, instance, colorOverride = null, sourceScene = scene) {
-    const geometry = sourceScene?.memberInstanceGeometries?.[instance.profileId];
-    if (!geometry?.positions?.length) return;
-    const base = hexToRgba(colorOverride || instance.color, instance.opacity ?? 1);
-    const light = v.norm(settings.render.lighting.direction);
-
-    for (let index = 0; index < geometry.positions.length; index += 3) {
-      const local = [geometry.positions[index], geometry.positions[index + 1], geometry.positions[index + 2]];
-      const normalLocal = [geometry.normals[index], geometry.normals[index + 1], geometry.normals[index + 2]];
-      const world = v.add(instance.start, v.add(
-        v.mul(instance.axisX, local[0] * instance.length),
-        v.add(v.mul(instance.axisY, local[1]), v.mul(instance.axisZ, local[2]))
-      ));
-      const normal = v.norm(v.add(
-        v.mul(instance.axisX, normalLocal[0]),
-        v.add(v.mul(instance.axisY, normalLocal[1]), v.mul(instance.axisZ, normalLocal[2]))
-      ));
-      const shade = settings.render.lighting.ambient + Math.max(0, v.dot(normal, light)) * settings.render.lighting.diffuse;
-      appendWorldVertex(positionData, colorData, world, [
-        Math.round(base[0] * shade),
-        Math.round(base[1] * shade),
-        Math.round(base[2] * shade),
-        base[3]
-      ]);
-    }
-  }
-
-  function appendWorldLine(positionData, colorData, a, b, rgba) {
-    appendWorldVertex(positionData, colorData, a, rgba);
-    appendWorldVertex(positionData, colorData, b, rgba);
-  }
-
-  function memberInstancePoint(instance, x, y, z) {
-    return v.add(instance.start, v.add(
-      v.mul(instance.axisX, x * instance.length),
-      v.add(v.mul(instance.axisY, y), v.mul(instance.axisZ, z))
-    ));
-  }
-
-  function appendMemberInstanceOutline(positionData, colorData, instance, rgba, sourceScene = scene) {
-    const contours = arrayValues(libraryProfileById(sourceScene?.profiles, instance.profileId)?.section?.contours);
-    for (const contour of contours) {
-      const points = arrayValues(contour.points);
-      if (points.length < 2) continue;
-      for (let index = 0; index < points.length; index += 1) {
-        const a = points[index];
-        const b = points[(index + 1) % points.length];
-        appendWorldLine(positionData, colorData, memberInstancePoint(instance, 0, a[0], a[1]), memberInstancePoint(instance, 0, b[0], b[1]), rgba);
-        appendWorldLine(positionData, colorData, memberInstancePoint(instance, 1, a[0], a[1]), memberInstancePoint(instance, 1, b[0], b[1]), rgba);
-        appendWorldLine(positionData, colorData, memberInstancePoint(instance, 0, a[0], a[1]), memberInstancePoint(instance, 1, a[0], a[1]), rgba);
-      }
-    }
-  }
-
-  function appendPreviewMemberInstance(positionData, colorData, instance) {
-    appendMemberInstanceSurface(positionData, colorData, transformedPreviewInstance(instance));
-  }
-
-  function drawObjectPreviewSurfaces(transparent = false) {
-    if (!objectPreview) return;
-    const positions = [];
-    const colors = [];
-    for (const instance of objectPreview.memberInstances) {
-      const opacity = instance.opacity ?? 1;
-      if ((opacity < 1) !== transparent) continue;
-      appendPreviewMemberInstance(positions, colors, instance);
-    }
-    for (const face of objectPreview.faces) {
-      const opacity = previewOpacity(face.opacity ?? 1);
-      if ((opacity < 1) !== transparent) continue;
-      const points = face.points.map((point) => previewPointForItem(face, point));
-      const rgba = shadedRgba(face.color, points, opacity);
-      for (const triangle of triangulateFace(points)) {
-        for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
-      }
-    }
-    drawWorldArrays(gl.TRIANGLES, positions, colors);
-  }
-
-  function drawAuthoringPreviewSurfaces(transparent = false) {
-    if (!authoringPreviewScene) return;
-    const positions = [];
-    const colors = [];
-    for (const instance of arrayValues(authoringPreviewScene.memberInstances)) {
-      const opacity = instance.opacity ?? 1;
-      if ((opacity < 1) !== transparent) continue;
-      appendMemberInstanceSurface(positions, colors, instance, null, authoringPreviewScene);
-    }
-    for (const face of arrayValues(authoringPreviewScene.faces)) {
-      const opacity = face.opacity ?? 1;
-      if ((opacity < 1) !== transparent) continue;
-      const rgba = shadedRgba(face.color, face.points, opacity);
-      for (const triangle of triangulateFace(face.points)) {
-        for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
-      }
-    }
-    drawWorldArrays(gl.TRIANGLES, positions, colors);
-  }
-
-  function drawObjectPreviewLines() {
-    if (!objectPreview) return;
-    const positions = [];
-    const colors = [];
-    const defaultEdgeColor = settings.render.edges.defaultColor;
-
-    for (const face of objectPreview.faces) {
-      if (face.hideEdges) continue;
-      const points = face.points.map((point) => previewPointForItem(face, point));
-      const rgba = hexToRgba(defaultEdgeColor, previewOpacity(face.opacity ?? 1));
-      for (let index = 0; index < points.length; index += 1) {
-        appendWorldVertex(positions, colors, points[index], rgba);
-        appendWorldVertex(positions, colors, points[(index + 1) % points.length], rgba);
-      }
-    }
-
-    for (const line of objectPreview.lines) {
-      const rgba = hexToRgba(line.color, previewOpacity(line.opacity ?? 1));
-      appendWorldVertex(positions, colors, previewPointForItem(line, line.points[0]), rgba);
-      appendWorldVertex(positions, colors, previewPointForItem(line, line.points[1]), rgba);
-    }
-    drawWorldArrays(gl.LINES, positions, colors);
-  }
-
-  function drawAuthoringPreviewLines() {
-    if (!authoringPreviewScene) return;
-    const positions = [];
-    const colors = [];
-    const defaultEdgeColor = settings.render.edges.defaultColor;
-
-    for (const instance of arrayValues(authoringPreviewScene.memberInstances)) {
-      appendMemberInstanceOutline(positions, colors, instance, hexToRgba(instance.edgeColor || defaultEdgeColor, instance.opacity ?? 1), authoringPreviewScene);
-    }
-    for (const face of arrayValues(authoringPreviewScene.faces)) {
-      if (face.hideEdges) continue;
-      const rgba = hexToRgba(face.edgeColor || defaultEdgeColor, face.opacity ?? 1);
-      for (let index = 0; index < face.points.length; index += 1) {
-        appendWorldVertex(positions, colors, face.points[index], rgba);
-        appendWorldVertex(positions, colors, face.points[(index + 1) % face.points.length], rgba);
-      }
-    }
-    for (const line of arrayValues(authoringPreviewScene.lines)) {
-      const rgba = hexToRgba(line.color, line.opacity ?? 1);
-      appendWorldVertex(positions, colors, line.points[0], rgba);
-      appendWorldVertex(positions, colors, line.points[1], rgba);
-    }
-    drawWorldArrays(gl.LINES, positions, colors);
-  }
-
-  function drawHighlightOverlayLines() {
-    const visibleHighlightedObjectIds = highlightedObjectIdsForOverlay();
-    if (!visibleHighlightedObjectIds.size || !useHighlightOverlay()) return;
-    const positions = [];
-    const colors = [];
-    const rgba = hexToRgba(highlight.edge);
-    for (const instance of memberInstancesForPick(visibleHighlightedObjectIds)) {
-      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
-      appendMemberInstanceOutline(positions, colors, instance, rgba);
-    }
-    for (const face of arrayValues(scene.faces)) {
-      if (!visibleHighlightedObjectIds.has(face.objectId) || face.hideEdges) continue;
-      if (!shouldDrawSceneItem(face)) continue;
-      for (let index = 0; index < face.points.length; index += 1) {
-        appendWorldLine(positions, colors, face.points[index], face.points[(index + 1) % face.points.length], rgba);
-      }
-    }
-    for (const line of arrayValues(scene.lines)) {
-      if (!visibleHighlightedObjectIds.has(line.objectId)) continue;
-      if (!shouldDrawSceneItem(line)) continue;
-      appendWorldLine(positions, colors, line.points[0], line.points[1], rgba);
-    }
-    drawWorldArrays(gl.LINES, positions, colors);
-  }
-
-  function drawStaticPickGroups(groups) {
-    if (!groups.length) return;
-    const state = prepareStaticSceneRenderer();
-
-    for (const group of groups) {
-      if (!group.pickColorBuffer) continue;
-      gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
-      gl.enableVertexAttribArray(state.position);
-      gl.vertexAttribPointer(state.position, 3, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, group.pickColorBuffer);
-      gl.enableVertexAttribArray(state.color);
-      gl.vertexAttribPointer(state.color, 4, gl.FLOAT, false, 0, 0);
-      gl.drawArrays(group.mode, 0, group.vertexCount);
-    }
-  }
-
-  function drawMemberInstancePickGroups() {
-    const prepared = prepareMemberInstanceDraw(1, 0);
-    if (!prepared) return;
-    const { state, groups } = prepared;
-
-    for (const group of groups) {
-      if (!group.instanceCount || !group.pickColorBuffer) continue;
-      bindMemberInstanceGroup(state, group, group.pickColorBuffer);
-      state.instancing.drawArraysInstancedANGLE(gl.TRIANGLES, 0, group.vertexCount, group.instanceCount);
-    }
-
-    resetMemberInstanceDivisors(state);
-  }
-
-  function pickSceneGpu(x, y, options = {}) {
-    if (!scene || !gl) return null;
-    if (!staticSceneCache) staticSceneCache = buildStaticSceneCache();
-    if (!memberInstanceCache) memberInstanceCache = buildMemberInstanceCache();
-
-    const background = [0, 0, 0, 1];
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(background[0], background[1], background[2], background[3]);
-    gl.clearDepth(1);
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-    gl.depthMask(true);
-    gl.disable(gl.BLEND);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    gl.enable(gl.POLYGON_OFFSET_FILL);
-    gl.polygonOffset(1, 1);
-    if (options.includeInstances !== false) drawMemberInstancePickGroups();
-    drawStaticPickGroups(staticSceneCache.opaqueFaces);
-    if (options.includeTransparent !== false) drawStaticPickGroups(staticSceneCache.transparentFaces);
-    gl.disable(gl.POLYGON_OFFSET_FILL);
-
-    const pixel = new Uint8Array(4);
-    const pixelX = clamp(Math.floor(x), 0, canvas.width - 1);
-    const pixelY = clamp(canvas.height - 1 - Math.floor(y), 0, canvas.height - 1);
-    gl.readPixels(pixelX, pixelY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-    const picked = pickObjectFromPixel(pixel);
-    draw();
-    return picked ? { depth: 0, point: null, face: picked } : null;
-  }
-
-  function draw() {
-    if (!scene || !gl) return;
-    invalidateScenePickCache();
-    if (!staticSceneCache) staticSceneCache = buildStaticSceneCache();
-    const background = hexToRgb(settings.render.background).map((value) => value / 255);
-    const wireframeMode = displayMode === "wireframe";
-
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(background[0], background[1], background[2], 1);
-    gl.clearDepth(1);
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    gl.enable(gl.POLYGON_OFFSET_FILL);
-    gl.polygonOffset(1, 1);
-    if (!wireframeMode) {
-      drawMemberInstances();
-      drawStaticRenderGroups(staticSceneCache.opaqueFaces);
-      drawObjectPreviewSurfaces(false);
-      drawAuthoringPreviewSurfaces(false);
-    }
-    gl.disable(gl.POLYGON_OFFSET_FILL);
-    if (!wireframeMode && (staticSceneCache.transparentFaces.length || objectPreview || authoringPreviewScene)) {
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      gl.depthMask(false);
-      drawStaticRenderGroups(staticSceneCache.transparentFaces);
-      drawObjectPreviewSurfaces(true);
-      drawAuthoringPreviewSurfaces(true);
-      gl.depthMask(true);
-      gl.disable(gl.BLEND);
-    }
-
-    gl.lineWidth(settings.render.edges.lineWidth);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    drawStaticRenderGroups(staticSceneCache.lines);
-    drawObjectPreviewLines();
-    drawAuthoringPreviewLines();
-    gl.lineWidth(Math.max(2, settings.render.edges.lineWidth));
-    drawHighlightOverlayLines();
-    gl.lineWidth(settings.render.edges.lineWidth);
-
-    const depthTestedAuthoringFacePositions = [];
-    const depthTestedAuthoringFaceColors = [];
-    const xrayAuthoringFacePositions = [];
-    const xrayAuthoringFaceColors = [];
-    for (const face of arrayValues(authoringOverlay.faces)) {
-      const rgba = hexToRgba(face.color, face.opacity ?? 0.32);
-      const positions = face.depthTest === true ? depthTestedAuthoringFacePositions : xrayAuthoringFacePositions;
-      const colors = face.depthTest === true ? depthTestedAuthoringFaceColors : xrayAuthoringFaceColors;
-      for (const triangle of triangulateFace(arrayValues(face.points))) {
-        for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
-      }
-    }
-    if (depthTestedAuthoringFacePositions.length) {
-      gl.enable(gl.DEPTH_TEST);
-      gl.depthMask(false);
-      gl.enable(gl.POLYGON_OFFSET_FILL);
-      gl.polygonOffset(-1, -1);
-      drawWorldArrays(gl.TRIANGLES, depthTestedAuthoringFacePositions, depthTestedAuthoringFaceColors);
-      gl.disable(gl.POLYGON_OFFSET_FILL);
-      gl.depthMask(true);
-    }
-    if (xrayAuthoringFacePositions.length) {
-      gl.disable(gl.DEPTH_TEST);
-      gl.depthMask(false);
-      drawWorldArrays(gl.TRIANGLES, xrayAuthoringFacePositions, xrayAuthoringFaceColors);
-      gl.depthMask(true);
-      gl.enable(gl.DEPTH_TEST);
-    }
-
-    const authoringLineGroups = new Map();
-    const defaultAuthoringLineWidth = Math.max(settings.authoring?.lineWidth || 2, settings.render.edges.lineWidth);
-    const authoringLineGroup = (lineWidth) => {
-      const width = Number.isFinite(lineWidth) ? Math.max(1, lineWidth) : defaultAuthoringLineWidth;
-      const key = String(width);
-      if (!authoringLineGroups.has(key)) authoringLineGroups.set(key, { width, positions: [], colors: [] });
-      return authoringLineGroups.get(key);
-    };
-    const isHoveredAuthoringLine = (line) => {
-      if (!authoringHoveredHandle?.edgeId || !line?.edgeId || authoringHoveredHandle.edgeId !== line.edgeId) return false;
-      return (authoringHoveredHandle.kind === "plate-sketch-edge" && line.kind === "plate-sketch-edge")
-        || (authoringHoveredHandle.kind === "plate-sketch-construction-edge" && line.kind === "plate-sketch-construction-edge");
-    };
-    for (const line of arrayValues(authoringOverlay.lines)) {
-      const hovered = isHoveredAuthoringLine(line);
-      const rgba = hexToRgba(hovered ? settings.authoring?.hoverColor || "#fef08a" : line.color);
-      const group = authoringLineGroup(hovered ? Math.max(line.lineWidth || defaultAuthoringLineWidth, settings.authoring?.hoverLineWidth || 6) : line.lineWidth);
-      pushVertex(group.positions, group.colors, clipPoint(line.points[0]), rgba);
-      pushVertex(group.positions, group.colors, clipPoint(line.points[1]), rgba);
-    }
-    if (authoringLineGroups.size) {
-      gl.disable(gl.DEPTH_TEST);
-      for (const group of authoringLineGroups.values()) {
-        gl.lineWidth(group.width);
-        drawArrays(gl.LINES, group.positions, group.colors);
-      }
-      gl.enable(gl.DEPTH_TEST);
-      gl.lineWidth(settings.render.edges.lineWidth);
-    }
-    gl.disable(gl.BLEND);
-
-    const dimensionPositions = [];
-    const dimensionColors = [];
-    for (const line of arrayValues(dimensionOverlay.lines)) {
-      const rgba = hexToRgba(dimensionUi.isHovered(line) ? dimensionUi.hoverColor : line.color);
-      pushVertex(dimensionPositions, dimensionColors, clipPoint(line.points[0]), rgba);
-      pushVertex(dimensionPositions, dimensionColors, clipPoint(line.points[1]), rgba);
-    }
-    if (dimensionPositions.length) {
-      if (hideDimensionsBehindGeometry()) gl.enable(gl.DEPTH_TEST);
-      else gl.disable(gl.DEPTH_TEST);
-      drawArrays(gl.LINES, dimensionPositions, dimensionColors);
-      gl.enable(gl.DEPTH_TEST);
-    }
-    const draftingAuthoringLabels = arrayValues(authoringOverlay.labels).filter((label) => label.draftingDimension);
-    dimensionTextRenderer?.draw({
-      labels: [...arrayValues(dimensionOverlay.labels), ...draftingAuthoringLabels],
-      projectPoint,
-      screenScale: () => camera.screenScale(),
-      isHovered: (label) => dimensionUi.isHovered(label),
-      hideBehindGeometry: hideDimensionsBehindGeometry()
-    });
-
-    const handlePositions = [];
-    const handleColors = [];
-    for (const handle of arrayValues(authoringOverlay.handles)) {
-      if (isAuthoringHovered(handle)) continue;
-      pushAuthoringHandle(handlePositions, handleColors, handle);
-    }
-    if (authoringHoveredHandle) {
-      pushAuthoringHandle(handlePositions, handleColors, authoringHoveredHandle);
-    }
-    if (handlePositions.length) {
-      gl.lineWidth(Math.max(settings.authoring?.handleLineWidth || 2, settings.render.edges.lineWidth));
-      gl.disable(gl.DEPTH_TEST);
-      drawArrays(gl.LINES, handlePositions, handleColors);
-      gl.enable(gl.DEPTH_TEST);
-      gl.lineWidth(settings.render.edges.lineWidth);
-    }
-    dimensionUi.renderLabels();
-    renderAuthoringLabels();
-    renderSceneCallouts();
-  }
-
   function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const size = domRuntime.viewportSize();
+    canvas.width = size.width;
+    canvas.height = size.height;
   }
-
   function resize() {
     resizeCanvas();
     draw();
   }
-
-  function attachControls() {
-    let orbitLockPending = false;
-    const orbitCursor = document.createElement("div");
-    orbitCursor.className = "orbit-cursor";
-    orbitCursor.innerHTML = `
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M9 12a9 9 0 0 1 15-4" />
-        <path d="M23 7h5v5" />
-        <path d="M23 20a9 9 0 0 1-15 4" />
-        <path d="M9 25H4v-5" />
-        <circle cx="16" cy="16" r="2.2" />
-      </svg>
-    `;
-    document.body.appendChild(orbitCursor);
-
-    const moveOrbitCursor = (x, y) => {
-      orbitCursor.style.left = `${x}px`;
-      orbitCursor.style.top = `${y}px`;
-    };
-    const showOrbitCursor = () => orbitCursor.classList.add("visible");
-    const hideOrbitCursor = () => orbitCursor.classList.remove("visible");
-
-    const requestOrbitLock = () => {
-      if (document.pointerLockElement === canvas) return;
-      if (!canvas.requestPointerLock) return;
-      orbitLockPending = true;
-      try {
-        const lockRequest = canvas.requestPointerLock();
-        lockRequest?.catch?.(() => {
-          orbitLockPending = false;
-        });
-      } catch {
-        orbitLockPending = false;
-      }
-    };
-
-    const capturePointer = (event) => {
-      try {
-        if (event.pointerId !== undefined && canvas.isConnected) canvas.setPointerCapture(event.pointerId);
-      } catch {
-        // Pointer capture can be rejected after focus/control handoff; active drags still use received events.
-      }
-    };
-
-    canvas.addEventListener("pointerdown", (event) => {
-      if (!scene) return;
-      event.preventDefault();
-      const commandPointer = commandHandler?.active?.() && event.button === 0;
-      const pointer = pointerStateFromEvent(event, {
-        forceGpuHit: commandPointer && commandHandler.needsPointerHit?.() !== false
-      });
-      const { x, y } = pointer.screen;
-      const mode = event.button === 1 || event.button === 2 || event.shiftKey ? "pan" : "pending-orbit";
-      const leftHandle = event.button === 0 && !event.shiftKey ? pickAuthoringHandle(x, y) : null;
-      const contextHandle = event.button === 2 && !event.shiftKey ? pickAuthoringHandle(x, y) : null;
-      const contextHandleKind = contextHandle?.kind || "";
-      const contextAuthoringHandle = contextHandleKind === "plate-sketch-vertex"
-        || contextHandleKind === "plate-sketch-edge";
-      const handle = leftHandle || (
-        contextAuthoringHandle
-          ? contextHandle
-          : null
-      );
-      if (commandPointer) {
-        commandHandler.pointerDown?.({ event, screen: pointer.screen, hit: pointer.hit, handle });
-        return;
-      }
-      if (handle?.kind === "coordinate-space-toggle") {
-        if (authoringHandler?.click?.({ handle, screen: { x, y } }) !== false) {
-          authoringHoveredHandle = null;
-          canvas.classList.remove("authoring-hover");
-          requestDraw();
-        }
-        return;
-      }
-      if (handle) {
-        const beginResult = authoringHandler?.beginDrag?.({
-          handle,
-          screen: { x, y },
-          event,
-          modifiers: {
-            altKey: Boolean(event.altKey),
-            ctrlKey: Boolean(event.ctrlKey),
-            metaKey: Boolean(event.metaKey),
-            shiftKey: Boolean(event.shiftKey)
-          }
-        });
-        if (beginResult === false) {
-          // Continue into normal scene picking/orbiting when the authoring handler explicitly declines the handle.
-        } else if (handle.draggable === false || beginResult === "handled") {
-          authoringHoveredHandle = null;
-          canvas.classList.remove("authoring-hover");
-          requestDraw();
-          return;
-        } else {
-          authoringHoveredHandle = handle;
-          drag = {
-            x: event.clientX,
-            y: event.clientY,
-            startX: event.clientX,
-            startY: event.clientY,
-            mode: "authoring",
-            handle,
-            pointerId: event.pointerId
-          };
-          capturePointer(event);
-          return;
-        }
-      }
-      if (event.button === 2 && !event.shiftKey) {
-        const contextResult = authoringHandler?.contextMenu?.({
-          screen: { x, y },
-          event,
-          hit: pointer.hit,
-          modifiers: {
-            altKey: Boolean(event.altKey),
-            ctrlKey: Boolean(event.ctrlKey),
-            metaKey: Boolean(event.metaKey),
-            shiftKey: Boolean(event.shiftKey)
-          }
-        });
-        if (contextResult) {
-          authoringHoveredHandle = null;
-          canvas.classList.remove("authoring-hover");
-          requestDraw();
-          return;
-        }
-      }
-      const dimension = event.button === 0 && !event.shiftKey ? pickDimension(x, y) : null;
-      if (dimension) {
-        drag = {
-          x: event.clientX,
-          y: event.clientY,
-          startX: event.clientX,
-          startY: event.clientY,
-          mode: "dimension",
-          dimension,
-          moved: false,
-          pointerId: event.pointerId
-        };
-        capturePointer(event);
-        return;
-      }
-      if (pickHandler && event.button === 0 && !event.shiftKey) {
-        const hitResult = pickScene(x, y, pickHandlerOptions);
-        pickHandler(hitResult?.face || null);
-        return;
-      }
-      if (mode === "pending-orbit") {
-        const hitResult = fastClickPick(x, y);
-        drag = {
-          x: event.clientX,
-          y: event.clientY,
-          startX: event.clientX,
-          startY: event.clientY,
-          mode,
-          face: hitResult?.face || null,
-          hit: hitResult?.point || null,
-          anchorResolved: Boolean(hitResult?.point),
-          screen: { x, y },
-          pointerId: event.pointerId
-        };
-      } else {
-        drag = {
-          x: event.clientX,
-          y: event.clientY,
-          mode,
-          pointerId: event.pointerId
-        };
-      }
-      if (mode === "orbit") moveOrbitCursor(event.clientX, event.clientY);
-      capturePointer(event);
-    });
-
-    canvas.addEventListener("dblclick", (event) => {
-      if (!scene || pickHandler || !doubleClickHandler || event.shiftKey) return;
-      event.preventDefault();
-      const { screen } = canvasPointer(event.clientX, event.clientY);
-      if (pickDimension(screen.x, screen.y)) return;
-      doubleClickHandler(pickScene(screen.x, screen.y)?.face || null);
-    });
-
-    canvas.addEventListener("pointermove", (event) => {
-      if (!drag) {
-        if (commandHandler?.active?.()) {
-          const pointer = pointerStateFromEvent(event, {
-            includeHit: commandHandler.needsPointerHit?.() !== false,
-            forceGpuHit: commandHandler.needsPointerHit?.() !== false
-          });
-          commandHandler.pointerMove?.({ event, screen: pointer.screen, hit: pointer.hit });
-          return;
-        }
-        pointerStateFromEvent(event);
-        if (updateAuthoringHover(event)) {
-          clearDimensionHover(event);
-          return;
-        }
-        clearAuthoringHover();
-        updateDimensionHover(event);
-        return;
-      }
-      clearDimensionHover(event);
-      if (drag.mode === "dimension") {
-        const totalDx = event.clientX - drag.startX;
-        const totalDy = event.clientY - drag.startY;
-        if (Math.hypot(totalDx, totalDy) > 2) drag.moved = true;
-        dimensionPlacementHandler?.(drag.dimension, {
-          totalDx,
-          totalDy,
-          offsetDelta: dimensionPlacementDelta(drag.dimension, totalDx, totalDy)
-        });
-        drag.x = event.clientX;
-        drag.y = event.clientY;
-        requestDraw();
-        return;
-      }
-      if (drag.mode === "authoring") {
-        if (authoringPanGesture(event)) {
-          stopAuthoringAutoPan();
-          const dx = event.clientX - drag.x;
-          const dy = event.clientY - drag.y;
-          camera.pan(dx, dy);
-          drag.x = event.clientX;
-          drag.y = event.clientY;
-          drag.startX += dx;
-          drag.startY += dy;
-          requestDraw();
-          return;
-        }
-        const { rect, screen } = canvasPointer(event.clientX, event.clientY);
-        const hit = authoringHandler?.needsDragHit?.({ handle: drag.handle, event }) === false
-          ? null
-          : authoringHitAt(screen, rect);
-        authoringHandler?.drag?.({
-          handle: drag.handle,
-          event,
-          modifiers: {
-            altKey: Boolean(event.altKey),
-            ctrlKey: Boolean(event.ctrlKey),
-            metaKey: Boolean(event.metaKey),
-            shiftKey: Boolean(event.shiftKey)
-          },
-          dx: event.clientX - drag.x,
-          dy: event.clientY - drag.y,
-          totalDx: event.clientX - drag.startX,
-          totalDy: event.clientY - drag.startY,
-          screen,
-          hit
-        });
-        drag.x = event.clientX;
-        drag.y = event.clientY;
-        scheduleAuthoringAutoPan();
-        requestDraw();
-        return;
-      }
-      if (drag.mode === "pending-orbit") {
-        const totalDx = event.clientX - drag.startX;
-        const totalDy = event.clientY - drag.startY;
-        if (Math.hypot(totalDx, totalDy) < 4) return;
-        if (!drag.anchorResolved) {
-          const anchor = preciseOrbitAnchor(drag.screen.x, drag.screen.y, drag.face);
-          drag.hit = anchor?.point || null;
-          drag.anchorResolved = true;
-        }
-        if (drag.hit) camera.setOrbitPivot(drag.hit, scene, canvas, drag.screen);
-        drag.mode = "orbit";
-        moveOrbitCursor(event.clientX, event.clientY);
-        requestOrbitLock();
-      }
-      const lockedOrbit = drag.mode === "orbit" && document.pointerLockElement === canvas;
-      const dx = lockedOrbit ? event.movementX : event.clientX - drag.x;
-      const dy = lockedOrbit ? event.movementY : event.clientY - drag.y;
-      if (drag.mode === "pan") {
-        camera.pan(dx, dy);
-      } else {
-        camera.orbit(dx, dy);
-        viewOrientation = "custom";
-        notifyCameraChange("orbit");
-      }
-      drag.x = event.clientX;
-      drag.y = event.clientY;
-      requestDraw();
-    });
-
-    const endDrag = (eventOrOptions = {}) => {
-      const options = eventOrOptions?.type ? {} : eventOrOptions;
-      const currentDrag = drag;
-      const pointerId = currentDrag?.pointerId;
-      const lockedOrbit = currentDrag?.mode === "orbit" && document.pointerLockElement === canvas;
-      if (currentDrag?.mode === "authoring") {
-        stopAuthoringAutoPan();
-        const cancel = eventOrOptions?.type === "pointercancel" || eventOrOptions?.type === "lostpointercapture";
-        (cancel ? authoringHandler?.cancel : authoringHandler?.end)?.({ handle: currentDrag.handle });
-      }
-      if (currentDrag?.mode === "dimension" && eventOrOptions?.type === "pointerup" && !currentDrag.moved) {
-        dimensionUi.clickDimension(currentDrag.dimension);
-      }
-      if (currentDrag?.mode === "pending-orbit" && eventOrOptions?.type === "pointerup" && clickHandler) {
-        const regionHit = pickScene(currentDrag.screen.x, currentDrag.screen.y, {
-          forceCpu: true,
-          includeInstances: false,
-          componentKind: "trim-region"
-        });
-        if (regionHit?.face) {
-          clickHandler({ ...regionHit.face, ...(regionHit.point ? { hitPoint: regionHit.point } : {}) });
-        } else if (currentDrag.face) {
-          const preciseClick = currentDrag.hit ? null : pickScene(currentDrag.screen.x, currentDrag.screen.y, {
-            forceCpu: true,
-            includeTransparent: false,
-            objectIds: [currentDrag.face.objectId]
-          });
-          const hitPoint = currentDrag.hit || preciseClick?.point || null;
-          clickHandler({ ...(preciseClick?.face || currentDrag.face), ...(hitPoint ? { hitPoint } : {}) });
-        } else if (shouldUseGpuPick()) {
-          clickHandler(null);
-        } else {
-          const { screen } = canvasPointer(eventOrOptions.clientX, eventOrOptions.clientY);
-          const hit = pickScene(screen.x, screen.y);
-          clickHandler(hit?.face ? { ...hit.face, ...(hit.point ? { hitPoint: hit.point } : {}) } : null);
-        }
-      }
-      drag = null;
-      hideOrbitCursor();
-      if (pointerId !== undefined && canvas.hasPointerCapture?.(pointerId)) canvas.releasePointerCapture(pointerId);
-      if ((options.exitPointerLock ?? true) && lockedOrbit) document.exitPointerLock?.();
-    };
-    canvas.addEventListener("pointerup", endDrag);
-    canvas.addEventListener("pointercancel", endDrag);
-    canvas.addEventListener("lostpointercapture", () => {
-      if (drag?.mode === "orbit" && (orbitLockPending || document.pointerLockElement === canvas)) return;
-      endDrag();
-    });
-    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-    document.addEventListener("pointerlockchange", () => {
-      orbitLockPending = false;
-      if (document.pointerLockElement === canvas && drag?.mode === "orbit") {
-        showOrbitCursor();
-        return;
-      }
-      hideOrbitCursor();
-      if (document.pointerLockElement !== canvas && drag?.mode === "orbit") endDrag({ exitPointerLock: false });
-    });
-    document.addEventListener("pointerlockerror", () => {
-      orbitLockPending = false;
-      hideOrbitCursor();
-    });
-    document.addEventListener("pointermove", (event) => {
-      if (event.target === canvas || dimensionUi.contains(event.target)) return;
-      clearDimensionHover(event);
-      clearAuthoringHover();
-    });
-
-    canvas.addEventListener("wheel", (event) => {
-      if (!scene) return;
-      requestWheelZoom(event.deltaY, event.clientX, event.clientY);
-    }, { passive: true });
-
-    reset.addEventListener("click", () => resetView());
-  }
-
   function resetView() {
     if (!scene) return false;
     camera.reset();
@@ -2867,17 +694,80 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     draw();
     return true;
   }
-
-  attachControls();
-
+  const controlState = {
+    get scene() {
+      return scene;
+    },
+    get drag() {
+      return drag;
+    },
+    set drag(value) {
+      drag = value;
+    },
+    get pickHandler() {
+      return pickHandler;
+    },
+    get pickHandlerOptions() {
+      return pickHandlerOptions;
+    },
+    get clickHandler() {
+      return clickHandler;
+    },
+    get doubleClickHandler() {
+      return doubleClickHandler;
+    },
+    get authoringHandler() {
+      return authoringHandler;
+    },
+    get commandHandler() {
+      return commandHandler;
+    },
+    get dimensionPlacementHandler() {
+      return dimensionPlacementHandler;
+    },
+    set authoringHoveredHandle(value) {
+      authoringHoveredHandle = value;
+    }
+  };
+  attachWebglViewerControls({
+    canvas,
+    domRuntime,
+    dimensionUi,
+    camera,
+    state: controlState,
+    canvasPointer,
+    pointerStateFromEvent,
+    pickAuthoringHandle,
+    pickDimension,
+    pickScene,
+    fastClickPick,
+    preciseOrbitAnchor,
+    shouldUseGpuPick,
+    authoringPanGesture,
+    authoringHitAt,
+    stopAuthoringAutoPan,
+    scheduleAuthoringAutoPan,
+    dimensionPlacementDelta,
+    updateAuthoringHover,
+    clearAuthoringHover,
+    updateDimensionHover,
+    clearDimensionHover,
+    requestWheelZoom,
+    requestDraw,
+    notifyCameraChange,
+    markCustomViewOrientation: () => {
+      viewOrientation = "custom";
+    },
+    resetView
+  });
   return {
     setScene(nextScene, options = {}) {
       const preserveCamera = options.preserveCamera && scene;
       invalidateRenderableCaches();
       invalidateMemberInstanceLookup();
       clearPendingDetailScaleChange();
-      resetPickObjects();
-      objectPreview = null;
+      pickColors.reset();
+      objectPreviewController.reset();
       scene = nextScene;
       resizeCanvas();
       if (!preserveCamera) {
@@ -3003,7 +893,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     },
     setHighlightedObjects(objectIds = []) {
       if (sameIdSet(highlightedObjectIds, objectIds)) return;
-      const memberOnlyHighlight = memberOnlyHighlightChange(objectIds);
+      const memberOnlyHighlight = isMemberOnlyHighlightChange(scene, highlightedObjectIds, objectIds);
       highlightedObjectIds = new Set(objectIds);
       if (!memberOnlyHighlight) {
         invalidateMemberInstanceCache();
@@ -3012,11 +902,12 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       requestDraw();
     },
     objectPoints,
-    beginObjectPreview,
-    updateMemberMovePreview,
-    clearObjectPreview,
-    updateMemberInstance,
-    replaceSceneObjects,
+    evaluatedSnapEdges,
+    beginObjectPreview: objectPreviewController.begin,
+    updateMemberMovePreview: objectPreviewController.updateMemberMove,
+    clearObjectPreview: objectPreviewController.clear,
+    updateMemberInstance: objectPreviewController.updateMemberInstance,
+    replaceSceneObjects: objectPreviewController.replaceSceneObjects,
     fitPoints(points, options = {}) {
       if (camera.fitPoints(points, canvas, options)) {
         if (finiteNumber(options.yaw) || finiteNumber(options.pitch)) viewOrientation = "custom";

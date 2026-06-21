@@ -1,5 +1,5 @@
-import { applyTooltip } from "../design-system/ui-elements.mjs?v=nav-cube-1";
-import { VIEW_ORIENTATION_FREE_ID, VIEW_ORIENTATION_NAV_ORDER, normalizeViewOrientation as normalizeViewOrientationValue, normalizeViewOrientationState, viewOrientationSpec } from "../commands/view-metadata.mjs?v=view-metadata-1";
+import { applyTooltip } from "../design-system/ui-elements.mjs";
+import { VIEW_ORIENTATION_FREE_ID, VIEW_ORIENTATION_NAV_ORDER, normalizeViewOrientation as normalizeViewOrientationValue, normalizeViewOrientationState, viewOrientationSpec } from "../commands/view-metadata.mjs";
 
 export const VIEW_ORIENTATION_IDS = VIEW_ORIENTATION_NAV_ORDER.slice();
 
@@ -22,8 +22,8 @@ export function mountNavCube({
   let currentOrientation = normalizeNavOrientation(orientation);
   let drag = null;
   let suppressNextClick = false;
-  let continuousYaw = null;
-  let continuousPitch = null;
+  let continuousRotateX = null;
+  let continuousRotateY = null;
 
   root.classList.add("bc-nav-cube");
   root.replaceChildren(navCubeSurface());
@@ -190,19 +190,17 @@ export function mountNavCube({
   }
 
   function applyCameraRotation({ yaw, pitch } = {}) {
-    if (Number.isFinite(pitch)) {
-      continuousPitch = unwrapAngle(pitch, continuousPitch);
-      root.style.setProperty("--bc-nav-cube-rotate-x", `${continuousPitch}rad`);
-    }
-    if (Number.isFinite(yaw)) {
-      continuousYaw = unwrapAngle(yaw, continuousYaw);
-      root.style.setProperty("--bc-nav-cube-rotate-y", `${-continuousYaw}rad`);
-    }
+    const rotation = navCubeRotationForCameraAngles({ yaw, pitch });
+    if (!rotation) return;
+    continuousRotateX = unwrapAngle(rotation.rotateX, continuousRotateX);
+    continuousRotateY = unwrapAngle(rotation.rotateY, continuousRotateY);
+    root.style.setProperty("--bc-nav-cube-rotate-x", `${continuousRotateX}rad`);
+    root.style.setProperty("--bc-nav-cube-rotate-y", `${continuousRotateY}rad`);
   }
 
   function clearCameraRotation() {
-    continuousYaw = null;
-    continuousPitch = null;
+    continuousRotateX = null;
+    continuousRotateY = null;
     root.style.removeProperty("--bc-nav-cube-rotate-x");
     root.style.removeProperty("--bc-nav-cube-rotate-y");
   }
@@ -210,6 +208,29 @@ export function mountNavCube({
 
 export function normalizeViewOrientation(orientation) {
   return normalizeViewOrientationValue(orientation);
+}
+
+export function navCubeRotationForCameraAngles({ yaw, pitch } = {}) {
+  if (!Number.isFinite(yaw) || !Number.isFinite(pitch)) return null;
+  const sinYaw = Math.sin(yaw);
+  const cosYaw = Math.cos(yaw);
+  const sinPitch = Math.sin(pitch);
+  const cosPitch = Math.cos(pitch);
+  const worldLookDirection = [
+    -sinYaw * sinPitch,
+    -cosYaw * sinPitch,
+    -cosPitch
+  ];
+  const cubeNormal = [
+    worldLookDirection[1],
+    worldLookDirection[2],
+    worldLookDirection[0]
+  ];
+  const lateralLength = Math.hypot(cubeNormal[0], cubeNormal[2]);
+  return {
+    rotateX: Math.atan2(cubeNormal[1], lateralLength),
+    rotateY: lateralLength <= 1e-12 ? 0 : Math.atan2(-cubeNormal[0], cubeNormal[2])
+  };
 }
 
 function normalizeNavOrientation(orientation) {

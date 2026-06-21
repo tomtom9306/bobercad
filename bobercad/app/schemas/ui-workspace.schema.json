@@ -88,10 +88,7 @@
   "$defs": {
     "toolbarDock": {
       "enum": [
-        "top",
-        "left",
-        "right",
-        "bottom"
+        "top"
       ]
     },
     "panelDock": {

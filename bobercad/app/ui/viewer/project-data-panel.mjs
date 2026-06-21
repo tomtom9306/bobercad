@@ -5,21 +5,21 @@ import {
   dataPanelRow,
   dataPanelSearch,
   dataPanelSection
-} from "../design-system/ui-elements.mjs?v=project-data-panel-1";
+} from "../design-system/ui-elements.mjs";
 import {
   DATA_LIBRARY_DEFAULT_IDS,
   dataLibraryDescriptor,
   dataLibraryFallbackSpec,
   sortDataLibraryEntries
-} from "../commands/data-surface-metadata.mjs?v=data-surface-metadata-1";
-import { MODEL_COLLECTION_SPECS } from "../commands/model-collection-metadata.mjs?v=model-collection-metadata-1";
+} from "../commands/data-surface-metadata.mjs";
+import { MODEL_COLLECTION_SPECS } from "../commands/model-collection-metadata.mjs";
 import {
   PROJECT_DATA_PANEL_SPEC,
   PROJECT_DATA_SETTING_ROW_SPECS,
   projectDataActionTitle,
   projectDataRowActionSpec,
   projectDataSectionLabel
-} from "../commands/project-data-metadata.mjs?v=project-data-metadata-1";
+} from "../commands/project-data-metadata.mjs";
 
 export function mountProjectDataPanel({
   root,

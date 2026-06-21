@@ -1,6 +1,6 @@
-import { v } from "../../../engine/core/math.mjs?v=world-axis-dry-1";
-import { arrayValues } from "../../../engine/core/model.mjs?v=scene-array-values-dry-1";
-import { authoringLine as line } from "./authoring-primitives.mjs?v=work-plane-axis-dry-1";
+import { v } from "../../../engine/core/math.mjs";
+import { arrayValues } from "../../../engine/core/model.mjs";
+import { authoringLine as line } from "./authoring-primitives.mjs";
 
 const DEFAULT_SNAP_COLOR = "#38bdf8";
 
@@ -75,9 +75,14 @@ function memberAxisHighlightPoints(source, snap, settings = {}) {
   ];
 }
 
+function isModelLineSource(source) {
+  return typeof source?.providerId === "string" && source.providerId.startsWith("model.");
+}
+
 function snapAxisLinePoints(source, snap, settings = {}) {
   if (source.type === "composite-guide-axis") return [source.a, source.b];
   if (source.type === "member-axis" || source.type === "layout-axis") return memberAxisHighlightPoints(source, snap, settings);
+  if (isModelLineSource(source)) return [source.a, source.b];
   const point = snapPoint(snap);
   const center = point || (v.isVec3(source.point) ? source.point : v.mul(v.add(source.a, source.b), 0.5));
   const direction = v.norm(v.sub(source.b, source.a));

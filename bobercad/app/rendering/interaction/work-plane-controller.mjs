@@ -1,8 +1,9 @@
 import { activeWorkPlane } from "../../engine/api/project/work-plane.mjs";
 import { v } from "../../engine/core/math.mjs";
-import { workPlaneFromThreePoints } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs?v=plate-construction-vertex-drag-1";
-import { pointerPlanePoint } from "./pointer-plane-point.mjs?v=pointer-plane-dry-1";
-import { handleBackspaceOrEscape } from "./keyboard-shortcuts.mjs?v=backspace-escape-dry-1";
+import { workPlaneFromThreePoints } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { pointerPlanePoint } from "./pointer-plane-point.mjs";
+import { handleBackspaceOrEscape } from "./keyboard-shortcuts.mjs";
+import { createPointerFrameScheduler } from "./pointer-frame-scheduler.mjs";
 
 export function createWorkPlaneController({
   viewer,
@@ -11,17 +12,13 @@ export function createWorkPlaneController({
   onWorkPlaneChange,
   onStatusChange
 }) {
-  const requestPointerFrame = typeof requestAnimationFrame === "function"
-    ? requestAnimationFrame
-    : (callback) => setTimeout(callback, 0);
+  const pointerScheduler = createPointerFrameScheduler();
   const state = {
     active: false,
     points: [],
     lastPointer: null,
     previewSnap: null
   };
-  let pendingPointer = null;
-  let pointerFramePending = false;
 
   function status() {
     const snap = state.previewSnap?.label ? ` | ${state.previewSnap.label}` : "";
@@ -30,8 +27,7 @@ export function createWorkPlaneController({
 
   function reset() {
     state.active = false;
-    pendingPointer = null;
-    pointerFramePending = false;
+    pointerScheduler.clear();
     state.points = [];
     state.lastPointer = null;
     state.previewSnap = null;
@@ -41,8 +37,7 @@ export function createWorkPlaneController({
 
   function start() {
     state.active = true;
-    pendingPointer = null;
-    pointerFramePending = false;
+    pointerScheduler.clear();
     state.points = [];
     state.lastPointer = viewer.currentPointer?.() || null;
     state.previewSnap = null;
@@ -78,13 +73,7 @@ export function createWorkPlaneController({
 
   function pointerMove(pointer) {
     if (!state.active) return false;
-    pendingPointer = pointer;
-    if (pointerFramePending) return true;
-    pointerFramePending = true;
-    requestPointerFrame(() => {
-      pointerFramePending = false;
-      const nextPointer = pendingPointer;
-      pendingPointer = null;
+    return pointerScheduler.schedule(pointer, (nextPointer) => {
       if (!state.active || !nextPointer) return;
       snapManager?.resetCycle?.();
       state.lastPointer = nextPointer;
@@ -92,12 +81,11 @@ export function createWorkPlaneController({
       state.previewSnap = result.snap;
       onStatusChange?.(status());
     });
-    return true;
   }
 
   function pointerDown(pointer) {
     if (!state.active) return false;
-    pendingPointer = null;
+    pointerScheduler.clear();
     state.lastPointer = pointer;
     const result = resolvedPointer(pointer);
     if (!v.isVec3(result.point)) {

@@ -140,9 +140,10 @@ async function ensureViewerServer(viewerUrl) {
     throw new Error(`viewer is not reachable and cannot be auto-started: ${viewerUrl}`);
   }
   const port = Number.parseInt(url.port || "80", 10);
+  const noCacheServer = path.join("tools", "dev", "no_cache_http_server.py");
   const candidates = [
-    { command: "python", args: ["-m", "http.server", String(port), "--bind", "127.0.0.1"] },
-    { command: "py", args: ["-3", "-m", "http.server", String(port), "--bind", "127.0.0.1"] }
+    { command: "python", args: [noCacheServer, String(port), "127.0.0.1", ROOT, "--no-reload"] },
+    { command: "py", args: ["-3", noCacheServer, String(port), "127.0.0.1", ROOT, "--no-reload"] }
   ];
   for (const candidate of candidates) {
     if (!(await commandExists(candidate.command, candidate.command === "py" ? ["-3", "--version"] : ["--version"]))) continue;
@@ -154,7 +155,7 @@ async function ensureViewerServer(viewerUrl) {
     await waitForFetch(viewerUrl, 10000);
     return child;
   }
-  throw new Error("viewer is not reachable and Python was not found to start a local static server");
+  throw new Error("viewer is not reachable and Python was not found to start a local no-cache static server");
 }
 
 async function freePort() {

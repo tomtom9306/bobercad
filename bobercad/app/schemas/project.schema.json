@@ -69,7 +69,7 @@
       }
     }
   },
-  "additionalProperties": true,
+  "additionalProperties": false,
   "$defs": {
     "id": {
       "type": "string",
@@ -245,6 +245,45 @@
         }
       ]
     },
+    "gridPlacementPoint": {
+      "type": "object",
+      "required": [
+        "gridSystem",
+        "gridX",
+        "gridY",
+        "level"
+      ],
+      "properties": {
+        "gridSystem": {
+          "$ref": "#/$defs/id"
+        },
+        "gridX": {
+          "$ref": "#/$defs/id"
+        },
+        "gridY": {
+          "$ref": "#/$defs/id"
+        },
+        "level": {
+          "$ref": "#/$defs/id"
+        },
+        "offset": {
+          "$ref": "#/$defs/vec3"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gridPlacement": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/gridPlacementPoint"
+        },
+        "end": {
+          "$ref": "#/$defs/gridPlacementPoint"
+        }
+      },
+      "additionalProperties": false
+    },
     "bim": {
       "type": "object",
       "properties": {
@@ -265,7 +304,7 @@
           }
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "tracking": {
       "type": "object",
@@ -289,7 +328,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "fabrication": {
       "type": "object",
@@ -606,7 +645,7 @@
               }
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "levelIds": {
           "type": "array",
@@ -615,7 +654,7 @@
           }
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "gridAxis": {
       "type": "object",
@@ -635,7 +674,7 @@
           "type": "number"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "level": {
       "type": "object",
@@ -659,7 +698,7 @@
           "type": "number"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "namedRecord": {
       "type": "object",
@@ -866,7 +905,7 @@
           "additionalProperties": true
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "workPoint": {
       "type": "object",
@@ -887,22 +926,10 @@
         "role": {
           "type": "string"
         },
-        "gridSystemId": {
-          "$ref": "#/$defs/id"
-        },
         "gridRefs": {
           "type": "object",
           "properties": {
             "gridSystemId": {
-              "$ref": "#/$defs/id"
-            },
-            "x": {
-              "$ref": "#/$defs/id"
-            },
-            "y": {
-              "$ref": "#/$defs/id"
-            },
-            "level": {
               "$ref": "#/$defs/id"
             },
             "xAxisId": {
@@ -982,6 +1009,18 @@
           },
           "additionalProperties": false
         },
+        "station": {
+          "type": "number"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "fabrication": {
+          "$ref": "#/$defs/fabrication"
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
         "notes": {
           "type": "string"
         }
@@ -995,7 +1034,7 @@
           }
         }
       ],
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "group": {
       "type": "object",
@@ -1029,9 +1068,33 @@
           "items": {
             "$ref": "#/$defs/id"
           }
+        },
+        "memberIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "partIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "plateIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "childGroupIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "assembly": {
       "type": "object",
@@ -1081,6 +1144,51 @@
             "$ref": "#/$defs/id"
           }
         },
+        "mainPartId": {
+          "$ref": "#/$defs/id"
+        },
+        "memberIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "partIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "plateIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "featureIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "holePatternIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "fastenerGroupIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "weldIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
         "sourceTemplate": {
           "$ref": "#/$defs/librarySource"
         },
@@ -1089,9 +1197,12 @@
         },
         "tracking": {
           "$ref": "#/$defs/tracking"
+        },
+        "bim": {
+          "$ref": "#/$defs/bim"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "interface": {
       "type": "object",
@@ -1177,6 +1288,13 @@
         },
         "notes": {
           "type": "string"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
+        },
+        "semanticIntent": {
+          "type": "object",
+          "additionalProperties": true
         }
       },
       "allOf": [
@@ -1257,7 +1375,7 @@
           }
         }
       ],
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "connectionZone": {
       "type": "object",
@@ -1315,7 +1433,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "member": {
       "type": "object",
@@ -1366,6 +1484,9 @@
           },
           "additionalProperties": true
         },
+        "gridPlacement": {
+          "$ref": "#/$defs/gridPlacement"
+        },
         "startPointRef": {
           "$ref": "#/$defs/id"
         },
@@ -1409,7 +1530,7 @@
           "$ref": "#/$defs/tracking"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "plate": {
       "type": "object",
@@ -1450,6 +1571,9 @@
         "assemblyId": {
           "$ref": "#/$defs/id"
         },
+        "referencePlaneId": {
+          "$ref": "#/$defs/id"
+        },
         "featureIds": {
           "type": "array",
           "items": {
@@ -1475,7 +1599,7 @@
           "$ref": "#/$defs/tracking"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "sketchObject": {
       "type": "object",
@@ -1526,7 +1650,7 @@
           "$ref": "#/$defs/tracking"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "holePattern": {
       "type": "object",
@@ -1546,6 +1670,9 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "holeType": {
+          "type": "string"
+        },
         "positions": {
           "type": "array",
           "minItems": 1,
@@ -1559,9 +1686,12 @@
             "type": "integer",
             "minimum": 0
           }
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "objectPattern": {
       "type": "object",
@@ -1667,7 +1797,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "feature": {
       "type": "object",
@@ -1891,6 +2021,12 @@
         },
         "bim": {
           "$ref": "#/$defs/bim"
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
         }
       },
       "allOf": [
@@ -1979,7 +2115,7 @@
           }
         }
       ],
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "trimJointParticipant": {
       "type": "object",
@@ -2274,6 +2410,12 @@
         },
         "bim": {
           "$ref": "#/$defs/bim"
+        },
+        "placementIntent": {
+          "$ref": "#/$defs/placementIntent"
+        },
+        "authoring": {
+          "$ref": "#/$defs/authoring"
         }
       },
       "not": {
@@ -2281,14 +2423,15 @@
           "jointPoint"
         ]
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "fastenerGroup": {
       "type": "object",
       "required": [
         "id",
         "type",
-        "participants"
+        "participants",
+        "through"
       ],
       "properties": {
         "id": {
@@ -2332,6 +2475,21 @@
             "$ref": "#/$defs/id"
           }
         },
+        "through": {
+          "type": "object",
+          "required": [
+            "fromFeatureId"
+          ],
+          "properties": {
+            "fromFeatureId": {
+              "$ref": "#/$defs/id"
+            },
+            "toFeatureId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "additionalProperties": true
+        },
         "display": {
           "$ref": "#/$defs/display"
         },
@@ -2348,7 +2506,7 @@
           "$ref": "#/$defs/tracking"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "weld": {
       "type": "object",
@@ -2424,9 +2582,12 @@
         },
         "tracking": {
           "$ref": "#/$defs/tracking"
+        },
+        "fabrication": {
+          "$ref": "#/$defs/fabrication"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "smartComponentInstance": {
       "type": "object",
@@ -2876,7 +3037,7 @@
           "additionalProperties": true
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "profileSection": {
       "type": "object",
@@ -3079,7 +3240,7 @@
           }
         }
       ],
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "librarySource": {
       "type": "object",
@@ -3233,7 +3394,114 @@
           }
         }
       ],
-      "additionalProperties": true
+      "additionalProperties": false
+    },
+    "topologicalSurfaceRef": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "memberId": {
+          "$ref": "#/$defs/id"
+        },
+        "profileId": {
+          "$ref": "#/$defs/id"
+        },
+        "contourId": {
+          "$ref": "#/$defs/id"
+        },
+        "edgeIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ownerId": {
+          "$ref": "#/$defs/id"
+        },
+        "featureId": {
+          "$ref": "#/$defs/id"
+        },
+        "featureType": {
+          "type": "string"
+        },
+        "faceId": {
+          "type": "string"
+        },
+        "trimJointId": {
+          "$ref": "#/$defs/id"
+        },
+        "planeId": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "additionalProperties": false
+    },
+    "topologicalEdgeRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "owner",
+        "surfaces"
+      ],
+      "properties": {
+        "kind": {
+          "const": "evaluated-edge"
+        },
+        "owner": {
+          "type": "object",
+          "required": [
+            "collection",
+            "objectId"
+          ],
+          "properties": {
+            "collection": {
+              "type": "string"
+            },
+            "objectId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "additionalProperties": true
+        },
+        "surfaces": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/topologicalSurfaceRef"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "placementAnchor": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "edgeRef": {
+          "$ref": "#/$defs/topologicalEdgeRef"
+        },
+        "parameter": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "offset": {
+          "$ref": "#/$defs/vec3"
+        },
+        "status": {
+          "enum": [
+            "resolved",
+            "broken",
+            "unresolved"
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "placementIntent": {
       "type": "object",
@@ -3254,6 +3522,9 @@
             "type": "object",
             "additionalProperties": true
           }
+        },
+        "anchor": {
+          "$ref": "#/$defs/placementAnchor"
         },
         "fit": {
           "type": "string"

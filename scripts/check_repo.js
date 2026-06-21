@@ -4,6 +4,7 @@ const { spawnSync } = require("child_process");
 const ROOT = path.resolve(__dirname, "..");
 const CHECKS = [
   "scripts/check_repo_structure.js",
+  "scripts/validate_domain_model.js",
   "scripts/check_viewer_runtime.js"
 ];
 

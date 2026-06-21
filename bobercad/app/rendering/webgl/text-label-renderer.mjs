@@ -1,6 +1,6 @@
-import { clamp } from "../../engine/core/math.mjs?v=render-clamp-dry-1";
-import { arrayValues } from "../../engine/core/model.mjs?v=webgl-array-values-dry-1";
-import { labelRotation } from "./label-rotation.mjs?v=label-rotation-dry-1";
+import { clamp } from "../../engine/core/math.mjs";
+import { arrayValues } from "../../engine/core/model.mjs";
+import { labelRotation } from "./label-rotation.mjs";
 
 const MAX_ATLAS_WIDTH = 2048;
 
@@ -89,8 +89,9 @@ export function createTextLabelRenderer(gl, canvas, settings) {
   };
 
   function createAtlas(records) {
-    const scale = clamp(window.devicePixelRatio || 1, 1, 2);
-    const measure = document.createElement("canvas").getContext("2d");
+    const page = canvas.ownerDocument;
+    const scale = clamp(page?.defaultView?.devicePixelRatio || 1, 1, 2);
+    const measure = page.createElement("canvas").getContext("2d");
     const items = records.map((record, index) => {
       const textureFontPx = Math.max(1, record.fontPx * scale);
       const padding = Math.ceil(textureFontPx * 0.35);
@@ -117,7 +118,7 @@ export function createTextLabelRenderer(gl, canvas, settings) {
       atlasWidth = Math.max(atlasWidth, x);
     }
     const atlasHeight = Math.max(1, y + rowHeight);
-    const atlasCanvas = document.createElement("canvas");
+    const atlasCanvas = page.createElement("canvas");
     atlasCanvas.width = nextPowerOfTwo(atlasWidth);
     atlasCanvas.height = nextPowerOfTwo(atlasHeight);
     const ctx = atlasCanvas.getContext("2d");

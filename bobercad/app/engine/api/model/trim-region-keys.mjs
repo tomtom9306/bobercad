@@ -26,6 +26,21 @@ export function planeTrimRegionKeys(referencePlaneIds) {
   return keys;
 }
 
+export function regionKey(items) {
+  if (!Array.isArray(items) || !items.length) throw new Error("trim region keys: items must be a non-empty array");
+  const seen = new Set();
+  return items.map((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`trim region keys: item ${index} must be an object`);
+    const planeId = item.planeId;
+    const side = item.side;
+    if (typeof planeId !== "string" || !planeId.trim()) throw new Error(`trim region keys: item ${index}.planeId must be a non-empty string`);
+    if (side !== "+" && side !== "-") throw new Error(`trim region keys: item ${index}.side must be + or -`);
+    if (seen.has(planeId)) throw new Error(`trim region keys: duplicate region selector for ${planeId}`);
+    seen.add(planeId);
+    return `${planeId}:${side}`;
+  }).join("|");
+}
+
 export function defaultPlaneTrimRemovedRegionKeys(referencePlaneIds) {
   return planeTrimRegionKeys(referencePlaneIds).filter((key) => key.split("|").some((part) => part.endsWith(":-")));
 }

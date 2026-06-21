@@ -1,11 +1,11 @@
-import { optionalPath } from "../../engine/modules/smart-components/smart-component-parameters-and-definition.mjs?v=smart-config-array-values-dry-1";
-import { averageVec3, boundsYz, distance2, distance3, finiteNumber, linePlaneIntersection, projectPointToPlane, v } from "../../engine/core/math.mjs?v=distance2-array-dry-1";
-import { formatNumber } from "../../engine/core/format.mjs?v=format-number-dry-1";
-import { arrayValues, objectById, truthyValues, uniqueValues } from "../../engine/core/model.mjs?v=array-values-dry-1";
-import { libraryProfileById } from "../../engine/api/project/profiles.mjs?v=profile-lookup-dry-1";
-import { resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs?v=geometry-api-array-values-dry-1";
-import { plateOutline as sketchPlateOutline } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs?v=plate-outline-relation-safety-1";
-import { linearDraftingDimension, midpoint3 } from "./drafting-dimensions.mjs?v=unified-dimension-overlay-1";
+import { optionalPath } from "../../engine/modules/smart-components/smart-component-parameters-and-definition.mjs";
+import { averageVec3, boundsYz, distance2, distance3, finiteNumber, linePlaneIntersection, projectPointToPlane, v } from "../../engine/core/math.mjs";
+import { formatNumber } from "../../engine/core/format.mjs";
+import { arrayValues, objectById, truthyValues, uniqueValues } from "../../engine/core/model.mjs";
+import { libraryProfileById } from "../../engine/api/project/profiles.mjs";
+import { resolveInterfaceWithConnectionReference, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
+import { plateOutline as sketchPlateOutline } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { linearDraftingDimension, midpoint3 } from "./drafting-dimensions.mjs";
 
 export { averageVec3, optionalPath, truthyValues, v };
 

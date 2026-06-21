@@ -15,482 +15,6 @@
       "returns": "project API object"
     },
     {
-      "id": "store.subscribe",
-      "module": "../store/project-command-store.mjs",
-      "description": "Listen for project changes.",
-      "parameters": {
-        "listener": "function(project)"
-      },
-      "returns": "unsubscribe function"
-    },
-    {
-      "id": "store.project",
-      "module": "../store/project-command-store.mjs",
-      "description": "Read the current project.",
-      "parameters": {},
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.object",
-      "module": "../store/project-command-store.mjs",
-      "description": "Read any indexed model object.",
-      "parameters": {
-        "objectId": "string"
-      },
-      "returns": "model object"
-    },
-    {
-      "id": "store.member",
-      "module": "../store/project-command-store.mjs",
-      "description": "Read a member by id.",
-      "parameters": {
-        "memberId": "string"
-      },
-      "returns": "member object"
-    },
-    {
-      "id": "store.smartComponent",
-      "module": "../store/project-command-store.mjs",
-      "description": "Read a Smart Component instance by id.",
-      "parameters": {
-        "smartComponentId": "string"
-      },
-      "returns": "Smart Component instance"
-    },
-    {
-      "id": "store.trimJoint",
-      "module": "../store/project-command-store.mjs",
-      "description": "Read a semantic corner trim joint by id.",
-      "parameters": {
-        "trimJointId": "string"
-      },
-      "returns": "trim joint object"
-    },
-    {
-      "id": "store.smartComponentForObject",
-      "module": "../store/project-command-store.mjs",
-      "description": "Find the Smart Component that owns or references an object.",
-      "parameters": {
-        "objectId": "string"
-      },
-      "returns": "Smart Component instance or null"
-    },
-    {
-      "id": "store.smartComponentRoot",
-      "module": "../store/project-command-store.mjs",
-      "description": "Find the highest parent Smart Component for an instance.",
-      "parameters": {
-        "smartComponentId": "string"
-      },
-      "returns": "Smart Component instance"
-    },
-    {
-      "id": "store.smartComponentRootForObject",
-      "module": "../store/project-command-store.mjs",
-      "description": "Find the highest parent Smart Component that owns or references an object.",
-      "parameters": {
-        "objectId": "string"
-      },
-      "returns": "Smart Component instance or null"
-    },
-    {
-      "id": "store.smartComponentObjectIds",
-      "module": "../store/project-command-store.mjs",
-      "description": "List objects owned by a Smart Component.",
-      "parameters": {
-        "smartComponentId": "string"
-      },
-      "returns": "array of object ids"
-    },
-    {
-      "id": "store.affectedSmartComponentIds",
-      "module": "../store/project-command-store.mjs",
-      "description": "List Smart Component ids related to a member.",
-      "parameters": {
-        "memberId": "string"
-      },
-      "returns": "array of Smart Component ids"
-    },
-    {
-      "id": "store.memberDependencyObjectIds",
-      "module": "../store/project-command-store.mjs",
-      "description": "List render/model object ids related to a member and its Smart Components.",
-      "parameters": {
-        "memberId": "string",
-        "options": "optional filter flags such as renderableOnly or includeMember"
-      },
-      "returns": "array of object ids"
-    },
-    {
-      "id": "store.featureDependencyObjectIds",
-      "module": "../store/project-command-store.mjs",
-      "description": "List render/model object ids affected by a feature edit.",
-      "parameters": {
-        "featureId": "string",
-        "options": "optional filter flags such as renderableOnly or includeSmartComponentMembers"
-      },
-      "returns": "array of object ids"
-    },
-    {
-      "id": "store.trimJointDependencyObjectIds",
-      "module": "../store/project-command-store.mjs",
-      "description": "List render/model object ids affected by a trim joint edit.",
-      "parameters": {
-        "trimJointId": "string",
-        "options": "optional filter flags such as renderableOnly"
-      },
-      "returns": "array of object ids"
-    },
-    {
-      "id": "store.definition",
-      "module": "../store/project-command-store.mjs",
-      "description": "Read the loaded definition for a Smart Component instance.",
-      "parameters": {
-        "smartComponentId": "string"
-      },
-      "returns": "Smart Component definition"
-    },
-    {
-      "id": "store.supportedSmartComponents",
-      "module": "../store/project-command-store.mjs",
-      "description": "List project Smart Components supported by loaded definitions.",
-      "parameters": {},
-      "returns": "array of Smart Component instances"
-    },
-    {
-      "id": "store.smartComponentPresets",
-      "module": "../store/project-command-store.mjs",
-      "description": "List available Smart Component presets.",
-      "parameters": {},
-      "returns": "array of presets"
-    },
-    {
-      "id": "store.catalogEntries",
-      "module": "../store/project-command-store.mjs",
-      "description": "Read entries from a loaded project catalog, such as fasteners.",
-      "parameters": {
-        "catalog": "catalog id, for example fasteners"
-      },
-      "returns": "map of catalog entries"
-    },
-    {
-      "id": "store.createSmartComponentFromPreset",
-      "module": "../store/project-command-store.mjs",
-      "description": "Create and generate a Smart Component from a preset.",
-      "parameters": {
-        "presetId": "string",
-        "memberIds": "member ids or empty for standalone presets"
-      },
-      "returns": "project and smartComponentId"
-    },
-    {
-      "id": "store.createTrimJoint",
-      "module": "../store/project-command-store.mjs",
-      "description": "Create a semantic trim joint with one initial trim operation.",
-      "parameters": {
-        "options": "memberIds, operationType, optional operationPatch, id and patch"
-      },
-      "returns": "project, trimJointId and trimJoint"
-    },
-    {
-      "id": "store.deleteSmartComponent",
-      "module": "../store/project-command-store.mjs",
-      "description": "Delete a Smart Component and its generated objects.",
-      "parameters": {
-        "smartComponentId": "string"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.smartComponentPlateOptions",
-      "module": "../store/project-command-store.mjs",
-      "description": "List optional plates for a Smart Component.",
-      "parameters": {
-        "smartComponentId": "string"
-      },
-      "returns": "array of plate options"
-    },
-    {
-      "id": "store.setSmartComponentPlateIncluded",
-      "module": "../store/project-command-store.mjs",
-      "description": "Toggle an optional Smart Component plate.",
-      "parameters": {
-        "smartComponentId": "string",
-        "plateId": "string",
-        "included": "boolean"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.updateSmartComponent",
-      "module": "../store/project-command-store.mjs",
-      "description": "Regenerate a Smart Component with new parameters.",
-      "parameters": {
-        "smartComponentId": "string",
-        "parameters": "Smart Component parameter object"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.updateMember",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch a member and regenerate affected Smart Components.",
-      "parameters": {
-        "memberId": "string",
-        "patch": "member fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.updateFeature",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch a semantic feature without changing id, owner, or type.",
-      "parameters": {
-        "featureId": "string",
-        "patch": "feature fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.updateTrimJoint",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch a semantic corner trim joint without changing id or type.",
-      "parameters": {
-        "trimJointId": "string",
-        "patch": "trim joint fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.updateFastenerGroup",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch a semantic fastener group through the common fastener API path, recording Smart Component overrides when applicable.",
-      "parameters": {
-        "fastenerGroupId": "string",
-        "patch": "fastener group fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.updateTrimJointParticipant",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch one participant row in a semantic corner trim joint.",
-      "parameters": {
-        "trimJointId": "string",
-        "memberId": "string",
-        "patch": "participant fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.addTrimJointParticipant",
-      "module": "../store/project-command-store.mjs",
-      "description": "Add one member participant to a semantic corner trim joint.",
-      "parameters": {
-        "trimJointId": "string",
-        "memberId": "string",
-        "patch": "optional initial participant fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.removeTrimJointParticipant",
-      "module": "../store/project-command-store.mjs",
-      "description": "Remove one member participant from a semantic corner trim joint.",
-      "parameters": {
-        "trimJointId": "string",
-        "memberId": "string"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.addTrimJointOperation",
-      "module": "../store/project-command-store.mjs",
-      "description": "Add one cut operation to a semantic corner trim joint.",
-      "parameters": {
-        "trimJointId": "string",
-        "patch": "operation fields including required type, plus memberAId, memberAEnd, memberBId, memberBEnd, referencePlaneIds, removedRegionKeys, and gap"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.updateTrimJointOperation",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch one cut operation in a semantic corner trim joint.",
-      "parameters": {
-        "trimJointId": "string",
-        "operationId": "string",
-        "patch": "operation fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setTrimJointOperationMember",
-      "module": "../store/project-command-store.mjs",
-      "description": "Set member A or member B on a trim joint operation and add the member as a participant when needed.",
-      "parameters": {
-        "trimJointId": "string",
-        "operationId": "string",
-        "role": "memberA or memberB",
-        "memberId": "string"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.removeTrimJointOperation",
-      "module": "../store/project-command-store.mjs",
-      "description": "Remove one cut operation from a semantic corner trim joint.",
-      "parameters": {
-        "trimJointId": "string",
-        "operationId": "string"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setFeatureOperationEnabled",
-      "module": "../store/project-command-store.mjs",
-      "description": "Enable or disable a semantic feature operation.",
-      "parameters": {
-        "featureId": "string",
-        "enabled": "boolean"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setReferencePlane",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch a semantic reference plane object.",
-      "parameters": {
-        "referencePlaneId": "string",
-        "patch": "reference plane fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setFeatureBody",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch a feature cutting body object.",
-      "parameters": {
-        "featureId": "string",
-        "patch": "body fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setFeatureSource",
-      "module": "../store/project-command-store.mjs",
-      "description": "Patch a semantic feature source object such as a member-profile cutting reference.",
-      "parameters": {
-        "featureId": "string",
-        "patch": "source fields"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setMemberProfile",
-      "module": "../store/project-command-store.mjs",
-      "description": "Change a member profile.",
-      "parameters": {
-        "memberId": "string",
-        "profileId": "string"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setMemberRotation",
-      "module": "../store/project-command-store.mjs",
-      "description": "Set member rotation in degrees.",
-      "parameters": {
-        "memberId": "string",
-        "rotation": "number"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.rotateMember",
-      "module": "../store/project-command-store.mjs",
-      "description": "Add a rotation delta to a member.",
-      "parameters": {
-        "memberId": "string",
-        "deltaDegrees": "number"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setMemberEndpoints",
-      "module": "../store/project-command-store.mjs",
-      "description": "Set member start and end points.",
-      "parameters": {
-        "memberId": "string",
-        "start": "[x,y,z]",
-        "end": "[x,y,z]"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.moveMember",
-      "module": "../store/project-command-store.mjs",
-      "description": "Move a member by a vector.",
-      "parameters": {
-        "memberId": "string",
-        "delta": "[x,y,z]"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setMemberCenter",
-      "module": "../store/project-command-store.mjs",
-      "description": "Move a member to a target center point.",
-      "parameters": {
-        "memberId": "string",
-        "center": "[x,y,z]"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.moveMemberWithLayout",
-      "module": "../store/project-command-store.mjs",
-      "description": "Move a member and its explicit virtual layout axis by a vector.",
-      "parameters": {
-        "memberId": "string",
-        "delta": "[x,y,z]"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setMemberPhysicalEndpoint",
-      "module": "../store/project-command-store.mjs",
-      "description": "Move one physical member endpoint and keep a matching layout endpoint in sync.",
-      "parameters": {
-        "memberId": "string",
-        "endpoint": "start | end",
-        "point": "[x,y,z]"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.setMemberLayoutEndpoint",
-      "module": "../store/project-command-store.mjs",
-      "description": "Move one virtual layout-axis endpoint without forcing the physical member endpoint.",
-      "parameters": {
-        "memberId": "string",
-        "endpoint": "start | end",
-        "point": "[x,y,z]"
-      },
-      "returns": "project JSON"
-    },
-    {
-      "id": "store.draftMemberProject",
-      "module": "../store/project-command-store.mjs",
-      "description": "Build a non-committed project draft for one member and its affected Smart Components.",
-      "parameters": {
-        "memberId": "string",
-        "member": "complete semantic member object",
-        "options": "optional flags such as regenerateSmartComponents"
-      },
-      "returns": "project JSON draft without mutating the store"
-    },
-    {
       "id": "project.memberLayoutAxis",
       "module": "./project/members.mjs",
       "description": "Read the member layout axis, using the physical member axis when no explicit virtual axis is stored.",
@@ -931,6 +455,1079 @@
         "objectIds": "stored object ids to estimate or section"
       },
       "returns": "object estimates, transport sections and section schedule rows"
+    },
+    {
+      "id": "store.addGridAxis",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for add grid axis.",
+      "parameters": {
+        "gridSystemId": "method parameter",
+        "axisGroup": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.addPlateSketchConstructionLine",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for add plate sketch construction line.",
+      "parameters": {
+        "plateId": "method parameter",
+        "fromPoint": "method parameter",
+        "toPoint": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.addTrimJointOperation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Add one cut operation to a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "patch": "operation fields including required type, plus memberAId, memberAEnd, memberBId, memberBEnd, referencePlaneIds, removedRegionKeys, and gap"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.addTrimJointParticipant",
+      "module": "../store/project-command-store.mjs",
+      "description": "Add one member participant to a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "memberId": "string",
+        "patch": "optional initial participant fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.affectedSmartComponentIds",
+      "module": "../store/project-command-store.mjs",
+      "description": "List Smart Component ids related to a member.",
+      "parameters": {
+        "memberId": "string"
+      },
+      "returns": "array of Smart Component ids"
+    },
+    {
+      "id": "store.catalogEntries",
+      "module": "../store/project-command-store.mjs",
+      "description": "Read entries from a loaded project catalog, such as fasteners.",
+      "parameters": {
+        "catalog": "catalog id, for example fasteners"
+      },
+      "returns": "map of catalog entries"
+    },
+    {
+      "id": "store.clearMemberAlignment",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for clear member alignment.",
+      "parameters": {
+        "memberId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.createCustomProfile",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for create custom profile.",
+      "parameters": {
+        "profile": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.createGridSystem",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for create grid system.",
+      "parameters": {
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.createLevel",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for create level.",
+      "parameters": {
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.createMember",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for create member.",
+      "parameters": {
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.createPlate",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for create plate.",
+      "parameters": {
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.createPlateFromSketch",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for create plate from sketch.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.createSketch",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for create sketch.",
+      "parameters": {
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.createSmartComponentFromPreset",
+      "module": "../store/project-command-store.mjs",
+      "description": "Create and generate a Smart Component from a preset.",
+      "parameters": {
+        "presetId": "string",
+        "memberIds": "member ids or empty for standalone presets"
+      },
+      "returns": "project and smartComponentId"
+    },
+    {
+      "id": "store.createTrimJoint",
+      "module": "../store/project-command-store.mjs",
+      "description": "Create a semantic trim joint with one initial trim operation.",
+      "parameters": {
+        "options": "memberIds, operationType, optional operationPatch, id and patch"
+      },
+      "returns": "project, trimJointId and trimJoint"
+    },
+    {
+      "id": "store.definition",
+      "module": "../store/project-command-store.mjs",
+      "description": "Read the loaded definition for a Smart Component instance.",
+      "parameters": {
+        "smartComponentId": "string"
+      },
+      "returns": "Smart Component definition"
+    },
+    {
+      "id": "store.deleteMember",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for delete member.",
+      "parameters": {
+        "memberId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.deleteRelation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for delete relation.",
+      "parameters": {
+        "relationId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.deleteSmartComponent",
+      "module": "../store/project-command-store.mjs",
+      "description": "Delete a Smart Component and its generated objects.",
+      "parameters": {
+        "smartComponentId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.detachSmartComponentObject",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for detach smart component object.",
+      "parameters": {
+        "smartComponentId": "method parameter",
+        "objectId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.draftMemberProject",
+      "module": "../store/project-command-store.mjs",
+      "description": "Build a non-committed project draft for one member and its affected Smart Components.",
+      "parameters": {
+        "memberId": "string",
+        "member": "complete semantic member object",
+        "options": "optional flags such as regenerateSmartComponents"
+      },
+      "returns": "project JSON draft without mutating the store"
+    },
+    {
+      "id": "store.featureDependencyObjectIds",
+      "module": "../store/project-command-store.mjs",
+      "description": "List render/model object ids affected by a feature edit.",
+      "parameters": {
+        "featureId": "string",
+        "options": "optional filter flags such as renderableOnly or includeSmartComponentMembers"
+      },
+      "returns": "array of object ids"
+    },
+    {
+      "id": "store.fixPlateSketchUnderDefinedEntities",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for fix plate sketch under defined entities.",
+      "parameters": {
+        "plateId": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.historyState",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for history state.",
+      "parameters": {},
+      "returns": "store method result"
+    },
+    {
+      "id": "store.inferPlateSketchRelations",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for infer plate sketch relations.",
+      "parameters": {
+        "plateId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.insertPlateSketchVertex",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for insert plate sketch vertex.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter",
+        "point": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.lastCommandResult",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for last command result.",
+      "parameters": {},
+      "returns": "store method result"
+    },
+    {
+      "id": "store.member",
+      "module": "../store/project-command-store.mjs",
+      "description": "Read a member by id.",
+      "parameters": {
+        "memberId": "string"
+      },
+      "returns": "member object"
+    },
+    {
+      "id": "store.memberAxisRelations",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for member axis relations.",
+      "parameters": {
+        "memberId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.memberDependencyObjectIds",
+      "module": "../store/project-command-store.mjs",
+      "description": "List render/model object ids related to a member and its Smart Components.",
+      "parameters": {
+        "memberId": "string",
+        "options": "optional filter flags such as renderableOnly or includeMember"
+      },
+      "returns": "array of object ids"
+    },
+    {
+      "id": "store.moveMember",
+      "module": "../store/project-command-store.mjs",
+      "description": "Move a member by a vector.",
+      "parameters": {
+        "memberId": "string",
+        "delta": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.moveMemberWithLayout",
+      "module": "../store/project-command-store.mjs",
+      "description": "Move a member and its explicit virtual layout axis by a vector.",
+      "parameters": {
+        "memberId": "string",
+        "delta": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.notchPlateSketchCorner",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for notch plate sketch corner.",
+      "parameters": {
+        "plateId": "method parameter",
+        "vertexId": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.object",
+      "module": "../store/project-command-store.mjs",
+      "description": "Read any indexed model object.",
+      "parameters": {
+        "objectId": "string"
+      },
+      "returns": "model object"
+    },
+    {
+      "id": "store.profiles",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for profiles.",
+      "parameters": {},
+      "returns": "store method result"
+    },
+    {
+      "id": "store.project",
+      "module": "../store/project-command-store.mjs",
+      "description": "Read the current project.",
+      "parameters": {},
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.reattachSmartComponentObject",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for reattach smart component object.",
+      "parameters": {
+        "smartComponentId": "method parameter",
+        "objectId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.redo",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for redo.",
+      "parameters": {},
+      "returns": "store method result"
+    },
+    {
+      "id": "store.referencePlaneDependencyObjectIds",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for reference plane dependency object ids.",
+      "parameters": {
+        "referencePlaneId": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.regenerateMemberSmartComponents",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for regenerate member smart components.",
+      "parameters": {
+        "memberId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.removeGridAxis",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for remove grid axis.",
+      "parameters": {
+        "gridSystemId": "method parameter",
+        "axisGroup": "method parameter",
+        "axisId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.removePlateBend",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for remove plate bend.",
+      "parameters": {
+        "plateId": "method parameter",
+        "bendId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.removePlateSketchFixedRelations",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for remove plate sketch fixed relations.",
+      "parameters": {
+        "plateId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.removePlateSketchRelation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for remove plate sketch relation.",
+      "parameters": {
+        "plateId": "method parameter",
+        "relationId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.removePlateSketchVertex",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for remove plate sketch vertex.",
+      "parameters": {
+        "plateId": "method parameter",
+        "vertexId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.removeTrimJointOperation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Remove one cut operation from a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "operationId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.removeTrimJointParticipant",
+      "module": "../store/project-command-store.mjs",
+      "description": "Remove one member participant from a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "memberId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.resetSmartComponentObjectOverrides",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for reset smart component object overrides.",
+      "parameters": {
+        "smartComponentId": "method parameter",
+        "objectId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.resolveSmartComponentDiagnostics",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for resolve smart component diagnostics.",
+      "parameters": {
+        "smartComponentId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.rotateMember",
+      "module": "../store/project-command-store.mjs",
+      "description": "Add a rotation delta to a member.",
+      "parameters": {
+        "memberId": "string",
+        "deltaDegrees": "number"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setFeatureBody",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch a feature cutting body object.",
+      "parameters": {
+        "featureId": "string",
+        "patch": "body fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setFeatureOperationEnabled",
+      "module": "../store/project-command-store.mjs",
+      "description": "Enable or disable a semantic feature operation.",
+      "parameters": {
+        "featureId": "string",
+        "enabled": "boolean"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setFeatureSource",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch a semantic feature source object such as a member-profile cutting reference.",
+      "parameters": {
+        "featureId": "string",
+        "patch": "source fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberAlignment",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set member alignment.",
+      "parameters": {
+        "memberId": "method parameter",
+        "source": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setMemberCenter",
+      "module": "../store/project-command-store.mjs",
+      "description": "Move a member to a target center point.",
+      "parameters": {
+        "memberId": "string",
+        "center": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberEndpoints",
+      "module": "../store/project-command-store.mjs",
+      "description": "Set member start and end points.",
+      "parameters": {
+        "memberId": "string",
+        "start": "[x,y,z]",
+        "end": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberLayoutEndpoint",
+      "module": "../store/project-command-store.mjs",
+      "description": "Move one virtual layout-axis endpoint without forcing the physical member endpoint.",
+      "parameters": {
+        "memberId": "string",
+        "endpoint": "start | end",
+        "point": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberPhysicalEndpoint",
+      "module": "../store/project-command-store.mjs",
+      "description": "Move one physical member endpoint and keep a matching layout endpoint in sync.",
+      "parameters": {
+        "memberId": "string",
+        "endpoint": "start | end",
+        "point": "[x,y,z]"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberProfile",
+      "module": "../store/project-command-store.mjs",
+      "description": "Change a member profile.",
+      "parameters": {
+        "memberId": "string",
+        "profileId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setMemberRotation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Set member rotation in degrees.",
+      "parameters": {
+        "memberId": "string",
+        "rotation": "number"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setPlateSketchEdgeAngle",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch edge angle.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeIds": "method parameter",
+        "angle": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchEdgeAngleMode",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch edge angle mode.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeIds": "method parameter",
+        "mode": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchEdgeLength",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch edge length.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter",
+        "length": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchEdgeLengthMode",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch edge length mode.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter",
+        "mode": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchPointDistance",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch point distance.",
+      "parameters": {
+        "plateId": "method parameter",
+        "vertexIds": "method parameter",
+        "distance": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchPointDistanceMode",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch point distance mode.",
+      "parameters": {
+        "plateId": "method parameter",
+        "vertexIds": "method parameter",
+        "mode": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchVertex",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch vertex.",
+      "parameters": {
+        "plateId": "method parameter",
+        "vertexId": "method parameter",
+        "point": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchVertices",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch vertices.",
+      "parameters": {
+        "plateId": "method parameter",
+        "vertexPoints": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setReferencePlane",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch a semantic reference plane object.",
+      "parameters": {
+        "referencePlaneId": "string",
+        "patch": "reference plane fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setSketchVertex",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set sketch vertex.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "vertexId": "method parameter",
+        "point": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSmartComponentPlateIncluded",
+      "module": "../store/project-command-store.mjs",
+      "description": "Toggle an optional Smart Component plate.",
+      "parameters": {
+        "smartComponentId": "string",
+        "plateId": "string",
+        "included": "boolean"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setSmartComponentRoleActive",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set smart component role active.",
+      "parameters": {
+        "smartComponentId": "method parameter",
+        "role": "method parameter",
+        "active": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setTrimJointOperationMember",
+      "module": "../store/project-command-store.mjs",
+      "description": "Set member A or member B on a trim joint operation and add the member as a participant when needed.",
+      "parameters": {
+        "trimJointId": "string",
+        "operationId": "string",
+        "role": "memberA or memberB",
+        "memberId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.smartComponent",
+      "module": "../store/project-command-store.mjs",
+      "description": "Read a Smart Component instance by id.",
+      "parameters": {
+        "smartComponentId": "string"
+      },
+      "returns": "Smart Component instance"
+    },
+    {
+      "id": "store.smartComponentForObject",
+      "module": "../store/project-command-store.mjs",
+      "description": "Find the Smart Component that owns or references an object.",
+      "parameters": {
+        "objectId": "string"
+      },
+      "returns": "Smart Component instance or null"
+    },
+    {
+      "id": "store.smartComponentObjectIds",
+      "module": "../store/project-command-store.mjs",
+      "description": "List objects owned by a Smart Component.",
+      "parameters": {
+        "smartComponentId": "string"
+      },
+      "returns": "array of object ids"
+    },
+    {
+      "id": "store.smartComponentPlateOptions",
+      "module": "../store/project-command-store.mjs",
+      "description": "List optional plates for a Smart Component.",
+      "parameters": {
+        "smartComponentId": "string"
+      },
+      "returns": "array of plate options"
+    },
+    {
+      "id": "store.smartComponentPresets",
+      "module": "../store/project-command-store.mjs",
+      "description": "List available Smart Component presets.",
+      "parameters": {},
+      "returns": "array of presets"
+    },
+    {
+      "id": "store.smartComponentRoleOptions",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for smart component role options.",
+      "parameters": {
+        "smartComponentId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.smartComponentRoot",
+      "module": "../store/project-command-store.mjs",
+      "description": "Find the highest parent Smart Component for an instance.",
+      "parameters": {
+        "smartComponentId": "string"
+      },
+      "returns": "Smart Component instance"
+    },
+    {
+      "id": "store.smartComponentRootForObject",
+      "module": "../store/project-command-store.mjs",
+      "description": "Find the highest parent Smart Component that owns or references an object.",
+      "parameters": {
+        "objectId": "string"
+      },
+      "returns": "Smart Component instance or null"
+    },
+    {
+      "id": "store.solvePlateSketchRelation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for solve plate sketch relation.",
+      "parameters": {
+        "plateId": "method parameter",
+        "relationId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.subscribe",
+      "module": "../store/project-command-store.mjs",
+      "description": "Listen for project changes.",
+      "parameters": {
+        "listener": "function(project)"
+      },
+      "returns": "unsubscribe function"
+    },
+    {
+      "id": "store.supportedSmartComponents",
+      "module": "../store/project-command-store.mjs",
+      "description": "List project Smart Components supported by loaded definitions.",
+      "parameters": {},
+      "returns": "array of Smart Component instances"
+    },
+    {
+      "id": "store.toggleSmartComponentRoleFromFace",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for toggle smart component role from face.",
+      "parameters": {
+        "face": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.trimJoint",
+      "module": "../store/project-command-store.mjs",
+      "description": "Read a semantic corner trim joint by id.",
+      "parameters": {
+        "trimJointId": "string"
+      },
+      "returns": "trim joint object"
+    },
+    {
+      "id": "store.trimJointDependencyObjectIds",
+      "module": "../store/project-command-store.mjs",
+      "description": "List render/model object ids affected by a trim joint edit.",
+      "parameters": {
+        "trimJointId": "string",
+        "options": "optional filter flags such as renderableOnly"
+      },
+      "returns": "array of object ids"
+    },
+    {
+      "id": "store.undo",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for undo.",
+      "parameters": {},
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateAssembly",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update assembly.",
+      "parameters": {
+        "assemblyId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateConnectionZone",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update connection zone.",
+      "parameters": {
+        "connectionZoneId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateFastenerGroup",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch a semantic fastener group through the common fastener API path, recording Smart Component overrides when applicable.",
+      "parameters": {
+        "fastenerGroupId": "string",
+        "patch": "fastener group fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateFeature",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch a semantic feature without changing id, owner, or type.",
+      "parameters": {
+        "featureId": "string",
+        "patch": "feature fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateGridSystem",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update grid system.",
+      "parameters": {
+        "gridSystemId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateGroup",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update group.",
+      "parameters": {
+        "groupId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateHolePattern",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update hole pattern.",
+      "parameters": {
+        "holePatternId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateInterface",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update interface.",
+      "parameters": {
+        "interfaceId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateLevel",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update level.",
+      "parameters": {
+        "levelId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateMember",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch a member and regenerate affected Smart Components.",
+      "parameters": {
+        "memberId": "string",
+        "patch": "member fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateObjectPattern",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update object pattern.",
+      "parameters": {
+        "objectPatternId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updatePlate",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update plate.",
+      "parameters": {
+        "plateId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateSmartComponent",
+      "module": "../store/project-command-store.mjs",
+      "description": "Regenerate a Smart Component with new parameters.",
+      "parameters": {
+        "smartComponentId": "string",
+        "parameters": "Smart Component parameter object"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateTrimJoint",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch a semantic corner trim joint without changing id or type.",
+      "parameters": {
+        "trimJointId": "string",
+        "patch": "trim joint fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateTrimJointOperation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch one cut operation in a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "operationId": "string",
+        "patch": "operation fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateTrimJointParticipant",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch one participant row in a semantic corner trim joint.",
+      "parameters": {
+        "trimJointId": "string",
+        "memberId": "string",
+        "patch": "participant fields"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.updateWeld",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update weld.",
+      "parameters": {
+        "weldId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.updateWorkPoint",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for update work point.",
+      "parameters": {
+        "workPointId": "method parameter",
+        "patch": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.upsertPlateBend",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for upsert plate bend.",
+      "parameters": {
+        "plateId": "method parameter",
+        "bend": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.upsertPlateSketchRelation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for upsert plate sketch relation.",
+      "parameters": {
+        "plateId": "method parameter",
+        "relation": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.upsertRelation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for upsert relation.",
+      "parameters": {
+        "relation": "method parameter"
+      },
+      "returns": "store method result"
     }
   ],
   "$schema": "../../schemas/api-register.schema.json"

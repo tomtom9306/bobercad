@@ -1,6 +1,6 @@
 import { requiredReferencePlane } from "../../../engine/geometry/reference-plane.mjs";
-import { trimOperationFirstReferencePlaneId, trimPlaneOperation } from "../../../engine/api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
-import { dimensionOffset, distance, finite, interfaceAnnotationBasis, interfaceAxis, interfaceByRole, linePlane, makeDimension, paramValue, plateBasis, pointToPlane, roleObject, v } from "../dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
+import { trimOperationFirstReferencePlaneId, trimPlaneOperation } from "../../../engine/api/project/trim-operations.mjs";
+import { dimensionOffset, distance, finite, interfaceAnnotationBasis, interfaceAxis, interfaceByRole, linePlane, makeDimension, paramValue, plateBasis, pointToPlane, roleObject, v } from "../dimension-geometry-and-label-context.mjs";
 
 export function interfaceOffsetDimension(ctx, spec) {
   const plate = roleObject(ctx.project, ctx.smartComponent, spec.reference.objectRole);

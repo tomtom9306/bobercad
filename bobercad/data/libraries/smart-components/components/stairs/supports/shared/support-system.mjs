@@ -99,6 +99,12 @@ function rolledBeam(ctx, role, centerline, profile, memberType, name, color, pla
   });
 }
 
+function recordStationRange(stationRanges, member, stationStart, stationEnd) {
+  if (!member?.id) return;
+  if (![stationStart, stationEnd].every((value) => typeof value === "number" && Number.isFinite(value))) return;
+  stationRanges[member.id] = { stationStart, stationEnd };
+}
+
 export function buildSupportSystem(ctx, options = {}) {
   const segments = requiredArrayInput(ctx, "layout.supports", "Solved support segments");
   const width = requiredPositiveInput(ctx, "geometry.width", "Stair width");
@@ -108,6 +114,7 @@ export function buildSupportSystem(ctx, options = {}) {
   const rolledPath = ctx.input("layout.rolledPath");
   const color = options.color || "#3f657d";
   const memberIds = [];
+  const stationRanges = {};
   let centerColumnId = null;
   let rolledMemberCount = 0;
   if (!segments || !width || !profile || offset === undefined || !routeType) return;
@@ -150,6 +157,7 @@ export function buildSupportSystem(ctx, options = {}) {
           family: options.family
         });
         memberIds.push(member.id);
+        recordStationRange(stationRanges, member, 0, rolledPath.length);
         rolledMemberCount += 1;
       }
     } else {
@@ -163,6 +171,8 @@ export function buildSupportSystem(ctx, options = {}) {
           side: "right"
         });
         memberIds.push(left.id, right.id);
+        recordStationRange(stationRanges, left, 0, rolledPath.length);
+        recordStationRange(stationRanges, right, 0, rolledPath.length);
         rolledMemberCount += 2;
       }
     }
@@ -192,6 +202,7 @@ export function buildSupportSystem(ctx, options = {}) {
     ctx.output("supportMemberIds", memberIds);
     ctx.output("stringerMemberIds", memberIds.filter((id) => id !== centerColumnId));
     ctx.output("rolledMemberIds", memberIds.filter((id) => id !== centerColumnId));
+    ctx.output("supportMemberStationRanges", stationRanges);
     ctx.output("centerColumnMemberId", centerColumnId);
     ctx.output("routeType", routeType);
     return;
@@ -209,6 +220,7 @@ export function buildSupportSystem(ctx, options = {}) {
       const role = `monoStringer${index + 1}`;
       const member = segmentBeam(ctx, role, segment, 0, profile, "stair-mono-stringer", `Mono stringer ${index + 1}`, color);
       memberIds.push(member.id);
+      recordStationRange(stationRanges, member, segment.startStation, segment.endStation);
       continue;
     }
 
@@ -217,6 +229,8 @@ export function buildSupportSystem(ctx, options = {}) {
     const left = segmentBeam(ctx, leftRole, segment, -width / 2 - offset, profile, "stair-stringer", `Left stringer ${index + 1}`, color);
     const right = segmentBeam(ctx, rightRole, segment, width / 2 + offset, profile, "stair-stringer", `Right stringer ${index + 1}`, color);
     memberIds.push(left.id, right.id);
+    recordStationRange(stationRanges, left, segment.startStation, segment.endStation);
+    recordStationRange(stationRanges, right, segment.startStation, segment.endStation);
   }
 
   ctx.objectPattern.create("supportPattern", {
@@ -240,6 +254,7 @@ export function buildSupportSystem(ctx, options = {}) {
   ctx.output("supportMemberIds", memberIds);
   ctx.output("stringerMemberIds", memberIds.filter((id) => id !== centerColumnId));
   ctx.output("rolledMemberIds", []);
+  ctx.output("supportMemberStationRanges", stationRanges);
   ctx.output("centerColumnMemberId", centerColumnId);
   ctx.output("routeType", routeType);
 }

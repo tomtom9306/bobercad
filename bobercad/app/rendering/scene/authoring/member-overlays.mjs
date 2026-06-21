@@ -1,9 +1,9 @@
-import { WORLD_AXIS_ENTRIES, clamp, finiteNumber, sameVec3, v } from "../../../engine/core/math.mjs?v=world-axis-dry-1";
-import { formatNumber } from "../../../engine/core/format.mjs?v=format-number-dry-1";
-import { memberAuthoringPoints, memberById } from "../../../engine/api/project/members.mjs?v=member-api-distance-dry-1";
-import { authoringAxisLines, authoringLine as line } from "./authoring-primitives.mjs?v=work-plane-axis-dry-1";
-import { activeAxisFromSnap, snapPointOverlay } from "./snap-overlays.mjs?v=plate-face-snap-2";
-import { coordinateSpaceLabel, memberAxesByTarget, normalizeCoordinateSpace } from "./member-axis-space.mjs?v=member-api-distance-dry-1";
+import { WORLD_AXIS_ENTRIES, clamp, finiteNumber, sameVec3, v } from "../../../engine/core/math.mjs";
+import { formatNumber } from "../../../engine/core/format.mjs";
+import { memberAuthoringPoints, memberById } from "../../../engine/api/project/members.mjs";
+import { authoringAxisLines, authoringLine as line } from "./authoring-primitives.mjs";
+import { activeAxisFromSnap, snapPointOverlay } from "./snap-overlays.mjs";
+import { coordinateSpaceLabel, memberAxesByTarget, normalizeCoordinateSpace } from "./member-axis-space.mjs";
 import { memberManipulatorHandles } from "./member-manipulator-overlays.mjs";
 
 function handle(memberId, kind, point, color, radius = 10) {

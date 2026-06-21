@@ -1,7 +1,7 @@
-import { distancePointToSegment, v } from "../../engine/core/math.mjs?v=point-segment-distance-dry-1";
-import { arrayValues } from "../../engine/core/model.mjs?v=interaction-array-values-dry-1";
-import { plateBendGeometry } from "../scene/plate-bend-geometry.mjs?v=plate-placement-vertex-dry-1";
-import { handleEscapeReset } from "./keyboard-shortcuts.mjs?v=escape-reset-dry-1";
+import { distancePointToSegment, v } from "../../engine/core/math.mjs";
+import { arrayValues } from "../../engine/core/model.mjs";
+import { plateBendGeometry } from "../scene/plate-bend-geometry.mjs";
+import { handleEscapeReset } from "./keyboard-shortcuts.mjs";
 
 function bendIdForTarget(target) {
   const raw = target.parentBendId

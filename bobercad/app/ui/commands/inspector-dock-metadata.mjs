@@ -12,7 +12,6 @@ export const INSPECTOR_COMMAND_TITLE = "Toggle properties";
 export const INSPECTOR_COMMAND_DESCRIPTION = "Show or hide the contextual properties dock.";
 export const INSPECTOR_COMMAND_ICON = "inspector";
 export const INSPECTOR_DEFAULT_CONTEXT = "properties";
-export const INSPECTOR_ACTIVE_CONTEXT_STORAGE_KEY = "bobercad.ui.inspector.active-panel.v1";
 
 export const INSPECTOR_CONTEXTS = Object.freeze([
   {
@@ -34,16 +33,6 @@ export const INSPECTOR_CONTEXTS = Object.freeze([
     description: "Advanced feature and cutting-body editor.",
     icon: "feature",
     panelSlot: "feature"
-  },
-  {
-    id: "trim",
-    label: "Trim",
-    commandId: "inspector.context.trim",
-    action: "onInspectorContextTrim",
-    title: "Show trim editor",
-    description: "Trim joint operation editor.",
-    icon: "trim",
-    panelSlot: "trim"
   },
   {
     id: "component",

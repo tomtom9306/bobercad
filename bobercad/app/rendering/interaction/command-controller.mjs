@@ -1,10 +1,10 @@
-import { isTextInput, matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs?v=truthy-values-dry-1";
-import { createMemberCreateController } from "./member-create-controller.mjs?v=member-reference-snap-1-own-axis-restore-1";
-import { createPlateCreateController } from "./plate-create-controller.mjs?v=pointer-coalesce-2";
-import { createSketchCreateController } from "./sketch-create-controller.mjs?v=pointer-coalesce-1";
-import { createWorkPlaneController } from "./work-plane-controller.mjs?v=pointer-coalesce-1";
-import { createPlateBendController } from "./plate-bend-controller.mjs?v=plate-placement-vertex-dry-1";
-import { activeWorkPlane } from "../../engine/api/project/work-plane.mjs?v=finite-point-api-dry-1";
+import { isTextInput, matchesShortcut, shortcutSetting } from "./keyboard-shortcuts.mjs";
+import { createMemberCreateController } from "./member-create-controller.mjs";
+import { createPlateCreateController } from "./plate-create-controller.mjs";
+import { createSketchCreateController } from "./sketch-create-controller.mjs";
+import { createWorkPlaneController } from "./work-plane-controller.mjs";
+import { createPlateBendController } from "./plate-bend-controller.mjs";
+import { activeWorkPlane } from "../../engine/api/project/work-plane.mjs";
 
 export function createCommandController({
   viewer,
@@ -16,8 +16,10 @@ export function createCommandController({
   onOverlayChange,
   onProjectChange,
   onStatusChange,
-  onCommandStart
+  onCommandStart,
+  keyboardTarget
 }) {
+  if (!keyboardTarget?.addEventListener) throw new Error("createCommandController requires a keyboardTarget event port");
   let activeCommand = null;
   let customWorkPlane = null;
   const shortcuts = settings.shortcuts?.commands || {};
@@ -135,7 +137,7 @@ export function createCommandController({
     }
   });
 
-  document.addEventListener("keydown", (event) => {
+  keyboardTarget.addEventListener("keydown", (event) => {
     if (isTextInput(event.target)) return;
     if (!commandActive()) {
       const commandShortcut = commandShortcuts.find(([key, fallback]) => matchesShortcut(event, shortcutSetting(shortcuts, key, fallback)));

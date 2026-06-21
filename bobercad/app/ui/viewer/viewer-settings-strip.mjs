@@ -1,13 +1,13 @@
-import { applyCommandState, segmentedControl } from "../design-system/ui-elements.mjs?v=command-state-1";
-import { createIcon } from "../icons/icon-registry.mjs?v=visibility-menu-1";
-import { DISPLAY_MODE_SPECS, VIEW_ORIENTATION_SPECS, activeViewOrientation, normalizeDisplayMode, normalizeViewOrientation } from "../commands/view-metadata.mjs?v=view-metadata-1";
+import { applyCommandState, segmentedControl } from "../design-system/ui-elements.mjs";
+import { createIcon } from "../icons/icon-registry.mjs";
+import { DISPLAY_MODE_SPECS, VIEW_ORIENTATION_SPECS, activeViewOrientation, normalizeDisplayMode, normalizeViewOrientation } from "../commands/view-metadata.mjs";
 import {
   normalizeViewerSettingsStripWorkspace,
   viewerSettingsStripGroupSpec,
   viewerSettingsStripVisibleGroupIds,
   viewerSettingsStripGroupLabel,
   viewerSettingsStripGroupOrder
-} from "../commands/settings-strip-metadata.mjs?v=render-visibility-1";
+} from "../commands/settings-strip-metadata.mjs";
 
 const DISPLAY_MODE_ORDER = new Map(DISPLAY_MODE_SPECS.map((spec) => [spec.id, spec.settingsStripOrder ?? 0]));
 const VIEW_ORIENTATION_ORDER = new Map(VIEW_ORIENTATION_SPECS.map((spec) => [spec.id, spec.settingsStripOrder ?? 100]));

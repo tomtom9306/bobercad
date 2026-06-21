@@ -1,7 +1,7 @@
-import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs?v=geometry-api-array-values-dry-1";
-import { arrayValues } from "../../../engine/core/model.mjs?v=smart-config-array-values-dry-1";
+import { clearanceCutGeometry } from "../../../engine/geometry/cut-features.mjs";
+import { arrayValues } from "../../../engine/core/model.mjs";
 import { requiredReferencePlane } from "../../../engine/geometry/reference-plane.mjs";
-import { trimOperationFirstReferencePlaneId, trimPlaneOperation } from "../../../engine/api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
+import { trimOperationFirstReferencePlaneId, trimPlaneOperation } from "../../../engine/api/project/trim-operations.mjs";
 import {
   clearanceAnnotationBasis,
   dimensionOffset,
@@ -12,7 +12,7 @@ import {
   rangeMid,
   roleObject,
   v
-} from "../dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
+} from "../dimension-geometry-and-label-context.mjs";
 
 const EPSILON = 1e-9;
 

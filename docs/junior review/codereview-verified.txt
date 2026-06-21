@@ -1,0 +1,272 @@
+Zweryfikowane trafne komentarze z docs/junior review/codereview.txt
+===================================================================
+
+Zakres: sprawdzone przeciwko obecnemu worktree w C:\boberos, nie przeciwko samemu opisowi z bundle.
+Skala: 10 = naprawic bardzo szybko / najwyzszy zwrot, 1 = kosmetyka.
+
+Weryfikacja wykonawcza:
+- node scripts/check_repo.js przechodzi, wiec obecny standardowy check nie lapie najwazniejszych
+  ReferenceError.
+- Dodatkowy smoke probe potwierdzil:
+  store.createLevel -> ReferenceError: nextObjectId is not defined
+  store.createGridSystem -> ReferenceError: nextObjectId is not defined
+  store.deleteMember -> ReferenceError: removeReferences is not defined
+  addMemberSnapRelations -> ReferenceError: axisRelationFromSnap is not defined
+- Runtime/static cross-check api-register vs createProjectStore potwierdzil 109 funkcji store,
+  49 zarejestrowanych store.* entries i store.trimJoint zarejestrowane bez implementacji.
+
+1. [10/10] Naprawic potwierdzone runtime ReferenceError po refaktorze dependency-bag/importow.
+
+   To jest najtrafniejsza czesc review. Kilka miejsc uzywa nazw, ktore nie sa lokalnie zdefiniowane,
+   zaimportowane ani przekazane w dependency bag. To sa realne sciezki awarii, nie kwestia stylu.
+
+   Potwierdzone miejsca:
+   - bobercad/app/engine/store/project-command-store.mjs:742
+     Uzywa removeReferences(...), ale w app tree nie ma definicji/importu tej nazwy.
+   - bobercad/app/engine/store/project-store-smart-component-helpers.mjs:111
+     Uzywa axisRelationFromSnap(...), ale importuje tylko relationUpsertKey z axis-relations.mjs.
+   - bobercad/app/engine/store/project-store-smart-component-methods.mjs:215-264
+     createLevel/createGridSystem uzywaja nextObjectId, finiteNumber, validateLevel,
+     validateGridSystem i addIndexedObject, ale createSmartComponentStoreMethods nie przyjmuje tych
+     zaleznosci, a project-command-store.mjs nie przekazuje ich w wywolaniu factory.
+   - bobercad/app/rendering/interaction/plate-sketch-drag-edit-controller.mjs:431,437
+     requestEdgeAngle/requestPointDistance sa wolane lokalnie, ale nie sa zdefiniowane w module.
+     Podobne funkcje istnieja w plate-sketch/drag-edit-dimensions.mjs, wiec refaktor rozjechal API.
+   - bobercad/app/rendering/interaction/plate-sketch/drag-edit-geometry.mjs:295-296
+     Uzywa edgeById(...), ale import z sketch-edit-geometry.mjs go nie zawiera.
+   - bobercad/app/ui/shell/workspace-customizer-manager.mjs:96,233,344
+     Uzywa normalizeCollapsedGroups, normalizeViewerSettingsStripWorkspace i normalizePanelDock,
+     ale nie importuje ich z workspace-customizer-state.mjs.
+   - bobercad/app/ui/shell/workspace-customizer-state.mjs:98,534,553
+     Uzywa titleCase(...), ale nie ma lokalnej funkcji ani importu z workspace-customizer-labels.mjs.
+   - bobercad/app/ui/viewer/panels/trim-joint-editor-panel.mjs:162
+     Uzywa regionKey(items), ale importuje tylko defaultPlaneTrimRemovedRegionKeys,
+     planeTrimRegionKeys i reconcilePlaneTrimRemovedRegionKeys.
+
+   Rekomendacja: poprawic importy/dependency bag i dodac guardrail, ktory zlapie takie rzeczy przed
+   uruchomieniem UI.
+
+2. [9.5/10] Dodac statyczna bramke na undefined identifiers i kontrakty dependency-bag.
+
+   Obecne checki importuja moduly i waliduja kontrakty, ale takie bledy jak brak removeReferences albo
+   brak titleCase przechodza przez zwykly import, bo JS wykrywa je dopiero przy wykonaniu konkretnej
+   sciezki.
+
+   Rekomendacja:
+   - wlaczyc JS-only no-undef/static identifier check dla app/**/*.mjs,
+   - dla factory typu createSmartComponentStoreMethods sprawdzac, ze wszystkie uzywane zaleznosci sa
+     jawnie przyjete i przekazane w call site,
+   - dodac smoke testy uruchamiajace potwierdzone sciezki: deleteMember, createLevel, createGridSystem,
+     plate sketch angle/distance relation, workspace customizer visibility/dock, trim region select.
+
+3. [9/10] Naprawic drift api-register.json wzgledem createProjectStore().
+
+   Potwierdzone runtime checkiem:
+   - createProjectStore() zwraca 109 funkcji.
+   - api-register.json ma 49 wpisow store.*.
+   - store.trimJoint jest zarejestrowany, ale store nie ma metody trimJoint().
+   - Wiele realnie uzywanych metod UI nie jest w registerze: createGridSystem, createLevel,
+     updatePlate, updateWeld, updateGridSystem, updateWorkPoint, addGridAxis/removeGridAxis,
+     setSmartComponentRoleActive, resetSmartComponentObjectOverrides, detachSmartComponentObject,
+     reattachSmartComponentObject, setPlateSketchEdgeLength/Angle/Distance itd.
+
+   Rekomendacja:
+   - dodac brakujace publiczne metody do registera albo usunac z registera wpisy nieistniejace,
+   - nie wprowadzac malej fasady maskujacej rozjazd; najpierw ustalic jeden prawdziwy kontrakt store API,
+   - dodac CI check: kazde store.* w registerze musi istniec w store, a kazda metoda store uzywana przez UI
+     musi byc jawnie zarejestrowana.
+
+4. [9/10] Zmienic deriveProjectCommandObjectIds(), zeby explicit command metadata bylo autorytatywne.
+
+   Potwierdzone w bobercad/app/engine/store/project-command-registry.mjs:28-41:
+   nawet gdy metadata.changedObjectIds istnieje, funkcja dalej iteruje po wszystkich nextIds z
+   objectIndex i porownuje obiekty przez JSON.stringify().
+
+   To oznacza, ze mala edycja moze skalowac z liczba obiektow w calym projekcie, mimo ze store juz
+   przenosi changedObjectIds/removedObjectIds/regeneratedObjectIds.
+
+   Rekomendacja: w normalnym trybie ufac explicit change-set i wymagac, zeby komendy podawaly prawdziwe
+   changed/removed/regenerated ids. Pelny diff nie powinien byc produkcyjnym fallbackiem; jesli zostanie,
+   to tylko jako osobny, jawnie uruchamiany test kontraktu, ktory ma znalezc bledne metadane, a nie
+   ratowac runtime.
+
+5. [8.5/10] Dodac indeksy zaleznosci zamiast skanow dla member -> Smart Components/features/trim joints.
+
+   Potwierdzone w bobercad/app/engine/api/project/dependencies.mjs:
+   - affectedSmartComponentsForMember() filtruje Object.values(model.smartComponentInstances).
+   - memberDependencyObjectIds() skanuje features, trimJoints i Smart Components.
+   - featureDependencyObjectIds() skanuje Smart Components.
+   - trimJointsUsingReferencePlane() skanuje trimJoints.
+
+   Rekomendacja: utrzymywac indeksy typu memberId -> smartComponentIds/features/trimJoints oraz
+   objectId -> owning smartComponentIds. To da duzy zwrot przy drag/edit/regeneration i dobrze pasuje do
+   istniejacego objectIndex.
+
+6. [8/10] Ujednolic pipeline ProjectCommandResult -> render/panele.
+
+   Projekt ma juz createProjectCommandResult() i store emituje result do subskrybentow, ale UI nadal
+   lokalnie wybiera strategie:
+   - onProjectChange: rerender
+   - onLocalObjectProjectChange: hotSwapMemberDetails
+   - onLocalMemberProjectChange: hotSwapMemberDetails
+   - renderProjectNow(api.project()) w callbackach fokusowych
+   - panele same odswiezaja sie po subscribe().
+
+   Rekomendacja: jeden centralny handler wyniku komendy powinien decydowac, czy robic full render,
+   partial scene replace, odswiezenie overlay/dimensions czy panel refresh. Panele powinny mutowac model,
+   nie wybierac strategii renderowania.
+
+7. [8/10] Sformalizowac SnapCandidate/SnapResult i oddzielic persistent reference od transient snap fields.
+
+   Potwierdzone:
+   - snap-candidate-providers.mjs: pushPoint/pushLine/pushPlane skladaja luzne obiekty z geometry,
+     providerId, target, priority, visibilityPolicy i dodatkowymi polami z data.
+   - snap-manager.mjs: resultFromSnap miesza relationHints, preview, providerId, target i raw snap.
+   - axisRelationFromSnap() tworzy relacje modelu bez jawnego kontraktu persistent reference.
+
+   Rekomendacja: wprowadzic jawna strukture:
+   geometry, identity, visibility, ranking, reference, hints, preview. Tylko reference powinno byc
+   kandydatem do zapisu w modelu.
+
+8. [7.5/10] Zastapic monolityczne collectSnapCandidates() provider pipeline/registry z budzetami.
+
+   Potwierdzone w snap-candidate-providers.mjs:1186-1230:
+   collectSnapCandidates() wolal kolejno prawie wszystkie zrodla: members, evaluated edges, plates,
+   fasteners, work points, grids, levels, reference planes, global axes, active sketch, adaptive grid,
+   construction axes, reference axes, drag guide axes i composite candidates.
+
+   Rekomendacja: provider registry z capability/scope/budget/visibility/reference metadata. To ograniczy
+   centralna liste, uproszcza testy i pomoze utrzymac wydajnosc.
+
+9. [7.5/10] Uproscic snap visibility: nie robic twardego object-under-cursor prefilter przed solverem.
+
+   Potwierdzone:
+   - snap-manager.mjs:250-300 wybiera visibleHit, potem solidVisibilityScopeCandidates(), potem solveSnap()
+     dostaje jeszcze createVisibilityFilter().
+   - snap-visibility-policy.mjs:236-284 odrzuca fizyczne kandydaty, gdy objectId nie pasuje do visibleIds.
+
+   To moze odrzucic dobry kandydat z innego widocznego/nearby obiektu zanim solver policzy ranking.
+
+   Rekomendacja: zrobic z tego penalty/budget albo jeden pozny etap widocznosci po geometry proximity.
+
+10. [7/10] Dodac stabilne references dla grid/reference plane/member axis w auto-relations.
+
+    Potwierdzone w axis-relations.mjs:
+    - AXIS_SNAP_TYPES zawiera grid-line.
+    - AXIS_SOURCE_TYPES nie zawiera grid-line.
+    - axisSourceFromSnap() dla grid-line spada do fixed-axis z biezacymi punktami a/b.
+
+    Skutek: snap do grid line zapisuje geometrie osi, a nie tozsamosc gridu. Po zmianie gridu relacja nie
+    bedzie semantycznie podazac za gridem.
+
+    Rekomendacja: provider snapow powinien wystawiac stable reference, np. gridSystemId + axisGroup +
+    axisId + levelId, a relacja powinna zapisywac reference zamiast fixed-axis tam, gdzie semantyka jest
+    stabilna.
+
+11. [7/10] Uczytelnic ranking snapow i intersection semantics.
+
+    Potwierdzone:
+    - snap-solver.mjs:409-425 robi rank przez class rank, screen distance, bias i dopiero potem priority.
+    - snap-solver.mjs:580-610 bierze line hits, ucina do maxIntersectionSources i testuje pary.
+    - intersection jest typu axis-intersection, ale pochodzi z screen line intersection + projekcji/closest
+      3D axes.
+
+    Rekomendacja: scoring breakdown w diagnostyce oraz rozdzielenie world-intersection,
+    screen-intersection i projection-guide. To zmniejszy trudne do debugowania CAD snap bugs.
+
+12. [6.5/10] Dodac provider-level spatial index/cache dla snapow przed duzymi modelami.
+
+    Potwierdzone:
+    - snap-candidate-providers.mjs skanuje Object.values(project.model.members), plates, fastenerGroups,
+      workPoints, levels itd.
+    - sa radius/maxMemberCandidates/maxPlateCandidates, ale one nadal startuja od skanu kolekcji.
+    - member-transform-edit-controller.mjs ma throttling, gdy ostatni snap drag trwa > 12 ms.
+
+    Rekomendacja: cache/index per provider + wspolna invalidacja na project/view change.
+
+13. [6.5/10] Rozbic viewer-runtime.mjs i viewer-command-registration.mjs dalej na koordynatory/uslugi.
+
+    Potwierdzone:
+    - viewer-runtime.mjs ma 934 linie i dalej laczy bootstrap, DOM roots, store, selection, snap, render,
+      QA, panele, command registration i selection routing.
+    - viewer-command-registration.mjs ma 662 linie i przyjmuje dluga liste getterow do subsystemow.
+
+    Rekomendacja: kontynuowac split na composition root + render service + selection/editor coordinator +
+    command packs. To jest wartosciowe, ale po P0 i API/change-set guardrails.
+
+14. [6/10] Nie mutowac zaladowanego viewer-settings.json jako runtime preferences.
+
+    Potwierdzone w viewer-command-registration.mjs:
+    - setSnapStrengthCommand() zapisuje settings.authoring.snap.strength.
+    - setDisplayModeCommand() zapisuje settings.render.displayMode.
+    - toggleRenderVisibilityCommand() mutuje settings.render.visibility.
+
+    Rekomendacja: viewer-settings.json traktowac jako defaults, a aktywny snap/display/visibility trzymac
+    w runtime/workspace preferences. To zmniejszy mylenie konfiguracji, workspace stanu i projektu.
+
+15. [6/10] Lazy-load QA bridge w produkcyjnym viewerze, ale go nie usuwac.
+
+    Potwierdzone:
+    - viewer-runtime.mjs importuje createViewerQaBridge zawsze.
+    - viewer-runtime.mjs zawsze tworzy qaBridge, mountQaApi() i applyQaView().
+    - viewer-qa-bridge.mjs robi realne rzeczy tylko dla qaView/qaCapture/qaDebug/qaSnapSmoke oraz DOM QA API.
+
+    Rekomendacja: dynamic import tylko gdy URL/search params albo test harness wymagaja QA. Nie usuwac,
+    bo narzedzia QA i capture korzystaja z tego mostka.
+
+16. [5.5/10] Dodac unified disposal/lifecycle registry dla runtime i paneli.
+
+    Potwierdzone:
+    - czesc modulow zwraca destroy() i odpinanie unsubscribe, np. model-browser/project-data.
+    - inne panele subskrybuja api.subscribe(render) bez expose destroy(), np. feature-editor-panel,
+      trim-joint-editor-panel, inspector-panel.
+    - viewer-runtime dodaje globalne event listenery bez centralnego cleanup.
+
+    Rekomendacja: maly disposers registry w composition root. Nie jest pilne dla single-page, ale pomoze
+    testom, embedded viewerowi i przyszlym multi-document flows.
+
+17. [5/10] Wyciagnac wspolny pointer-frame scheduler dla authoring controllers.
+
+    Potwierdzone w member-create, plate-create, sketch-create i work-plane controllerach:
+    powtarza sie pendingPointer + pointerFramePending + requestAnimationFrame + reset.
+
+    Rekomendacja: maly helper po ustabilizowaniu biezacych P0. Zysk glownie maintainability.
+
+18. [4.5/10] Posprzatac szerokie importy plate-sketch po naprawie regresji.
+
+    Potwierdzone: moduly drag-edit-geometry/overlays/snap/targets maja bardzo szerokie importy z
+    plate-sketch-relations-and-bends.mjs i sketch-edit-geometry.mjs; jednoczesnie w drag-edit-geometry
+    brakuje konkretnego edgeById. To wyglada jak efekt mechanicznego splitu.
+
+    Rekomendacja: najpierw naprawic brakujace importy, potem zrobic import cleanup i ewentualnie
+    ograniczyc barrel imports. To nie jest wysokie ROI samo w sobie, ale zmniejszy kolejne false positives.
+
+19. [4/10] Oznaczyc placeholder commands jako planned/disabled w metadanych.
+
+    Potwierdzone:
+    - command-registry.mjs definiuje tools.clashDetection.open i structural-analysis.open.
+    - viewer-command-registration.mjs rejestruje handlery, ale tylko pokazuje "not available yet."
+
+    Rekomendacja: dodac status: planned / implemented: false / disabledReason do command metadata, zeby
+    command palette i QA mogly odroznic gotowy workflow od placeholdera.
+
+Komentarze, ktorych nie wpisuje jako rekomendacji do wdrozenia
+---------------------------------------------------------------
+
+- "Przeniesc compliance.mjs i solver-result.mjs albo usunac do czasu prawdziwej funkcji" - nietrafne
+  w obecnym repo. Sa uzywane przez stair-system solver/rule packs oraz scripts/contracts.
+
+- "Schematy sa tylko app-tree payload/documentation, wiec przeniesc z app" - za mocne.
+  AGENTS.md, data-model.md, check_repo.js i $schema w danych traktuja bobercad/app/schemas jako aktualny
+  source of truth. Mozna kiedys wykluczyc schematy z produkcyjnego browser bundle, ale nie przenosic ich
+  mechanicznie z source tree bez migracji wszystkich $schema refs i skryptow.
+
+- "Brak testow" - tylko czesciowo prawda. Nie ma typowych *.test.*/*.spec.* plikow, ale repo ma duzy
+  zestaw scripts/contracts oraz validate_domain_model.js pod check_repo.js. Sensowna rekomendacja to
+  dodac konkretne testy na P0/API drift/snap/store, nie twierdzic, ze nie ma zadnych kontraktow.
+
+- "Dodac assertProjectInvariants od zera" - czesciowo juz istnieje jako scripts/validate_domain_model.js
+  i jest w check_repo.js. Warto najwyzej rozszerzyc to o dev-after-command/test mode oraz brakujace
+  runtime invariants.
+
+- "Usunac QA bridge" - nie. Warto lazy-load, ale QA bridge jest uzyteczny dla capture/smoke/debug tools.

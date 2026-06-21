@@ -156,7 +156,6 @@ bobercad
         |   |
         |   `-- smart-components
         |       |-- smart-component-register.json
-        |       |-- member-pick-smart-component-library-ui.mjs
         |       |-- smart-component-parameter-ui.mjs
         |       |-- parameter-values.mjs
         |       |
@@ -232,7 +231,7 @@ ui/panels      generic project/property panels
 ui/dimensions  dimension edit state and commits
 ```
 
-Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The Smart Component register points to `data/libraries/smart-components/member-pick-smart-component-library-ui.mjs` for library-level tools. Component-specific fields come from Smart Component config, not custom viewer files.
+Domain-specific panels should be contributions loaded into generic viewer hosts, not hardcoded UI structure. Files such as `connection-creator-panel.mjs` or `connection-panel.mjs` must not live in `app/ui/viewer`. The Smart Component register is catalog-only; viewer-side Smart Component UI loading is separate from headless catalog loading. Component-specific fields come from Smart Component config, not custom viewer files.
 
 API rule:
 
@@ -249,7 +248,6 @@ Smart Component libraries keep parametric authoring definitions out of app core.
 ```text
 bobercad/bobercad/data/libraries/smart-components
 |-- smart-component-register.json
-|-- member-pick-smart-component-library-ui.mjs
 |-- smart-component-parameter-ui.mjs
 `-- components
     |-- connections
@@ -263,4 +261,4 @@ bobercad/bobercad/data/libraries/smart-components
     `-- buildings
 ```
 
-Adding a new Smart Component means adding one folder under the matching `components/<kind>` subfolder and registering that folder path in `bobercad/bobercad/data/libraries/smart-components/smart-component-register.json`. The register is also the only link to library UI through `libraryUi`. A config may run a declarative `recipe` of public operations or a local `build.mjs` that calls the public model API. Do not add specific component types to app core.
+Adding a new Smart Component means adding one folder under the matching `components/<kind>` subfolder and registering that folder path in `bobercad/bobercad/data/libraries/smart-components/smart-component-register.json`. The register must stay headless and catalog-only. A config may run a declarative `recipe` of public operations or a local `build.mjs` that calls the public model API. Do not add specific component types to app core.

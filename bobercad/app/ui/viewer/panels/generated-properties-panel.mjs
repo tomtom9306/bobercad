@@ -1,5 +1,5 @@
-import { actionFieldControl, actionListControl, actionRow, actionRowControl, axisTransformGridControl, button, checkboxInput, descriptorActions, diagnosticListControl, disclosureSection, messageControl, numberChoiceControl, numberListControl, numericControl, numericInput, objectRefControl, objectRefListControl, optionGridControl, propertiesPanelShell, propertyButtonClass, readout, readoutListControl, segmentedFieldControl, selectInput, statusGroupTitleControl, statusListRowControl, statusRowControl, summaryCardControl, tabListControl, text, textInput, vectorControl } from "./panel-elements.mjs?v=properties-shell-1";
-import { normalizeInspectorPropertySections } from "../../commands/inspector-property-metadata.mjs?v=inspector-descriptor-contract-1";
+import { actionFieldControl, actionListControl, actionRow, actionRowControl, axisTransformGridControl, button, checkboxInput, descriptorActions, diagnosticListControl, disclosureSection, messageControl, numberChoiceControl, numberListControl, numericControl, numericInput, objectRefControl, objectRefListControl, optionGridControl, propertiesPanelShell, propertyButtonClass, readout, readoutListControl, segmentedFieldControl, selectInput, statusGroupTitleControl, statusListRowControl, statusRowControl, summaryCardControl, tabListControl, text, textInput, vectorControl } from "./panel-elements.mjs";
+import { normalizeInspectorPropertySections } from "../../commands/inspector-property-metadata.mjs";
 
 export function generatedPropertiesPanel({
   title = "Properties",

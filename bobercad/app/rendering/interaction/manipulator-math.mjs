@@ -1,5 +1,5 @@
-import { clamp, finiteNumber, finiteNumberOr, finitePositiveNumber, finitePositiveNumberOr, v } from "../../engine/core/math.mjs?v=number-or-dry-1";
-import { memberFrame } from "../../engine/geometry/member-evaluator.mjs?v=geometry-api-array-values-dry-1";
+import { clamp, finiteNumber, finiteNumberOr, finitePositiveNumber, finitePositiveNumberOr, v } from "../../engine/core/math.mjs";
+import { memberFrame } from "../../engine/geometry/member-evaluator.mjs";
 
 const DEFAULT_NICE_STEPS = [1, 2, 5, 10, 25, 50, 100];
 

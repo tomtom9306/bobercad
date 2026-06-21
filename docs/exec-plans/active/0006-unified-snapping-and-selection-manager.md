@@ -297,7 +297,8 @@ Required providers:
 | `model.fasteners` | Fastener centers and hole centers. |
 | `model.workPoints` | Work points from the project model. |
 | `model.referencePlanes` | Reference plane origin/corners/axes/edges. |
-| `model.grids` | Grid lines and intersections. |
+| `model.gridSystems` | Grid lines and intersections derived from stored grid axes and datum levels. |
+| `model.levels` | Level planes exposed through the grid/datum snap scope. |
 | `construction.globalAxes` | Global origin and axes. |
 | `construction.memberCreateAxes` | Current start axes, profile axes, creation axes, active reference axes. |
 | `construction.memberEditAxes` | Drag guide axes and relation axes. |

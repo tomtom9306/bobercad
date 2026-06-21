@@ -6,7 +6,7 @@ import {
   dataPanelRow,
   dataPanelSearch,
   dataPanelSection
-} from "../design-system/ui-elements.mjs?v=smart-component-browser-1";
+} from "../design-system/ui-elements.mjs";
 import {
   SMART_COMPONENT_BROWSER_PANEL_SPEC,
   smartComponentCreatedStatus,
@@ -21,7 +21,7 @@ import {
   smartComponentStatusIcon,
   smartComponentStatusValue,
   smartComponentTitleCase
-} from "../commands/smart-component-browser-metadata.mjs?v=smart-component-browser-metadata-1";
+} from "../commands/smart-component-browser-metadata.mjs";
 
 export function mountSmartComponentBrowser({
   root,

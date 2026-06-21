@@ -1,4 +1,4 @@
-import { truthyValues } from "../../engine/core/model.mjs?v=truthy-values-dry-1";
+import { truthyValues } from "../../engine/core/model.mjs";
 
 function bindingList(binding) {
   if (Array.isArray(binding)) return binding;

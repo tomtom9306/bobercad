@@ -251,6 +251,26 @@
     "level_top_flush": {
       "collection": "levels",
       "type": "datum-level"
+    },
+    "wp_main_beam_start": {
+      "collection": "workPoints",
+      "type": "workPoints"
+    },
+    "wp_main_beam_end": {
+      "collection": "workPoints",
+      "type": "workPoints"
+    },
+    "wp_supported_beam_start": {
+      "collection": "workPoints",
+      "type": "workPoints"
+    },
+    "wp_supported_beam_end": {
+      "collection": "workPoints",
+      "type": "workPoints"
+    },
+    "wp_connection_center": {
+      "collection": "workPoints",
+      "type": "workPoints"
     }
   },
   "modelDefaults": {

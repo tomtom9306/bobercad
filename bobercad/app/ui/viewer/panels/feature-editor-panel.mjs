@@ -1,8 +1,8 @@
-import { createPanelMessageState, disclosureSection, hidePanel, renderEditorPanel } from "./panel-elements.mjs?v=panel-primitives-1";
-import { arrayValues } from "../../../engine/core/model.mjs?v=ui-array-values-dry-1";
-import { inspectorFeatureEditorSections } from "../../commands/inspector-property-metadata.mjs?v=feature-editor-metadata-1";
-import { bindGeneratedPropertySections } from "./generated-property-bindings.mjs?v=generated-property-bindings-1";
-import { generatedPropertyField } from "./generated-properties-panel.mjs?v=feature-editor-generated-fields-1";
+import { createPanelMessageState, disclosureSection, hidePanel, renderEditorPanel } from "./panel-elements.mjs";
+import { arrayValues } from "../../../engine/core/model.mjs";
+import { inspectorFeatureEditorSections } from "../../commands/inspector-property-metadata.mjs";
+import { bindGeneratedPropertySections } from "./generated-property-bindings.mjs";
+import { generatedPropertyField } from "./generated-properties-panel.mjs";
 
 export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectProjectChange }) {
   let selectedFeatureId = null;
@@ -98,7 +98,7 @@ export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectPr
     render();
   }
 
-  api.subscribe(() => {
+  const unsubscribe = api.subscribe(() => {
     if (selectedFeatureId && !api.project().model.features?.[selectedFeatureId]) clear();
     else render();
   });
@@ -116,6 +116,9 @@ export function mountFeatureEditorPanel({ panel, api, selection, onLocalObjectPr
       selection.select([featureId]);
       render();
     },
-    clear
+    clear,
+    destroy() {
+      unsubscribe();
+    }
   };
 }

@@ -1,5 +1,5 @@
-import { arrayValues } from "../../core/model.mjs?v=array-values-dry-1";
-import { v } from "../../core/math.mjs?v=axis-segment-dry-1";
+import { arrayValues } from "../../core/model.mjs";
+import { v } from "../../core/math.mjs";
 
 const EPSILON = 1e-9;
 

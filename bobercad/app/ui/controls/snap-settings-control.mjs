@@ -1,5 +1,5 @@
-import { SNAP_STRENGTH_SPECS, SNAP_TARGET_SPECS, normalizeSnapStrength } from "../commands/snap-metadata.mjs?v=snap-metadata-1";
-import { createIcon } from "../icons/icon-registry.mjs?v=snap-settings-control-1";
+import { SNAP_STRENGTH_SPECS, SNAP_TARGET_SPECS, normalizeSnapStrength } from "../commands/snap-metadata.mjs";
+import { createIcon } from "../icons/icon-registry.mjs";
 
 export function createSnapSettingsControl({
   snapSettings = {},

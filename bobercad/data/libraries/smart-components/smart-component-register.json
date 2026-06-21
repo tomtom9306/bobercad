@@ -1,6 +1,5 @@
 {
   "$schema": "../../../app/schemas/smart-component-register.schema.json",
-  "libraryUi": "./member-pick-smart-component-library-ui.mjs",
   "components": [
     "./components/connections/fin-plate/",
     "./components/connections/moment-end-plate/",

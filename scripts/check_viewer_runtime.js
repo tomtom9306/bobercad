@@ -1,27 +1,33 @@
-const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
+const { assertNavCubeCameraRotations, createDetailFreeMemberProject, readJson } = require("./contracts/viewer_runtime_contract_helpers");
 
 const ROOT = path.resolve(__dirname, "..");
 
-function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
-}
-
 async function main() {
   const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "scene", "scene-geometry-builder.mjs")).href);
+  const { createProjectStore } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "store", "project-command-store.mjs")).href);
   const { createCamera } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "webgl", "camera.mjs")).href);
+  const { navCubeRotationForCameraAngles } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "ui", "viewer", "nav-cube.mjs")).href);
   const { ccwPoints } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "geometry", "csg.mjs")).href);
   const { signedArea2d, triangulateFace } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "geometry", "polygon.mjs")).href);
   const { solveSnap } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "api", "interaction", "snap-solver.mjs")).href);
   const { sketchFromRectangle } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "api", "project", "plate-sketch-relations-and-bends.mjs")).href);
   const { collectSnapCandidates } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "interaction", "snap-candidate-providers.mjs")).href);
   const { createSnapManager } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "interaction", "snap-manager.mjs")).href);
-  const { snapPointOverlay } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "scene", "authoring", "snap-overlays.mjs")).href);
+  const { createMemberCreateController } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "interaction", "member-create-controller.mjs")).href);
+  const { createPlateCreateController } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "interaction", "plate-create-controller.mjs")).href);
+  const { createPlateSketchEditController } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "interaction", "plate-sketch-drag-edit-controller.mjs")).href);
+  const { snapAxisSourceLines, snapPointOverlay } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "scene", "authoring", "snap-overlays.mjs")).href);
   const { buildSmartComponentDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "annotations", "build-dimensions.mjs")).href);
   const { loadSmartComponentDefinitions, smartComponentDefinition } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "modules", "smart-components", "smart-component-registry.mjs")).href);
   const settingsPath = path.join(ROOT, "bobercad", "app", "ui", "viewer", "viewer-settings.json");
   const settings = readJson(settingsPath);
+  const navCubeRotationError = assertNavCubeCameraRotations(navCubeRotationForCameraAngles);
+  if (navCubeRotationError) {
+    console.error(navCubeRotationError);
+    return 1;
+  }
   const projectPath = path.resolve(path.dirname(settingsPath), settings.project.path);
   const project = readJson(projectPath);
   const profiles = readJson(path.resolve(path.dirname(projectPath), project.libraries.profiles.path));
@@ -32,6 +38,23 @@ async function main() {
     faces: sourceScene.faces.map((face) => face.points.map(pointKey).sort().join("|")).sort(),
     lines: sourceScene.lines.map((line) => line.points.map(pointKey).sort().join("|")).sort()
   });
+  const trimProjectPath = path.join(ROOT, "bobercad", "data", "projects", "sample_connection_test_frame.json");
+  const trimProject = readJson(trimProjectPath);
+  const trimProfiles = readJson(path.resolve(path.dirname(trimProjectPath), trimProject.libraries.profiles.path));
+  const trimFasteners = readJson(path.resolve(path.dirname(trimProjectPath), trimProject.libraries.fasteners.path));
+  const trimResult = createProjectStore({ project: trimProject }).createTrimJoint({
+    memberIds: ["column_c1", "beam_b1_south"],
+    operationType: "end-butt-both"
+  });
+  const trimScene = buildScene(trimResult.project, trimProfiles, trimFasteners, settings);
+  if (!Object.prototype.hasOwnProperty.call(trimResult.project.model.trimJoints || {}, trimResult.trimJointId)) {
+    console.error("FAILED: trim create should store the new trim joint");
+    return 1;
+  }
+  if (!trimScene.lines.some((line) => line.collection === "trimJoints" && line.objectId === trimResult.trimJointId)) {
+    console.error("FAILED: created member-to-member trim should render trim markers");
+    return 1;
+  }
 
   for (const profileId of ["DEMO_I_200X100X8X12", "DEMO_I_300X150X8X12", "DEMO_L_75X75X8"]) {
     const contour = profiles.profiles?.[profileId]?.section?.contours?.find((item) => item.role === "solid");
@@ -51,34 +74,87 @@ async function main() {
     console.error("FAILED: viewer produced no faces");
     return 1;
   }
+  const evaluatedMemberEdges = scene.lines.filter((line) => line.snapRole === "member-evaluated-edge");
+  if (!evaluatedMemberEdges.length) {
+    console.error("FAILED: detailed member CSG edges should expose evaluated snap edges");
+    return 1;
+  }
+  const evaluatedCutEdge = evaluatedMemberEdges.find((line) => (
+    line.edgeRef?.kind === "evaluated-edge"
+      && line.edgeRef.owner?.collection === "members"
+      && line.edgeRef.owner?.objectId === line.objectId
+      && line.edgeRef.surfaces?.some((surface) => surface.kind === "cut-face" && surface.featureId)
+  ));
+  if (!evaluatedCutEdge) {
+    console.error("FAILED: boolean/notched member edges should carry cut-face provenance in edgeRef");
+    return 1;
+  }
+  const evaluatedCutCutEdge = evaluatedMemberEdges.find((line) => (
+    (line.edgeRef?.surfaces || []).filter((surface) => surface.kind === "cut-face" && surface.featureId).length >= 2
+  ));
+  if (!evaluatedCutCutEdge) {
+    console.error("FAILED: intersecting/notch-on-notch cuts should preserve both cut-face refs on evaluated edges");
+    return 1;
+  }
+  if (JSON.stringify(evaluatedCutEdge.edgeRef).includes("[") && evaluatedCutEdge.edgeRef.points) {
+    console.error("FAILED: evaluated edgeRef must not store generated mesh coordinates");
+    return 1;
+  }
+  const evaluatedCutEdgeMid = evaluatedCutEdge.points.reduce((sum, point) => (
+    [sum[0] + point[0] / evaluatedCutEdge.points.length, sum[1] + point[1] / evaluatedCutEdge.points.length, sum[2] + point[2] / evaluatedCutEdge.points.length]
+  ), [0, 0, 0]);
+  const evaluatedEdgeCandidates = collectSnapCandidates({
+    project,
+    profiles,
+    context: {
+      includeGlobalAxes: false,
+      evaluatedEdges: [evaluatedCutEdge]
+    },
+    scope: {},
+    profile: { includeSurfaceTargets: "edges" },
+    rawPoint: evaluatedCutEdgeMid
+  }).filter((candidate) => candidate.type?.startsWith("member-evaluated-edge"));
+  if (!evaluatedEdgeCandidates.some((candidate) => candidate.target?.edgeRef?.kind === "evaluated-edge")) {
+    console.error("FAILED: evaluated member edge snap candidates should carry stable edgeRef targets");
+    return 1;
+  }
+  const evaluatedEdgeSnapManager = createSnapManager({
+    viewer: {
+      projectPoint: ([x, y, z = 0]) => ({ x, y, depth: z }),
+      screenRay: (x, y) => ({ origin: [x, y, 100000], direction: [0, 0, -1] }),
+      snapVisibilityAt: () => ({
+        depth: evaluatedCutEdgeMid[2],
+        point: evaluatedCutEdgeMid,
+        face: { objectId: evaluatedCutEdge.objectId }
+      }),
+      evaluatedSnapEdges: ({ objectIds = [] } = {}) => (
+        objectIds.includes(evaluatedCutEdge.objectId) ? [evaluatedCutEdge] : []
+      )
+    },
+    api: { project: () => project },
+    profiles,
+    settings
+  });
+  const evaluatedEdgeSnap = evaluatedEdgeSnapManager.resolve({
+    screen: { x: evaluatedCutEdgeMid[0], y: evaluatedCutEdgeMid[1] },
+    rawPoint: evaluatedCutEdgeMid,
+    context: { includeGlobalAxes: false, snapVisibilityRadiusPx: 0 }
+  });
+  if (!evaluatedEdgeSnap.snap?.type?.startsWith("member-evaluated-edge") || evaluatedEdgeSnap.snap?.target?.edgeRef?.kind !== "evaluated-edge") {
+    console.error(`FAILED: snap manager should resolve visible cut/notch edges through evaluated edgeRef candidates, got ${evaluatedEdgeSnap.snap?.type || "none"}`);
+    return 1;
+  }
 
-  const largeProject = JSON.parse(JSON.stringify(project));
   const largeCount = 6000;
   const stressProfileId = Object.keys(profiles.profiles)[0];
-  largeProject.project.name = "Synthetic Large Member Scene";
-  largeProject.objectIndex = {};
-  largeProject.model.members = {};
-  largeProject.model.plates = {};
-  largeProject.model.holePatterns = {};
-  largeProject.model.objectPatterns = {};
-  largeProject.model.features = {};
-  largeProject.model.trimJoints = {};
-  largeProject.model.fastenerGroups = {};
-  largeProject.model.welds = {};
-  largeProject.model.smartComponentInstances = {};
-  largeProject.model.assemblies = {};
-  for (let index = 0; index < largeCount; index += 1) {
-    const id = `stress_member_${index}`;
-    largeProject.objectIndex[id] = { collection: "members", type: "boolean-demo-beam" };
-    largeProject.model.members[id] = {
-      id,
-      type: "boolean-demo-beam",
-      profile: stressProfileId,
-      start: [index * 12, 0, 0],
-      end: [index * 12 + 1000 + index * 0.01, 0, 0],
-      featureIds: []
-    };
-  }
+  const largeProject = createDetailFreeMemberProject(project, stressProfileId, {
+    count: largeCount,
+    idPrefix: "stress_member",
+    name: "Synthetic Large Member Scene",
+    spacing: 12,
+    baseLength: 1000,
+    lengthJitter: 0.01
+  });
   const largeScene = buildScene(largeProject, profiles, fasteners, settings);
   if (largeScene.memberInstances.length !== largeCount) {
     console.error(`FAILED: detail-free members should use the instanced path, got ${largeScene.memberInstances.length}/${largeCount}`);
@@ -89,22 +165,13 @@ async function main() {
     return 1;
   }
 
-  const smallProject = JSON.parse(JSON.stringify(largeProject));
-  smallProject.project.name = "Synthetic Small Member Scene";
-  smallProject.objectIndex = {};
-  smallProject.model.members = {};
-  for (let index = 0; index < 2; index += 1) {
-    const id = `simple_member_${index}`;
-    smallProject.objectIndex[id] = { collection: "members", type: "boolean-demo-beam" };
-    smallProject.model.members[id] = {
-      id,
-      type: "boolean-demo-beam",
-      profile: stressProfileId,
-      start: [index * 1200, 0, 0],
-      end: [index * 1200 + 900, 0, 0],
-      featureIds: []
-    };
-  }
+  const smallProject = createDetailFreeMemberProject(project, stressProfileId, {
+    count: 2,
+    idPrefix: "simple_member",
+    name: "Synthetic Small Member Scene",
+    spacing: 1200,
+    baseLength: 900
+  });
   const smallScene = buildScene(smallProject, profiles, fasteners, settings);
   if (smallScene.memberInstances.length !== 2 || smallScene.faces.length) {
     console.error(`FAILED: small detail-free scenes should use the same instanced path, got ${smallScene.memberInstances.length} instances and ${smallScene.faces.length} faces`);
@@ -157,6 +224,68 @@ async function main() {
   const plateLikeCutScene = buildScene(plateLikeProject, profiles, fasteners, settings, { renderObjectIds: ["plate_like_cut"] });
   if (JSON.stringify(sceneGeometrySignature(plateLikePlateScene)) !== JSON.stringify(sceneGeometrySignature(plateLikeCutScene))) {
     console.error("FAILED: polygonal cutting body should use the same scene geometry path as a matching plate");
+    return 1;
+  }
+  let plateLikeOverlay = null;
+  let editablePlateLikeProject = JSON.parse(JSON.stringify(plateLikeProject));
+  const plateLikeEditApi = {
+    project: () => editablePlateLikeProject,
+    subscribe: () => {},
+    setFeatureBody: (featureId, patch) => {
+      editablePlateLikeProject = JSON.parse(JSON.stringify(editablePlateLikeProject));
+      const feature = editablePlateLikeProject.model.features?.[featureId];
+      if (!feature) throw new Error(`feature not found: ${featureId}`);
+      feature.body = { ...feature.body, ...patch };
+      return editablePlateLikeProject;
+    },
+    updatePlate: (plateId, patch) => {
+      editablePlateLikeProject = JSON.parse(JSON.stringify(editablePlateLikeProject));
+      const plate = editablePlateLikeProject.model.plates?.[plateId];
+      if (!plate) throw new Error(`plate not found: ${plateId}`);
+      Object.assign(plate, patch);
+      return editablePlateLikeProject;
+    }
+  };
+  const plateLikeSketchEdit = createPlateSketchEditController({
+    viewer: {
+      setAuthoringOverlay: (overlay) => {
+        plateLikeOverlay = overlay;
+      },
+      screenScale: () => 1
+    },
+    api: plateLikeEditApi,
+    settings: {},
+    requestDimensionInput: ({ defaultValue }) => defaultValue,
+    onProjectChange: (nextProject) => {
+      editablePlateLikeProject = nextProject;
+    }
+  });
+  if (!plateLikeSketchEdit.selectObject("plate_like_cut", { sketchMode: "clean" })) {
+    console.error("FAILED: polygonal cutting body should select as a plate-like sketch target");
+    return 1;
+  }
+  if (!plateLikeOverlay?.handles?.some((handle) => handle.kind === "plate-sketch-center")) {
+    console.error("FAILED: plate-like cutting body sketch overlay should expose a movable center handle");
+    return 1;
+  }
+  if (!plateLikeOverlay.handles.some((handle) => handle.kind === "plate-sketch-vertex") || !plateLikeOverlay.labels?.some((label) => label.dimensionId?.includes(":length"))) {
+    console.error("FAILED: plate-like cutting body sketch overlay should expose plate sketch vertices and dimensions");
+    return 1;
+  }
+  const cutVertexHandle = plateLikeOverlay.handles.find((handle) => handle.kind === "plate-sketch-vertex");
+  cutVertexHandle.dragAxesScreen = {
+    x: { unit: { x: 1, y: 0 }, scalePxPerWorld: 1 },
+    y: { unit: { x: 0, y: 1 }, scalePxPerWorld: 1 }
+  };
+  if (!plateLikeSketchEdit.authoringHandler.beginDrag({ handle: cutVertexHandle, event: { button: 0, detail: 1 }, modifiers: {} })) {
+    console.error("FAILED: plate-like cutting body sketch vertex should begin drag");
+    return 1;
+  }
+  plateLikeSketchEdit.authoringHandler.drag({ totalDx: 10, totalDy: 0, dx: 10, dy: 0, screen: { x: 0, y: 0 } });
+  plateLikeSketchEdit.authoringHandler.end();
+  const movedCutOutline = editablePlateLikeProject.model.features.plate_like_cut.body.outline;
+  if (!Array.isArray(movedCutOutline) || Math.abs(movedCutOutline[0][0] - -40) > 1e-6) {
+    console.error(`FAILED: plate-like cutting body vertex drag should update body.outline, got ${JSON.stringify(movedCutOutline)}`);
     return 1;
   }
 
@@ -228,7 +357,7 @@ async function main() {
     priority: 72
   };
   const offSegmentSnap = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 25, y: 2 },
     candidates: [plateEdge],
     screenTolerance: 5,
@@ -239,7 +368,7 @@ async function main() {
     return 1;
   }
   const onSegmentSnap = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 5, y: 2 },
     candidates: [plateEdge],
     screenTolerance: 5,
@@ -250,7 +379,7 @@ async function main() {
     return 1;
   }
   const offSegmentIntersection = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 25, y: 0 },
     candidates: [
       plateEdge,
@@ -259,12 +388,12 @@ async function main() {
     screenTolerance: 5,
     intersectionTolerancePx: 5
   });
-  if (offSegmentIntersection.snap?.type === "axis-intersection") {
+  if (offSegmentIntersection.snap?.intersectionSemanticType === "axis-intersection") {
     console.error("FAILED: finite plate edge intersection should not use extended segments");
     return 1;
   }
   const guideSnap = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 25, y: 2 },
     candidates: [{ ...plateEdge, type: "creation-axis", label: "Start X axis", screenIntersectionMode: "self" }],
     screenTolerance: 5,
@@ -272,6 +401,33 @@ async function main() {
   });
   if (guideSnap.snap?.label !== "Start X axis") {
     console.error("FAILED: construction guide lines should still snap beyond their finite endpoints");
+    return 1;
+  }
+  const memberProfileEdgeOverlay = snapAxisSourceLines({
+    kind: "line",
+    providerId: "model.members",
+    type: "member-profile-edge",
+    objectId: "snap_member_edge",
+    label: "Member edge",
+    a: [0, 0, 0],
+    b: [0, 0, 100],
+    point: [0, 0, 10]
+  }, { snapAxisHighlightSpan: 1600 })[0];
+  if (JSON.stringify(memberProfileEdgeOverlay?.points) !== JSON.stringify([[0, 0, 0], [0, 0, 100]])) {
+    console.error(`FAILED: member profile edge overlay should highlight the exact physical edge, got ${JSON.stringify(memberProfileEdgeOverlay?.points)}`);
+    return 1;
+  }
+  const creationAxisOverlay = snapAxisSourceLines({
+    kind: "line",
+    providerId: "construction.memberCreateAxes",
+    type: "creation-axis",
+    label: "Start X axis",
+    a: [0, 0, 0],
+    b: [10, 0, 0],
+    point: [0, 0, 0]
+  }, { snapAxisHighlightSpan: 1600 })[0];
+  if (JSON.stringify(creationAxisOverlay?.points) !== JSON.stringify([[-1600, 0, 0], [1600, 0, 0]])) {
+    console.error(`FAILED: construction guide overlay should remain an extended guide axis, got ${JSON.stringify(creationAxisOverlay?.points)}`);
     return 1;
   }
   const hiddenBackFace = {
@@ -299,7 +455,7 @@ async function main() {
     priority: 10
   };
   const visibilityFilteredSnap = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 5, y: 5 },
     rawPoint: [5, 5, 10],
     candidates: [hiddenBackFace, visibleFrontFace],
@@ -322,7 +478,7 @@ async function main() {
     return 1;
   }
   const memberFaceInteriorSnap = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 5, y: 5 },
     rawPoint: [5, 5, 0],
     candidates: [
@@ -361,6 +517,56 @@ async function main() {
     console.error(`FAILED: member face interior should beat nearby unrelated point snaps, got ${memberFaceInteriorSnap.snap?.label || "none"}`);
     return 1;
   }
+  const memberFaceInteriorBeatsSameFaceGuides = solveSnap({
+    projection: snapViewer,
+    screen: { x: 5, y: 5 },
+    rawPoint: [5, 5, 0],
+    candidates: [
+      {
+        kind: "line",
+        type: "member-profile-face-centerline",
+        objectId: "visible_member",
+        label: "Member face centerline",
+        a: [0, 5, 0],
+        b: [10, 5, 0],
+        point: [5, 5, 0],
+        priority: 74
+      },
+      {
+        kind: "point",
+        type: "member-profile-face-center",
+        objectId: "visible_member",
+        label: "Member face center",
+        point: [5, 5, 0],
+        priority: 82
+      },
+      {
+        kind: "plane",
+        type: "member-profile-face",
+        objectId: "visible_member",
+        visibilityPolicy: "visible-surface",
+        label: "Member face",
+        points: [[0, 0, 0], [10, 0, 0], [10, 10, 0], [0, 10, 0]],
+        origin: [0, 0, 0],
+        axisU: [1, 0, 0],
+        axisV: [0, 1, 0],
+        normal: [0, 0, 1],
+        bounds: { minU: 0, maxU: 10, minV: 0, maxV: 10 },
+        point: [5, 5, 0],
+        priority: 52,
+        preferInteriorSnap: true,
+        interiorSnapEdgeBiasPx: 3
+      }
+    ],
+    screenTolerance: 8,
+    pointPriorityBiasPx: 12,
+    projectionPriorityBiasPx: 5,
+    visibilityFilter: () => ({ accepted: true })
+  });
+  if (memberFaceInteriorBeatsSameFaceGuides.snap?.type !== "member-profile-face") {
+    console.error(`FAILED: member face plane should beat same-face helper snaps in the face interior, got ${memberFaceInteriorBeatsSameFaceGuides.snap?.type || "none"}`);
+    return 1;
+  }
   const plateSnapProject = {
     model: {
       members: {},
@@ -380,7 +586,8 @@ async function main() {
       features: {},
       workPoints: {},
       referencePlanes: {},
-      gridSystems: {}
+      gridSystems: {},
+      levels: {}
     }
   };
   const plateCandidates = collectSnapCandidates({
@@ -478,6 +685,123 @@ async function main() {
       }
     }
   };
+  const memberCreateProject = {
+    modelDefaults: {
+      collections: {
+        members: {
+          "*": { profile: "DEMO_FLAT_100X10" }
+        }
+      }
+    },
+    model: {
+      members: {},
+      plates: {},
+      fastenerGroups: {},
+      features: {},
+      workPoints: {},
+      referencePlanes: {},
+      gridSystems: {},
+      levels: {}
+    }
+  };
+  const memberCreateContexts = [];
+  const memberCreateController = createMemberCreateController({
+    viewer: {},
+    api: {
+      project: () => memberCreateProject,
+      profiles: () => profiles.profiles,
+      createMember: (options) => ({
+        project: memberCreateProject,
+        member: {
+          id: "created_snap_beam",
+          ...options
+        }
+      })
+    },
+    profiles,
+    settings,
+    snapManager: {
+      resetCycle: () => {},
+      resolve: (input) => {
+        memberCreateContexts.push(input.context || {});
+        return {
+          accepted: true,
+          pointWorld: input.rawPoint,
+          snap: {
+            kind: "point",
+            type: "test-snap",
+            label: "Test snap",
+            point: input.rawPoint
+          }
+        };
+      }
+    },
+    onPreviewChange: () => {},
+    onOverlayChange: () => {},
+    onProjectChange: () => {},
+    onStatusChange: () => {}
+  });
+  memberCreateController.start("beam");
+  memberCreateController.pointerDown({ screen: { x: 0, y: 0 }, hit: { point: [0, 0, 0] }, event: {} });
+  memberCreateController.pointerDown({ screen: { x: 10, y: 0 }, hit: { point: [10, 0, 0] }, event: {} });
+  if (memberCreateContexts.length < 2) {
+    console.error("FAILED: member create should resolve snaps for both start and end picks");
+    return 1;
+  }
+  if (memberCreateContexts.some((context) => Object.prototype.hasOwnProperty.call(context, "includeSurfaceTargets"))) {
+    console.error("FAILED: member create should not downgrade snap profile surface targets away from beam faces");
+    return 1;
+  }
+  if (memberCreateContexts.some((context) => Object.prototype.hasOwnProperty.call(context, "snapVisibilityRequirePrecise"))) {
+    console.error("FAILED: member create should keep precise visibility filtering for member face snaps");
+    return 1;
+  }
+  const plateCreateContexts = [];
+  const plateCreatePlane = {
+    origin: [0, 0, 0],
+    normal: [0, 0, 1],
+    axisX: [1, 0, 0],
+    axisY: [0, 1, 0]
+  };
+  const plateCreateController = createPlateCreateController({
+    viewer: {
+      screenRay: (x, y) => ({ origin: [x, y, 100], direction: [0, 0, -1] }),
+      projectPoint: ([x, y, z = 0]) => ({ x, y, depth: z }),
+      screenScale: () => 1
+    },
+    api: { project: () => memberCreateProject },
+    snapManager: {
+      resetCycle: () => {},
+      point: (input) => {
+        plateCreateContexts.push(input.context || {});
+        return {
+          point: [input.rawPoint[0], input.rawPoint[1], 5],
+          snap: {
+            kind: "plane",
+            type: "member-profile-face",
+            label: "Member face",
+            point: [input.rawPoint[0], input.rawPoint[1], 5]
+          }
+        };
+      }
+    },
+    getWorkPlane: () => plateCreatePlane,
+    settings,
+    onPreviewChange: () => {},
+    onOverlayChange: () => {},
+    onProjectChange: () => {},
+    onStatusChange: () => {}
+  });
+  plateCreateController.start({ screen: { x: 0, y: 0 }, event: {} });
+  plateCreateController.pointerDown({ screen: { x: 0, y: 0 }, event: {} });
+  if (!plateCreateContexts.length) {
+    console.error("FAILED: plate create should resolve snap context for face picks");
+    return 1;
+  }
+  if (plateCreateContexts.some((context) => context.projectToPlane !== false)) {
+    console.error("FAILED: plate create should preserve visible face snap points instead of projecting them back to the active work plane");
+    return 1;
+  }
   const hiddenFaceSnapManager = createSnapManager({
     viewer: occludedPlateViewer,
     api: { project: () => plateSnapProject },
@@ -594,23 +918,34 @@ async function main() {
       features: {},
       workPoints: {},
       referencePlanes: {},
-      gridSystems: {}
+      gridSystems: {},
+      levels: {}
     }
   };
-  const memberFaceCenterlineCandidates = collectSnapCandidates({
+  const memberFaceCandidates = collectSnapCandidates({
     project: memberCenterlineProject,
     profiles,
     context: { includeGlobalAxes: false },
     scope: {},
     profile: { includeSurfaceTargets: "faces" },
     rawPoint: [25, 0, 5]
-  }).filter((candidate) => candidate.type === "member-profile-face-centerline");
+  });
+  const memberFaceCenterlineCandidates = memberFaceCandidates.filter((candidate) => candidate.type === "member-profile-face-centerline");
+  const memberFaceCenterCandidates = memberFaceCandidates.filter((candidate) => candidate.type === "member-profile-face-center");
   if (!memberFaceCenterlineCandidates.length) {
     console.error("FAILED: member face centerline candidates should be generated for profile faces");
     return 1;
   }
   if (memberFaceCenterlineCandidates.some((candidate) => candidate.visibilityPolicy !== "visible-surface" || !candidate.snapFacePoints?.length || !candidate.bounds || !candidate.normal)) {
     console.error("FAILED: member face centerline snaps should carry visible-surface source-face metadata");
+    return 1;
+  }
+  if (!memberFaceCenterCandidates.length) {
+    console.error("FAILED: member face center candidates should be generated for profile faces");
+    return 1;
+  }
+  if (memberFaceCenterCandidates.some((candidate) => candidate.visibilityPolicy !== "visible-surface" || !candidate.snapFacePoints?.length)) {
+    console.error("FAILED: member face center snaps should require the same visible source face as their parent surface");
     return 1;
   }
   const memberTopFaceViewer = {
@@ -634,8 +969,8 @@ async function main() {
     rawPoint: [25, 0, 5],
     context: { includeGlobalAxes: false, snapVisibilityRadiusPx: 0 }
   });
-  if (visibleMemberFaceCenterlineSnap.snap?.type !== "member-profile-face-centerline") {
-    console.error(`FAILED: visible member face centerline should be selectable when its source face is visible, got ${visibleMemberFaceCenterlineSnap.snap?.label || "none"}`);
+  if (visibleMemberFaceCenterlineSnap.snap?.type !== "member-profile-face") {
+    console.error(`FAILED: visible member face plane should win over same-face centerline in the face interior, got ${visibleMemberFaceCenterlineSnap.snap?.label || "none"}`);
     return 1;
   }
   if (visibleMemberFaceCenterlineSnap.candidates.some((candidate) => (
@@ -687,7 +1022,8 @@ async function main() {
       features: {},
       workPoints: {},
       referencePlanes: {},
-      gridSystems: {}
+      gridSystems: {},
+      levels: {}
     }
   };
   const frontPlateViewer = {
@@ -728,7 +1064,7 @@ async function main() {
     return 1;
   }
   const plateFaceSnap = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 3, y: 2 },
     rawPoint: [3, 2, 4],
     candidates: [plateFace],
@@ -740,7 +1076,7 @@ async function main() {
     return 1;
   }
   const plateInteriorSnap = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 4, y: 0 },
     rawPoint: [4, 0, 4],
     candidates: plateCandidates,
@@ -754,7 +1090,7 @@ async function main() {
     return 1;
   }
   const plateEdgeSnap = solveSnap({
-    viewer: snapViewer,
+    projection: snapViewer,
     screen: { x: 4, y: 4.5 },
     rawPoint: [4, 4.5, 4],
     candidates: plateCandidates,

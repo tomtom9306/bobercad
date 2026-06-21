@@ -295,7 +295,15 @@
     "visibility": {
       "cuttingObjects": true,
       "fasteners": true,
+      "grids": true,
       "referencePlanes": true
+    },
+    "datum": {
+      "gridColor": "#0ea5e9",
+      "gridOpacity": 0.82,
+      "gridLabelColor": "#075985",
+      "gridLabelOffset": 180,
+      "gridLabelTextHeight": 260
     },
     "background": "#f5f7fb",
     "lighting": {

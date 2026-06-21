@@ -1,7 +1,7 @@
-import { commandPaletteSpecs } from "../commands/command-registry.mjs?v=visibility-menu-1";
-import { commandGroupLabel } from "../commands/command-group-metadata.mjs?v=command-groups-1";
-import { DATA_DOCK_COMMAND_LABEL, DATA_DOCK_PANEL_ID } from "../commands/data-dock-metadata.mjs?v=data-dock-metadata-1";
-import { INSPECTOR_COMMAND_LABEL, INSPECTOR_PANEL_ID } from "../commands/inspector-dock-metadata.mjs?v=inspector-dock-metadata-1";
+import { commandPaletteSpecs } from "../commands/command-registry.mjs";
+import { commandGroupLabel } from "../commands/command-group-metadata.mjs";
+import { DATA_DOCK_COMMAND_LABEL, DATA_DOCK_PANEL_ID } from "../commands/data-dock-metadata.mjs";
+import { INSPECTOR_COMMAND_LABEL, INSPECTOR_PANEL_ID } from "../commands/inspector-dock-metadata.mjs";
 
 export function createViewerCommandItems({
   app = null,
@@ -23,7 +23,8 @@ export function createViewerCommandItems({
         run: () => {
           const nextState = includeState ? combinedCommandState(command, app, commandStateFor) : {};
           if (nextState.enabled === false) return false;
-          return app?.canRunCommand?.(command.id) ? app.runCommand(command.id) : actionHandlers[command.action]();
+          const actionHandler = actionHandlers[command.action];
+          return app?.canRunCommand?.(command.id) ? app.runCommand(command.id) : typeof actionHandler === "function" ? actionHandler() : false;
         }
       };
     });
@@ -39,6 +40,13 @@ function combinedCommandState(command, app, commandStateFor) {
 function viewerCommandState(command, app) {
   const activeCommandId = app?.commandState?.().activeCommandId || null;
   const state = { enabled: true, active: activeCommandId === command.id };
+  if (command.implemented === false) {
+    return {
+      ...state,
+      enabled: false,
+      disabledReason: command.disabledReason || "This command is planned."
+    };
+  }
   if (["view.fitSelection", "selection.clear"].includes(command.id) && !selectedObjectIds(app).length) {
     return {
       ...state,

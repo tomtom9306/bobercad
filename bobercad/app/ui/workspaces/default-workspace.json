@@ -83,7 +83,6 @@
       "tabIds": [
         "properties",
         "feature",
-        "trim",
         "component"
       ],
       "hiddenTabIds": [],

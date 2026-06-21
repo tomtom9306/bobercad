@@ -127,7 +127,6 @@ body.bc-workspace-customizer-open .dimension-tooltip {
   white-space: nowrap;
 }
 
-.bc-workspace-customizer-dock-options,
 .bc-workspace-customizer-segment-options {
   display: inline-flex;
   gap: var(--bc-space-1);
@@ -565,13 +564,8 @@ body.bc-workspace-customizer-open .dimension-tooltip {
     flex: 1 1 160px;
   }
 
-  .bc-workspace-customizer-dock-options,
   .bc-workspace-customizer-segment-options {
     display: grid;
-  }
-
-  .bc-workspace-customizer-dock-options {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .bc-workspace-customizer-segment-options {

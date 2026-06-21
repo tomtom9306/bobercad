@@ -1,5 +1,5 @@
-import { createIcon } from "../icons/icon-registry.mjs?v=pin-off-icon-1";
-import { setWorkspaceSectionOpen, WORKSPACE_SECTIONS_RESET_EVENT, workspaceSectionOpen } from "../shell/workspace-storage.mjs?v=design-section-state-1";
+import { createIcon } from "../icons/icon-registry.mjs";
+import { setWorkspaceSectionOpen, WORKSPACE_SECTIONS_RESET_EVENT, workspaceSectionOpen } from "../shell/workspace-storage.mjs";
 
 const resettingWorkspaceSections = new WeakSet();
 let workspaceSectionResetBound = false;
@@ -271,17 +271,6 @@ export function shellChromeButton({
   return element;
 }
 
-export function toolbarDragHandleControl({ button = null, hidden = true, label = "Move toolbar" } = {}) {
-  return shellChromeButton({
-    button,
-    className: "bc-toolbar-drag-handle",
-    label,
-    title: label,
-    icon: "drag-handle",
-    hidden
-  });
-}
-
 export function dockResizeHandleControl({ button = null, label = "Resize panel", dock = "" } = {}) {
   return shellChromeButton({
     button,
@@ -325,7 +314,7 @@ export function dockPinToggleControl({
     className: "bc-dock-pin-toggle",
     label,
     title: label,
-    icon: pinned ? "pin" : "pin-off",
+    icon: pinned ? "pin-off" : "pin",
     pressed: pinned,
     dataset: {
       dock,

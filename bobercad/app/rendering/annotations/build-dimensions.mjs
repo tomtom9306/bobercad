@@ -1,6 +1,6 @@
-import { arrayValues } from "../../engine/core/model.mjs?v=smart-config-array-values-dry-1";
-import { finite, combine, truthyValues, v } from "./dimension-geometry-and-label-context.mjs?v=unified-dimension-overlay-1";
-import { dimensionHandler } from "./dimension-registry.mjs?v=unified-dimension-overlay-1";
+import { arrayValues } from "../../engine/core/model.mjs";
+import { finite, combine, truthyValues, v } from "./dimension-geometry-and-label-context.mjs";
+import { dimensionHandler } from "./dimension-registry.mjs";
 
 function buildOne(ctx, spec) {
   const activePaths = truthyValues([spec.parameter, spec.reference?.customParameter]);

@@ -108,6 +108,8 @@ function len(vector) {
 
 function emptyModel() {
   return {
+    gridSystems: {},
+    levels: {},
     workPoints: {},
     referencePlanes: {},
     groups: {},
@@ -192,12 +194,16 @@ function projectBase(template) {
       zone_lattice_tower: { id: "zone_lattice_tower", type: "zone", name: "Lattice Tower", children: [] }
     }
   };
-  project.gridSystems = {
+  project.model.gridSystems = {
     eiffel_grid: {
       id: "eiffel_grid",
+      type: "orthogonal-grid-system",
       name: "Eiffel tower footprint",
       origin: [0, 0, 0],
-      rotation: 0,
+      axisX: [1, 0, 0],
+      axisY: [0, 1, 0],
+      axisZ: [0, 0, 1],
+      levelIds: ["level_base", "level_first", "level_second", "level_third", "level_top"],
       axes: {
         x: [
           { id: "grid_x_west", label: "W", position: -62500 },
@@ -212,13 +218,15 @@ function projectBase(template) {
       }
     }
   };
-  project.levels = {
-    level_base: { id: "level_base", name: "Base", elevation: 0 },
-    level_first: { id: "level_first", name: "First floor", elevation: 57630 },
-    level_second: { id: "level_second", name: "Second floor", elevation: 115730 },
-    level_third: { id: "level_third", name: "Third floor", elevation: 276130 },
-    level_top: { id: "level_top", name: "Antenna top", elevation: 330000 }
+  project.model.levels = {
+    level_base: { id: "level_base", type: "datum-level", name: "Base", elevation: 0 },
+    level_first: { id: "level_first", type: "datum-level", name: "First floor", elevation: 57630 },
+    level_second: { id: "level_second", type: "datum-level", name: "Second floor", elevation: 115730 },
+    level_third: { id: "level_third", type: "datum-level", name: "Third floor", elevation: 276130 },
+    level_top: { id: "level_top", type: "datum-level", name: "Antenna top", elevation: 330000 }
   };
+  for (const grid of Object.values(project.model.gridSystems)) project.objectIndex[grid.id] = { collection: "gridSystems", type: grid.type };
+  for (const level of Object.values(project.model.levels)) project.objectIndex[level.id] = { collection: "levels", type: level.type };
   project.phases = { phase_1: { id: "phase_1", name: "Phase 1" } };
   project.lots = { lot_1: { id: "lot_1", name: "Lot 1" } };
   project.modelDefaults = {
@@ -265,7 +273,7 @@ function addWorkPoint(project, id, point, role) {
     type: "eiffel-reference-point",
     point,
     role,
-    gridSystemId: "eiffel_grid"
+    gridRefs: { gridSystemId: "eiffel_grid" }
   });
 }
 

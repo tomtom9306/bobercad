@@ -4,11 +4,11 @@ import {
   DATA_DOCK_COMMAND_LABEL,
   DATA_DOCK_COMMAND_TITLE,
   DATA_DOCK_TABS
-} from "./data-dock-metadata.mjs?v=data-dock-metadata-1";
-import { INSPECTOR_COMMAND_DESCRIPTION, INSPECTOR_COMMAND_ICON, INSPECTOR_COMMAND_LABEL, INSPECTOR_COMMAND_TITLE, INSPECTOR_CONTEXTS } from "./inspector-dock-metadata.mjs?v=inspector-context-commands-1";
-import { COMMAND_GROUPS } from "./command-group-metadata.mjs?v=command-groups-1";
-import { SNAP_SCOPE_MODES, SNAP_STRENGTH_SPECS, SNAP_TARGET_SPECS } from "./snap-metadata.mjs?v=snap-metadata-1";
-import { DISPLAY_MODE_SPECS, VIEW_ORIENTATION_SPECS } from "./view-metadata.mjs?v=view-metadata-1";
+} from "./data-dock-metadata.mjs";
+import { INSPECTOR_COMMAND_DESCRIPTION, INSPECTOR_COMMAND_ICON, INSPECTOR_COMMAND_LABEL, INSPECTOR_COMMAND_TITLE, INSPECTOR_CONTEXTS } from "./inspector-dock-metadata.mjs";
+import { COMMAND_GROUPS } from "./command-group-metadata.mjs";
+import { SNAP_SCOPE_MODES, SNAP_STRENGTH_SPECS, SNAP_TARGET_SPECS } from "./snap-metadata.mjs";
+import { DISPLAY_MODE_SPECS, VIEW_ORIENTATION_SPECS } from "./view-metadata.mjs";
 
 export { COMMAND_GROUPS };
 
@@ -126,9 +126,9 @@ export const MODEL_REFERENCE_COMMANDS = [
   {
     id: "model.grid.create",
     action: "onGridCreate",
-    label: "Grid",
-    title: "Create grid system",
-    description: "Create a structural grid system for model layout.",
+    label: "Grid System",
+    title: "Grid System Editor",
+    description: "Open grid system and level editing in Properties.",
     group: "model",
     navSurface: FEATURE_NAVBAR_SURFACE,
     ribbonSection: "references",
@@ -144,6 +144,9 @@ export const TOOLS_WORKFLOW_COMMANDS = [
     title: "Open clash detection",
     description: "Review model object clashes and coordination issues.",
     group: "tools",
+    status: "planned",
+    implemented: false,
+    disabledReason: "Clash detection workflow is planned.",
     navSurface: FEATURE_NAVBAR_SURFACE,
     ribbonSection: "coordination",
     icon: "search"
@@ -158,6 +161,9 @@ export const STRUCTURAL_ANALYSIS_COMMANDS = [
     title: "Open structural analysis",
     description: "Prepare and review structural analysis workflows.",
     group: "structural-analysis",
+    status: "planned",
+    implemented: false,
+    disabledReason: "Structural analysis workflow is planned.",
     navSurface: FEATURE_NAVBAR_SURFACE,
     ribbonSection: "analysis",
     icon: "feature"
@@ -371,6 +377,20 @@ export const RENDER_VISIBILITY_COMMANDS = [
     icon: "reference-plane"
   },
   {
+    id: "settings.visibility.grids.toggle",
+    action: "onGridVisibilityToggle",
+    renderVisibilityKey: "grids",
+    label: "Grids",
+    title: "Toggle grids",
+    description: "Show or hide structural grid system lines.",
+    group: "tools",
+    ribbonSection: "display",
+    settingsStripGroup: "visibility",
+    settingsStripLabel: "Grids",
+    settingsStripOrder: 2,
+    icon: "grid"
+  },
+  {
     id: "settings.visibility.fasteners.toggle",
     action: "onFastenersVisibilityToggle",
     renderVisibilityKey: "fasteners",
@@ -381,7 +401,7 @@ export const RENDER_VISIBILITY_COMMANDS = [
     ribbonSection: "display",
     settingsStripGroup: "visibility",
     settingsStripLabel: "Fasteners",
-    settingsStripOrder: 2,
+    settingsStripOrder: 3,
     icon: "fastener"
   }
 ];

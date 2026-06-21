@@ -1,10 +1,11 @@
 import { v } from "../../core/math.mjs";
+import { datumLevelsForGrid, gridLineSegmentsAtLevel, gridSystemById, levelById } from "./datums.mjs";
 import { memberLayoutAxis, vec3 } from "./members.mjs";
 import { cleanId } from "./objects.mjs";
 
 const AXIS_SNAP_TYPES = new Set(["member-axis", "layout-axis", "grid-line", "global-axis"]);
 const RELATION_TYPES = new Set(["point-on-axis", "member-align-axis"]);
-const AXIS_SOURCE_TYPES = new Set(["fixed-axis", "global-axis", "layout-axis", "member-axis"]);
+const AXIS_SOURCE_TYPES = new Set(["fixed-axis", "global-axis", "layout-axis", "member-axis", "grid-line"]);
 
 function fail(message) {
   throw new Error(`axis relation: ${message}`);
@@ -52,13 +53,13 @@ function axisPointFromSnap(snap) {
 }
 
 function relationId(memberId, endpoint, source) {
-  const owner = source.memberId || source.objectId || source.gridId || source.axis || source.label || "axis";
+  const owner = source.memberId || source.objectId || source.gridSystemId || source.gridId || source.axis || source.label || "axis";
   const target = endpoint || "axis";
   return cleanId(`rel_${memberId}_${target}_on_${source.type || "axis"}_${owner}`);
 }
 
 function alignRelationId(memberId, source) {
-  const owner = source.memberId || source.objectId || source.gridId || source.axis || source.label || "axis";
+  const owner = source.memberId || source.objectId || source.gridSystemId || source.gridId || source.axis || source.label || "axis";
   return cleanId(`rel_${memberId}_align_to_${source.type || "axis"}_${owner}`);
 }
 
@@ -80,6 +81,23 @@ function storedRelation(value, id) {
 
 function axisSourceFromSnap(snap) {
   if (!snap || snap.kind !== "line" || !AXIS_SNAP_TYPES.has(snap.type)) return null;
+  if (snap.type === "grid-line") {
+    const reference = optionalObject(snap.reference, "grid-line snap reference");
+    if (reference.type === "grid-line") {
+      return {
+        type: "grid-line",
+        gridSystemId: optionalString(reference.gridSystemId, undefined, "grid-line reference gridSystemId"),
+        axisGroup: optionalString(reference.axisGroup, undefined, "grid-line reference axisGroup"),
+        axisId: reference.axisId === undefined || reference.axisId === null
+          ? null
+          : optionalString(reference.axisId, undefined, "grid-line reference axisId"),
+        levelId: reference.levelId === undefined || reference.levelId === null
+          ? null
+          : optionalString(reference.levelId, undefined, "grid-line reference levelId"),
+        label: optionalString(snap.label, "Grid line", "grid-line snap label")
+      };
+    }
+  }
   if (snap.type === "global-axis") {
     const axis = optionalString(snap.axis, undefined, "global axis snap axis");
     if (!axis) fail("global axis snap requires axis");
@@ -194,6 +212,21 @@ function axisForSource(project, source, origin = null) {
     return {
       a: vec3(axis.start, "source axis start"),
       b: vec3(axis.end, "source axis end")
+    };
+  }
+  if (source.type === "grid-line") {
+    const grid = gridSystemById(project, source.gridSystemId);
+    if (!grid) fail(`source grid system not found: ${source.gridSystemId}`);
+    const level = source.levelId ? levelById(project, source.levelId) : datumLevelsForGrid(project, grid)[0];
+    if (!level) fail(`source grid level not found: ${source.levelId || "default"}`);
+    const segment = gridLineSegmentsAtLevel(project, grid, level).find((item) => (
+      item.axisGroup === source.axisGroup
+      && (!source.axisId || item.axis.id === source.axisId)
+    ));
+    if (!segment) fail(`source grid line not found: ${source.gridSystemId}/${source.axisGroup}/${source.axisId || "*"}`);
+    return {
+      a: vec3(segment.a, "source grid line start"),
+      b: vec3(segment.b, "source grid line end")
     };
   }
   if (source.type === "fixed-axis") {

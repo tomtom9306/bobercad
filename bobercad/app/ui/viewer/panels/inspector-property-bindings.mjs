@@ -1,4 +1,4 @@
-import { mergeObjectPatch } from "../../../engine/core/model.mjs?v=inspector-property-bindings-1";
+import { mergeObjectPatch } from "../../../engine/core/model.mjs";
 
 export function createInspectorPropertyBindings({
   getSelection = () => ({}),
@@ -67,6 +67,9 @@ export function createInspectorPropertyBindings({
 
   const supportObjectCommitBindings = () => ({
     "supportObject.workPoint.update": (value, commit) => support.updateWorkPoint?.(propertyPatch(value, commit)),
+    "supportObject.gridSystem.update": (value, commit) => support.updateGridSystem?.(propertyPatch(value, commit)),
+    "supportObject.gridLevel.update": (value, commit) => support.updateGridLevel?.(commit.levelId, propertyPatch(value, commit)),
+    "supportObject.level.update": (value, commit) => support.updateLevel?.(propertyPatch(value, commit)),
     "supportObject.referencePlane.update": (value, commit) => support.updateReferencePlane?.(propertyPatch(value, commit)),
     "supportObject.interface.update": (value, commit) => support.updateInterface?.(propertyPatch(value, commit)),
     "supportObject.connectionZone.update": (value, commit) => support.updateConnectionZone?.(propertyPatch(value, commit)),
@@ -78,6 +81,13 @@ export function createInspectorPropertyBindings({
 
   const generatedSupportObjectBindings = () => ({
     ...generatedReferenceBindings(),
+    actions: {
+      ...generatedReferenceBindings().actions,
+      "gridSystem.add": () => support.addGridSystem?.(),
+      "gridAxis.add": (field) => support.addGridAxis?.(field.payload?.axisGroup),
+      "gridAxis.remove": (field) => support.removeGridAxis?.(field.payload?.axisGroup, field.payload?.axisId),
+      "gridLevel.add": (field) => support.addGridLevel?.(field.payload?.gridSystemId)
+    },
     commits: supportObjectCommitBindings()
   });
 
@@ -214,6 +224,18 @@ export function createInspectorPropertyBindings({
 }
 
 export function propertyPatch(value, commit = {}) {
+  if (Array.isArray(commit.arrayObjectValue) && Number.isInteger(commit.itemIndex) && commit.childKey) {
+    const nextArray = commit.arrayObjectValue.map((item) => item && typeof item === "object" && !Array.isArray(item) ? { ...item } : item);
+    const nextItem = nextArray[commit.itemIndex] && typeof nextArray[commit.itemIndex] === "object" && !Array.isArray(nextArray[commit.itemIndex])
+      ? { ...nextArray[commit.itemIndex] }
+      : {};
+    nextItem[commit.childKey] = value;
+    nextArray[commit.itemIndex] = nextItem;
+    if (Array.isArray(commit.patchPath) && commit.patchPath.length) {
+      return commit.patchPath.slice().reverse().reduce((patch, key) => ({ [key]: patch }), nextArray);
+    }
+    return commit.patchKey ? { [commit.patchKey]: nextArray } : {};
+  }
   if (Array.isArray(commit.patchPath) && commit.patchPath.length) {
     return commit.patchPath.slice().reverse().reduce((patch, key) => ({ [key]: patch }), value);
   }

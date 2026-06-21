@@ -1,15 +1,99 @@
-import { WORLD_AXIS_ENTRIES, closestAxisPoints, closestPointOnSegment, finiteNumber, finiteNumberOr, v } from "../../engine/core/math.mjs?v=world-axis-dry-1";
-import { arrayValues, objectById, truthyValues, uniqueTruthy } from "../../engine/core/model.mjs?v=final-array-values-dry-1";
-import { memberCenter, memberLayoutAxis } from "../../engine/api/project/members.mjs?v=vec3-dry-1";
-import { orderedSketchLoop } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs?v=plate-relation-preflight-1";
-import { libraryProfileById } from "../../engine/api/project/profiles.mjs?v=profile-api-dry-1";
-import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs?v=geometry-api-array-values-dry-1";
+import { WORLD_AXIS_ENTRIES, closestAxisPoints, closestPointOnSegment, finiteNumber, finiteNumberOr, v } from "../../engine/core/math.mjs";
+import { arrayValues, objectById, truthyValues, uniqueTruthy } from "../../engine/core/model.mjs";
+import { memberCenter, memberLayoutAxis } from "../../engine/api/project/members.mjs";
+import { allGridIntersectionPoints, allGridLineSegments, projectLevels } from "../../engine/api/project/datums.mjs";
+import { orderedSketchLoop } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { libraryProfileById } from "../../engine/api/project/profiles.mjs";
+import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs";
 
 const EPSILON = 1e-9;
 const VISIBLE_OBJECT_SNAP = "visible-object";
 const VISIBLE_POINT_SNAP = "visible-point";
 const VISIBLE_EDGE_SNAP = "visible-edge";
 const VISIBLE_SURFACE_SNAP = "visible-surface";
+const SNAP_PROVIDER_INDEX = new WeakMap();
+
+function plainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function projectSnapProviderIndex(project) {
+  if (!project || typeof project !== "object") return null;
+  let cached = SNAP_PROVIDER_INDEX.get(project);
+  if (cached) return cached;
+  const model = project.model || {};
+  cached = {
+    members: Object.values(model.members || {}),
+    plates: Object.values(model.plates || {}),
+    fastenerGroups: Object.values(model.fastenerGroups || {}),
+    features: model.features || {},
+    holePatterns: model.holePatterns || {},
+    workPoints: Object.values(model.workPoints || {}),
+    levels: Object.values(projectLevels(project)),
+    gridLineSegments: allGridLineSegments(project),
+    gridIntersectionPoints: allGridIntersectionPoints(project),
+    referencePlanes: Object.values(model.referencePlanes || {}),
+    membersById: model.members || {}
+  };
+  SNAP_PROVIDER_INDEX.set(project, cached);
+  return cached;
+}
+
+function persistentReference(data = {}, kind = null) {
+  if (plainObject(data.reference)) return data.reference;
+  if (data.type === "global-axis" && typeof data.axis === "string") {
+    return { type: "global-axis", axis: data.axis };
+  }
+  if ((data.type === "member-axis" || data.type === "layout-axis") && typeof data.objectId === "string") {
+    return { type: data.type, memberId: data.objectId };
+  }
+  if (data.type === "reference-plane-axis" && typeof data.objectId === "string" && typeof data.axis === "string") {
+    return { type: "reference-plane-axis", referencePlaneId: data.objectId, axis: data.axis };
+  }
+  if (data.type === "reference-plane-origin" && typeof data.objectId === "string") {
+    return { type: "reference-plane-origin", referencePlaneId: data.objectId };
+  }
+  if (data.target?.collection && data.target?.objectId) {
+    return {
+      type: kind || data.kind || "snap",
+      collection: data.target.collection,
+      objectId: data.target.objectId,
+      subId: data.target.subId || null,
+      semanticRole: data.target.semanticRole || null
+    };
+  }
+  return null;
+}
+
+function candidateContract(kind, data = {}, geometry = {}, defaultPriority = 0) {
+  const providerId = data.providerId || "model";
+  const priority = finiteNumber(data.priority) ? data.priority : defaultPriority;
+  const objectId = data.objectId || data.target?.objectId || null;
+  const reference = persistentReference(data, kind);
+  return {
+    geometry: { kind, ...geometry },
+    identity: {
+      providerId,
+      type: data.type || null,
+      objectId,
+      target: data.target || null,
+      candidateId: data.candidateId || null
+    },
+    visibility: {
+      policy: data.visibilityPolicy || null,
+      objectIds: uniqueTruthy([objectId])
+    },
+    ranking: {
+      priority,
+      screenTolerance: finiteNumber(data.screenTolerance) ? data.screenTolerance : null
+    },
+    reference,
+    hints: {
+      relationHints: Array.isArray(data.relationHints) ? data.relationHints : []
+    },
+    preview: plainObject(data.preview) ? data.preview : null
+  };
+}
 
 function defaultVisibilityPolicy(data = {}, kind = null) {
   if (data.visibilityPolicy === false || data.visibilityPolicy === null) return null;
@@ -35,7 +119,8 @@ function pushPoint(candidates, point, data = {}) {
     priority: 100,
     providerId: extra.providerId || "model",
     target: extra.target || null,
-    ...extra
+    ...extra,
+    ...candidateContract("point", extra, { point: [...point] }, 100)
   });
 }
 
@@ -50,7 +135,8 @@ function pushLine(candidates, a, b, data = {}) {
     priority: 60,
     providerId: extra.providerId || "model",
     target: extra.target || null,
-    ...extra
+    ...extra,
+    ...candidateContract("line", extra, { a: [...a], b: [...b], point: v.isVec3(extra.point) ? [...extra.point] : [...a] }, 60)
   });
 }
 
@@ -74,7 +160,14 @@ function pushPlane(candidates, points, data = {}) {
     priority: 48,
     providerId: extra.providerId || "model",
     target: extra.target || null,
-    ...extra
+    ...extra,
+    ...candidateContract("plane", extra, {
+      points: cleanPoints.map((point) => [...point]),
+      origin: [...origin],
+      axisU,
+      axisV,
+      normal
+    }, 48)
   });
 }
 
@@ -106,7 +199,7 @@ function memberSnapDistance(member, options) {
 }
 
 function membersInRange(project, options) {
-  const members = Object.values(project.model?.members || {});
+  const members = projectSnapProviderIndex(project)?.members || [];
   const maxMemberCandidates = finiteNumber(options.maxMemberCandidates)
     ? Math.max(0, Math.floor(options.maxMemberCandidates))
     : null;
@@ -232,6 +325,7 @@ function addMemberProfileTargets(candidates, member, profile, options) {
           label: "Member face center",
           priority: 82,
           ...(facePoints ? { snapFacePoints: facePoints } : {}),
+          ...(facePoints ? { visibilityPolicy: VISIBLE_SURFACE_SNAP } : {}),
           target: target("members", member.id, `profile-face-center-${index}@${Math.round(station)}`, "profile-face-center")
         });
       }
@@ -357,78 +451,127 @@ function addMemberCandidates(candidates, project, profiles, options) {
   }
 }
 
-function gridDirections(grid) {
-  const rotation = (grid.rotation || 0) * Math.PI / 180;
+function edgeRefTargetId(line, index) {
+  return line.edgeKey || `evaluated-edge-${index}`;
+}
+
+function targetWithEdgeRef(collection, objectId, subId, semanticRole, edgeRef) {
   return {
-    xDir: [Math.cos(rotation), Math.sin(rotation), 0],
-    yDir: [-Math.sin(rotation), Math.cos(rotation), 0]
+    ...target(collection, objectId, subId, semanticRole),
+    ...(edgeRef ? { edgeRef } : {})
   };
 }
 
-function gridPosition(origin, xDir, yDir, x, y, z) {
-  return v.add(v.add([origin[0], origin[1], z], v.mul(xDir, x)), v.mul(yDir, y));
-}
-
-function axisSpan(values, fallback = 5000) {
-  const positions = values.map((axis) => axis.position || 0);
-  if (!positions.length) return [-fallback, fallback];
-  const min = Math.min(...positions);
-  const max = Math.max(...positions);
-  if (Math.abs(max - min) < EPSILON) return [min - fallback, max + fallback];
-  const pad = Math.max((max - min) * 0.25, fallback * 0.2);
-  return [min - pad, max + pad];
+function addEvaluatedMemberEdgeCandidates(candidates, options) {
+  if (options.scope?.members === false || options.includeLines === false) return;
+  const surfaceMode = options.profile?.includeSurfaceTargets;
+  if (surfaceMode !== "edges" && surfaceMode !== "faces") return;
+  for (const [index, line] of arrayValues(options.evaluatedEdges).entries()) {
+    if (line?.snapRole !== "member-evaluated-edge" || line.collection !== "members" || !line.objectId) continue;
+    const points = arrayValues(line.points).filter(v.isVec3);
+    if (points.length < 2) continue;
+    const a = points[0];
+    const b = points[1];
+    const point = v.isVec3(options.center) ? closestPointOnSegment(options.center, a, b) : v.mul(v.add(a, b), 0.5);
+    const subId = edgeRefTargetId(line, index);
+    const base = {
+      providerId: "model.members",
+      objectId: line.objectId,
+      edgeRef: line.edgeRef || null,
+      edgeKey: line.edgeKey || null
+    };
+    pushLine(candidates, a, b, {
+      ...base,
+      type: "member-evaluated-edge",
+      label: "Member edge",
+      point,
+      priority: 84,
+      allowIntersections: false,
+      target: targetWithEdgeRef("members", line.objectId, subId, "evaluated-edge", line.edgeRef)
+    });
+    pushPoint(candidates, point, {
+      ...base,
+      type: "member-evaluated-edge-midpoint",
+      label: "Member edge midpoint",
+      priority: 94,
+      target: targetWithEdgeRef("members", line.objectId, `${subId}:mid`, "evaluated-edge-midpoint", line.edgeRef)
+    });
+    for (const [endpointIndex, endpoint] of [a, b].entries()) {
+      pushPoint(candidates, endpoint, {
+        ...base,
+        type: "member-evaluated-edge-endpoint",
+        label: "Member edge endpoint",
+        priority: 98,
+        target: targetWithEdgeRef("members", line.objectId, `${subId}:endpoint-${endpointIndex}`, "evaluated-edge-endpoint", line.edgeRef)
+      });
+    }
+  }
 }
 
 function addGridCandidates(candidates, project, options) {
   if (options.scope?.grids === false) return;
-  const projectLevels = Object.values(project.levels || project.model?.levels || {});
-  for (const grid of Object.values(project.gridSystems || project.model?.gridSystems || {})) {
-    const origin = grid.origin || [0, 0, 0];
-    const xAxes = arrayValues(grid.axes?.x);
-    const yAxes = arrayValues(grid.axes?.y);
-    const levels = grid.levels || (projectLevels.length ? projectLevels : [{ id: "base", elevation: origin[2] || 0 }]);
-    const { xDir, yDir } = gridDirections(grid);
-    const xSpan = axisSpan(xAxes);
-    const ySpan = axisSpan(yAxes);
-    for (const level of levels) {
-      const z = level.elevation || 0;
-      for (const xAxis of xAxes) {
-        const x = xAxis.position || 0;
-        pushLine(candidates, gridPosition(origin, xDir, yDir, x, ySpan[0], z), gridPosition(origin, xDir, yDir, x, ySpan[1], z), {
-          providerId: "model.grids",
-          type: "grid-line",
-          objectId: grid.id,
-          axis: "x",
-          label: `Grid ${xAxis.id || "X"}`,
-          priority: 55,
-          target: target("gridSystems", grid.id, xAxis.id || "x", "grid-line")
-        });
-      }
-      for (const yAxis of yAxes) {
-        const y = yAxis.position || 0;
-        pushLine(candidates, gridPosition(origin, xDir, yDir, xSpan[0], y, z), gridPosition(origin, xDir, yDir, xSpan[1], y, z), {
-          providerId: "model.grids",
-          type: "grid-line",
-          objectId: grid.id,
-          axis: "y",
-          label: `Grid ${yAxis.id || "Y"}`,
-          priority: 55,
-          target: target("gridSystems", grid.id, yAxis.id || "y", "grid-line")
-        });
-      }
-      for (const xAxis of xAxes) {
-        for (const yAxis of yAxes) {
-          pushPoint(candidates, gridPosition(origin, xDir, yDir, xAxis.position || 0, yAxis.position || 0, z), {
-            providerId: "model.grids",
-            type: "grid-intersection",
-            objectId: grid.id,
-            label: `Grid ${xAxis.id || "X"}/${yAxis.id || "Y"}`,
-            priority: 130,
-            target: target("gridSystems", grid.id, `${xAxis.id || "x"}/${yAxis.id || "y"}`, "grid-intersection")
-          });
-        }
-      }
-    }
+  for (const segment of projectSnapProviderIndex(project)?.gridLineSegments || []) {
+    pushLine(candidates, segment.a, segment.b, {
+      providerId: "model.gridSystems",
+      type: "grid-line",
+      objectId: segment.grid.id,
+      axis: segment.axisGroup,
+      label: `Grid ${segment.axis.label || segment.axis.id || segment.axisGroup.toUpperCase()}`,
+      priority: 55,
+      reference: {
+        type: "grid-line",
+        gridSystemId: segment.grid.id,
+        axisGroup: segment.axisGroup,
+        axisId: segment.axis.id || null,
+        levelId: segment.level?.id || null
+      },
+      target: target("gridSystems", segment.grid.id, segment.axis.id || segment.axisGroup, "grid-line")
+    });
+  }
+  for (const intersection of projectSnapProviderIndex(project)?.gridIntersectionPoints || []) {
+    pushPoint(candidates, intersection.point, {
+      providerId: "model.gridSystems",
+      type: "grid-intersection",
+      objectId: intersection.grid.id,
+      label: `Grid ${intersection.xAxis.label || intersection.xAxis.id || "X"}/${intersection.yAxis.label || intersection.yAxis.id || "Y"}`,
+      priority: 130,
+      reference: {
+        type: "grid-intersection",
+        gridSystemId: intersection.grid.id,
+        xAxisId: intersection.xAxis.id || null,
+        yAxisId: intersection.yAxis.id || null,
+        levelId: intersection.level?.id || null
+      },
+      target: target("gridSystems", intersection.grid.id, `${intersection.xAxis.id || "x"}/${intersection.yAxis.id || "y"}/${intersection.level.id || "level"}`, "grid-intersection")
+    });
+  }
+}
+
+function addLevelCandidates(candidates, project, options) {
+  if (options.scope?.grids === false) return;
+  const span = Math.max(1, finiteNumberOr(options.levelSnapSpan, 5000));
+  for (const level of projectSnapProviderIndex(project)?.levels || []) {
+    const elevation = finiteNumber(level.elevation) ? level.elevation : 0;
+    const origin = [0, 0, elevation];
+    const points = [
+      [-span, -span, elevation],
+      [span, -span, elevation],
+      [span, span, elevation],
+      [-span, span, elevation]
+    ];
+    pushPlane(candidates, points, {
+      providerId: "model.levels",
+      type: "level-plane",
+      objectId: level.id,
+      origin,
+      axisU: [1, 0, 0],
+      axisV: [0, 1, 0],
+      normal: [0, 0, 1],
+      bounds: { minU: -span, maxU: span, minV: -span, maxV: span },
+      label: `Level ${level.name || level.id}`,
+      priority: 52,
+      target: target("levels", level.id, "plane", "level-plane")
+    });
   }
 }
 
@@ -453,7 +596,7 @@ function referencePlaneSpans(plane, fallback = 5000) {
 function addReferencePlaneCandidates(candidates, project, options) {
   if (options.scope?.referencePlanes === false) return;
   const spanFallback = Math.max(1, finiteNumberOr(options.referencePlaneSnapSpan, 5000));
-  for (const plane of Object.values(project.model?.referencePlanes || {})) {
+  for (const plane of projectSnapProviderIndex(project)?.referencePlanes || []) {
     if (!v.isVec3(plane.origin) || !inRange(plane.origin, options)) continue;
     const axisX = v.safeNorm(plane.axisX, [1, 0, 0]);
     const axisY = v.safeNorm(plane.axisY, [0, 1, 0]);
@@ -513,8 +656,8 @@ function addReferencePlaneCandidates(candidates, project, options) {
 
 function addWorkPointCandidates(candidates, project, options) {
   if (options.scope?.workPoints === false) return;
-  for (const point of Object.values(project.model?.workPoints || {})) {
-    const position = point.position;
+  for (const point of projectSnapProviderIndex(project)?.workPoints || []) {
+    const position = point.point;
     if (!inRange(position, options)) continue;
     pushPoint(candidates, position, {
       providerId: "model.workPoints",
@@ -557,7 +700,7 @@ function plateSnapDistance(plate, options) {
 }
 
 function platesInRange(project, options) {
-  const plates = Object.values(project.model?.plates || {});
+  const plates = projectSnapProviderIndex(project)?.plates || [];
   const maxPlateCandidates = finiteNumber(options.maxPlateCandidates)
     ? Math.max(0, Math.floor(options.maxPlateCandidates))
     : null;
@@ -735,7 +878,7 @@ function referenceOrigin(project, feature) {
   const reference = feature?.reference || {};
   if (v.isVec3(reference.origin)) return reference.origin;
   if (reference.origin === "plate-center") {
-    const plate = project.model?.plates?.[feature.ownerId];
+    const plate = projectSnapProviderIndex(project)?.plates.find((item) => item.id === feature.ownerId);
     if (v.isVec3(plate?.center)) return plate.center;
   }
   if (v.isVec3(feature?.center)) return feature.center;
@@ -751,18 +894,14 @@ function referencePatternPoint(reference, origin, position) {
 
 function featureForFastenerPattern(project, group) {
   const fromFeatureId = group?.through?.fromFeatureId || null;
-  if (fromFeatureId && project.model?.features?.[fromFeatureId]) return project.model.features[fromFeatureId];
-  return Object.values(project.model?.features || {}).find((feature) => (
-    feature.type === "hole-pattern"
-    && feature.holePatternRef === group?.holePatternRef
-    && (!Array.isArray(group?.participants) || group.participants.includes(feature.ownerId))
-  )) || null;
+  return fromFeatureId ? projectSnapProviderIndex(project)?.features?.[fromFeatureId] || null : null;
 }
 
 function addFastenerCandidates(candidates, project, options) {
   if (options.scope?.fasteners === false) return;
-  for (const group of Object.values(project.model?.fastenerGroups || {})) {
-    const pattern = project.model?.holePatterns?.[group.holePatternRef];
+  const providerIndex = projectSnapProviderIndex(project);
+  for (const group of providerIndex?.fastenerGroups || []) {
+    const pattern = providerIndex?.holePatterns?.[group.holePatternRef];
     if (!Array.isArray(pattern?.positions) || !pattern.positions.length) continue;
     const feature = featureForFastenerPattern(project, group);
     const origin = referenceOrigin(project, feature);
@@ -1151,6 +1290,79 @@ export function worldAxisCandidate({ type, origin, direction, span, label, objec
   };
 }
 
+const SNAP_CANDIDATE_PROVIDERS = [
+  {
+    id: "model.members",
+    capability: "physical-member-snaps",
+    budget: "maxMemberCandidates",
+    collect: ({ candidates, project, profiles, options }) => addMemberCandidates(candidates, project, profiles, options)
+  },
+  {
+    id: "model.memberEdges",
+    capability: "evaluated-member-edge-snaps",
+    budget: "context.evaluatedMemberEdges",
+    collect: ({ candidates, options }) => addEvaluatedMemberEdgeCandidates(candidates, options)
+  },
+  {
+    id: "model.plates",
+    capability: "physical-plate-snaps",
+    budget: "maxPlateCandidates",
+    collect: ({ candidates, project, options }) => addPlateCandidates(candidates, project, options)
+  },
+  {
+    id: "model.fasteners",
+    capability: "physical-fastener-snaps",
+    budget: "holePattern.positions",
+    collect: ({ candidates, project, options }) => addFastenerCandidates(candidates, project, options)
+  },
+  {
+    id: "model.workPoints",
+    capability: "datum-point-snaps",
+    budget: "workPoints",
+    collect: ({ candidates, project, options }) => addWorkPointCandidates(candidates, project, options)
+  },
+  {
+    id: "model.gridSystems",
+    capability: "grid-line-and-intersection-snaps",
+    budget: "gridLineSegments",
+    collect: ({ candidates, project, options }) => addGridCandidates(candidates, project, options)
+  },
+  {
+    id: "model.levels",
+    capability: "level-plane-snaps",
+    budget: "levels",
+    collect: ({ candidates, project, options }) => addLevelCandidates(candidates, project, options)
+  },
+  {
+    id: "model.referencePlanes",
+    capability: "reference-plane-snaps",
+    budget: "referencePlanes",
+    collect: ({ candidates, project, options }) => addReferencePlaneCandidates(candidates, project, options)
+  },
+  {
+    id: "construction.globalAxes",
+    capability: "global-axis-snaps",
+    budget: "three-world-axes",
+    collect: ({ candidates, options }) => addGlobalAxisCandidates(candidates, options)
+  },
+  {
+    id: "sketch.active",
+    capability: "active-sketch-snaps",
+    budget: "context.activeSketch.candidates",
+    collect: ({ candidates, context, options }) => addActiveSketchCandidates(candidates, context, options)
+  },
+  {
+    id: "precision.adaptiveGrid",
+    capability: "adaptive-grid-snaps",
+    budget: "context.adaptiveGrid",
+    collect: ({ candidates, context, options }) => addAdaptiveGridCandidates(candidates, context, options)
+  }
+];
+
+function collectRegisteredSnapProviders(providerContext) {
+  for (const provider of SNAP_CANDIDATE_PROVIDERS) provider.collect(providerContext);
+}
+
 export function collectSnapCandidates({ project, profiles = {}, context = {}, scope = {}, profile = {}, rawPoint = null } = {}) {
   if (!project) return [];
   const options = {
@@ -1169,15 +1381,7 @@ export function collectSnapCandidates({ project, profiles = {}, context = {}, sc
     maxPlateCandidates: context.maxPlateCandidates
   };
   const candidates = [];
-  addMemberCandidates(candidates, project, profiles, options);
-  addPlateCandidates(candidates, project, options);
-  addFastenerCandidates(candidates, project, options);
-  addWorkPointCandidates(candidates, project, options);
-  addGridCandidates(candidates, project, options);
-  addReferencePlaneCandidates(candidates, project, options);
-  addGlobalAxisCandidates(candidates, options);
-  addActiveSketchCandidates(candidates, context, options);
-  addAdaptiveGridCandidates(candidates, context, options);
+  collectRegisteredSnapProviders({ candidates, project, profiles, context, options });
   const memberCreateAxes = memberCreateConstructionAxes(project, context, profile);
   const memberEditAxes = memberEditDragGuideAxes(context, profile);
   const referenceAxes = activeReferenceAxes(project, context, profile);

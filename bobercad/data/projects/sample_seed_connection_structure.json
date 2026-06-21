@@ -714,15 +714,6 @@
           1500
         ],
         "assemblyId": "assembly_beam_1",
-        "gridPlacement": {
-          "referenceLevel": "level_connection",
-          "referenceGridY": "grid_a",
-          "offset": [
-            0,
-            0,
-            0
-          ]
-        },
         "fabrication": {
           "partMark": "B1"
         },

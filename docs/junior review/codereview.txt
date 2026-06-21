@@ -1,0 +1,1035 @@
+I reviewed the uploaded app bundle as a static codebase, using the viewer HTML/runtime as the main “wired app” entry path. The bundle is **262 files / about 72.5k physical lines**. I treated a reduction as either: code that can be removed from `bobercad/app`, code that can be lazy-loaded out of the normal runtime, or code that is wired only as placeholder/compatibility. The highest-confidence opportunities are below. 
+
+| Priority | Area                                                                 | Finding                                                                                                                                                                                                                                                                                                                                                                                      |                                                                                 Estimated LOC reduction | Confidence           |
+| -------: | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------: | -------------------- |
+|        1 | `bobercad/app/schemas/*.json`                                        | Schema files are app-tree payload/documentation, not runtime viewer code. They are referenced by `$schema` strings and metadata, but they do not need to live in the shipped app runtime bundle. The largest single file is `project.schema.json`; schema examples also appear for API, fasteners, materials, and profiles.                                                                  |                                                         **~6,341 LOC** if moved out of app runtime tree | High                 |
+|        2 | `engine/api/api-register.json`                                       | API register is a large descriptive registry. It is useful as API documentation/catalog metadata, but it is not on the viewer runtime import path. Keep it in docs/tooling or generate it, rather than shipping it in `app`.                                                                                                                                                                 |                                                                                            **~938 LOC** | High                 |
+|        3 | `engine/api/model/compliance.mjs` + `solver-result.mjs`              | The compliance/rule-pack/solver-result API appears to be registered as a generic headless API, but not wired into the viewer runtime path. If not used by scripts/tests, move to a separate analysis package or delete until the feature is real.                                                                                                                                            |                                                                                            **~291 LOC** | High                 |
+|        4 | `ui/viewer/viewer-qa-bridge.mjs`                                     | QA bridge is always imported and instantiated by the viewer runtime, but its features are gated by URL/search params such as `qaView`, `qaCapture`, `qaDebug`, and `qaSnapSmoke`. The code includes DOM QA request handling, screenshot hiding CSS, capture output, and snap diagnostics.                                                                                                    | **~620–660 runtime LOC** by lazy-loading only when `qa*` params exist; **~664 LOC** if removed entirely | High                 |
+|        5 | Planned-but-not-real commands: clash detection + structural analysis | `TOOLS_WORKFLOW_COMMANDS` and `STRUCTURAL_ANALYSIS_COMMANDS` define UI commands, but the registered handlers only show “not available yet.” There is also an empty `plannedModelCommandState()` placeholder.                                                                                                                                                                                 |                                                                                          **~45–70 LOC** | High                 |
+|        6 | `ui/shell/workspace-storage.mjs` legacy migration                    | Workspace storage carries compatibility for old toolbar preference shapes: `commandIds`, `hiddenCommandIds`, `groupIds`, `collapsedGroups`, `dock`, and `modeling`. If users no longer need migration from the pre-`toolbars.modeling` format, this can be dropped or moved to a one-time migration script.                                                                                  |                                                                                          **~45–65 LOC** | High                 |
+|        7 | Plate-sketch drag-edit modules                                       | Several `rendering/interaction/plate-sketch/drag-edit-*.mjs` files import a huge shared list of plate-sketch APIs, but each file uses only a subset. The snippet shows a very wide import in `drag-edit-geometry.mjs`.  Static identifier analysis found roughly **188 unused imported names** across `drag-edit-geometry`, `drag-edit-overlays`, `drag-edit-snap`, and `drag-edit-targets`. |                    **~70–110 LOC** from import cleanup alone; more if split into focused helper modules | Medium-high          |
+|        8 | Engine plate-sketch relation modules                                 | `relation-analysis.mjs`, `relation-mutations.mjs`, and `solver-core.mjs` have similar copied import blocks and several unused imported names. The barrel module `solver-and-relations.mjs` re-exports many relation helpers, which is convenient but encourages broad imports.                                                                                                               |                                                                                          **~40–80 LOC** | Medium-high          |
+|        9 | Duplicate pointer-frame throttling in authoring controllers          | Beam/member/plate/sketch/work-plane creation controllers repeat the same “pending pointer + requestAnimationFrame + cycleIndex reset” pattern. Extracting a small pointer-frame scheduler helper would remove duplicated boilerplate and make behavior more consistent.                                                                                                                      |                                                                                          **~35–50 LOC** | Medium               |
+|       10 | `project-command-store.mjs` unused imports / old helper surface      | Static analysis found about **34 apparently unused imported names** in `project-command-store.mjs`, including validation helpers, relation helpers, and ID/list utilities. Some may be historical compatibility from older store operations. Direct import cleanup is modest; follow-on removal of now-unused helper exports could be larger.                                                |                                              **~20–40 LOC** direct; **~60–120 LOC** with helper cleanup | Medium               |
+|       11 | Generic path API exports                                             | In `engine/api/geometry/paths.mjs`, functions such as `pointAtStation`, `frameAtStation`, and `offsetPath` look exported but not used elsewhere in this app bundle. `pathLength`, `samplePath`, and `normalizePath` are used, so this is not a whole-file deletion.                                                                                                                          |                                                              **~30–45 LOC** if these are not public API | Medium               |
+|       12 | Connection primitive registry introspection                          | `connectionPrimitiveOperations()` and `registeredModelOperations()` appear to be introspection helpers. If no tooling/UI consumes them, they can be removed while keeping registration/building.                                                                                                                                                                                             |                                                                                          **~20–30 LOC** | Medium               |
+|       13 | Workspace ordering helpers                                           | `workspace-customizer-ordering.mjs` repeats the same move-by-direction and move-before pattern for toolbar groups, bottom strip items, viewer settings strip groups, feature nav groups, and panels. The repeated shape is visible in the bottom strip/viewer settings helpers.                                                                                                              |                                                                                          **~40–70 LOC** | Medium               |
+|       14 | Command state helpers across palette/navbar/toolbar                  | Command UI layers duplicate enabled/disabled/title/description state derivation. Centralizing command state normalization would reduce repeated defensive code across the command palette, feature navbar, toolbar, and workspace customizer.                                                                                                                                                |                                                                                          **~30–50 LOC** | Medium               |
+|       15 | LOD/detail policy split between render scheduler and WebGL viewer    | Detail/progressive rendering policy appears split between scheduler code and WebGL view state/runtime. It is wired, not dead, but could be consolidated into one policy object to reduce branching and duplicated thresholds.                                                                                                                                                                |                                                                                         **~60–100 LOC** | Lower; refactor risk |
+
+### Best reduction targets
+
+The **largest safe app-tree reduction** is to move non-runtime metadata out of `bobercad/app`:
+
+| Package to move out of runtime app |            LOC |
+| ---------------------------------- | -------------: |
+| Schemas                            |         ~6,341 |
+| API register                       |           ~938 |
+| Compliance + solver-result API     |           ~291 |
+| **Subtotal**                       | **~7,570 LOC** |
+
+That does not necessarily mean deleting them from the repo. A cleaner target would be `bobercad/schemas`, `bobercad/tools/api-register`, or generated docs, then exclude them from the app bundle.
+
+The **largest production runtime reduction** is the QA bridge. Since the viewer runtime imports it unconditionally but QA behavior is URL-param-driven, lazy-loading it behind `qaView`, `qaCapture`, `qaDebug`, or `qaSnapSmoke` would remove roughly **620–660 LOC from normal viewer load** while preserving QA functionality.  
+
+### Conservative total
+
+A conservative cleanup that keeps real features and only removes/moves low-risk bloat is:
+
+**~7,900–8,300 LOC from the app/runtime surface**, mainly from schemas/register/compliance relocation, QA lazy-load, planned-command placeholders, legacy workspace compatibility, and import cleanup.
+
+An aggressive cleanup that also removes QA entirely, drops unused public API exports, and consolidates repeated workspace/rendering helpers is closer to:
+
+**~8,700–9,300 LOC**, but that should be done behind tests because some exported APIs may be used by external scripts not visible in this bundle.
+I completed a first full-bundle review pass over the uploaded `bobercad/app` bundle: **262 files** across the engine, store, rendering, UI, schemas, and WebGL layers. The bundle itself identifies the reviewed scope as `bobercad/app` and reports 262 files. 
+
+Artifacts:
+
+[Full Markdown review report](sandbox:/mnt/data/bobercad_code_review_report.md)
+[Critical/static findings CSV](sandbox:/mnt/data/bobercad_static_findings.csv)
+[Per-file inventory CSV](sandbox:/mnt/data/bobercad_file_inventory.csv)
+
+## Verdict
+
+The architecture is **promising but not release-ready**.
+
+The good news: the project has a clear domain-oriented shape: `engine/core`, `engine/api`, `engine/modules/smart-components`, `engine/store`, rendering interaction/WebGL, UI shell/panels, and schemas. The API register also shows an intentional headless/store API surface for project, member, Smart Component, trim, geometry, rule-pack, and transport-sectioning operations. 
+
+The serious issue: the deeper static pass found **likely runtime `ReferenceError` defects** caused by missing imports or missing dependency-bag entries. Syntax itself is clean, but several code paths can still break when invoked.
+
+## Checks I ran
+
+| Check                                      |                         Result |
+| ------------------------------------------ | -----------------------------: |
+| Files reviewed                             |                            262 |
+| Total lines                                |                         72,494 |
+| Nonblank lines                             |                         67,138 |
+| `.mjs` syntax check with `node --check`    |               225 / 225 passed |
+| JSON parse check                           |                  14 / 14 valid |
+| Relative import/export file resolution     | 788 checked, 0 missing targets |
+| TypeScript checkJS diagnostics             |      663 parseable diagnostics |
+| Test files found by common naming patterns |                              0 |
+| `eval` / `new Function`                    |                              0 |
+| `console.*` uses                           |                             13 |
+| `.innerHTML =` writes                      |                              3 |
+| Lines over 160 chars                       |                            234 |
+
+## P0 defects to fix first
+
+These are the highest-risk findings because they are likely direct runtime failures.
+
+| File                                                                                 | Issue                                                                                                                                                      | Why it matters                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine/store/project-command-store.mjs:742`                                         | Uses `removeReferences` but no definition/import was found.                                                                                                | A delete/remove path can throw `ReferenceError`.                                                                                                                                         |
+| `engine/store/project-store-smart-component-helpers.mjs:111`                         | Uses `axisRelationFromSnap` without importing/injecting it.                                                                                                | Smart-component snap relation creation can throw.                                                                                                                                        |
+| `engine/store/project-store-smart-component-methods.mjs:218,223,225,226,237,261,262` | Uses `nextObjectId`, `finiteNumber`, `validateLevel`, `validateGridSystem`, and `addIndexedObject` without declaring them in the module or dependency bag. | `createLevel` and `createGridSystem` can fail when called. The module’s factory receives many dependencies, but these are absent from the factory parameter list and from the call site. |
+| `rendering/interaction/plate-sketch-drag-edit-controller.mjs:431,437`                | Calls `requestEdgeAngle` and `requestPointDistance`, but those names are not defined in that module.                                                       | Plate-sketch dimension editing actions can throw.                                                                                                                                        |
+| `rendering/interaction/plate-sketch/drag-edit-geometry.mjs:295-296`                  | Uses `edgeById` without importing it.                                                                                                                      | Relation overlay / drag geometry can throw.                                                                                                                                              |
+| `ui/shell/workspace-customizer-manager.mjs:96,233,344`                               | Uses `normalizeCollapsedGroups`, `normalizeViewerSettingsStripWorkspace`, and `normalizePanelDock` without importing/injecting them.                       | Workspace customization paths can throw.                                                                                                                                                 |
+| `ui/shell/workspace-customizer-state.mjs:98,534,553`                                 | Uses `titleCase` without a visible local definition/import.                                                                                                | Workspace label normalization can throw.                                                                                                                                                 |
+| `ui/viewer/panels/trim-joint-editor-panel.mjs:162`                                   | Uses `regionKey` without a visible definition/import.                                                                                                      | Trim-region hit selection can throw.                                                                                                                                                     |
+
+The strongest pattern behind these bugs is **dependency-bag drift**: large modules accept many injected helpers, but there is no typed contract forcing call sites to pass every required helper.
+
+## Architecture review
+
+The strongest architectural choice is the separation between domain logic and UI/rendering. Geometry, members, plate sketches, trim operations, Smart Components, model builders, and project object dependencies mostly live in the engine/API layer. The rendering and UI layers call into those APIs rather than owning the model rules directly.
+
+The weakest architectural choice is the size of the orchestration modules. Several functions are far too large to reason about line-by-line safely:
+
+| Function                                | Lines | Approx. complexity |
+| --------------------------------------- | ----: | -----------------: |
+| `createToolbarWorkspaceManager`         | 1,113 |                274 |
+| `createPlateSketchEditController`       | 1,071 |                288 |
+| `mountEditorUi`                         |   994 |                130 |
+| `createMemberEditController`            |   973 |                208 |
+| `createWebglViewer`                     |   924 |                228 |
+| `createProjectStore`                    |   879 |                221 |
+| `solveSketchRelationsAfterVertexChange` |   494 |                275 |
+
+These should be split into state machines, pure reducers/helpers, command handlers, and view adapters. The plate sketch solver in particular deserves very focused tests before refactoring.
+
+## Good patterns I found
+
+The validation style is generally good: many APIs reject invalid inputs early and with domain-specific messages. The project-object index is a solid foundation for lookup, deletion, and dependency tracking. The semantic builder layer is also a good abstraction because it keeps generated objects structured around roles like plates, hole patterns, trims, fasteners, and welds.
+
+The snap solver has a sensible separation between candidate collection, candidate ranking, visibility filtering, diagnostics, and final result creation. The presence of diagnostics is a strong engineering choice because snapping behavior is otherwise hard to debug. 
+
+The JSON schemas and API register are positive signs: they show that the project is moving toward explicit contracts rather than ad-hoc data shapes. 
+
+## Main code-quality problems
+
+The biggest problem is not syntax. The biggest problem is **contract enforcement**. JavaScript can let these missing dependency errors survive until a specific user action hits the path. A CI check using TypeScript `checkJs`, JSDoc typedefs, or a migration to TypeScript would catch most of them before runtime.
+
+The second problem is **oversized controller/store modules**. When one function owns UI state, command dispatch, rendering, persistence, snapping, and side effects, it becomes very hard to review every line confidently.
+
+The third problem is **duplicated validation helpers**. Many modules define local `requiredObject`, `optionalString`, `requiredPositiveNumber`, etc. Some duplication is acceptable for domain-specific error prefixes, but this project has enough repetition that validation semantics will drift.
+
+The fourth problem is **weak test visibility**. I found no common `*.test.*`, `*.spec.*`, `tests/`, or `__tests__/` files in the bundle. For geometry, snapping, sketch constraints, Smart Component regeneration, and store mutations, that is risky.
+
+## Recommended fix order
+
+First, fix every P0 undefined identifier and add smoke tests that execute those code paths. Then add CI gates for `node --check`, JSON validation, import/export resolution, and `tsc --allowJs --checkJs`. After that, add typed contracts for all dependency-bag factories, especially store and UI manager factories.
+
+Then refactor the largest controllers in this order: `plate-sketch-drag-edit-controller`, `workspace-customizer-manager`, `project-command-store`, `member-transform-edit-controller`, and `webgl-viewer-runtime`. Each should become a small shell around pure helpers and a state reducer.
+
+The next practical milestone should be: **zero `TS2304 Cannot find name` diagnostics**, then a regression test suite for store commands, snap solving, plate sketch constraint solving, and Smart Component regeneration.
+I reviewed the uploaded Bobercad app bundle and treated “routes” as the exposed callable API surface: `api-register.json`, project-store methods, UI/controller callers, and command-palette/modeling command handlers. 
+
+## Executive summary
+
+The **viewer command route layer is mostly complete**, but the **headless API register is materially stale**.
+
+I found:
+
+| Area                                                           |                                                         Result |
+| -------------------------------------------------------------- | -------------------------------------------------------------: |
+| `.mjs` syntax check                                            |                       Pass: 225 files checked, 0 syntax errors |
+| Static local import/exports check                              | Pass: 788 local imports/exports checked, 0 missing local paths |
+| Module graph cycles                                            |                                           Pass: 0 cycles found |
+| Command palette/modeling command specs vs handlers             |                         Pass: 56 specs, 56 registered handlers |
+| Actual project-store callable methods                          |                                                            109 |
+| Store methods registered in `api-register.json`                |                                                             49 |
+| Store methods implemented but missing from `api-register.json` |                                                             61 |
+| Registered store API missing from implementation               |                                           1: `store.trimJoint` |
+| Placeholder command routes                                     |                        2: clash detection, structural analysis |
+
+The highest-priority fix is to make `api-register.json` generated or at least CI-verified against `createProjectStore()`. Right now it advertises some non-existent/ambiguous calls and omits many real public methods that the UI already depends on.
+
+---
+
+## Missing or mismatched API routes
+
+### 1. `store.trimJoint` is registered but not implemented
+
+`api-register.json` advertises a `store.trimJoint` API with `trimJointId` as input, but the composed store does not expose a `trimJoint(trimJointId)` reader. The actual smart-component store reader set includes `object`, `member`, `smartComponent`, `smartComponentForObject`, roots, dependency methods, etc., but not `trimJoint`.  
+
+Recommended fix:
+
+```js
+trimJoint(trimJointId) {
+  return trimJointById(state.currentProject, trimJointId);
+}
+```
+
+or remove `store.trimJoint` from the register if object reads are meant to go through `store.object()` only.
+
+---
+
+### 2. Implemented and UI-used store APIs missing from `api-register.json`
+
+The project store composes methods from the base store, smart-component store methods, trim store methods, and plate-sketch store methods. The register lists many core methods, but misses large categories that are already used by viewer/UI code. For example, the UI calls methods like `api.updateWeld`, `api.createGridSystem`, `api.updateGridSystem`, `api.addGridAxis`, `api.updateWorkPoint`, `api.setSmartComponentRoleActive`, `api.resetSmartComponentObjectOverrides`, `api.detachSmartComponentObject`, and `api.reattachSmartComponentObject`; these are not in the register.   
+
+#### High-priority missing store routes
+
+**Creation and deletion**
+
+`createMember`, `createPlate`, `createSketch`, `createPlateFromSketch`, `createGridSystem`, `createLevel`, `createCustomProfile`, `deleteMember`, `deleteRelation`.
+
+The store actually defines creation methods such as `createMember`, `createPlate`, `createSketch`, and `createPlateFromSketch`, and then spreads trim methods into the returned API. 
+
+**General object/support object edits**
+
+`updatePlate`, `updateWeld`, `updateGridSystem`, `addGridAxis`, `removeGridAxis`, `updateLevel`, `updateWorkPoint`, `updateHolePattern`, `updateGroup`, `updateAssembly`, `updateObjectPattern`, `updateInterface`, `updateConnectionZone`.
+
+These are clearly public in practice because the inspector and support-object bindings call them through `api.*`.  
+
+**Member relations**
+
+`memberAxisRelations`, `setMemberAlignment`, `clearMemberAlignment`, `upsertRelation`.
+
+The UI exposes member alignment and relation editing actions that call these store methods. 
+
+**Smart Component lifecycle/subfeature routes**
+
+`smartComponentRoleOptions`, `setSmartComponentRoleActive`, `toggleSmartComponentRoleFromFace`, `resetSmartComponentObjectOverrides`, `detachSmartComponentObject`, `reattachSmartComponentObject`, `resolveSmartComponentDiagnostics`, `profiles`.
+
+The smart-component store exports these methods, and the inspector uses several of them for object override/reset/detach/reattach workflows.  
+
+**Dependency/render support**
+
+`referencePlaneDependencyObjectIds`, `regenerateMemberSmartComponents`.
+
+`memberDependencyObjectIds`, `featureDependencyObjectIds`, and `trimJointDependencyObjectIds` are registered, but `referencePlaneDependencyObjectIds` is implemented and missing. This is an inconsistency in the dependency API family. 
+
+**Plate sketch and bend routes**
+
+`setPlateSketchVertex`, `setPlateSketchVertices`, `addPlateSketchConstructionLine`, `setPlateSketchEdgeLength`, `setPlateSketchEdgeLengthMode`, `setPlateSketchEdgeAngle`, `setPlateSketchEdgeAngleMode`, `setPlateSketchPointDistance`, `setPlateSketchPointDistanceMode`, `insertPlateSketchVertex`, `removePlateSketchVertex`, `notchPlateSketchCorner`, `removePlateSketchRelation`, `removePlateSketchFixedRelations`, `solvePlateSketchRelation`, `upsertPlateSketchRelation`, `fixPlateSketchUnderDefinedEntities`, `inferPlateSketchRelations`, `setSketchVertex`, `upsertPlateBend`, `removePlateBend`.
+
+These are implemented by `createPlateSketchStoreMethods()` and used heavily by the plate sketch drag-edit layer, but none appear in `api-register.json`.  
+
+---
+
+## Command routes
+
+The command layer looks healthier than the API register.
+
+The command registry defines modeling commands such as beam, column, plate, sketch, work plane, plate bend, and trim; it also defines model/reference, tools, structural-analysis, view, selection, snap, data dock, panel, inspector, settings, and cancel commands.  
+
+The viewer runtime registers matching handlers for the command IDs, including modeling commands, view commands, display modes, render visibility, dock commands, snap commands, and cancel. I found no spec-without-handler mismatch in this route layer. 
+
+Two command routes are deliberately placeholders:
+
+```js
+"tools.clashDetection.open": () => {
+  updateModelingStatus("Clash detection tools are not available yet.");
+},
+"structural-analysis.open": () => {
+  updateModelingStatus("Structural analysis tools are not available yet.");
+}
+```
+
+Those are not “missing” handlers, but they are not functional workflows yet. 
+
+---
+
+## Ambiguous/non-callable API register entries
+
+A few register entries look like namespace declarations rather than callable routes. This is okay only if the register schema supports namespaces, but the current schema describes every item as an API with `id`, `module`, `description`, `parameters`, and `returns`; it does not distinguish callable function, namespace, builder family, command route, or documentation node. 
+
+Examples:
+
+| Register entry     | Problem                                                                                                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `geometry.paths`   | `geometry/paths.mjs` exports concrete helpers like `normalizePath`, `pathLength`, `pointAtStation`, `frameAtStation`, `samplePath`, `offsetPath`; there is no single callable `paths` export.   |
+| `model.sectioning` | `transport-sectioning.mjs` exports functions like `estimateObject`, `estimateObjects`, `createSection`, `splitByMaxWeight`, `sectionSchedule`; there is no single callable `sectioning` export. |
+| `ctx.geometry`     | `createGeometryApi()` returns a helper namespace; register includes only some child methods and omits many others exposed on the returned object.                                               |
+| `ctx.*` builders   | Some builder functions are registered, but others exposed by `createSemanticBuilders()` are not, such as member, assembly, work point, object pattern, and corner trim builders.                |
+
+The architecture needs a distinction between:
+
+```txt
+callable route
+namespace
+builder method
+store method
+runtime ctx method
+command route
+internal helper
+```
+
+Right now these are blended together.
+
+---
+
+## Architecture review
+
+### What is strong
+
+The app has a useful headless-store shape. `createProjectStore()` centralizes model mutation, emits command results, tracks history stacks, and acts as the main project API used by UI and scripts. 
+
+The command UI architecture is comparatively clean: command metadata is centralized, command execution is registered through `viewerApp.registerCommands()`, and `viewerApp.runCommand()` throws on missing handlers. That gives the command layer a real route boundary. 
+
+The smart-component/runtime side is also moving in a good direction: builder APIs, geometry helpers, checks, and semantic builders are separated from UI concerns. The register documents many of these runtime APIs, including `ctx.check.*`, `ctx.reference.plane`, `ctx.part.plate`, `ctx.pattern.rectangularGrid`, `ctx.feature.*`, `ctx.fastener.*`, and `ctx.weld.fillet`. 
+
+### What is weak
+
+The API register is manual and already out of sync. The strongest signal is that there are far more implemented store methods than registered store methods, and the UI calls many of the missing ones directly. This means the register cannot currently be trusted as the source of truth.
+
+The public/private boundary is unclear. Files under `engine/api` include stable public-ish APIs, smart-component runtime DSL methods, geometric internals, project helper utilities, and interaction helpers. That makes it hard to know what should be versioned and what can be changed freely.
+
+The store API is too broad. It now includes project CRUD, smart-component lifecycle, sketch editing, grid/support objects, trim operations, relation editing, history, dependency queries, and catalog access. That may be fine internally, but it needs explicit grouping or generated manifests to avoid drift.
+
+The API schema is too weak for contract governance. It requires strings for description and returns, but it does not validate uniqueness, callable existence, method kind, side effects, ownership, return shape, or version/deprecation. 
+
+---
+
+## Recommended fixes
+
+### Immediate fixes
+
+1. **Add or remove `store.trimJoint`.**
+   I would add it, because a trim-joint reader is a natural peer of `store.member()` and `store.smartComponent()`.
+
+2. **Register the UI-used missing store methods.**
+   Start with `updatePlate`, `updateWeld`, grid/support-object methods, smart-component object override methods, and all plate-sketch/bend methods. These are public in practice because the UI already depends on them.
+
+3. **Mark placeholder commands as planned.**
+   Add metadata like `status: "planned"` or `implemented: false` for `tools.clashDetection.open` and `structural-analysis.open`, so they do not look like completed workflow routes.
+
+### CI guardrail
+
+Add a test that instantiates the project store and asserts:
+
+```js
+for (const api of register.apis.filter((api) => api.id.startsWith("store."))) {
+  const method = api.id.slice("store.".length);
+  assert.equal(typeof store[method], "function", `${api.id} is registered but missing`);
+}
+```
+
+Then add the inverse allowlist check:
+
+```js
+const intentionallyInternal = new Set([
+  // only if you decide some methods are private despite being returned
+]);
+
+for (const method of Object.keys(store)) {
+  if (typeof store[method] !== "function") continue;
+  if (intentionallyInternal.has(method)) continue;
+  assert(registerIds.has(`store.${method}`), `store.${method} is public but unregistered`);
+}
+```
+
+Also keep the command route test I effectively ran:
+
+```js
+for (const command of commandPaletteSpecs()) {
+  assert(app.canRunCommand(command.id), `${command.id} has no registered handler`);
+}
+```
+
+### Manifest redesign
+
+Replace the current flat register with typed entries:
+
+```json
+{
+  "id": "store.updatePlate",
+  "kind": "store-method",
+  "callable": true,
+  "module": "../store/project-command-store.mjs",
+  "method": "updatePlate",
+  "sideEffects": "mutates-project",
+  "history": true,
+  "parameters": {
+    "plateId": { "type": "string" },
+    "patch": { "type": "object" }
+  },
+  "returns": { "type": "project" }
+}
+```
+
+For namespaces:
+
+```json
+{
+  "id": "ctx.geometry",
+  "kind": "namespace",
+  "callable": false,
+  "children": [
+    "ctx.geometry.rectangleOutline",
+    "ctx.geometry.clipPlateOutlineByPlane"
+  ]
+}
+```
+
+### Architectural split
+
+A good target split would be:
+
+```txt
+engine/api/public/          stable app/headless API
+engine/api/runtime/         Smart Component ctx DSL
+engine/api/project/         pure project model helpers
+engine/api/internal/        implementation helpers not promised to callers
+engine/store/               command bus + project mutation facade
+ui/commands/                UI command routes
+```
+
+That split would make “missing routes” easier to define: public routes live in one manifest; internal helpers do not.
+
+---
+
+## Priority list
+
+1. **Fix `store.trimJoint` mismatch.**
+2. **Register all UI-used store methods or intentionally hide them behind a smaller public facade.**
+3. **Add CI tests for register/store drift and command spec/handler drift.**
+4. **Classify register entries by kind: callable, namespace, runtime-builder, command.**
+5. **Separate public API from internal project/runtime helpers.**
+
+My overall read: the underlying architecture is solid enough, especially the command layer and project-store concept, but the API contract layer has drifted behind the implementation. The main risk is not broken imports or syntax; it is that `api-register.json` no longer represents the real public surface.
+I reviewed the app bundle as an architecture snapshot, not a runtime/debug pass. My take: **do not keep adding major functions yet**. The core is promising, but you should first harden the update pipeline, contracts, and regression safety around the app’s “project graph → smart components → render scene → UI panels” loop. The bundle is `bobercad/app`, 262 files, excluding docs and project JSON data.  
+
+## What is already good
+
+You already have the right architectural direction: a **headless project store** exposed through an API register, rather than letting UI code mutate project JSON directly. The API register explicitly describes `createProjectStore`, `store.subscribe`, `store.project`, object lookups, smart-component dependency lookups, and mutation APIs.
+
+The store also has a real command/result shape: current project state, subscribers, command results, undo/redo stacks, and command metadata such as changed, removed, and regenerated object IDs. That is a strong foundation for CAD-style editing.
+
+Smart components are also more mature than a typical early app feature. The runtime builds a patch from a definition, validates parameters, runs `definition.build(ctx)`, builds child components, applies overrides, calculates `ownedObjectIds`, writes `objectRoles`, stores diagnostics, and sets health status.
+
+Rendering is not naïve either. The render scheduler already supports progressive detail rendering, queued rerenders, idle callbacks, and object-level hot swapping through `viewer.replaceSceneObjects`. 
+
+So the problem is **not** that the app lacks architecture. The risk is that the architecture is becoming too broad before its boundaries are enforced.
+
+## The main thing to fix now: make project changes one single pipeline
+
+Right now, the store already knows how to emit command results, and the render layer already knows how to patch specific object IDs. But feature code still appears to choose between direct rerendering, local object hot swaps, editor-specific refreshes, and manual selection refreshes. The store’s command metadata should become the only source of truth for “what changed.” The UI should not have to know whether a member edit, smart-component regen, feature edit, or trim edit needs full rerender vs partial scene patch.
+
+Do this now:
+
+```text
+Project command -> ProjectCommandResult -> central app change handler -> render scheduler + panels
+```
+
+That means every mutating API should return or emit the same shape:
+
+```js
+{
+  project,
+  commandType,
+  changedObjectIds,
+  removedObjectIds,
+  regeneratedObjectIds,
+  diagnostics
+}
+```
+
+You already have most of this in `createProjectCommandResult` and the command store. The missing improvement is to stop letting panels/controllers decide their own update strategy. For example, member editing uses `hotSwapMemberDetails`, feature and trim panels use local object patching, and viewer runtime wires many callbacks manually. Centralize that logic in one `project-change-orchestrator` or similar.
+
+**Acceptance check:** after this refactor, adding a new mutation should require only: implement store command, declare affected IDs, and optionally add UI controls. It should not require custom rerender logic in three panels.
+
+## Second: shrink `project-command-store.mjs` before it becomes unmaintainable
+
+`project-command-store.mjs` is doing too much. It owns state, history, transactions, member updates, smart-component regeneration, helper geometry, project support-object updates, custom profiles, trim/smart-component method composition, and more. The code already splits some methods into `project-store-trim-methods`, `project-store-plate-sketch-methods`, and `project-store-smart-component-methods`, which is good, but the main store is still a large coordinator.
+
+I would split it into these layers:
+
+```text
+project-store/
+  project-store.mjs                 // state, subscribe, history, commit
+  project-command-runner.mjs         // execute command, derive result IDs
+  project-mutations/
+    members.mjs
+    plates.mjs
+    features.mjs
+    trims.mjs
+    smart-components.mjs
+    support-objects.mjs
+  project-invariants.mjs             // validate whole project graph
+  project-change-orchestrator.mjs     // optional UI-facing adapter
+```
+
+Keep `createProjectStore` as the public facade, but move logic out. The rule should be: **the store facade wires things; mutation modules do work; invariant modules validate; render/UI never mutate project internals.**
+
+This will matter a lot before more functions because each new function currently increases the chance of hidden coupling between project graph, smart components, and renderer.
+
+## Third: add invariant checks around the project graph
+
+You have an indexed object model: `objectIndex` maps object IDs to collections, and helpers like `setIndexedModelObject` update both the collection and index. Smart components also maintain `ownedObjectIds`, `objectRoles`, detached IDs, child components, generated helpers, and field overrides. That is powerful, but it needs automatic invariant checks.
+
+Add a dev-only checker that can run after every command in development and in tests:
+
+```js
+assertProjectInvariants(project)
+```
+
+It should check:
+
+```text
+Every objectIndex entry points to a real object.
+Every indexed object has the same id as its key.
+Every feature ownerId exists.
+Every holePatternRef exists.
+Every fastener participant exists.
+Every trim participant and operation member exists.
+Every smartComponent.ownedObjectIds item exists or is explicitly detached.
+Every smartComponent.objectRoles id resolves.
+Every generated object authoring.componentInstanceId matches its owner smart component.
+Every connectionZone/interface/assembly reference resolves.
+No object belongs to two generated owners unless allowed.
+```
+
+This is especially urgent because smart-component rebuilds remove, regenerate, detach, reattach, and override generated objects. Without invariant tests, you will eventually add a feature that leaves stale references after one uncommon edit path. The runtime already records component diagnostics and health, so the invariant checker should complement that by checking project graph integrity.
+
+## Fourth: turn the smart-component runtime into a stricter plugin boundary
+
+Smart components are the main extensibility system. Before adding many more component functions, lock the contract.
+
+Right now the build pipeline gives a rich mutable context, then collects roles, generated objects, child components, overrides, diagnostics, and owned object IDs. That is flexible, but it can become fragile if each component author does things slightly differently.
+
+Add a formal “component output contract”:
+
+```js
+{
+  objects: {
+    plates: {},
+    features: {},
+    trimJoints: {},
+    fastenerGroups: {},
+    welds: {},
+    referencePlanes: {},
+    smartComponentInstances: {}
+  },
+  roles: {},
+  diagnostics: [],
+  outputs: {}
+}
+```
+
+Then enforce these rules:
+
+```text
+A component may only create objects through semantic builders.
+A component cannot manually choose IDs except through ctx.id(role).
+Every created object must be assigned to exactly one role.
+Every role declared in the definition must either resolve, be suppressed, or produce a diagnostic.
+Every diagnostic must have stable code, objectRoles, and parameterPaths.
+Every child component must declare inputs explicitly.
+```
+
+You already have semantic builders and a model-operation registry, which are good foundations. The missing bit is making these contracts hard, testable rules rather than conventions.
+
+## Fifth: split `viewer-runtime.mjs` into a real composition root plus coordinators
+
+`viewer-runtime.mjs` is acting as app bootstrap, dependency container, mode coordinator, command binder, panel manager, selection mediator, keyboard shortcut owner, render scheduler owner, QA bridge mount, and status manager. It wires `createProjectStore`, selection, snapping, workspace bindings, app controller, command registration, status bar, render scheduler, member edit, plate sketch edit, reference plane edit, trim create, feature editor, inspector, model browser, project panels, and smart-component browser.
+
+That is fine as an early composition root, but it will become the place every new function touches. Split it before adding more UI functions.
+
+Suggested split:
+
+```text
+viewer-bootstrap.mjs
+  load settings/project/libraries
+  create viewer
+  create project store
+
+viewer-services.mjs
+  create selection, snap manager, render scheduler, QA bridge
+
+viewer-mode-coordinator.mjs
+  clear editor modes
+  switch active command/editor
+  handle global escape/delete/tab behavior
+
+viewer-panels.mjs
+  mount inspector, model browser, smart component browser, data panels
+
+viewer-command-bindings.mjs
+  register command IDs to actions
+```
+
+The goal is that adding a new modeling function touches one command registration file and one controller, not the bootstrap file, panel manager, status bar, and render scheduler all at once.
+
+## Sixth: make dependency IDs drive rendering everywhere
+
+The API register already exposes dependency functions such as `memberDependencyObjectIds`, `featureDependencyObjectIds`, and `trimJointDependencyObjectIds`. These are exactly what you need for incremental rendering. 
+
+But use them consistently. Every project command result should include enough affected IDs for the render scheduler to decide:
+
+```text
+If changed IDs are small -> replace scene objects.
+If dependency graph expands -> replace dependency object set.
+If command type is global/settings/library/schema -> full render.
+If smart component regenerated -> replace owned + detached + dependent members.
+```
+
+This removes panel-specific knowledge like “feature editor calls featureDependencyObjectIds” or “member editor calls hotSwapMemberDetails.” The panel should update project data; the change pipeline should decide render impact.
+
+## Seventh: add automated tests before new functions
+
+I saw a QA bridge for browser/runtime diagnostics, including snap diagnostics and view capture support. That is useful, but it is not a replacement for deterministic unit and integration tests.
+
+Before more functions, add these test groups:
+
+```text
+1. Project store command tests
+   - create member
+   - move member
+   - update feature
+   - create/delete smart component
+   - undo/redo
+   - changedObjectIds/removedObjectIds/regeneratedObjectIds correctness
+
+2. Smart component golden tests
+   - preset -> generated object graph
+   - parameter update -> expected changed objects
+   - suppress plate -> expected assembly/zone/object visibility
+   - invalid parameters -> diagnostics and health=error
+
+3. Project invariant tests
+   - objectIndex consistency
+   - no stale object references after delete/regenerate
+   - smart component child ownership tree
+
+4. Sketch solver tests
+   - under-defined / fully-defined / over-defined cases
+   - vertex move preserves relations
+   - relation deletion leaves valid sketch
+
+5. Render dependency tests
+   - member edit returns enough IDs to patch scene
+   - feature edit patches owner + feature + smart component dependencies
+```
+
+This matters because CAD apps fail in combinations, not single functions. The hard bugs will be “move member that owns smart component with hidden back plate and a modified fastener group, then undo.” Build tests around those combinations now.
+
+## Eighth: reduce duplicated validation utilities
+
+There are many local validators: `fail`, `requiredObject`, `requiredString`, positive number checks, vector checks, etc. Some duplication is okay in small modules, but across a CAD model it causes inconsistent error behavior and inconsistent semantics. You already have `engine/core/math.mjs`, smart-component runtime validation, and project-store model helpers; consolidate around a small number of validation modules and use them consistently.
+
+Recommended structure:
+
+```text
+engine/core/assert.mjs
+  assertObject
+  assertString
+  assertArray
+  assertEnum
+  assertFiniteNumber
+
+engine/core/math.mjs
+  vectors, geometry primitives
+
+engine/project/project-invariants.mjs
+  project graph checks
+
+engine/schemas/validate.mjs
+  JSON schema validation for external files
+```
+
+Do not overdo this for every tiny helper, but for project graph objects, smart-component definitions, and public API inputs, centralize.
+
+## Ninth: add schema validation at file boundaries
+
+You have JSON schemas, including an API register schema and large project/schema files. The API register itself describes a broad public surface.
+
+Before new functions, make sure this exists:
+
+```text
+On project load: validate project JSON schema.
+On library load: validate profiles/materials/fasteners/smart components.
+On smart-component definition load: validate definition schema.
+In development: validate command result project after mutation.
+In CI: validate all demo projects and catalogs.
+```
+
+This will stop malformed data from becoming “architecture bugs.”
+
+## My recommended “do now” order
+
+1. **Centralize project-change handling** so all mutations flow through `ProjectCommandResult` and one render/panel update path.
+2. **Extract `project-command-store.mjs` into smaller mutation modules** while keeping `createProjectStore` as the facade.
+3. **Add `assertProjectInvariants(project)` and run it in tests/dev after commands.**
+4. **Write golden tests for smart-component generation and regeneration.**
+5. **Split `viewer-runtime.mjs` into bootstrap, services, mode coordinator, panels, and command bindings.**
+6. **Enforce smart-component output contracts before adding more component types.**
+
+## What I would not prioritize yet
+
+Do not spend time on broad style cleanup, renaming, or switching frameworks. The app’s current vanilla/module approach can still scale if you lock the domain boundaries. The urgent work is not visual polish; it is **making every edit predictable, testable, and renderable through one consistent pipeline**.
+
+My blunt recommendation: **freeze new feature functions for a short architecture-hardening pass.** The app is at the point where every new function will either become cheap to add after the pipeline is cleaned up, or expensive to maintain if added before.
+
+I reviewed the uploaded Bobercad app bundle. My read: the UI architecture is **strongly modular at the feature/module level, but still organized around a large runtime orchestrator**. It is closer to a well-structured vanilla-JS application shell than a clean layered UI platform.
+
+## High-level architecture
+
+The UI is built as plain ES modules. The main browser entry point is `viewer-runtime.mjs`, which imports the project store, scene builder, interaction controllers, WebGL viewer runtime, dimension overlay, panels, command palette, status bar, workspace bindings, model browser, data panels, smart component browser, nav cube, viewer settings strip, QA bridge, and render scheduler. That file also grabs the main DOM roots and wires the application together. 
+
+The core split is:
+
+| Layer                       | Current modules                                                                                    | Assessment                                                                                          |
+| --------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Domain/model state**      | `engine/store/project-command-store.mjs`, engine API modules                                       | Good separation. The project store is headless and exposes subscribe/project/history/mutation APIs. |
+| **Rendering**               | `rendering/*`, `viewer-render-scheduler.mjs`, WebGL runtime                                        | Good boundary. Rendering is mostly isolated and has thoughtful performance paths.                   |
+| **Interaction controllers** | command, selection, snap, member edit, sketch edit, trim create, dimensions                        | Good pattern, but coordination is centralized in runtime.                                           |
+| **Shell/workspace**         | command palette, dock tabs, status bar, workspace customizer/storage                               | Good reusable shell concept. Workspace persistence is quite mature.                                 |
+| **Panels**                  | inspector, feature editor, trim editor, model browser, smart component browser, project data/files | Mostly good “mount component returns API” style.                                                    |
+| **Command system**          | command metadata, command adapter, viewer command registration, app controller                     | Strong idea, but command registration is over-centralized.                                          |
+
+## What is working well
+
+**1. The headless project API is the right foundation.**
+`createProjectStore` is explicitly described as the headless project API used by UI and scripts, with store methods for project reads, subscription, object/member lookup, Smart Components, member updates, feature updates, trim joints, and geometry/plate-sketch operations. That separation is valuable because it keeps CAD/model semantics out of DOM code. 
+
+**2. The composition root is explicit.**
+`viewer-runtime.mjs` loads settings/project/libraries, creates the WebGL viewer, creates the project store, creates selection and snap controllers, then mounts workspace, commands, panels, render scheduling, QA, and editors. This makes boot order easy to trace. 
+
+**3. Command reuse is a good architectural direction.**
+The app has a `createViewerAppController` that provides command registration/execution, selection state, snap settings, workspace patching, and selection focus. The command adapter then maps command metadata into runnable command palette/toolbar items.
+
+**4. Workspace customization is more robust than typical early CAD UIs.**
+The workspace layer has schema/version fields, localStorage read/write, migration support, import/export, section state, toolbar state, panel state, bottom strip state, viewer settings strip state, and overlay state. That is a strong basis for user-configurable UI.
+
+**5. Rendering performance has been considered.**
+`viewer-render-scheduler.mjs` uses progressive detail rendering above a project object-count threshold, schedules work with `requestIdleCallback` where available, preserves camera state, and supports partial scene replacement through `viewer.replaceSceneObjects` for affected-object updates. 
+
+**6. The shell/panel model is extensible.**
+The workspace binding module defines data dock and inspector dock panel specs, maps tabs to runtime panel elements, mounts dock tabs, tracks active inspector/data tabs, and refreshes command surfaces when workspace state changes. This is a good path toward a configurable CAD shell. 
+
+## Main risks
+
+**1. `viewer-runtime.mjs` is doing too much.**
+It is the bootloader, dependency container, event router, selection coordinator, command bootstrapper, render scheduler owner, editor coordinator, keyboard handler, smart-component editor launcher, panel binder, QA binder, and click/double-click dispatcher. The mutable locals around `commandController`, `trimCreate`, `dimensionEdit`, `focusedMemberId`, `editorApi`, `featureEditorApi`, `trimJointEditorApi`, `memberEdit`, `referencePlaneEdit`, `plateSketchEdit`, `modelingUi`, `viewerSettingsUi`, `navCubeUi`, `modelBrowserUi`, etc. make the runtime hard to reason about as features grow. 
+
+**2. Cross-controller coordination is callback-heavy.**
+For example, selecting or clicking an object in runtime directly clears dimensions, clears member edit, clears auxiliary editors, switches inspector context, updates selection surfaces, and triggers rerender paths. That works, but it creates implicit ordering dependencies. The risk is regression when a new editor/tool is added.
+
+**3. Command registration is close to a service locator.**
+`createViewerCommandRegistration` receives many getters: status bar, modeling UI, viewer settings UI, nav cube UI, command controller, trim create, dimension edit, editor API, member edit, trim editor, plate sketch edit, model browser, project files/data, smart component browser, plus workspace bindings and rendering/status callbacks. That keeps dependencies lazy, but it concentrates too much knowledge in one module. 
+
+**4. UI state is spread across several mechanisms.**
+Project model state is in the project store. Selection state is in selection controller/editor state. Workspace state is in workspace customizer/localStorage. Command state is partly in command registration. View/render settings mutate the loaded `settings` object. Editor state lives inside each mounted panel/controller. This is workable now, but it will make “why did this UI update?” harder to debug.
+
+**5. Rendering updates are not fully unified.**
+Some paths call `rerender`, some use `hotSwapMemberDetails`, some call `renderProjectNow`, and some call direct editor refreshes. The scheduler itself is good, but the caller side should be normalized around project command results and affected object IDs.
+
+**6. Lifecycle cleanup is inconsistent.**
+Some mounted components expose `destroy()` or subscriptions, but the main runtime largely mounts once and does not appear to maintain a unified disposal registry. That is acceptable for a single-page CAD app that never hot-unmounts, but it will matter for tests, embedded viewer instances, demo reloads, or future multi-project tabs.
+
+## Recommended target architecture
+
+I would keep the current vanilla ES-module approach, but formalize the runtime into **five services** instead of one large closure.
+
+```text
+bootstrap/
+  loadAppResources()
+  createAppServices()
+
+services/
+  project-service        -> wraps project store + command results
+  render-service         -> owns viewer-render-scheduler and scene updates
+  selection-service      -> owns selection/editor selection coordination
+  command-service        -> command registry + command state providers
+  workspace-service      -> docks, panels, workspace persistence
+
+features/
+  member-edit
+  plate-sketch-edit
+  trim-edit
+  smart-component-edit
+  model-browser
+  project-data
+```
+
+The practical refactor is not a rewrite. It is extracting existing wiring into modules.
+
+### 1. Split `viewer-runtime.mjs` into boot phases
+
+Suggested first extraction:
+
+```js
+const resources = await loadViewerResources();
+const services = createViewerServices(resources, dom);
+const shell = mountViewerShell(services, dom);
+const editors = mountViewerEditors(services, shell, dom);
+bindViewerInteractions(services, editors, shell);
+```
+
+This would let `viewer-runtime.mjs` remain the top-level composition file, but shrink it to “load → create → mount → bind”.
+
+### 2. Create a selection/editor coordinator
+
+Move this kind of logic out of `viewer-runtime.mjs`:
+
+```js
+clearSmartComponentEditor();
+clearAuxiliaryEditors();
+workspaceBindings.showInspectorProperties();
+featureEditorApi.selectFeature(...);
+trimJointEditorApi.selectTrimJoint(...);
+plateSketchEdit.selectObject(...);
+commandRegistration.syncSketchRelationsButton();
+```
+
+A `selectionCoordinator` should own “what happens when a face/object/member/smart-component is selected.” Runtime should only call:
+
+```js
+selectionCoordinator.selectFace(face);
+selectionCoordinator.clearSceneSelection();
+selectionCoordinator.selectObject(objectId, detail);
+```
+
+This will remove a lot of cross-feature branching from the app shell.
+
+### 3. Turn command registration into smaller command packs
+
+Keep the metadata-driven command palette, but split handlers/state providers:
+
+```text
+commands/view-commands.mjs
+commands/snap-commands.mjs
+commands/panel-commands.mjs
+commands/modeling-commands.mjs
+commands/selection-commands.mjs
+commands/workspace-commands.mjs
+```
+
+Then `createViewerCommandRegistration` becomes an assembler rather than the owner of all command behavior.
+
+### 4. Standardize model update flow
+
+The project store already tracks command results and affected object IDs. Use that as the single path:
+
+```text
+UI action -> projectStore command -> command result -> render service decides:
+  - full render
+  - affected-object scene patch
+  - progressive rerender
+  - overlay/dimension refresh
+```
+
+This removes decisions from individual panels. Instead of panels choosing `rerender` vs `hotSwapMemberDetails`, they should emit/apply a project mutation and let `renderService.applyProjectResult(result)` decide.
+
+### 5. Treat settings as preferences, not mutable config
+
+Right now command handlers mutate loaded settings for snap strength, render visibility, and display mode. That is convenient, but it blurs runtime state and persisted config. I would split:
+
+```text
+viewer-settings.json      = defaults / project-independent config
+workspace preferences     = user UI preferences
+runtime view state        = active display mode, snap mode, camera state, current tool
+project model             = actual CAD data
+```
+
+Snap strength, display mode, visible overlays, dock state, and command visibility should probably live in workspace/runtime preferences rather than mutating the loaded settings object.
+
+### 6. Add explicit lifecycle management
+
+Adopt a tiny pattern:
+
+```js
+const disposers = [];
+disposers.push(app.subscribe(...));
+disposers.push(commandPalette.destroy);
+disposers.push(modelBrowser.destroy);
+disposers.push(() => window.removeEventListener(...));
+
+return {
+  destroy() {
+    for (const dispose of disposers.reverse()) dispose?.();
+  }
+};
+```
+
+This will make testing and future embedded/multi-document scenarios much easier.
+
+## Priority list
+
+**P0 / immediate:** Do not rewrite UI framework. The current vanilla module architecture is fine.
+
+**P1:** Extract `selectionCoordinator` and `renderService`. Those will reduce the most coupling with the least churn.
+
+**P2:** Split command registration into command packs. Keep `viewerApp.runCommand(id)` as the stable public API.
+
+**P3:** Move mutable view/snap/display preferences out of raw `settings` and into a workspace/runtime preference store.
+
+**P4:** Add a disposal/lifecycle registry and require every `mountX()` to either return `destroy()` or explicitly document why it is static for app lifetime.
+
+**P5:** Add JSDoc/TypeScript-style interface typedefs for the main contracts: `ViewerApp`, `ProjectStore`, `SelectionController`, `RenderScheduler`, `WorkspaceBindings`, and `EditorApi`. The app is heavily callback-based, so typed contracts would pay off quickly.
+
+## Verdict
+
+The architecture is **good for a sophisticated prototype / early product**: modular, no unnecessary framework dependency, strong domain separation, good command metadata, and surprisingly solid workspace customization. The main issue is **orchestration debt**: `viewer-runtime.mjs` and `viewer-command-registration.mjs` know too much about every subsystem. I would evolve it into a service-oriented vanilla architecture, not replace it.
+The biggest issue is not one bad function; it is that snapping is doing **too many architectural jobs at once**. It is a picking system, geometry solver, visibility filter, modeling-constraint author, sketch-relation author, work-plane projector, and performance throttle all in one pipeline.
+
+My ranked concerns:
+
+### 1. The snap candidate contract is too informal
+
+Everything flows through loose `{ kind: "point" | "line" | "plane", ... }` objects, but those objects also carry provider identity, target metadata, visibility policy, priority, relation hints, object ids, preview data, local sketch points, max world distance, and sometimes modeling semantics. The constructors `pushPoint`, `pushLine`, and `pushPlane` default geometry fields, priority, provider ids, target ids, and visibility policy in the same place, then every provider mutates the shape by convention. 
+
+That makes providers easy to add, but hard to trust. A provider can accidentally change solver behavior, UI behavior, relation creation, or visibility behavior just by adding or omitting a field. I would make an explicit snap schema with separate sections: `geometry`, `identity`, `visibility`, `ranking`, `authoringHints`, and `preview`.
+
+### 2. Candidate collection is monolithic and will not scale cleanly
+
+`collectSnapCandidates` calls almost every snap source directly: members, evaluated member edges, plates, fasteners, work points, grids, levels, reference planes, global axes, active sketch, adaptive grid, construction axes, reference axes, drag guide axes, and composite candidates. 
+
+That is a classic “central list keeps growing” problem. There is no real provider registry, no provider capability declaration, and no provider-specific budget. Every new authoring feature has to know the global context flags and the central collection order. It also means performance policy is scattered: some providers support radius and max counts, some do not, and the manager has to guess limits.
+
+### 3. Visibility filtering is split in a risky way
+
+The snap manager first gathers a visible hit under the cursor, uses that to choose `candidateRawPoint`, collects candidates, applies a scope filter, applies `solidVisibilityScopeCandidates`, then later passes another visibility filter into `solveSnap`. 
+
+The pre-filter is especially risky: for physical snap providers, `solidVisibilityScopeCandidates` keeps only candidates whose object ids match the visible object under the cursor.  That can discard a legitimate nearby edge/endpoint on another visible object before the solver has a chance to rank it. Then `createVisibilityFilter` also performs per-candidate visibility/depth checks later. 
+
+I would collapse this into one visibility stage after initial geometric proximity, or at least make pre-filtering a coarse “occlusion candidate budget” rather than a hard rejection.
+
+### 4. Ranking is very heuristic and likely to feel unstable
+
+The solver ranks by snap class, screen distance, class bias, raw screen distance, priority, and label. Priority is used late, after biased distance and class rules.  That means provider authors may think “priority 150” matters, but it can be beaten by a few pixels of class bias. The current system also has special-case promotion for interior planes. 
+
+Planes are particularly dangerous: a face candidate can have `screenDistance = 0` anywhere inside its projected polygon, then the actual snap point is ray-plane/projected/clamped.  That makes large faces sticky unless points/edges are very close. This is probably why the code has `preferInteriorSnap` and blocking exceptions; those are symptoms of ranking policy being too implicit.
+
+I would move toward a scoring model that is easier to reason about: `score = weightedDistance + semanticPenalty + occlusionPenalty - intentBonus`, with a diagnostic breakdown for the winning candidate.
+
+### 5. Auto-relations are too tightly coupled to transient snap metadata
+
+`axisRelationFromSnap` only creates model relations from line snaps of specific types. It recognizes `member-axis`, `layout-axis`, `grid-line`, and `global-axis`, but the persistent axis source types only include `fixed-axis`, `global-axis`, `layout-axis`, and `member-axis`. A `grid-line` snap falls through into a fixed axis using the current `a` and `b`, which loses the grid identity. 
+
+That means snapping to a grid line can create a relation that will not follow the grid if the grid moves or is edited. More broadly, the model relation is being inferred from UI snap fields rather than from an explicit “persistent reference contract.” Member editing also immediately turns snap results into endpoint axis relations and resolves conflicts with alignment relations inside the editor controller. 
+
+I would separate “snap result” from “constraint reference.” Providers should optionally expose a stable `reference` object, and only those references should be persisted.
+
+### 6. Intersection snapping is expensive and semantically weak
+
+`solveSnap` re-evaluates line hits for intersection sources, sorts them, truncates to `maxIntersectionSources`, then tries every pair.  That is acceptable at small `k`, but it is still quadratic and depends heavily on candidate ordering and limits. It also computes screen-space line intersections first, then checks closest 3D axes with a default world tolerance. For non-intersecting 3D axes that visually cross, it can return a projected/screen-derived point rather than a true model intersection. 
+
+For CAD, the distinction between “screen crossing” and “real geometric intersection” matters. I would split these into separate snap kinds: `world-intersection`, `screen-intersection`, and `projection-guide`, each with different labels and persistence rules.
+
+### 7. Performance is handled by throttling instead of indexing
+
+There is some radius limiting for members and plates, but it still scans all members/plates to score them.  Grids are added by iterating all grid line segments and all grid intersection points.  Member drag then compensates by adding a drag snap interval when snap evaluation exceeds 12 ms. 
+
+That is a red flag: throttling hides the cost by making snapping less responsive under load. The better architectural move is a per-provider spatial index or viewport-space candidate cache, with strict budgets per provider and one invalidation path when the project/view changes.
+
+### 8. Sketch snapping is partly inside the central snap manager and partly separate
+
+Plate sketch editing calls `snapManager.resolve` with `activeSketch` local candidates, then converts the result back into sketch-local coordinates and applies relation hints.  But other sketch snap logic creates local candidates and relation snaps directly, including relation hints and max-world-distance behavior. 
+
+That split will cause inconsistent behavior between “model snap,” “sketch snap,” and “relation snap.” It also makes it hard to test snapping independently because some important behavior lives in the sketch editor, not the snap architecture.
+
+### What I would fix first
+
+I would do these in order:
+
+1. Define a formal `SnapCandidate` and `SnapResult` schema, and move authoring/persistence fields into explicit `reference` and `hints` sub-objects.
+2. Replace `collectSnapCandidates` with a registered provider pipeline: each provider declares scope keys, geometry kinds, visibility behavior, budget, and whether it can produce persistent references.
+3. Remove the hard object-under-cursor pre-filter or downgrade it to a ranking penalty; keep actual occlusion/depth checks in one place.
+4. Replace rank heuristics with an inspectable scoring breakdown.
+5. Add stable references for grids/reference planes/member axes so auto-relations persist semantic intent instead of storing fixed geometry.
+6. Add provider-level spatial indexing/caching before adding more snap types.
+
+The current architecture is workable for a small model and fast iteration, but the largest risk is **semantic fragility**: the same loosely typed snap object decides what the user sees, what point is picked, what wins ranking, what survives visibility, and what constraints get written into the project. That coupling is the part most likely to create hard-to-reproduce CAD bugs.
+The **biggest bottleneck is not the WebGL renderer itself**. It is the **project-wide commit / diff / invalidation path**.
+
+Your architecture is already trying to be object-granular: commands carry `changedObjectIds`, Smart Components expose dependency object IDs, and the renderer has `hotSwapMemberDetails()` for affected-object scene patching. But the central store still turns many small edits into **whole-project work**.
+
+The clearest smoking gun is `deriveProjectCommandObjectIds()`: even when metadata already includes `changedObjectIds`, it still iterates every object ID in `objectIndex` and runs `JSON.stringify()` comparisons via `objectChanged()` to discover changes. That means a one-member edit scales with **total project object count**, not with the one member plus its affected components. 
+
+That cost is amplified by the store lifecycle. `commitCommand()` executes the command, `commitResult()` updates `currentProject`, records history, then emits to every subscriber with the whole project/result pair. So every command has a centralized fan-out point, and any subscriber that ignores the result payload can re-render or recompute too broadly. 
+
+You have good local optimizations, but they are partly neutralized. For example, member replacement uses a targeted transaction and `cloneProjectForModelCollection()`, then regenerates affected Smart Components. That is the right direction. But after that, the result still goes through the command registry’s full-object diff path.
+
+The second-order bottleneck is dependency discovery. `affectedSmartComponentsForMember()` scans all Smart Component instances, `memberDependencyObjectIds()` scans all features and trim joints, and feature dependency lookup scans all Smart Component instances again. That is acceptable at small scale, but it becomes expensive exactly where you need interaction to stay smooth: member drag, Smart Component edit, feature edit, and selection/detail refresh.
+
+Rendering is expensive too, but the architecture already recognizes that. `createViewerRenderScheduler()` supports progressive rendering, coarse scene first, delayed detail build, and `hotSwapMemberDetails()` builds a partial scene for a set of affected object IDs and calls `viewer.replaceSceneObjects()`. That means rendering has a mitigation path; the commit/diff/dependency layer is more foundational and currently forces too much global work before the renderer can benefit.
+
+**So the one-line answer:**
+Your biggest bottleneck is **coarse-grained project invalidation: full-project diffing, full-project subscriber fan-out, and scan-based dependency lookup on every edit**.
+
+The highest-impact fix would be to make command metadata authoritative. When a command supplies `changedObjectIds`, `removedObjectIds`, and `regeneratedObjectIds`, do not scan `objectIndex` and `JSON.stringify()` every object in production. Keep that full diff only behind a development assertion mode.
+
+A good target shape would be:
+
+```js
+export function deriveProjectCommandObjectIds(previousProject, nextProject, metadata = {}) {
+  const hasExplicitChangeSet =
+    metadata.changedObjectIds ||
+    metadata.removedObjectIds ||
+    metadata.regeneratedObjectIds;
+
+  if (hasExplicitChangeSet && metadata.verifyChangeSet !== true) {
+    return {
+      changedObjectIds: idList(metadata.changedObjectIds, "changedObjectIds") || [],
+      removedObjectIds: idList(metadata.removedObjectIds, "removedObjectIds") || [],
+      regeneratedObjectIds: idList(metadata.regeneratedObjectIds, "regeneratedObjectIds") || []
+    };
+  }
+
+  // dev/debug fallback: full diff
+}
+```
+
+Then add maintained indexes for the scan-heavy relations:
+
+```js
+dependencies: {
+  smartComponentsByMemberId: Map<memberId, Set<smartComponentId>>,
+  featuresBySourceMemberId: Map<memberId, Set<featureId>>,
+  featuresByOwnerId: Map<objectId, Set<featureId>>,
+  trimJointsByMemberId: Map<memberId, Set<trimJointId>>,
+  smartComponentsByObjectId: Map<objectId, Set<smartComponentId>>
+}
+```
+
+That changes the common path from:
+
+```text
+small member edit
+→ clone/patch member
+→ regenerate affected component(s)
+→ scan all objects with JSON.stringify
+→ scan all dependency collections
+→ notify everyone
+→ maybe patch scene
+```
+
+to:
+
+```text
+small member edit
+→ patch member
+→ lookup affected component ids by index
+→ regenerate exact component ids
+→ emit exact change set
+→ patch exact scene objects
+→ only interested UI subscribers update
+```
+
+I would prioritize the work in this order:
+
+1. **Remove production `JSON.stringify()` full diffing** when command metadata exists.
+2. **Add dependency indexes** for member → Smart Components/features/trim joints and object → owning Smart Component.
+3. **Make subscribers selective**: panels should subscribe to command result/change sets, not just “project changed”.
+4. **Push exact affected IDs into renderer consistently**, using `hotSwapMemberDetails()` style patching for more command types.
+5. **Keep full project rebuilds only for global settings, library reloads, schema migrations, or debug validation.**
+
+The codebase has a solid semantic model and a promising object-level renderer. The bottleneck is that the middle of the architecture still behaves like a monolithic document database on each edit.
+
+

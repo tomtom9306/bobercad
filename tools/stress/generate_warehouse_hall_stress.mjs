@@ -71,6 +71,8 @@ function normalize(vector, fallback = [1, 0, 0]) {
 
 function modelCollections() {
   return {
+    gridSystems: {},
+    levels: {},
     workPoints: {},
     referencePlanes: {},
     groups: {},
@@ -313,8 +315,6 @@ async function main() {
         }
       }
     },
-    gridSystems: {},
-    levels: {},
     phases: { phase_stress: { id: "phase_stress", name: "Stress Test" } },
     lots: { lot_stress: { id: "lot_stress", name: "Stress Lot" } },
     objectIndex: {},

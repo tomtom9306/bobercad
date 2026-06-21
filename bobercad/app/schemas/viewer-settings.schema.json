@@ -546,6 +546,7 @@
           "required": [
             "cuttingObjects",
             "fasteners",
+            "grids",
             "referencePlanes"
           ],
           "properties": {
@@ -555,8 +556,36 @@
             "fasteners": {
               "type": "boolean"
             },
+            "grids": {
+              "type": "boolean"
+            },
             "referencePlanes": {
               "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "datum": {
+          "type": "object",
+          "properties": {
+            "gridColor": {
+              "$ref": "#/$defs/color"
+            },
+            "gridOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "gridLabelColor": {
+              "$ref": "#/$defs/color"
+            },
+            "gridLabelOffset": {
+              "type": "number",
+              "minimum": 0
+            },
+            "gridLabelTextHeight": {
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           },
           "additionalProperties": false

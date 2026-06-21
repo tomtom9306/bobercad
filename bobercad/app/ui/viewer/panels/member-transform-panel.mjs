@@ -1,6 +1,6 @@
-import { disclosureSection, hidePanel, text as element } from "./panel-elements.mjs?v=panel-primitives-1";
-import { bindGeneratedPropertyField } from "./generated-property-bindings.mjs?v=generated-property-bindings-1";
-import { generatedPropertyField } from "./generated-properties-panel.mjs?v=member-transform-generated-fields-1";
+import { disclosureSection, hidePanel, text as element } from "./panel-elements.mjs";
+import { bindGeneratedPropertyField } from "./generated-property-bindings.mjs";
+import { generatedPropertyField } from "./generated-properties-panel.mjs";
 
 const AXES = [
   { id: "x", label: "X", index: 0 },

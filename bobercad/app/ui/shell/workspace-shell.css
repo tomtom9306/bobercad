@@ -175,80 +175,12 @@
   transform: translateX(-50%);
 }
 
-.bc-toolbar-band[data-toolbar-dock="top"] {
-  top: var(--bc-shell-toolbar-top-offset);
-  right: auto;
-  bottom: auto;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.bc-toolbar-band[data-toolbar-dock="bottom"] {
-  top: auto;
-  right: auto;
-  bottom: var(--bc-shell-toolbar-bottom-offset);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.bc-toolbar-band[data-toolbar-dock="left"],
-.bc-toolbar-band[data-toolbar-dock="right"] {
-  top: var(--bc-shell-toolbar-top-offset);
-  bottom: auto;
-  flex-direction: column;
-  max-height: var(--bc-shell-toolbar-available-height);
-  transform: none;
-}
-
-.bc-toolbar-band[data-toolbar-dock="left"] {
-  right: auto;
-  left: var(--bc-space-6);
-}
-
-.bc-toolbar-band[data-toolbar-dock="right"] {
-  right: var(--bc-space-6);
-  left: auto;
-}
-
 .bc-toolbar-band #modeling-toolbar {
   position: static;
   left: auto;
   top: auto;
   max-width: calc(100vw - 24px);
   transform: none;
-}
-
-.bc-toolbar-band[data-toolbar-dock="left"] #modeling-toolbar,
-.bc-toolbar-band[data-toolbar-dock="right"] #modeling-toolbar {
-  max-width: none;
-  max-height: var(--bc-shell-toolbar-available-height);
-  overflow: auto;
-}
-
-.bc-toolbar-band[data-toolbar-dock="left"] .bc-toolbar,
-.bc-toolbar-band[data-toolbar-dock="right"] .bc-toolbar {
-  flex-direction: column;
-}
-
-.bc-toolbar-band[data-toolbar-dock="left"] .bc-toolbar-group,
-.bc-toolbar-band[data-toolbar-dock="right"] .bc-toolbar-group {
-  flex-direction: column;
-}
-
-.bc-toolbar-band[data-toolbar-dock="left"] .bc-toolbar-separator,
-.bc-toolbar-band[data-toolbar-dock="right"] .bc-toolbar-separator {
-  width: 24px;
-  height: 1px;
-  margin: var(--bc-space-1) 0;
-}
-
-.bc-toolbar-band[data-toolbar-dock="bottom"] .bc-toolbar-overflow-menu {
-  top: auto;
-  bottom: calc(100% + var(--bc-space-2));
-}
-
-.bc-toolbar-band.is-dragging {
-  opacity: 0.86;
 }
 
 .bc-left-dock,
@@ -416,16 +348,6 @@
   display: none;
 }
 
-.bc-left-dock [data-inspector-context-panel="trim"],
-.bc-right-dock [data-inspector-context-panel="trim"] {
-  width: 100%;
-}
-
-.bc-left-dock:has([data-inspector-context-panel="trim"][data-inspector-active="true"]:not([hidden])),
-.bc-right-dock:has([data-inspector-context-panel="trim"][data-inspector-active="true"]:not([hidden])) {
-  width: min(max(var(--bc-dock-width), var(--bc-shell-inspector-wide-min-width)), calc(100vw - var(--bc-shell-dock-screen-margin)));
-}
-
 .bc-left-dock .bc-inspector-dock-shell,
 .bc-right-dock .bc-inspector-dock-shell {
   height: 100%;
@@ -466,12 +388,12 @@
 
 .bc-dock-pin-toggle {
   top: var(--bc-space-2);
-  width: 28px;
-  height: 28px;
-  border-color: transparent;
+  width: 30px;
+  height: 30px;
+  border-color: color-mix(in srgb, var(--bc-color-border) 76%, transparent);
   border-radius: var(--bc-radius-2);
-  background: transparent;
-  box-shadow: none;
+  background: color-mix(in srgb, var(--bc-color-surface-solid) 88%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--bc-color-text) 10%, transparent);
   transform: none;
   visibility: visible;
 }
@@ -534,13 +456,18 @@
 }
 
 .bc-dock-pin-toggle .bc-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .bc-dock-pin-toggle[data-panel-pinned="true"] {
-  background: color-mix(in srgb, var(--bc-color-accent) 12%, var(--bc-color-surface-solid));
+  border-color: color-mix(in srgb, var(--bc-color-accent) 48%, var(--bc-color-border));
+  background: color-mix(in srgb, var(--bc-color-active) 86%, var(--bc-color-surface-solid));
   color: var(--bc-color-accent-strong);
+}
+
+.bc-dock-pin-toggle[data-panel-pinned="true"] .bc-icon svg {
+  stroke-width: 2.2;
 }
 
 .bc-dock-reveal-toggle:hover,
@@ -1082,31 +1009,6 @@ button.bc-statusbar-segment:focus-visible,
 
   .bc-toolbar-band::-webkit-scrollbar {
     display: none;
-  }
-
-  .bc-toolbar-band[data-toolbar-dock] {
-    top: var(--bc-shell-toolbar-top-offset-mobile);
-    right: auto;
-    bottom: auto;
-    left: 50%;
-    flex-direction: row;
-    transform: translateX(-50%);
-  }
-
-  .bc-toolbar-band[data-toolbar-dock] #modeling-toolbar {
-    max-width: calc(100vw - 24px);
-    max-height: none;
-  }
-
-  .bc-toolbar-band[data-toolbar-dock] .bc-toolbar,
-  .bc-toolbar-band[data-toolbar-dock] .bc-toolbar-group {
-    flex-direction: row;
-  }
-
-  .bc-toolbar-band[data-toolbar-dock] .bc-toolbar-separator {
-    width: 1px;
-    height: 24px;
-    margin: 0 var(--bc-space-1);
   }
 
   .bc-left-dock,

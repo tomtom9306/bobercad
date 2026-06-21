@@ -1,5 +1,5 @@
-import { uniqueTruthy as unique } from "../../engine/core/model.mjs?v=unique-dry-1";
-import { createSnapSelectionManager } from "./snap-selection-manager.mjs?v=unified-snap-manager-10";
+import { uniqueTruthy as unique } from "../../engine/core/model.mjs";
+import { createSnapSelectionManager } from "./snap-selection-manager.mjs";
 
 function memberIdFromFace(face) {
   if (face?.collection === "members") return face.objectId;

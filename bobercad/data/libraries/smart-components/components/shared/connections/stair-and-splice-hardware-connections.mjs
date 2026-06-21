@@ -1,7 +1,3 @@
-function component(project, id) {
-  return id ? project.model?.smartComponentInstances?.[id] : null;
-}
-
 function add(a, b) {
   return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 }
@@ -102,8 +98,7 @@ function registerRole(ctx, role, suffix) {
 }
 
 function outputIds(ctx, componentId, path, label) {
-  const instance = component(ctx.project, componentId);
-  const value = String(path).split(".").reduce((cursor, key) => cursor?.[key], instance?.outputs);
+  const value = ctx.componentOutput(componentId, path);
   if (!Array.isArray(value)) {
     ctx.error("component-output-missing", `${label} output ${path} is required for standard connection generation.`);
     return [];
@@ -113,18 +108,27 @@ function outputIds(ctx, componentId, path, label) {
 
 function outputMembers(ctx, componentId, path, label) {
   return outputIds(ctx, componentId, path, label)
-    .map((id) => ctx.project.model?.members?.[id])
+    .map((id) => ctx.modelObject(id, "members"))
     .filter(Boolean);
 }
 
 function outputPlates(ctx, componentId, path, label) {
   return outputIds(ctx, componentId, path, label)
-    .map((id) => ctx.project.model?.plates?.[id])
+    .map((id) => ctx.modelObject(id, "plates"))
     .filter(Boolean);
+}
+
+function outputObject(ctx, componentId, path) {
+  const value = ctx.componentOutput(componentId, path);
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
 
 function supportMembers(ctx, supportComponentId) {
   return outputMembers(ctx, supportComponentId, "supportMemberIds", "Support component");
+}
+
+function supportMemberStationRanges(ctx, supportComponentId) {
+  return outputObject(ctx, supportComponentId, "supportMemberStationRanges");
 }
 
 function spiralColumnMember(supports) {
@@ -156,9 +160,9 @@ function horizontalFrame(member) {
   return { axis, horizontal, lateral };
 }
 
-function memberPointAtRouteStation(member, splitFrame) {
-  const startStation = member.placementIntent?.stationStart;
-  const endStation = member.placementIntent?.stationEnd;
+function memberPointAtRouteStation(member, splitFrame, stationRange) {
+  const startStation = stationRange?.stationStart;
+  const endStation = stationRange?.stationEnd;
   if (![startStation, endStation, splitFrame?.station].every((value) => typeof value === "number" && Number.isFinite(value))) return null;
   const span = endStation - startStation;
   if (Math.abs(span) <= 1e-9) return null;
@@ -798,7 +802,9 @@ export function buildStairHardwareConnections(ctx, options = {}) {
 export const buildStandardHardwareConnections = buildStairHardwareConnections;
 
 export function buildMemberSpliceConnections(ctx, options = {}) {
-  const members = supportMembers(ctx, ctx.input("components.supportComponentId"));
+  const supportComponentId = ctx.input("components.supportComponentId");
+  const members = supportMembers(ctx, supportComponentId);
+  const stationRanges = supportMemberStationRanges(ctx, supportComponentId);
   const generatedIds = { plates: [], patterns: [], features: [], fasteners: [], welds: [], referencePlanes: [], trimJoints: [] };
   const thickness = requiredPositiveInput(ctx, "connections.splicePlateThickness", "Splice plate thickness");
   const width = requiredPositiveInput(ctx, "connections.splicePlateWidth", "Splice plate width");
@@ -819,7 +825,7 @@ export function buildMemberSpliceConnections(ctx, options = {}) {
   let index = 0;
   for (const splitFrame of splitFrames) {
     for (const member of members) {
-      const center = memberPointAtRouteStation(member, splitFrame);
+      const center = memberPointAtRouteStation(member, splitFrame, stationRanges[member.id]);
       if (!center) continue;
       const role = registerRole(ctx, `memberSplice${index + 1}`, `_member_splice_${index + 1}`);
       index += 1;

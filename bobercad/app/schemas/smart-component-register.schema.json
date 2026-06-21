@@ -6,17 +6,11 @@
   "type": "object",
   "required": [
     "$schema",
-    "libraryUi",
     "components"
   ],
   "properties": {
     "$schema": {
       "type": "string"
-    },
-    "libraryUi": {
-      "type": "string",
-      "minLength": 3,
-      "pattern": "^\\./"
     },
     "components": {
       "type": "array",

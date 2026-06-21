@@ -514,10 +514,12 @@ export function createSemanticBuilders(ctx) {
         const id = ctx.id(role);
         const point = {
           id,
+          type: optionalString(data.type, "work-point", `${role}: work point type`, ctx),
           role: optionalString(data.role, role, `${role}: work point role`, ctx),
           point: data.point,
-          gridSystemId: data.gridSystemId,
-          gridRefs: data.gridRefs,
+          gridRefs: data.gridSystemId
+            ? { ...(data.gridRefs || {}), gridSystemId: data.gridSystemId }
+            : data.gridRefs,
           referencePlaneId: data.referencePlaneId,
           notes: data.notes
         };

@@ -1,12 +1,6 @@
 import { cleanVec2Loop, finiteNumber, finitePositiveNumber, v } from "../core/math.mjs";
 import { signedArea2d, triangulateFace } from "./polygon.mjs";
 
-let settings = null;
-
-export function setGeometrySettings(viewerSettings) {
-  settings = viewerSettings;
-}
-
 export const CSG_EPSILON = 0.00001;
 
 export function geometryError(message) {
@@ -50,10 +44,16 @@ export function projectCoincidentTolerance(project) {
   return value;
 }
 
-function circleSegments() {
-  const render = requiredObject(requiredObject(settings, "geometry settings").render, "geometry settings.render");
+export function csgTessellationOptions(viewerSettings) {
+  const render = requiredObject(requiredObject(viewerSettings, "geometry settings").render, "geometry settings.render");
   const curves = requiredObject(render.curves, "geometry settings.render.curves");
-  const segments = curves.circleSegments;
+  const circleSegments = curves.circleSegments;
+  if (!Number.isInteger(circleSegments) || circleSegments < 3) geometryError("geometry settings.render.curves.circleSegments must be an integer >= 3");
+  return { circleSegments };
+}
+
+function circleSegments(options = {}) {
+  const segments = options.circleSegments;
   if (!Number.isInteger(segments) || segments < 3) geometryError("geometry settings.render.curves.circleSegments must be an integer >= 3");
   return segments;
 }
@@ -286,23 +286,28 @@ export function ccwPoints(points) {
   return signedArea2d(clean) >= 0 ? clean : [...clean].reverse();
 }
 
+function polygonShared(shared = {}, surfaceRef = null) {
+  const { surfaceRefs, ...rest } = shared || {};
+  return surfaceRef ? { ...rest, surfaceRef } : rest;
+}
+
 export function csgExtrudedRingPolygons(back, front, shared = {}) {
   if (!Array.isArray(back) || !Array.isArray(front) || back.length !== front.length || back.length < 3) {
     geometryError("extruded CSG rings must contain matching point loops");
   }
   const polygons = [];
-  const add = (vertices, triangulate = false) => {
+  const add = (vertices, triangulate = false, surfaceRef = null) => {
     const faces = triangulate && vertices.length > 3 ? triangulateFace(vertices) : [vertices];
     for (const face of faces) {
-      const polygon = csgPolygon(face, { ...shared });
+      const polygon = csgPolygon(face, polygonShared(shared, surfaceRef));
       if (polygon) polygons.push(polygon);
     }
   };
-  add([...back].reverse(), true);
-  add(front, true);
+  add([...back].reverse(), true, shared?.surfaceRefs?.back || null);
+  add(front, true, shared?.surfaceRefs?.front || null);
   for (let i = 0; i < back.length; i += 1) {
     const j = (i + 1) % back.length;
-    add([back[i], back[j], front[j], front[i]]);
+    add([back[i], back[j], front[j], front[i]], false, shared?.surfaceRefs?.sides?.[i] || null);
   }
   return polygons;
 }
@@ -321,7 +326,7 @@ export function prismPolygons(center, axisX, axisY, axisZ, depth, outline, share
   return csgExtrudedRingPolygons(back, front, shared);
 }
 
-export function cutBodyPolygons(body, shared = {}) {
+export function cutBodyPolygons(body, shared = {}, tessellation = {}) {
   if (!body || !body.type) geometryError("boolean-part body missing type");
   const center = requiredVector(body, "center", `${body.type} body`);
   const basis = requiredBasis(body, `${body.type} body`);
@@ -344,7 +349,7 @@ export function cutBodyPolygons(body, shared = {}) {
     const radius = requiredNumber(body, "radius", "cylinder body");
     if (radius <= 0) geometryError("cylinder radius must be positive");
     const depth = requiredNumber(body, "depth", "cylinder body");
-    const segments = circleSegments();
+    const segments = circleSegments(tessellation);
     const outline = [];
     for (let i = 0; i < segments; i += 1) {
       const angle = i / segments * Math.PI * 2;
@@ -355,13 +360,13 @@ export function cutBodyPolygons(body, shared = {}) {
   geometryError(`unsupported boolean-part body type ${body.type}`);
 }
 
-export function slotOutline2d(length, width, angle) {
+export function slotOutline2d(length, width, angle, tessellation = {}) {
   if (!finiteNumber(angle)) geometryError("slot-hole orientation must be a valid angle");
   if (!finitePositiveNumber(length) || !finitePositiveNumber(width)) geometryError("slot-hole length and width must be positive");
   if (length < width) geometryError("slot-hole length must be greater than or equal to width");
   const radius = width / 2;
   const straight = Math.max(0, length - width) / 2;
-  const segments = Math.max(8, Math.floor(circleSegments() / 2));
+  const segments = Math.max(8, Math.floor(circleSegments(tessellation) / 2));
   const local = [];
   for (let i = 0; i <= segments; i += 1) {
     const a = Math.PI / 2 + i / segments * Math.PI;

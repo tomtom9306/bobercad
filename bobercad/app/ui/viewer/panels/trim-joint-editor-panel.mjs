@@ -1,12 +1,12 @@
-import { finiteNumberOr, v } from "../../../engine/core/math.mjs?v=panel-number-or-dry-1";
-import { arrayValues, uniqueTruthy } from "../../../engine/core/model.mjs?v=ui-array-values-dry-1";
-import { defaultPlaneTrimRemovedRegionKeys, planeTrimRegionKeys, reconcilePlaneTrimRemovedRegionKeys } from "../../../engine/api/model/trim-region-keys.mjs?v=geometry-api-array-values-dry-1";
-import { libraryProfileById } from "../../../engine/api/project/profiles.mjs?v=profile-api-dry-1";
-import { trimJointOperations, trimJointParticipants, trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd, trimPlaneOperationsForMember } from "../../../engine/api/project/trim-operations.mjs?v=geometry-api-array-values-dry-1";
-import { TRIM_OPERATION_TYPES, trimOperationIcon, trimOperationLabel, trimOperationSupportsGap } from "../../commands/trim-operation-metadata.mjs?v=trim-operation-metadata-1";
-import { button, createPanelMessageState, disclosureSection, field, hidePanel, renderEditorPanel, text } from "./panel-elements.mjs?v=panel-primitives-1";
-import { bindGeneratedPropertySections } from "./generated-property-bindings.mjs?v=generated-property-bindings-1";
-import { generatedPropertyField } from "./generated-properties-panel.mjs?v=trim-option-icons-1";
+import { finiteNumberOr, v } from "../../../engine/core/math.mjs";
+import { arrayValues, uniqueTruthy } from "../../../engine/core/model.mjs";
+import { defaultPlaneTrimRemovedRegionKeys, planeTrimRegionKeys, reconcilePlaneTrimRemovedRegionKeys, regionKey } from "../../../engine/api/model/trim-region-keys.mjs";
+import { libraryProfileById } from "../../../engine/api/project/profiles.mjs";
+import { trimJointOperations, trimJointParticipants, trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd, trimPlaneOperationsForMember } from "../../../engine/api/project/trim-operations.mjs";
+import { TRIM_OPERATION_TYPES, trimOperationIcon, trimOperationLabel, trimOperationSupportsGap } from "../../commands/trim-operation-metadata.mjs";
+import { button, createPanelMessageState, disclosureSection, field, hidePanel, renderEditorPanel, text } from "./panel-elements.mjs";
+import { bindGeneratedPropertySections } from "./generated-property-bindings.mjs";
+import { generatedPropertyField } from "./generated-properties-panel.mjs";
 
 const { add, sub, mul, dot } = v;
 const norm = (point) => v.safeNorm(point, [0, 0, 1]);
@@ -54,11 +54,13 @@ function memberButton(label, color, className, onClick) {
   return element;
 }
 
-export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onLocalObjectProjectChange, onFocusChange }) {
+export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onLocalObjectProjectChange, onFocusChange, onEmptyRender }) {
   let selectedTrimJointId = null;
   let activeOperationId = null;
   let activeRegionKey = null;
   let activeMemberId = null;
+  let createMode = false;
+  let createPickedMemberIds = [];
   const panelMessage = createPanelMessageState(() => render());
   const setMessage = panelMessage.set;
 
@@ -601,12 +603,28 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     ];
   };
 
+  const createModeRows = () => {
+    const picked = createPickedMemberIds.map((memberId, index) => field(
+      index === 0 ? "First member" : "Second member",
+      text("span", "bc-value", memberName(api, memberId))
+    ));
+    return [
+      disclosureSection("Create Trim", [
+        text("div", "bc-empty", "Pick two members in the model to create a trim joint."),
+        ...picked,
+        field("Next pick", text("span", "bc-value", createPickedMemberIds.length ? "Second member" : "First member"))
+      ], { open: true, sectionId: "trim.create" })
+    ];
+  };
+
   function clear() {
-    const hadFocus = Boolean(selectedTrimJointId);
+    const hadFocus = Boolean(selectedTrimJointId || createMode);
     selectedTrimJointId = null;
     activeOperationId = null;
     activeRegionKey = null;
     activeMemberId = null;
+    createMode = false;
+    createPickedMemberIds = [];
     panelMessage.clear({ render: false });
     render();
     if (hadFocus) notifyFocusChange();
@@ -615,7 +633,15 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
   function render() {
     const trimJoint = selectedTrimJoint();
     const model = trimJoint ? trimJointEditorModel(trimJoint) : null;
+    if (createMode) {
+      renderEditorPanel(panel, "Trim Editor", clear, createModeRows(), panelMessage.element());
+      return;
+    }
     if (!model) {
+      if (typeof onEmptyRender === "function") {
+        onEmptyRender();
+        return;
+      }
       hidePanel(panel);
       return;
     }
@@ -623,13 +649,27 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     renderEditorPanel(panel, "Trim Editor", clear, editorRows(model), panelMessage.element());
   }
 
-  api.subscribe(() => {
+  const unsubscribe = api.subscribe(() => {
     if (selectedTrimJointId && !api.project().model.trimJoints?.[selectedTrimJointId]) clear();
     else render();
   });
   render();
 
   return {
+    openCreateMode(options = {}) {
+      selectedTrimJointId = null;
+      activeOperationId = null;
+      activeRegionKey = null;
+      activeMemberId = null;
+      createMode = true;
+      createPickedMemberIds = uniqueTruthy(options.pickedMemberIds || []);
+      const message = createPickedMemberIds.length
+        ? "Pick second member."
+        : "Pick first member.";
+      panelMessage.set(message, "ok", { render: false });
+      render();
+      notifyFocusChange();
+    },
     selectTrimJoint(trimJointId, options = {}) {
       const trimJoint = api.project().model.trimJoints?.[trimJointId];
       if (!trimJoint) {
@@ -640,6 +680,8 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
       activeOperationId = trimOperationById(trimJoint, options.operationId) ? options.operationId : null;
       activeRegionKey = activeOperationId && typeof options.regionKey === "string" ? options.regionKey : null;
       activeMemberId = null;
+      createMode = false;
+      createPickedMemberIds = [];
       const operation = activeOperation();
       panelMessage.set(activeRegionKey ? `Selected region ${activeRegionKey}.` : operation ? `Selected ${trimOperationLabel(operation.type)}.` : "", operation ? "ok" : "", { render: false });
       selection.select(trimObjectIds());
@@ -673,6 +715,9 @@ export function mountTrimJointEditorPanel({ panel, api, profiles, selection, onL
     sceneFocus() {
       return sceneFocus();
     },
-    clear
+    clear,
+    destroy() {
+      unsubscribe();
+    }
   };
 }

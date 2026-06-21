@@ -1,0 +1,56 @@
+Rank,FormerScore,CurrentScore,Area,Scope,Status
+1,5,0,Smart Components,Data-library parameter UI,Resolved
+2,5,0,Smart Components,Data-library parameter values,Resolved
+3,5,0,Smart Components,Stair and splice hardware helpers,Resolved
+4,5,0,Smart Components,Transport section build,Resolved
+5,5,0,Workspace UI,Workspace customizer panel,Resolved
+6,5,0,WebGL Runtime,WebGL viewer runtime,Resolved
+7,5,0,Checks,Repository contract checker,Resolved
+8,5,0,Rendering Interaction,Member transform edit controller,Resolved
+9,5,0,Rendering Interaction,Plate sketch drag edit controller,Resolved
+10,5,0,Scene Build,Scene geometry builder,Resolved
+11,5,0,Store,Project command store,Resolved
+12,5,0,Inspector UI,Inspector property metadata,Resolved
+13,5,0,Inspector UI,Inspector panel,Resolved
+14,5,0,Viewer UI,Viewer command registration,Resolved
+15,5,0,Viewer UI,Viewer runtime,Resolved
+16,4,0,Public API,API register/store facade,Resolved
+17,4,0,Smart Components,Smart Component runtime,Resolved
+18,4,0,Schema,Project schema,Resolved
+19,4,0,Dimensions,Dimension context,Resolved
+20,4,0,Rendering Interaction,Member create controller,Resolved
+21,4,0,Snapping,Snap candidate providers,Resolved
+22,4,0,Snapping,Snap manager,Resolved
+23,4,0,WebGL UI,Dimension label editor UI,Resolved
+24,4,0,Smart Components,Railing path/panel system,Resolved
+25,4,0,Smart Components,Stair solver,Resolved
+26,4,0,Commands,Command registry,Resolved
+27,4,0,Design System,UI elements helper,Resolved
+28,4,0,Workspace Storage,Workspace storage,Resolved
+29,4,0,Dimensions UI,Dimension edit controller,Resolved
+30,4,0,Inspector UI,Inspector property bindings,Resolved
+31,4,0,Trim UI,Trim joint editor panel,Resolved
+32,4,0,QA Boundary,Viewer QA bridge,Resolved
+33,4,0,Rendering Scheduler,Viewer render scheduler,Resolved
+34,3,0,Snapping API,Snap solver,Resolved
+35,3,0,Plate Sketch Engine,Solver and relations facade,Resolved
+36,3,0,Geometry,CSG module,Resolved
+37,3,0,Dimensions,Hole edge distance,Resolved
+38,3,0,Rendering Interaction,Command controller,Resolved
+39,3,0,Rendering Interaction,Plate create controller,Resolved
+40,3,0,Plate Sketch UI,Dimension overlay,Resolved
+41,3,0,Datums,Reference plane edit controller,Resolved
+42,3,0,Sketch Authoring,Sketch create controller,Resolved
+43,3,0,Commands,Left-dock result metadata,Resolved
+44,3,0,Commands,Model collection metadata,Resolved
+45,3,0,Trim Commands,Trim operation metadata,Resolved
+46,3,0,CSS,Panels and controls CSS,Resolved
+47,3,0,Command Palette,Command palette,Resolved
+48,3,0,CSS,Workspace shell CSS,Resolved
+49,3,0,Model Browser,Model browser,Resolved
+50,3,0,Feature UI,Feature editor panel,Resolved
+51,3,0,Panel Elements,Panel elements,Resolved
+52,3,0,Smart Component UI,Smart Component browser,Resolved
+53,3,0,CSS,Authoring overlays CSS,Resolved
+54,3,0,Workspace Binding,Viewer workspace bindings,Resolved
+55,3,0,Checks,Viewer runtime smoke test,Resolved

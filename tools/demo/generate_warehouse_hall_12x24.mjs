@@ -29,6 +29,8 @@ function clone(value) {
 
 function emptyModel() {
   return {
+    gridSystems: {},
+    levels: {},
     workPoints: {},
     groups: {},
     interfaces: {},
@@ -138,12 +140,16 @@ async function main() {
       zone_steel_frame: { id: "zone_steel_frame", type: "zone", name: "Steel Frame", children: [] }
     }
   };
-  project.gridSystems = {
+  project.model.gridSystems = {
     warehouse_grid: {
       id: "warehouse_grid",
+      type: "orthogonal-grid-system",
       name: "Warehouse Grid",
       origin: [0, 0, 0],
-      rotation: 0,
+      axisX: [1, 0, 0],
+      axisY: [0, 1, 0],
+      axisZ: [0, 0, 1],
+      levelIds: ["level_base", "level_eaves", "level_ridge"],
       axes: {
         x: [
           { id: "grid_x_1", label: "1", position: 0 },
@@ -158,11 +164,13 @@ async function main() {
       }
     }
   };
-  project.levels = {
-    level_base: { id: "level_base", name: "Base", elevation: 0 },
-    level_eaves: { id: "level_eaves", name: "Eaves", elevation: EAVES_Z },
-    level_ridge: { id: "level_ridge", name: "Ridge", elevation: RIDGE_Z }
+  project.model.levels = {
+    level_base: { id: "level_base", type: "datum-level", name: "Base", elevation: 0 },
+    level_eaves: { id: "level_eaves", type: "datum-level", name: "Eaves", elevation: EAVES_Z },
+    level_ridge: { id: "level_ridge", type: "datum-level", name: "Ridge", elevation: RIDGE_Z }
   };
+  for (const grid of Object.values(project.model.gridSystems)) project.objectIndex[grid.id] = { collection: "gridSystems", type: grid.type };
+  for (const level of Object.values(project.model.levels)) project.objectIndex[level.id] = { collection: "levels", type: level.type };
   project.phases = { phase_1: { id: "phase_1", name: "Phase 1" } };
   project.lots = { lot_1: { id: "lot_1", name: "Lot 1" } };
   project.modelDefaults = {

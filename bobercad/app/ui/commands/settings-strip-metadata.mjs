@@ -58,10 +58,14 @@ export function normalizeViewerSettingsStripWorkspace(settingsStrip = {}) {
 }
 
 export function mergeViewerSettingsStripWorkspace(defaultSettingsStrip, storedSettingsStrip) {
-  return normalizeViewerSettingsStripWorkspace({
-    ...normalizeViewerSettingsStripWorkspace(defaultSettingsStrip),
-    ...objectMap(storedSettingsStrip)
-  });
+  const defaults = normalizeViewerSettingsStripWorkspace(defaultSettingsStrip);
+  const stored = objectMap(storedSettingsStrip);
+  const storedGroupIds = normalizeViewerSettingsStripGroupIds(stored.groupIds, defaults.groupIds);
+  const groupIds = mergeGroupOrder(defaults.groupIds, storedGroupIds);
+  return {
+    groupIds,
+    hiddenGroupIds: normalizeViewerSettingsStripHiddenGroupIds(stored.hiddenGroupIds, groupIds)
+  };
 }
 
 export function viewerSettingsStripVisibleGroupIds(settingsStrip = {}) {
@@ -78,6 +82,15 @@ function uniqueKnownGroupIds(values = []) {
 
 function objectMap(value) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function mergeGroupOrder(defaultGroupIds = [], storedGroupIds = []) {
+  const defaults = normalizeViewerSettingsStripGroupIds(defaultGroupIds, VIEWER_SETTINGS_STRIP_DEFAULT_GROUP_IDS);
+  const stored = uniqueKnownGroupIds(storedGroupIds);
+  return [
+    ...stored.filter((groupId) => defaults.includes(groupId)),
+    ...defaults.filter((groupId) => !stored.includes(groupId))
+  ];
 }
 
 function titleCase(value = "") {

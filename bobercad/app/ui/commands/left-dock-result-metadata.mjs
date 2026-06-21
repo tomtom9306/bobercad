@@ -1,8 +1,8 @@
-import { DATA_DOCK_TABS } from "./data-dock-metadata.mjs?v=data-dock-metadata-1";
-import { dataLibraryDescriptor, dataSourceDescriptor, sortDataLibraryEntries } from "./data-surface-metadata.mjs?v=data-surface-metadata-1";
-import { MODEL_COLLECTION_SPECS, modelCollectionSelectionKind, modelObjectSearchDescriptor } from "./model-collection-metadata.mjs?v=model-collection-metadata-1";
-import { smartComponentKindIcon, smartComponentTitleCase } from "./smart-component-browser-metadata.mjs?v=smart-component-browser-metadata-1";
-import { commandPaletteResultKindLabel } from "./command-palette-metadata.mjs?v=command-palette-metadata-1";
+import { DATA_DOCK_TABS } from "./data-dock-metadata.mjs";
+import { dataLibraryDescriptor, dataSourceDescriptor, sortDataLibraryEntries } from "./data-surface-metadata.mjs";
+import { MODEL_COLLECTION_SPECS, modelCollectionSelectionKind, modelObjectSearchDescriptor } from "./model-collection-metadata.mjs";
+import { smartComponentKindIcon, smartComponentTitleCase } from "./smart-component-browser-metadata.mjs";
+import { commandPaletteResultKindLabel } from "./command-palette-metadata.mjs";
 
 export const LEFT_DOCK_RESULT_GROUP_LABELS = Object.freeze({
   files: "Files",

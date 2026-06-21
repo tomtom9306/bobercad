@@ -249,8 +249,6 @@ export function defineSmartComponent(definition) {
   }
   if (!nonEmptyString(definition.title)) fail(definition.type, "missing title");
   if (typeof definition.build !== "function") fail(definition.type, "missing build(ctx)");
-  const customUi = requiredObject(definition.customUi, definition.type, "customUi");
-  if (typeof customUi.mountSmartComponentUi !== "function") fail(definition.type, "missing generic smart component UI mountSmartComponentUi(args)");
   if (!definition.parameters || typeof definition.parameters !== "object" || Array.isArray(definition.parameters)) fail(definition.type, "missing parameters");
   const ui = requiredObject(definition.ui, definition.type, "ui");
   if (!Array.isArray(ui.tabs) || !ui.tabs.length) fail(definition.type, "missing ui.tabs");

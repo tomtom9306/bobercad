@@ -73,16 +73,24 @@ Viewer and editor work must follow these conventions.
 
 Edit constraints are stored as first-class objects in `model.relations`, indexed through `objectIndex`. Members do not store relation arrays. Current relation types include `point-on-axis` and `member-align-axis`: `member.start` and `member.end` remain the authoritative geometry, and deleting a relation must leave the current member coordinates unchanged. When automatic relations are enabled in the viewer, snapping a member endpoint to another member axis, layout axis, fixed grid axis, or contextual global X/Y/Z creates a `point-on-axis` relation for that endpoint only. Whole-member axis alignment is a separate explicit `member-align-axis` relation created by member UI commands such as Align X/Y/Z or Pick Custom Axis.
 
-## Work Points And Reference Planes
+## Datum Systems, Work Points, And Reference Planes
+
+Use `model.gridSystems` for named structural grids. A grid system is semantic datum data, not generated geometry: it stores a local origin, explicit `axisX` / `axisY` / `axisZ`, X/Y axis records with stable ids, labels, and positions, plus optional `levelIds` that say where the grid should be shown and snapped.
+
+Use `model.levels` for named elevation datums such as Base, FFL, Top Steel, or roof-control levels. A level stores `id`, `type`, `name`, and `elevation`; the viewer derives level planes and grid-line helpers at runtime.
 
 Use `model.workPoints` for named, stored construction points that AI agents and editors can reference without guessing coordinates.
 
 A member can include `startPointRef` and `endPointRef`, but `start` and `end` remain the authoritative geometry. The refs are for authoring clarity, review, and future QA checks. They must not be used as hidden fallbacks to fill missing member coordinates.
 
+When a work point records grid provenance, store stable ids in `gridRefs`: `gridSystemId`, `xAxisId`, `yAxisId`, and `levelId`. Do not use grid labels as references; labels are user-facing text and may be renamed without changing the datum identity.
+
 Use `model.referencePlanes` for stored semantic planes such as roof slopes, facade planes, floor planes, truss center planes, and connection working planes. A reference plane is not a mesh, a surface body, or generated geometry. It is a named plane with origin, normal, local axes, and optional extents.
 
 For roof and truss work, prefer this pattern:
 
+- store the structural grid once in `model.gridSystems`
+- store named elevation datums once in `model.levels`
 - store the roof slope planes once in `referencePlanes`
 - store grid/node points in `workPoints`
 - store each member with explicit `start`, `end`, and optional point refs
@@ -220,7 +228,31 @@ It must not drive rendering, silently fill missing geometry, or auto-correct obj
 - fasteners and welds still follow stored references
 - missing geometry should fail validation/rendering instead of falling back to `placementIntent`
 
-Keep `placementIntent` compact: role, host object, intended fit, flush faces, avoided zones, and split side. Do not duplicate stored geometry in `placementIntent`.
+Keep `placementIntent` compact: role, host object, intended fit, flush faces, avoided zones, split side, and optional topological anchors. Do not duplicate stored geometry in `placementIntent`.
+
+For permanent attachment to a modeled edge, store an `anchor.edgeRef`, not generated edge vertices. Runtime snapping may produce evaluated edge references from final CSG member geometry. These references are semantic topological names made from the owner object and the adjacent source surfaces, for example a member profile face plus a boolean cut face, or two intersecting cut faces after notch-on-notch operations. A stored anchor may include:
+
+```json
+{
+  "placementIntent": {
+    "anchor": {
+      "kind": "edge",
+      "edgeRef": {
+        "kind": "evaluated-edge",
+        "owner": { "collection": "members", "objectId": "beam_1" },
+        "surfaces": [
+          { "kind": "member-profile-face", "memberId": "beam_1", "profileId": "DEMO_I_200X100X8X12", "contourId": "outer", "edgeIndex": 6 },
+          { "kind": "cut-face", "ownerId": "beam_1", "featureId": "notch_top_1", "featureType": "clearance-cut", "faceId": "zPlus" }
+        ]
+      },
+      "parameter": 0.5,
+      "status": "resolved"
+    }
+  }
+}
+```
+
+If the referenced edge cannot be resolved after edits, tools should mark the anchor as `broken` or ask the user to reattach. They must not silently move the object to another nearby generated edge.
 
 ## Interfaces And Connection Zones
 

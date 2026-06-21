@@ -741,14 +741,6 @@
       "collection": "interfaces",
       "type": "component-scope"
     },
-    "sc_stair_system_connections_standardHardware_zone_2": {
-      "collection": "connectionZones",
-      "type": "stair-hardware-zone"
-    },
-    "sc_stair_system_connections_standardHardware_assembly_2": {
-      "collection": "assemblies",
-      "type": "connection-assembly"
-    },
     "sc_stair_system_treads_tread_assembly_2": {
       "collection": "assemblies",
       "type": "stair-tread-assembly"
@@ -796,14 +788,6 @@
     "sc_stair_system_connections_standardHardware_secondary_interface_3": {
       "collection": "interfaces",
       "type": "component-scope"
-    },
-    "sc_stair_system_connections_standardHardware_zone_3": {
-      "collection": "connectionZones",
-      "type": "stair-hardware-zone"
-    },
-    "sc_stair_system_connections_standardHardware_assembly_3": {
-      "collection": "assemblies",
-      "type": "connection-assembly"
     },
     "main_grid": {
       "collection": "gridSystems",
@@ -1113,284 +1097,6 @@
           0
         ],
         "interfaceIds": [
-          "sc_stair_system_connections_standardHardware_main_interface",
-          "sc_stair_system_connections_standardHardware_secondary_interface"
-        ],
-        "smartComponentInstanceIds": [
-          "sc_stair_system_connections"
-        ],
-        "objectIds": [
-          "sc_stair_system_connections_treadCleat1_1",
-          "sc_stair_system_connections_treadCleat1_1_pattern",
-          "sc_stair_system_connections_treadCleat1_1_holes",
-          "sc_stair_system_connections_treadCleat1_1_fasteners",
-          "sc_stair_system_connections_treadCleat1_2",
-          "sc_stair_system_connections_treadCleat1_2_pattern",
-          "sc_stair_system_connections_treadCleat1_2_holes",
-          "sc_stair_system_connections_treadCleat1_2_fasteners",
-          "sc_stair_system_connections_treadCleat2_1",
-          "sc_stair_system_connections_treadCleat2_1_pattern",
-          "sc_stair_system_connections_treadCleat2_1_holes",
-          "sc_stair_system_connections_treadCleat2_1_fasteners",
-          "sc_stair_system_connections_treadCleat2_2",
-          "sc_stair_system_connections_treadCleat2_2_pattern",
-          "sc_stair_system_connections_treadCleat2_2_holes",
-          "sc_stair_system_connections_treadCleat2_2_fasteners",
-          "sc_stair_system_connections_treadCleat3_1",
-          "sc_stair_system_connections_treadCleat3_1_pattern",
-          "sc_stair_system_connections_treadCleat3_1_holes",
-          "sc_stair_system_connections_treadCleat3_1_fasteners",
-          "sc_stair_system_connections_treadCleat3_2",
-          "sc_stair_system_connections_treadCleat3_2_pattern",
-          "sc_stair_system_connections_treadCleat3_2_holes",
-          "sc_stair_system_connections_treadCleat3_2_fasteners",
-          "sc_stair_system_connections_treadCleat4_1",
-          "sc_stair_system_connections_treadCleat4_1_pattern",
-          "sc_stair_system_connections_treadCleat4_1_holes",
-          "sc_stair_system_connections_treadCleat4_1_fasteners",
-          "sc_stair_system_connections_treadCleat4_2",
-          "sc_stair_system_connections_treadCleat4_2_pattern",
-          "sc_stair_system_connections_treadCleat4_2_holes",
-          "sc_stair_system_connections_treadCleat4_2_fasteners",
-          "sc_stair_system_connections_treadCleat5_1",
-          "sc_stair_system_connections_treadCleat5_1_pattern",
-          "sc_stair_system_connections_treadCleat5_1_holes",
-          "sc_stair_system_connections_treadCleat5_1_fasteners",
-          "sc_stair_system_connections_treadCleat5_2",
-          "sc_stair_system_connections_treadCleat5_2_pattern",
-          "sc_stair_system_connections_treadCleat5_2_holes",
-          "sc_stair_system_connections_treadCleat5_2_fasteners",
-          "sc_stair_system_connections_treadCleat6_1",
-          "sc_stair_system_connections_treadCleat6_1_pattern",
-          "sc_stair_system_connections_treadCleat6_1_holes",
-          "sc_stair_system_connections_treadCleat6_1_fasteners",
-          "sc_stair_system_connections_treadCleat6_2",
-          "sc_stair_system_connections_treadCleat6_2_pattern",
-          "sc_stair_system_connections_treadCleat6_2_holes",
-          "sc_stair_system_connections_treadCleat6_2_fasteners",
-          "sc_stair_system_connections_treadCleat7_1",
-          "sc_stair_system_connections_treadCleat7_1_pattern",
-          "sc_stair_system_connections_treadCleat7_1_holes",
-          "sc_stair_system_connections_treadCleat7_1_fasteners",
-          "sc_stair_system_connections_treadCleat7_2",
-          "sc_stair_system_connections_treadCleat7_2_pattern",
-          "sc_stair_system_connections_treadCleat7_2_holes",
-          "sc_stair_system_connections_treadCleat7_2_fasteners",
-          "sc_stair_system_connections_treadCleat8_1",
-          "sc_stair_system_connections_treadCleat8_1_pattern",
-          "sc_stair_system_connections_treadCleat8_1_holes",
-          "sc_stair_system_connections_treadCleat8_1_fasteners",
-          "sc_stair_system_connections_treadCleat8_2",
-          "sc_stair_system_connections_treadCleat8_2_pattern",
-          "sc_stair_system_connections_treadCleat8_2_holes",
-          "sc_stair_system_connections_treadCleat8_2_fasteners",
-          "sc_stair_system_connections_floor_mounting_surface",
-          "sc_stair_system_connections_top_slab_mounting_surface",
-          "sc_stair_system_connections_floorBasePlate1",
-          "sc_stair_system_connections_floorBasePlate1_pattern",
-          "sc_stair_system_connections_floorBasePlate1_holes",
-          "sc_stair_system_connections_floorBasePlate1_fasteners",
-          "sc_stair_system_connections_topSlabBracket1",
-          "sc_stair_system_connections_topSlabBracket1_pattern",
-          "sc_stair_system_connections_topSlabBracket1_holes",
-          "sc_stair_system_connections_topSlabBracket1_fasteners",
-          "sc_stair_system_connections_floorBasePlate2",
-          "sc_stair_system_connections_floorBasePlate2_pattern",
-          "sc_stair_system_connections_floorBasePlate2_holes",
-          "sc_stair_system_connections_floorBasePlate2_fasteners",
-          "sc_stair_system_connections_topSlabBracket2",
-          "sc_stair_system_connections_topSlabBracket2_pattern",
-          "sc_stair_system_connections_topSlabBracket2_holes",
-          "sc_stair_system_connections_topSlabBracket2_fasteners",
-          "sc_stair_system_connections_postBase1",
-          "sc_stair_system_connections_postBase1_pattern",
-          "sc_stair_system_connections_postBase1_holes",
-          "sc_stair_system_connections_postBase1_fasteners",
-          "sc_stair_system_connections_postBase2",
-          "sc_stair_system_connections_postBase2_pattern",
-          "sc_stair_system_connections_postBase2_holes",
-          "sc_stair_system_connections_postBase2_fasteners",
-          "sc_stair_system_connections_postBase3",
-          "sc_stair_system_connections_postBase3_pattern",
-          "sc_stair_system_connections_postBase3_holes",
-          "sc_stair_system_connections_postBase3_fasteners",
-          "sc_stair_system_connections_postBase4",
-          "sc_stair_system_connections_postBase4_pattern",
-          "sc_stair_system_connections_postBase4_holes",
-          "sc_stair_system_connections_postBase4_fasteners",
-          "sc_stair_system_connections_postBase5",
-          "sc_stair_system_connections_postBase5_pattern",
-          "sc_stair_system_connections_postBase5_holes",
-          "sc_stair_system_connections_postBase5_fasteners",
-          "sc_stair_system_connections_postBase6",
-          "sc_stair_system_connections_postBase6_pattern",
-          "sc_stair_system_connections_postBase6_holes",
-          "sc_stair_system_connections_postBase6_fasteners",
-          "sc_stair_system_connections_connection_pattern",
-          "sc_stair_system_connections_connection_assembly"
-        ],
-        "authoring": {
-          "source": "smart-component-api",
-          "lifecycle": "delete-with-smart-component",
-          "status": "generated",
-          "componentInstanceId": "sc_stair_system_connections",
-          "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_connections_standardHardware_zone_2": {
-        "id": "sc_stair_system_connections_standardHardware_zone_2",
-        "type": "stair-hardware-zone",
-        "name": "Standard hardware connection zone",
-        "mainObjectId": "sc_stair_system_support",
-        "secondaryObjectIds": [
-          "sc_stair_system_treads",
-          "sc_stair_system_railing"
-        ],
-        "origin": [
-          0,
-          0,
-          0
-        ],
-        "interfaceIds": [
-          "sc_stair_system_connections_standardHardware_main_interface_2",
-          "sc_stair_system_connections_standardHardware_secondary_interface_2"
-        ],
-        "smartComponentInstanceIds": [
-          "sc_stair_system_connections"
-        ],
-        "objectIds": [
-          "sc_stair_system_connections_treadCleat1_1",
-          "sc_stair_system_connections_treadCleat1_1_pattern",
-          "sc_stair_system_connections_treadCleat1_1_holes",
-          "sc_stair_system_connections_treadCleat1_1_fasteners",
-          "sc_stair_system_connections_treadCleat1_2",
-          "sc_stair_system_connections_treadCleat1_2_pattern",
-          "sc_stair_system_connections_treadCleat1_2_holes",
-          "sc_stair_system_connections_treadCleat1_2_fasteners",
-          "sc_stair_system_connections_treadCleat2_1",
-          "sc_stair_system_connections_treadCleat2_1_pattern",
-          "sc_stair_system_connections_treadCleat2_1_holes",
-          "sc_stair_system_connections_treadCleat2_1_fasteners",
-          "sc_stair_system_connections_treadCleat2_2",
-          "sc_stair_system_connections_treadCleat2_2_pattern",
-          "sc_stair_system_connections_treadCleat2_2_holes",
-          "sc_stair_system_connections_treadCleat2_2_fasteners",
-          "sc_stair_system_connections_treadCleat3_1",
-          "sc_stair_system_connections_treadCleat3_1_pattern",
-          "sc_stair_system_connections_treadCleat3_1_holes",
-          "sc_stair_system_connections_treadCleat3_1_fasteners",
-          "sc_stair_system_connections_treadCleat3_2",
-          "sc_stair_system_connections_treadCleat3_2_pattern",
-          "sc_stair_system_connections_treadCleat3_2_holes",
-          "sc_stair_system_connections_treadCleat3_2_fasteners",
-          "sc_stair_system_connections_treadCleat4_1",
-          "sc_stair_system_connections_treadCleat4_1_pattern",
-          "sc_stair_system_connections_treadCleat4_1_holes",
-          "sc_stair_system_connections_treadCleat4_1_fasteners",
-          "sc_stair_system_connections_treadCleat4_2",
-          "sc_stair_system_connections_treadCleat4_2_pattern",
-          "sc_stair_system_connections_treadCleat4_2_holes",
-          "sc_stair_system_connections_treadCleat4_2_fasteners",
-          "sc_stair_system_connections_treadCleat5_1",
-          "sc_stair_system_connections_treadCleat5_1_pattern",
-          "sc_stair_system_connections_treadCleat5_1_holes",
-          "sc_stair_system_connections_treadCleat5_1_fasteners",
-          "sc_stair_system_connections_treadCleat5_2",
-          "sc_stair_system_connections_treadCleat5_2_pattern",
-          "sc_stair_system_connections_treadCleat5_2_holes",
-          "sc_stair_system_connections_treadCleat5_2_fasteners",
-          "sc_stair_system_connections_treadCleat6_1",
-          "sc_stair_system_connections_treadCleat6_1_pattern",
-          "sc_stair_system_connections_treadCleat6_1_holes",
-          "sc_stair_system_connections_treadCleat6_1_fasteners",
-          "sc_stair_system_connections_treadCleat6_2",
-          "sc_stair_system_connections_treadCleat6_2_pattern",
-          "sc_stair_system_connections_treadCleat6_2_holes",
-          "sc_stair_system_connections_treadCleat6_2_fasteners",
-          "sc_stair_system_connections_treadCleat7_1",
-          "sc_stair_system_connections_treadCleat7_1_pattern",
-          "sc_stair_system_connections_treadCleat7_1_holes",
-          "sc_stair_system_connections_treadCleat7_1_fasteners",
-          "sc_stair_system_connections_treadCleat7_2",
-          "sc_stair_system_connections_treadCleat7_2_pattern",
-          "sc_stair_system_connections_treadCleat7_2_holes",
-          "sc_stair_system_connections_treadCleat7_2_fasteners",
-          "sc_stair_system_connections_treadCleat8_1",
-          "sc_stair_system_connections_treadCleat8_1_pattern",
-          "sc_stair_system_connections_treadCleat8_1_holes",
-          "sc_stair_system_connections_treadCleat8_1_fasteners",
-          "sc_stair_system_connections_treadCleat8_2",
-          "sc_stair_system_connections_treadCleat8_2_pattern",
-          "sc_stair_system_connections_treadCleat8_2_holes",
-          "sc_stair_system_connections_treadCleat8_2_fasteners",
-          "sc_stair_system_connections_floor_mounting_surface",
-          "sc_stair_system_connections_top_slab_mounting_surface",
-          "sc_stair_system_connections_floorBasePlate1",
-          "sc_stair_system_connections_floorBasePlate1_pattern",
-          "sc_stair_system_connections_floorBasePlate1_holes",
-          "sc_stair_system_connections_floorBasePlate1_fasteners",
-          "sc_stair_system_connections_topSlabBracket1",
-          "sc_stair_system_connections_topSlabBracket1_pattern",
-          "sc_stair_system_connections_topSlabBracket1_holes",
-          "sc_stair_system_connections_topSlabBracket1_fasteners",
-          "sc_stair_system_connections_floorBasePlate2",
-          "sc_stair_system_connections_floorBasePlate2_pattern",
-          "sc_stair_system_connections_floorBasePlate2_holes",
-          "sc_stair_system_connections_floorBasePlate2_fasteners",
-          "sc_stair_system_connections_topSlabBracket2",
-          "sc_stair_system_connections_topSlabBracket2_pattern",
-          "sc_stair_system_connections_topSlabBracket2_holes",
-          "sc_stair_system_connections_topSlabBracket2_fasteners",
-          "sc_stair_system_connections_postBase1",
-          "sc_stair_system_connections_postBase1_pattern",
-          "sc_stair_system_connections_postBase1_holes",
-          "sc_stair_system_connections_postBase1_fasteners",
-          "sc_stair_system_connections_postBase2",
-          "sc_stair_system_connections_postBase2_pattern",
-          "sc_stair_system_connections_postBase2_holes",
-          "sc_stair_system_connections_postBase2_fasteners",
-          "sc_stair_system_connections_postBase3",
-          "sc_stair_system_connections_postBase3_pattern",
-          "sc_stair_system_connections_postBase3_holes",
-          "sc_stair_system_connections_postBase3_fasteners",
-          "sc_stair_system_connections_postBase4",
-          "sc_stair_system_connections_postBase4_pattern",
-          "sc_stair_system_connections_postBase4_holes",
-          "sc_stair_system_connections_postBase4_fasteners",
-          "sc_stair_system_connections_postBase5",
-          "sc_stair_system_connections_postBase5_pattern",
-          "sc_stair_system_connections_postBase5_holes",
-          "sc_stair_system_connections_postBase5_fasteners",
-          "sc_stair_system_connections_postBase6",
-          "sc_stair_system_connections_postBase6_pattern",
-          "sc_stair_system_connections_postBase6_holes",
-          "sc_stair_system_connections_postBase6_fasteners",
-          "sc_stair_system_connections_connection_pattern",
-          "sc_stair_system_connections_connection_assembly"
-        ],
-        "authoring": {
-          "source": "smart-component-api",
-          "lifecycle": "delete-with-smart-component",
-          "status": "generated",
-          "componentInstanceId": "sc_stair_system_connections",
-          "componentStatus": "managed"
-        }
-      },
-      "sc_stair_system_connections_standardHardware_zone_3": {
-        "id": "sc_stair_system_connections_standardHardware_zone_3",
-        "type": "stair-hardware-zone",
-        "name": "Standard hardware connection zone",
-        "mainObjectId": "sc_stair_system_support",
-        "secondaryObjectIds": [
-          "sc_stair_system_treads",
-          "sc_stair_system_railing"
-        ],
-        "origin": [
-          0,
-          0,
-          0
-        ],
-        "interfaceIds": [
           "sc_stair_system_connections_standardHardware_main_interface_3",
           "sc_stair_system_connections_standardHardware_secondary_interface_3"
         ],
@@ -1626,7 +1332,7 @@
       "sc_stair_system_connections_connection_assembly": {
         "id": "sc_stair_system_connections_connection_assembly",
         "type": "hardware-assembly",
-        "name": "Standard hardware",
+        "name": "Stair hardware",
         "childAssemblyIds": [],
         "partIds": [
           "sc_stair_system_connections_treadCleat1_1",
@@ -1722,27 +1428,7 @@
           "componentStatus": "managed"
         },
         "bim": {
-          "name": "Standard hardware"
-        }
-      },
-      "sc_stair_system_connections_standardHardware_assembly_2": {
-        "id": "sc_stair_system_connections_standardHardware_assembly_2",
-        "type": "connection-assembly",
-        "name": "Standard hardware assembly",
-        "parentAssemblyId": null,
-        "childAssemblyIds": [],
-        "connectionZoneIds": [
-          "sc_stair_system_connections_standardHardware_zone_2"
-        ],
-        "smartComponentInstanceIds": [
-          "sc_stair_system_connections"
-        ],
-        "authoring": {
-          "source": "smart-component-api",
-          "lifecycle": "delete-with-smart-component",
-          "status": "generated",
-          "componentInstanceId": "sc_stair_system_connections",
-          "componentStatus": "managed"
+          "name": "Stair hardware"
         }
       },
       "sc_stair_system_treads_tread_assembly_2": {
@@ -1780,26 +1466,6 @@
         "bim": {
           "name": "Grating tread set"
         }
-      },
-      "sc_stair_system_connections_standardHardware_assembly_3": {
-        "id": "sc_stair_system_connections_standardHardware_assembly_3",
-        "type": "connection-assembly",
-        "name": "Standard hardware assembly",
-        "parentAssemblyId": null,
-        "childAssemblyIds": [],
-        "connectionZoneIds": [
-          "sc_stair_system_connections_standardHardware_zone_3"
-        ],
-        "smartComponentInstanceIds": [
-          "sc_stair_system_connections"
-        ],
-        "authoring": {
-          "source": "smart-component-api",
-          "lifecycle": "delete-with-smart-component",
-          "status": "generated",
-          "componentInstanceId": "sc_stair_system_connections",
-          "componentStatus": "managed"
-        }
       }
     },
     "members": {
@@ -1818,6 +1484,18 @@
           -450,
           1440
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            -450,
+            0
+          ],
+          "end": [
+            2240,
+            -450,
+            1440
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -1847,18 +1525,6 @@
           "stationStart": 0,
           "stationEnd": 2240,
           "flightId": "flight_1"
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            -450,
-            0
-          ],
-          "end": [
-            2240,
-            -450,
-            1440
-          ]
         }
       },
       "sc_stair_system_support_rightStringer1": {
@@ -1876,6 +1542,18 @@
           450,
           1440
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            450,
+            0
+          ],
+          "end": [
+            2240,
+            450,
+            1440
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -1905,18 +1583,6 @@
           "stationStart": 0,
           "stationEnd": 2240,
           "flightId": "flight_1"
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            450,
-            0
-          ],
-          "end": [
-            2240,
-            450,
-            1440
-          ]
         }
       },
       "sc_stair_system_railing_left_post_1": {
@@ -1934,6 +1600,18 @@
           -380,
           1000
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            -380,
+            0
+          ],
+          "end": [
+            0,
+            -380,
+            1000
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -1962,18 +1640,6 @@
           "side": "left",
           "station": 0,
           "topReference": "handrail-axis"
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            -380,
-            0
-          ],
-          "end": [
-            0,
-            -380,
-            1000
-          ]
         }
       },
       "sc_stair_system_railing_left_post_2": {
@@ -1991,6 +1657,18 @@
           -380,
           1720
         ],
+        "layoutAxis": {
+          "start": [
+            1120,
+            -380,
+            720
+          ],
+          "end": [
+            1120,
+            -380,
+            1720
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2019,18 +1697,6 @@
           "side": "left",
           "station": 1120,
           "topReference": "handrail-axis"
-        },
-        "layoutAxis": {
-          "start": [
-            1120,
-            -380,
-            720
-          ],
-          "end": [
-            1120,
-            -380,
-            1720
-          ]
         }
       },
       "sc_stair_system_railing_left_post_3": {
@@ -2048,6 +1714,18 @@
           -380,
           2440
         ],
+        "layoutAxis": {
+          "start": [
+            2240,
+            -380,
+            1440
+          ],
+          "end": [
+            2240,
+            -380,
+            2440
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2076,18 +1754,6 @@
           "side": "left",
           "station": 2240,
           "topReference": "handrail-axis"
-        },
-        "layoutAxis": {
-          "start": [
-            2240,
-            -380,
-            1440
-          ],
-          "end": [
-            2240,
-            -380,
-            2440
-          ]
         }
       },
       "sc_stair_system_railing_left_handrail_1": {
@@ -2105,6 +1771,18 @@
           -380,
           2440
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            -380,
+            1000
+          ],
+          "end": [
+            2240,
+            -380,
+            2440
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2136,18 +1814,6 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            -380,
-            1000
-          ],
-          "end": [
-            2240,
-            -380,
-            2440
-          ]
         }
       },
       "sc_stair_system_railing_left_midrail_1_1": {
@@ -2165,6 +1831,18 @@
           -380,
           1860
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            -380,
+            420
+          ],
+          "end": [
+            2240,
+            -380,
+            1860
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2197,18 +1875,6 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            -380,
-            420
-          ],
-          "end": [
-            2240,
-            -380,
-            1860
-          ]
         }
       },
       "sc_stair_system_railing_left_midrail_2_1": {
@@ -2226,6 +1892,18 @@
           -380,
           2120
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            -380,
+            680
+          ],
+          "end": [
+            2240,
+            -380,
+            2120
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2258,18 +1936,6 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            -380,
-            680
-          ],
-          "end": [
-            2240,
-            -380,
-            2120
-          ]
         }
       },
       "sc_stair_system_railing_right_post_1": {
@@ -2287,6 +1953,18 @@
           380,
           1000
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            380,
+            0
+          ],
+          "end": [
+            0,
+            380,
+            1000
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2315,18 +1993,6 @@
           "side": "right",
           "station": 0,
           "topReference": "handrail-axis"
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            380,
-            0
-          ],
-          "end": [
-            0,
-            380,
-            1000
-          ]
         }
       },
       "sc_stair_system_railing_right_post_2": {
@@ -2344,6 +2010,18 @@
           380,
           1720
         ],
+        "layoutAxis": {
+          "start": [
+            1120,
+            380,
+            720
+          ],
+          "end": [
+            1120,
+            380,
+            1720
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2372,18 +2050,6 @@
           "side": "right",
           "station": 1120,
           "topReference": "handrail-axis"
-        },
-        "layoutAxis": {
-          "start": [
-            1120,
-            380,
-            720
-          ],
-          "end": [
-            1120,
-            380,
-            1720
-          ]
         }
       },
       "sc_stair_system_railing_right_post_3": {
@@ -2401,6 +2067,18 @@
           380,
           2440
         ],
+        "layoutAxis": {
+          "start": [
+            2240,
+            380,
+            1440
+          ],
+          "end": [
+            2240,
+            380,
+            2440
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2429,18 +2107,6 @@
           "side": "right",
           "station": 2240,
           "topReference": "handrail-axis"
-        },
-        "layoutAxis": {
-          "start": [
-            2240,
-            380,
-            1440
-          ],
-          "end": [
-            2240,
-            380,
-            2440
-          ]
         }
       },
       "sc_stair_system_railing_right_handrail_1": {
@@ -2458,6 +2124,18 @@
           380,
           2440
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            380,
+            1000
+          ],
+          "end": [
+            2240,
+            380,
+            2440
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2489,18 +2167,6 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            380,
-            1000
-          ],
-          "end": [
-            2240,
-            380,
-            2440
-          ]
         }
       },
       "sc_stair_system_railing_right_midrail_1_1": {
@@ -2518,6 +2184,18 @@
           380,
           1860
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            380,
+            420
+          ],
+          "end": [
+            2240,
+            380,
+            1860
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2550,18 +2228,6 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            380,
-            420
-          ],
-          "end": [
-            2240,
-            380,
-            1860
-          ]
         }
       },
       "sc_stair_system_railing_right_midrail_2_1": {
@@ -2579,6 +2245,18 @@
           380,
           2120
         ],
+        "layoutAxis": {
+          "start": [
+            0,
+            380,
+            680
+          ],
+          "end": [
+            2240,
+            380,
+            2120
+          ]
+        },
         "rotation": 0,
         "cardinalPoint": "middle-center",
         "fabrication": {
@@ -2611,18 +2289,6 @@
           "runIndex": 0,
           "stationStart": 0,
           "stationEnd": 2240
-        },
-        "layoutAxis": {
-          "start": [
-            0,
-            380,
-            680
-          ],
-          "end": [
-            2240,
-            380,
-            2120
-          ]
         }
       }
     },
@@ -2631,50 +2297,6 @@
         "id": "sc_stair_system_connections_treadCleat1_1",
         "type": "bolted-tread-cleat",
         "thickness": 8,
-        "center": [
-          140,
-          -415,
-          104
-        ],
-        "normal": [
-          0,
-          -1,
-          0
-        ],
-        "localAxisY": [
-          1,
-          0,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          0,
-          1
-        ],
-        "featureIds": [
-          "sc_stair_system_connections_treadCleat1_1_holes"
-        ],
-        "placementIntent": {
-          "role": "tread-cleat",
-          "treadIndex": 0,
-          "sideIndex": 0,
-          "host": {
-            "treadId": "sc_stair_system_treads_tread_1_2",
-            "supportId": "sc_stair_system_support_leftStringer1"
-          }
-        },
-        "display": {
-          "color": "#475569",
-          "edgeColor": "#334155"
-        },
-        "bim": {
-          "name": "Tread 1 bolted cleat 1"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat1_1",
-          "componentStatus": "managed"
-        },
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -2815,20 +2437,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat1_2": {
-        "id": "sc_stair_system_connections_treadCleat1_2",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
           140,
-          415,
+          -415,
           104
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -2842,15 +2459,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat1_2_holes"
+          "sc_stair_system_connections_treadCleat1_1_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
           "treadIndex": 0,
-          "sideIndex": 1,
+          "sideIndex": 0,
           "host": {
             "treadId": "sc_stair_system_treads_tread_1_2",
-            "supportId": "sc_stair_system_support_rightStringer1"
+            "supportId": "sc_stair_system_support_leftStringer1"
           }
         },
         "display": {
@@ -2858,13 +2475,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 1 bolted cleat 2"
+          "name": "Tread 1 bolted cleat 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat1_2",
+          "componentRole": "treadCleat1_1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat1_2": {
+        "id": "sc_stair_system_connections_treadCleat1_2",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -3005,20 +2627,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat2_1": {
-        "id": "sc_stair_system_connections_treadCleat2_1",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
-          420,
-          -415,
-          284
+          140,
+          415,
+          104
         ],
         "normal": [
           0,
-          -1,
+          1,
           0
         ],
         "localAxisY": [
@@ -3032,15 +2649,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat2_1_holes"
+          "sc_stair_system_connections_treadCleat1_2_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
-          "treadIndex": 1,
-          "sideIndex": 0,
+          "treadIndex": 0,
+          "sideIndex": 1,
           "host": {
-            "treadId": "sc_stair_system_treads_tread_2_2",
-            "supportId": "sc_stair_system_support_leftStringer1"
+            "treadId": "sc_stair_system_treads_tread_1_2",
+            "supportId": "sc_stair_system_support_rightStringer1"
           }
         },
         "display": {
@@ -3048,13 +2665,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 2 bolted cleat 1"
+          "name": "Tread 1 bolted cleat 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat2_1",
+          "componentRole": "treadCleat1_2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat2_1": {
+        "id": "sc_stair_system_connections_treadCleat2_1",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -3195,20 +2817,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat2_2": {
-        "id": "sc_stair_system_connections_treadCleat2_2",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
           420,
-          415,
+          -415,
           284
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -3222,15 +2839,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat2_2_holes"
+          "sc_stair_system_connections_treadCleat2_1_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
           "treadIndex": 1,
-          "sideIndex": 1,
+          "sideIndex": 0,
           "host": {
             "treadId": "sc_stair_system_treads_tread_2_2",
-            "supportId": "sc_stair_system_support_rightStringer1"
+            "supportId": "sc_stair_system_support_leftStringer1"
           }
         },
         "display": {
@@ -3238,13 +2855,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 2 bolted cleat 2"
+          "name": "Tread 2 bolted cleat 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat2_2",
+          "componentRole": "treadCleat2_1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat2_2": {
+        "id": "sc_stair_system_connections_treadCleat2_2",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -3385,20 +3007,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat3_1": {
-        "id": "sc_stair_system_connections_treadCleat3_1",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
-          700,
-          -415,
-          464
+          420,
+          415,
+          284
         ],
         "normal": [
           0,
-          -1,
+          1,
           0
         ],
         "localAxisY": [
@@ -3412,15 +3029,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat3_1_holes"
+          "sc_stair_system_connections_treadCleat2_2_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
-          "treadIndex": 2,
-          "sideIndex": 0,
+          "treadIndex": 1,
+          "sideIndex": 1,
           "host": {
-            "treadId": "sc_stair_system_treads_tread_3_2",
-            "supportId": "sc_stair_system_support_leftStringer1"
+            "treadId": "sc_stair_system_treads_tread_2_2",
+            "supportId": "sc_stair_system_support_rightStringer1"
           }
         },
         "display": {
@@ -3428,13 +3045,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 3 bolted cleat 1"
+          "name": "Tread 2 bolted cleat 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat3_1",
+          "componentRole": "treadCleat2_2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat3_1": {
+        "id": "sc_stair_system_connections_treadCleat3_1",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -3575,20 +3197,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat3_2": {
-        "id": "sc_stair_system_connections_treadCleat3_2",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
           700,
-          415,
+          -415,
           464
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -3602,15 +3219,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat3_2_holes"
+          "sc_stair_system_connections_treadCleat3_1_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
           "treadIndex": 2,
-          "sideIndex": 1,
+          "sideIndex": 0,
           "host": {
             "treadId": "sc_stair_system_treads_tread_3_2",
-            "supportId": "sc_stair_system_support_rightStringer1"
+            "supportId": "sc_stair_system_support_leftStringer1"
           }
         },
         "display": {
@@ -3618,13 +3235,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 3 bolted cleat 2"
+          "name": "Tread 3 bolted cleat 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat3_2",
+          "componentRole": "treadCleat3_1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat3_2": {
+        "id": "sc_stair_system_connections_treadCleat3_2",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -3765,20 +3387,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat4_1": {
-        "id": "sc_stair_system_connections_treadCleat4_1",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
-          980,
-          -415,
-          644
+          700,
+          415,
+          464
         ],
         "normal": [
           0,
-          -1,
+          1,
           0
         ],
         "localAxisY": [
@@ -3792,15 +3409,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat4_1_holes"
+          "sc_stair_system_connections_treadCleat3_2_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
-          "treadIndex": 3,
-          "sideIndex": 0,
+          "treadIndex": 2,
+          "sideIndex": 1,
           "host": {
-            "treadId": "sc_stair_system_treads_tread_4_2",
-            "supportId": "sc_stair_system_support_leftStringer1"
+            "treadId": "sc_stair_system_treads_tread_3_2",
+            "supportId": "sc_stair_system_support_rightStringer1"
           }
         },
         "display": {
@@ -3808,13 +3425,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 4 bolted cleat 1"
+          "name": "Tread 3 bolted cleat 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat4_1",
+          "componentRole": "treadCleat3_2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat4_1": {
+        "id": "sc_stair_system_connections_treadCleat4_1",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -3955,20 +3577,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat4_2": {
-        "id": "sc_stair_system_connections_treadCleat4_2",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
           980,
-          415,
+          -415,
           644
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -3982,15 +3599,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat4_2_holes"
+          "sc_stair_system_connections_treadCleat4_1_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
           "treadIndex": 3,
-          "sideIndex": 1,
+          "sideIndex": 0,
           "host": {
             "treadId": "sc_stair_system_treads_tread_4_2",
-            "supportId": "sc_stair_system_support_rightStringer1"
+            "supportId": "sc_stair_system_support_leftStringer1"
           }
         },
         "display": {
@@ -3998,13 +3615,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 4 bolted cleat 2"
+          "name": "Tread 4 bolted cleat 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat4_2",
+          "componentRole": "treadCleat4_1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat4_2": {
+        "id": "sc_stair_system_connections_treadCleat4_2",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -4145,20 +3767,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat5_1": {
-        "id": "sc_stair_system_connections_treadCleat5_1",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
-          1260,
-          -415,
-          824
+          980,
+          415,
+          644
         ],
         "normal": [
           0,
-          -1,
+          1,
           0
         ],
         "localAxisY": [
@@ -4172,15 +3789,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat5_1_holes"
+          "sc_stair_system_connections_treadCleat4_2_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
-          "treadIndex": 4,
-          "sideIndex": 0,
+          "treadIndex": 3,
+          "sideIndex": 1,
           "host": {
-            "treadId": "sc_stair_system_treads_tread_5_2",
-            "supportId": "sc_stair_system_support_leftStringer1"
+            "treadId": "sc_stair_system_treads_tread_4_2",
+            "supportId": "sc_stair_system_support_rightStringer1"
           }
         },
         "display": {
@@ -4188,13 +3805,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 5 bolted cleat 1"
+          "name": "Tread 4 bolted cleat 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat5_1",
+          "componentRole": "treadCleat4_2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat5_1": {
+        "id": "sc_stair_system_connections_treadCleat5_1",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -4335,20 +3957,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat5_2": {
-        "id": "sc_stair_system_connections_treadCleat5_2",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
           1260,
-          415,
+          -415,
           824
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -4362,15 +3979,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat5_2_holes"
+          "sc_stair_system_connections_treadCleat5_1_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
           "treadIndex": 4,
-          "sideIndex": 1,
+          "sideIndex": 0,
           "host": {
             "treadId": "sc_stair_system_treads_tread_5_2",
-            "supportId": "sc_stair_system_support_rightStringer1"
+            "supportId": "sc_stair_system_support_leftStringer1"
           }
         },
         "display": {
@@ -4378,13 +3995,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 5 bolted cleat 2"
+          "name": "Tread 5 bolted cleat 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat5_2",
+          "componentRole": "treadCleat5_1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat5_2": {
+        "id": "sc_stair_system_connections_treadCleat5_2",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -4525,20 +4147,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat6_1": {
-        "id": "sc_stair_system_connections_treadCleat6_1",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
-          1540,
-          -415,
-          1004
+          1260,
+          415,
+          824
         ],
         "normal": [
           0,
-          -1,
+          1,
           0
         ],
         "localAxisY": [
@@ -4552,15 +4169,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat6_1_holes"
+          "sc_stair_system_connections_treadCleat5_2_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
-          "treadIndex": 5,
-          "sideIndex": 0,
+          "treadIndex": 4,
+          "sideIndex": 1,
           "host": {
-            "treadId": "sc_stair_system_treads_tread_6_2",
-            "supportId": "sc_stair_system_support_leftStringer1"
+            "treadId": "sc_stair_system_treads_tread_5_2",
+            "supportId": "sc_stair_system_support_rightStringer1"
           }
         },
         "display": {
@@ -4568,13 +4185,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 6 bolted cleat 1"
+          "name": "Tread 5 bolted cleat 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat6_1",
+          "componentRole": "treadCleat5_2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat6_1": {
+        "id": "sc_stair_system_connections_treadCleat6_1",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -4715,20 +4337,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat6_2": {
-        "id": "sc_stair_system_connections_treadCleat6_2",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
           1540,
-          415,
+          -415,
           1004
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -4742,15 +4359,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat6_2_holes"
+          "sc_stair_system_connections_treadCleat6_1_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
           "treadIndex": 5,
-          "sideIndex": 1,
+          "sideIndex": 0,
           "host": {
             "treadId": "sc_stair_system_treads_tread_6_2",
-            "supportId": "sc_stair_system_support_rightStringer1"
+            "supportId": "sc_stair_system_support_leftStringer1"
           }
         },
         "display": {
@@ -4758,13 +4375,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 6 bolted cleat 2"
+          "name": "Tread 6 bolted cleat 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat6_2",
+          "componentRole": "treadCleat6_1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat6_2": {
+        "id": "sc_stair_system_connections_treadCleat6_2",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -4905,20 +4527,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat7_1": {
-        "id": "sc_stair_system_connections_treadCleat7_1",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
-          1820,
-          -415,
-          1184
+          1540,
+          415,
+          1004
         ],
         "normal": [
           0,
-          -1,
+          1,
           0
         ],
         "localAxisY": [
@@ -4932,15 +4549,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat7_1_holes"
+          "sc_stair_system_connections_treadCleat6_2_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
-          "treadIndex": 6,
-          "sideIndex": 0,
+          "treadIndex": 5,
+          "sideIndex": 1,
           "host": {
-            "treadId": "sc_stair_system_treads_tread_7_2",
-            "supportId": "sc_stair_system_support_leftStringer1"
+            "treadId": "sc_stair_system_treads_tread_6_2",
+            "supportId": "sc_stair_system_support_rightStringer1"
           }
         },
         "display": {
@@ -4948,13 +4565,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 7 bolted cleat 1"
+          "name": "Tread 6 bolted cleat 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat7_1",
+          "componentRole": "treadCleat6_2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat7_1": {
+        "id": "sc_stair_system_connections_treadCleat7_1",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -5095,20 +4717,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat7_2": {
-        "id": "sc_stair_system_connections_treadCleat7_2",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
           1820,
-          415,
+          -415,
           1184
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -5122,15 +4739,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat7_2_holes"
+          "sc_stair_system_connections_treadCleat7_1_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
           "treadIndex": 6,
-          "sideIndex": 1,
+          "sideIndex": 0,
           "host": {
             "treadId": "sc_stair_system_treads_tread_7_2",
-            "supportId": "sc_stair_system_support_rightStringer1"
+            "supportId": "sc_stair_system_support_leftStringer1"
           }
         },
         "display": {
@@ -5138,13 +4755,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 7 bolted cleat 2"
+          "name": "Tread 7 bolted cleat 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat7_2",
+          "componentRole": "treadCleat7_1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat7_2": {
+        "id": "sc_stair_system_connections_treadCleat7_2",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -5285,20 +4907,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat8_1": {
-        "id": "sc_stair_system_connections_treadCleat8_1",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
-          2100,
-          -415,
-          1364
+          1820,
+          415,
+          1184
         ],
         "normal": [
           0,
-          -1,
+          1,
           0
         ],
         "localAxisY": [
@@ -5312,15 +4929,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat8_1_holes"
+          "sc_stair_system_connections_treadCleat7_2_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
-          "treadIndex": 7,
-          "sideIndex": 0,
+          "treadIndex": 6,
+          "sideIndex": 1,
           "host": {
-            "treadId": "sc_stair_system_treads_tread_8_2",
-            "supportId": "sc_stair_system_support_leftStringer1"
+            "treadId": "sc_stair_system_treads_tread_7_2",
+            "supportId": "sc_stair_system_support_rightStringer1"
           }
         },
         "display": {
@@ -5328,13 +4945,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 8 bolted cleat 1"
+          "name": "Tread 7 bolted cleat 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat8_1",
+          "componentRole": "treadCleat7_2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat8_1": {
+        "id": "sc_stair_system_connections_treadCleat8_1",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -5475,20 +5097,15 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_treadCleat8_2": {
-        "id": "sc_stair_system_connections_treadCleat8_2",
-        "type": "bolted-tread-cleat",
-        "thickness": 8,
+        },
         "center": [
           2100,
-          415,
+          -415,
           1364
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -5502,15 +5119,15 @@
           1
         ],
         "featureIds": [
-          "sc_stair_system_connections_treadCleat8_2_holes"
+          "sc_stair_system_connections_treadCleat8_1_holes"
         ],
         "placementIntent": {
           "role": "tread-cleat",
           "treadIndex": 7,
-          "sideIndex": 1,
+          "sideIndex": 0,
           "host": {
             "treadId": "sc_stair_system_treads_tread_8_2",
-            "supportId": "sc_stair_system_support_rightStringer1"
+            "supportId": "sc_stair_system_support_leftStringer1"
           }
         },
         "display": {
@@ -5518,13 +5135,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Tread 8 bolted cleat 2"
+          "name": "Tread 8 bolted cleat 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "treadCleat8_2",
+          "componentRole": "treadCleat8_1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_treadCleat8_2": {
+        "id": "sc_stair_system_connections_treadCleat8_2",
+        "type": "bolted-tread-cleat",
+        "thickness": 8,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -5665,21 +5287,16 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_floor_mounting_surface": {
-        "id": "sc_stair_system_connections_floor_mounting_surface",
-        "type": "concrete-floor-mounting-surface",
-        "thickness": 120,
+        },
         "center": [
-          -80,
-          0,
-          -180
+          2100,
+          415,
+          1364
         ],
         "normal": [
           0,
-          0,
-          1
+          1,
+          0
         ],
         "localAxisY": [
           1,
@@ -5688,32 +5305,38 @@
         ],
         "localAxisZ": [
           0,
-          1,
-          0
+          0,
+          1
         ],
-        "featureIds": [],
+        "featureIds": [
+          "sc_stair_system_connections_treadCleat8_2_holes"
+        ],
         "placementIntent": {
-          "role": "floor-mounting-surface",
+          "role": "tread-cleat",
+          "treadIndex": 7,
+          "sideIndex": 1,
           "host": {
-            "supportMemberIds": [
-              "sc_stair_system_support_leftStringer1",
-              "sc_stair_system_support_rightStringer1"
-            ]
+            "treadId": "sc_stair_system_treads_tread_8_2",
+            "supportId": "sc_stair_system_support_rightStringer1"
           }
         },
         "display": {
-          "color": "#9aa3ad",
-          "edgeColor": "#717b86",
-          "opacity": 0.78
+          "color": "#475569",
+          "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Concrete floor mounting surface"
+          "name": "Tread 8 bolted cleat 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "floorMountingSurface",
+          "componentRole": "treadCleat8_2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_floor_mounting_surface": {
+        "id": "sc_stair_system_connections_floor_mounting_surface",
+        "type": "concrete-floor-mounting-surface",
+        "thickness": 120,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -5854,35 +5477,30 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_top_slab_mounting_surface": {
-        "id": "sc_stair_system_connections_top_slab_mounting_surface",
-        "type": "concrete-top-slab-mounting-surface",
-        "thickness": 160,
+        },
         "center": [
-          2400,
+          -80,
           0,
-          1590
+          -180
         ],
         "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
           0,
           0,
           1
         ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
         "featureIds": [],
         "placementIntent": {
-          "role": "top-slab-mounting-surface",
+          "role": "floor-mounting-surface",
           "host": {
             "supportMemberIds": [
               "sc_stair_system_support_leftStringer1",
@@ -5893,16 +5511,21 @@
         "display": {
           "color": "#9aa3ad",
           "edgeColor": "#717b86",
-          "opacity": 0.72
+          "opacity": 0.78
         },
         "bim": {
-          "name": "Concrete top slab mounting surface"
+          "name": "Concrete floor mounting surface"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "topSlabMountingSurface",
+          "componentRole": "floorMountingSurface",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_top_slab_mounting_surface": {
+        "id": "sc_stair_system_connections_top_slab_mounting_surface",
+        "type": "concrete-top-slab-mounting-surface",
+        "thickness": 160,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -6043,54 +5666,55 @@
               ]
             }
           ]
+        },
+        "center": [
+          2400,
+          0,
+          1590
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "localAxisY": [
+          0,
+          1,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          0,
+          1
+        ],
+        "featureIds": [],
+        "placementIntent": {
+          "role": "top-slab-mounting-surface",
+          "host": {
+            "supportMemberIds": [
+              "sc_stair_system_support_leftStringer1",
+              "sc_stair_system_support_rightStringer1"
+            ]
+          }
+        },
+        "display": {
+          "color": "#9aa3ad",
+          "edgeColor": "#717b86",
+          "opacity": 0.72
+        },
+        "bim": {
+          "name": "Concrete top slab mounting surface"
+        },
+        "authoring": {
+          "componentInstanceId": "sc_stair_system_connections",
+          "componentRole": "topSlabMountingSurface",
+          "componentStatus": "managed"
         }
       },
       "sc_stair_system_connections_floorBasePlate1": {
         "id": "sc_stair_system_connections_floorBasePlate1",
         "type": "floor-base-plate",
         "thickness": 14,
-        "center": [
-          0,
-          -450,
-          -10
-        ],
-        "normal": [
-          0,
-          0,
-          1
-        ],
-        "localAxisY": [
-          1,
-          0,
-          0
-        ],
-        "localAxisZ": [
-          0,
-          1,
-          0
-        ],
-        "featureIds": [
-          "sc_stair_system_connections_floorBasePlate1_holes"
-        ],
-        "placementIntent": {
-          "role": "floor-base-plate",
-          "host": {
-            "memberId": "sc_stair_system_support_leftStringer1",
-            "end": "start"
-          }
-        },
-        "display": {
-          "color": "#53616f",
-          "edgeColor": "#334155"
-        },
-        "bim": {
-          "name": "Stringer 1 floor base plate"
-        },
-        "authoring": {
-          "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "floorBasePlate1",
-          "componentStatus": "managed"
-        },
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -6231,40 +5855,35 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_topSlabBracket1": {
-        "id": "sc_stair_system_connections_topSlabBracket1",
-        "type": "top-slab-fixing-plate",
-        "thickness": 14,
+        },
         "center": [
-          2320,
+          0,
           -450,
-          1530
+          -10
         ],
         "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
           0,
           0,
           1
         ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
         "featureIds": [
-          "sc_stair_system_connections_topSlabBracket1_holes"
+          "sc_stair_system_connections_floorBasePlate1_holes"
         ],
         "placementIntent": {
-          "role": "top-slab-fixing-plate",
+          "role": "floor-base-plate",
           "host": {
             "memberId": "sc_stair_system_support_leftStringer1",
-            "end": "end"
+            "end": "start"
           }
         },
         "display": {
@@ -6272,13 +5891,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Stringer 1 top slab bracket"
+          "name": "Stringer 1 floor base plate"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "topSlabBracket1",
+          "componentRole": "floorBasePlate1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_topSlabBracket1": {
+        "id": "sc_stair_system_connections_topSlabBracket1",
+        "type": "top-slab-fixing-plate",
+        "thickness": 14,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -6419,40 +6043,35 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_floorBasePlate2": {
-        "id": "sc_stair_system_connections_floorBasePlate2",
-        "type": "floor-base-plate",
-        "thickness": 14,
+        },
         "center": [
-          0,
-          450,
-          -10
+          2320,
+          -450,
+          1530
         ],
         "normal": [
-          0,
-          0,
-          1
-        ],
-        "localAxisY": [
           1,
           0,
+          0
+        ],
+        "localAxisY": [
+          0,
+          1,
           0
         ],
         "localAxisZ": [
           0,
-          1,
-          0
+          0,
+          1
         ],
         "featureIds": [
-          "sc_stair_system_connections_floorBasePlate2_holes"
+          "sc_stair_system_connections_topSlabBracket1_holes"
         ],
         "placementIntent": {
-          "role": "floor-base-plate",
+          "role": "top-slab-fixing-plate",
           "host": {
-            "memberId": "sc_stair_system_support_rightStringer1",
-            "end": "start"
+            "memberId": "sc_stair_system_support_leftStringer1",
+            "end": "end"
           }
         },
         "display": {
@@ -6460,13 +6079,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Stringer 2 floor base plate"
+          "name": "Stringer 1 top slab bracket"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "floorBasePlate2",
+          "componentRole": "topSlabBracket1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_floorBasePlate2": {
+        "id": "sc_stair_system_connections_floorBasePlate2",
+        "type": "floor-base-plate",
+        "thickness": 14,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -6607,40 +6231,35 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_topSlabBracket2": {
-        "id": "sc_stair_system_connections_topSlabBracket2",
-        "type": "top-slab-fixing-plate",
-        "thickness": 14,
+        },
         "center": [
-          2320,
+          0,
           450,
-          1530
+          -10
         ],
         "normal": [
-          1,
-          0,
-          0
-        ],
-        "localAxisY": [
-          0,
-          1,
-          0
-        ],
-        "localAxisZ": [
           0,
           0,
           1
         ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
         "featureIds": [
-          "sc_stair_system_connections_topSlabBracket2_holes"
+          "sc_stair_system_connections_floorBasePlate2_holes"
         ],
         "placementIntent": {
-          "role": "top-slab-fixing-plate",
+          "role": "floor-base-plate",
           "host": {
             "memberId": "sc_stair_system_support_rightStringer1",
-            "end": "end"
+            "end": "start"
           }
         },
         "display": {
@@ -6648,13 +6267,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Stringer 2 top slab bracket"
+          "name": "Stringer 2 floor base plate"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "topSlabBracket2",
+          "componentRole": "floorBasePlate2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_topSlabBracket2": {
+        "id": "sc_stair_system_connections_topSlabBracket2",
+        "type": "top-slab-fixing-plate",
+        "thickness": 14,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -6795,21 +6419,16 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_postBase1": {
-        "id": "sc_stair_system_connections_postBase1",
-        "type": "post-base-plate",
-        "thickness": 10,
+        },
         "center": [
-          0,
-          -380,
-          -6
+          2320,
+          450,
+          1530
         ],
         "normal": [
+          1,
           0,
-          0,
-          1
+          0
         ],
         "localAxisY": [
           0,
@@ -6817,17 +6436,18 @@
           0
         ],
         "localAxisZ": [
-          1,
           0,
-          0
+          0,
+          1
         ],
         "featureIds": [
-          "sc_stair_system_connections_postBase1_holes"
+          "sc_stair_system_connections_topSlabBracket2_holes"
         ],
         "placementIntent": {
-          "role": "post-base-plate",
+          "role": "top-slab-fixing-plate",
           "host": {
-            "memberId": "sc_stair_system_railing_left_post_1"
+            "memberId": "sc_stair_system_support_rightStringer1",
+            "end": "end"
           }
         },
         "display": {
@@ -6835,13 +6455,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Post 1 base plate"
+          "name": "Stringer 2 top slab bracket"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "postBase1",
+          "componentRole": "topSlabBracket2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_postBase1": {
+        "id": "sc_stair_system_connections_postBase1",
+        "type": "post-base-plate",
+        "thickness": 10,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -6982,16 +6607,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_postBase2": {
-        "id": "sc_stair_system_connections_postBase2",
-        "type": "post-base-plate",
-        "thickness": 10,
+        },
         "center": [
-          1120,
+          0,
           -380,
-          714
+          -6
         ],
         "normal": [
           0,
@@ -7009,12 +6629,12 @@
           0
         ],
         "featureIds": [
-          "sc_stair_system_connections_postBase2_holes"
+          "sc_stair_system_connections_postBase1_holes"
         ],
         "placementIntent": {
           "role": "post-base-plate",
           "host": {
-            "memberId": "sc_stair_system_railing_left_post_2"
+            "memberId": "sc_stair_system_railing_left_post_1"
           }
         },
         "display": {
@@ -7022,13 +6642,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Post 2 base plate"
+          "name": "Post 1 base plate"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "postBase2",
+          "componentRole": "postBase1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_postBase2": {
+        "id": "sc_stair_system_connections_postBase2",
+        "type": "post-base-plate",
+        "thickness": 10,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -7169,16 +6794,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_postBase3": {
-        "id": "sc_stair_system_connections_postBase3",
-        "type": "post-base-plate",
-        "thickness": 10,
+        },
         "center": [
-          2240,
+          1120,
           -380,
-          1434
+          714
         ],
         "normal": [
           0,
@@ -7196,12 +6816,12 @@
           0
         ],
         "featureIds": [
-          "sc_stair_system_connections_postBase3_holes"
+          "sc_stair_system_connections_postBase2_holes"
         ],
         "placementIntent": {
           "role": "post-base-plate",
           "host": {
-            "memberId": "sc_stair_system_railing_left_post_3"
+            "memberId": "sc_stair_system_railing_left_post_2"
           }
         },
         "display": {
@@ -7209,13 +6829,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Post 3 base plate"
+          "name": "Post 2 base plate"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "postBase3",
+          "componentRole": "postBase2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_postBase3": {
+        "id": "sc_stair_system_connections_postBase3",
+        "type": "post-base-plate",
+        "thickness": 10,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -7356,16 +6981,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_postBase4": {
-        "id": "sc_stair_system_connections_postBase4",
-        "type": "post-base-plate",
-        "thickness": 10,
+        },
         "center": [
-          0,
-          380,
-          -6
+          2240,
+          -380,
+          1434
         ],
         "normal": [
           0,
@@ -7383,12 +7003,12 @@
           0
         ],
         "featureIds": [
-          "sc_stair_system_connections_postBase4_holes"
+          "sc_stair_system_connections_postBase3_holes"
         ],
         "placementIntent": {
           "role": "post-base-plate",
           "host": {
-            "memberId": "sc_stair_system_railing_right_post_1"
+            "memberId": "sc_stair_system_railing_left_post_3"
           }
         },
         "display": {
@@ -7396,13 +7016,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Post 4 base plate"
+          "name": "Post 3 base plate"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "postBase4",
+          "componentRole": "postBase3",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_postBase4": {
+        "id": "sc_stair_system_connections_postBase4",
+        "type": "post-base-plate",
+        "thickness": 10,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -7543,16 +7168,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_postBase5": {
-        "id": "sc_stair_system_connections_postBase5",
-        "type": "post-base-plate",
-        "thickness": 10,
+        },
         "center": [
-          1120,
+          0,
           380,
-          714
+          -6
         ],
         "normal": [
           0,
@@ -7570,12 +7190,12 @@
           0
         ],
         "featureIds": [
-          "sc_stair_system_connections_postBase5_holes"
+          "sc_stair_system_connections_postBase4_holes"
         ],
         "placementIntent": {
           "role": "post-base-plate",
           "host": {
-            "memberId": "sc_stair_system_railing_right_post_2"
+            "memberId": "sc_stair_system_railing_right_post_1"
           }
         },
         "display": {
@@ -7583,13 +7203,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Post 5 base plate"
+          "name": "Post 4 base plate"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "postBase5",
+          "componentRole": "postBase4",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_postBase5": {
+        "id": "sc_stair_system_connections_postBase5",
+        "type": "post-base-plate",
+        "thickness": 10,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -7730,16 +7355,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_connections_postBase6": {
-        "id": "sc_stair_system_connections_postBase6",
-        "type": "post-base-plate",
-        "thickness": 10,
+        },
         "center": [
-          2240,
+          1120,
           380,
-          1434
+          714
         ],
         "normal": [
           0,
@@ -7757,12 +7377,12 @@
           0
         ],
         "featureIds": [
-          "sc_stair_system_connections_postBase6_holes"
+          "sc_stair_system_connections_postBase5_holes"
         ],
         "placementIntent": {
           "role": "post-base-plate",
           "host": {
-            "memberId": "sc_stair_system_railing_right_post_3"
+            "memberId": "sc_stair_system_railing_right_post_2"
           }
         },
         "display": {
@@ -7770,13 +7390,18 @@
           "edgeColor": "#334155"
         },
         "bim": {
-          "name": "Post 6 base plate"
+          "name": "Post 5 base plate"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_connections",
-          "componentRole": "postBase6",
+          "componentRole": "postBase5",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_connections_postBase6": {
+        "id": "sc_stair_system_connections_postBase6",
+        "type": "post-base-plate",
+        "thickness": 10,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -7917,16 +7542,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_treads_tread_1_2": {
-        "id": "sc_stair_system_treads_tread_1_2",
-        "type": "grating-tread",
-        "thickness": 12,
+        },
         "center": [
-          140,
-          0,
-          174
+          2240,
+          380,
+          1434
         ],
         "normal": [
           0,
@@ -7943,40 +7563,32 @@
           0,
           0
         ],
-        "featureIds": [],
+        "featureIds": [
+          "sc_stair_system_connections_postBase6_holes"
+        ],
         "placementIntent": {
-          "role": "stair-steel-tray-tread",
-          "surfaceKind": "tread",
-          "family": "grating-tread",
-          "index": 0,
-          "station": 140,
-          "stationStart": 0,
-          "stationEnd": 280,
-          "flightId": "flight_1",
-          "overlap": 20,
-          "walkingSurface": [
-            140,
-            0,
-            180
-          ]
+          "role": "post-base-plate",
+          "host": {
+            "memberId": "sc_stair_system_railing_right_post_3"
+          }
         },
         "display": {
-          "color": "#64748b",
-          "edgeColor": "#475569"
-        },
-        "fabrication": {
-          "family": "grating-tread",
-          "overlap": 20,
-          "finish": "shop-primer"
+          "color": "#53616f",
+          "edgeColor": "#334155"
         },
         "bim": {
-          "name": "grating-tread 1"
+          "name": "Post 6 base plate"
         },
         "authoring": {
-          "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "tread1",
+          "componentInstanceId": "sc_stair_system_connections",
+          "componentRole": "postBase6",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_treads_tread_1_2": {
+        "id": "sc_stair_system_treads_tread_1_2",
+        "type": "grating-tread",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -8117,16 +7729,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_treads_tread_2_2": {
-        "id": "sc_stair_system_treads_tread_2_2",
-        "type": "grating-tread",
-        "thickness": 12,
+        },
         "center": [
-          420,
+          140,
           0,
-          354
+          174
         ],
         "normal": [
           0,
@@ -8148,35 +7755,40 @@
           "role": "stair-steel-tray-tread",
           "surfaceKind": "tread",
           "family": "grating-tread",
-          "index": 1,
-          "station": 420,
-          "stationStart": 280,
-          "stationEnd": 560,
+          "index": 0,
+          "station": 140,
+          "stationStart": 0,
+          "stationEnd": 280,
           "flightId": "flight_1",
           "overlap": 20,
           "walkingSurface": [
-            420,
+            140,
             0,
-            360
+            180
           ]
-        },
-        "display": {
-          "color": "#64748b",
-          "edgeColor": "#475569"
         },
         "fabrication": {
           "family": "grating-tread",
           "overlap": 20,
           "finish": "shop-primer"
         },
+        "display": {
+          "color": "#64748b",
+          "edgeColor": "#475569"
+        },
         "bim": {
-          "name": "grating-tread 2"
+          "name": "grating-tread 1"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "tread2",
+          "componentRole": "tread1",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_treads_tread_2_2": {
+        "id": "sc_stair_system_treads_tread_2_2",
+        "type": "grating-tread",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -8317,16 +7929,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_treads_tread_3_2": {
-        "id": "sc_stair_system_treads_tread_3_2",
-        "type": "grating-tread",
-        "thickness": 12,
+        },
         "center": [
-          700,
+          420,
           0,
-          534
+          354
         ],
         "normal": [
           0,
@@ -8348,35 +7955,40 @@
           "role": "stair-steel-tray-tread",
           "surfaceKind": "tread",
           "family": "grating-tread",
-          "index": 2,
-          "station": 700,
-          "stationStart": 560,
-          "stationEnd": 840,
+          "index": 1,
+          "station": 420,
+          "stationStart": 280,
+          "stationEnd": 560,
           "flightId": "flight_1",
           "overlap": 20,
           "walkingSurface": [
-            700,
+            420,
             0,
-            540
+            360
           ]
-        },
-        "display": {
-          "color": "#64748b",
-          "edgeColor": "#475569"
         },
         "fabrication": {
           "family": "grating-tread",
           "overlap": 20,
           "finish": "shop-primer"
         },
+        "display": {
+          "color": "#64748b",
+          "edgeColor": "#475569"
+        },
         "bim": {
-          "name": "grating-tread 3"
+          "name": "grating-tread 2"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "tread3",
+          "componentRole": "tread2",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_treads_tread_3_2": {
+        "id": "sc_stair_system_treads_tread_3_2",
+        "type": "grating-tread",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -8517,16 +8129,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_treads_tread_4_2": {
-        "id": "sc_stair_system_treads_tread_4_2",
-        "type": "grating-tread",
-        "thickness": 12,
+        },
         "center": [
-          980,
+          700,
           0,
-          714
+          534
         ],
         "normal": [
           0,
@@ -8548,35 +8155,40 @@
           "role": "stair-steel-tray-tread",
           "surfaceKind": "tread",
           "family": "grating-tread",
-          "index": 3,
-          "station": 980,
-          "stationStart": 840,
-          "stationEnd": 1120,
+          "index": 2,
+          "station": 700,
+          "stationStart": 560,
+          "stationEnd": 840,
           "flightId": "flight_1",
           "overlap": 20,
           "walkingSurface": [
-            980,
+            700,
             0,
-            720
+            540
           ]
-        },
-        "display": {
-          "color": "#64748b",
-          "edgeColor": "#475569"
         },
         "fabrication": {
           "family": "grating-tread",
           "overlap": 20,
           "finish": "shop-primer"
         },
+        "display": {
+          "color": "#64748b",
+          "edgeColor": "#475569"
+        },
         "bim": {
-          "name": "grating-tread 4"
+          "name": "grating-tread 3"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "tread4",
+          "componentRole": "tread3",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_treads_tread_4_2": {
+        "id": "sc_stair_system_treads_tread_4_2",
+        "type": "grating-tread",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -8717,16 +8329,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_treads_tread_5_2": {
-        "id": "sc_stair_system_treads_tread_5_2",
-        "type": "grating-tread",
-        "thickness": 12,
+        },
         "center": [
-          1260,
+          980,
           0,
-          894
+          714
         ],
         "normal": [
           0,
@@ -8748,35 +8355,40 @@
           "role": "stair-steel-tray-tread",
           "surfaceKind": "tread",
           "family": "grating-tread",
-          "index": 4,
-          "station": 1260,
-          "stationStart": 1120,
-          "stationEnd": 1400,
+          "index": 3,
+          "station": 980,
+          "stationStart": 840,
+          "stationEnd": 1120,
           "flightId": "flight_1",
           "overlap": 20,
           "walkingSurface": [
-            1260,
+            980,
             0,
-            900
+            720
           ]
-        },
-        "display": {
-          "color": "#64748b",
-          "edgeColor": "#475569"
         },
         "fabrication": {
           "family": "grating-tread",
           "overlap": 20,
           "finish": "shop-primer"
         },
+        "display": {
+          "color": "#64748b",
+          "edgeColor": "#475569"
+        },
         "bim": {
-          "name": "grating-tread 5"
+          "name": "grating-tread 4"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "tread5",
+          "componentRole": "tread4",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_treads_tread_5_2": {
+        "id": "sc_stair_system_treads_tread_5_2",
+        "type": "grating-tread",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -8917,16 +8529,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_treads_tread_6_2": {
-        "id": "sc_stair_system_treads_tread_6_2",
-        "type": "grating-tread",
-        "thickness": 12,
+        },
         "center": [
-          1540,
+          1260,
           0,
-          1074
+          894
         ],
         "normal": [
           0,
@@ -8948,35 +8555,40 @@
           "role": "stair-steel-tray-tread",
           "surfaceKind": "tread",
           "family": "grating-tread",
-          "index": 5,
-          "station": 1540,
-          "stationStart": 1400,
-          "stationEnd": 1680,
+          "index": 4,
+          "station": 1260,
+          "stationStart": 1120,
+          "stationEnd": 1400,
           "flightId": "flight_1",
           "overlap": 20,
           "walkingSurface": [
-            1540,
+            1260,
             0,
-            1080
+            900
           ]
-        },
-        "display": {
-          "color": "#64748b",
-          "edgeColor": "#475569"
         },
         "fabrication": {
           "family": "grating-tread",
           "overlap": 20,
           "finish": "shop-primer"
         },
+        "display": {
+          "color": "#64748b",
+          "edgeColor": "#475569"
+        },
         "bim": {
-          "name": "grating-tread 6"
+          "name": "grating-tread 5"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "tread6",
+          "componentRole": "tread5",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_treads_tread_6_2": {
+        "id": "sc_stair_system_treads_tread_6_2",
+        "type": "grating-tread",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -9117,16 +8729,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_treads_tread_7_2": {
-        "id": "sc_stair_system_treads_tread_7_2",
-        "type": "grating-tread",
-        "thickness": 12,
+        },
         "center": [
-          1820,
+          1540,
           0,
-          1254
+          1074
         ],
         "normal": [
           0,
@@ -9148,35 +8755,40 @@
           "role": "stair-steel-tray-tread",
           "surfaceKind": "tread",
           "family": "grating-tread",
-          "index": 6,
-          "station": 1820,
-          "stationStart": 1680,
-          "stationEnd": 1960,
+          "index": 5,
+          "station": 1540,
+          "stationStart": 1400,
+          "stationEnd": 1680,
           "flightId": "flight_1",
           "overlap": 20,
           "walkingSurface": [
-            1820,
+            1540,
             0,
-            1260
+            1080
           ]
-        },
-        "display": {
-          "color": "#64748b",
-          "edgeColor": "#475569"
         },
         "fabrication": {
           "family": "grating-tread",
           "overlap": 20,
           "finish": "shop-primer"
         },
+        "display": {
+          "color": "#64748b",
+          "edgeColor": "#475569"
+        },
         "bim": {
-          "name": "grating-tread 7"
+          "name": "grating-tread 6"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "tread7",
+          "componentRole": "tread6",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_treads_tread_7_2": {
+        "id": "sc_stair_system_treads_tread_7_2",
+        "type": "grating-tread",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -9317,16 +8929,11 @@
               ]
             }
           ]
-        }
-      },
-      "sc_stair_system_treads_tread_8_2": {
-        "id": "sc_stair_system_treads_tread_8_2",
-        "type": "grating-tread",
-        "thickness": 12,
+        },
         "center": [
-          2100,
+          1820,
           0,
-          1434
+          1254
         ],
         "normal": [
           0,
@@ -9348,35 +8955,40 @@
           "role": "stair-steel-tray-tread",
           "surfaceKind": "tread",
           "family": "grating-tread",
-          "index": 7,
-          "station": 2100,
-          "stationStart": 1960,
-          "stationEnd": 2240,
+          "index": 6,
+          "station": 1820,
+          "stationStart": 1680,
+          "stationEnd": 1960,
           "flightId": "flight_1",
           "overlap": 20,
           "walkingSurface": [
-            2100,
+            1820,
             0,
-            1440
+            1260
           ]
-        },
-        "display": {
-          "color": "#64748b",
-          "edgeColor": "#475569"
         },
         "fabrication": {
           "family": "grating-tread",
           "overlap": 20,
           "finish": "shop-primer"
         },
+        "display": {
+          "color": "#64748b",
+          "edgeColor": "#475569"
+        },
         "bim": {
-          "name": "grating-tread 8"
+          "name": "grating-tread 7"
         },
         "authoring": {
           "componentInstanceId": "sc_stair_system_treads",
-          "componentRole": "tread8",
+          "componentRole": "tread7",
           "componentStatus": "managed"
-        },
+        }
+      },
+      "sc_stair_system_treads_tread_8_2": {
+        "id": "sc_stair_system_treads_tread_8_2",
+        "type": "grating-tread",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
@@ -9517,6 +9129,60 @@
               ]
             }
           ]
+        },
+        "center": [
+          2100,
+          0,
+          1434
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          0,
+          1,
+          0
+        ],
+        "localAxisZ": [
+          1,
+          0,
+          0
+        ],
+        "featureIds": [],
+        "placementIntent": {
+          "role": "stair-steel-tray-tread",
+          "surfaceKind": "tread",
+          "family": "grating-tread",
+          "index": 7,
+          "station": 2100,
+          "stationStart": 1960,
+          "stationEnd": 2240,
+          "flightId": "flight_1",
+          "overlap": 20,
+          "walkingSurface": [
+            2100,
+            0,
+            1440
+          ]
+        },
+        "fabrication": {
+          "family": "grating-tread",
+          "overlap": 20,
+          "finish": "shop-primer"
+        },
+        "display": {
+          "color": "#64748b",
+          "edgeColor": "#475569"
+        },
+        "bim": {
+          "name": "grating-tread 8"
+        },
+        "authoring": {
+          "componentInstanceId": "sc_stair_system_treads",
+          "componentRole": "tread8",
+          "componentStatus": "managed"
         }
       }
     },
@@ -11455,37 +11121,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -11539,37 +11178,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -11623,37 +11235,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -11707,37 +11292,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -11791,37 +11349,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -11875,37 +11406,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -11959,37 +11463,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12043,37 +11520,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12127,37 +11577,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12211,37 +11634,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12295,37 +11691,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12379,37 +11748,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12463,37 +11805,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12547,37 +11862,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12631,37 +11919,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12715,37 +11976,10 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.treadFastenerRef",
               "holeDiameter": "connections.treadBoltHoleDiameter",
               "length": "connections.treadBoltLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.treadFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.treadBoltLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12800,43 +12034,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.anchorFastenerRef",
               "holeDiameter": "connections.anchorHoleDiameter",
               "length": "connections.anchorLength",
               "gripLength": "connections.floorAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.anchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.anchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.anchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.floorAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12891,43 +12093,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.anchorFastenerRef",
               "holeDiameter": "connections.anchorHoleDiameter",
               "length": "connections.anchorLength",
               "gripLength": "connections.slabAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.anchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.anchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.anchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.slabAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -12982,43 +12152,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.anchorFastenerRef",
               "holeDiameter": "connections.anchorHoleDiameter",
               "length": "connections.anchorLength",
               "gripLength": "connections.floorAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.anchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.anchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.anchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.floorAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -13073,43 +12211,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.anchorFastenerRef",
               "holeDiameter": "connections.anchorHoleDiameter",
               "length": "connections.anchorLength",
               "gripLength": "connections.slabAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.anchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.anchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.anchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.slabAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -13161,43 +12267,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.postAnchorFastenerRef",
               "holeDiameter": "connections.postAnchorHoleDiameter",
               "length": "connections.postAnchorLength",
               "gripLength": "connections.postAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -13249,43 +12323,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.postAnchorFastenerRef",
               "holeDiameter": "connections.postAnchorHoleDiameter",
               "length": "connections.postAnchorLength",
               "gripLength": "connections.postAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -13337,43 +12379,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.postAnchorFastenerRef",
               "holeDiameter": "connections.postAnchorHoleDiameter",
               "length": "connections.postAnchorLength",
               "gripLength": "connections.postAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -13425,43 +12435,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.postAnchorFastenerRef",
               "holeDiameter": "connections.postAnchorHoleDiameter",
               "length": "connections.postAnchorLength",
               "gripLength": "connections.postAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -13513,43 +12491,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.postAnchorFastenerRef",
               "holeDiameter": "connections.postAnchorHoleDiameter",
               "length": "connections.postAnchorLength",
               "gripLength": "connections.postAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -13601,43 +12547,11 @@
         "authoring": {
           "controls": {
             "kind": "component-driven-fastener-values",
-            "api": "model.fastener.patternedGroup",
-            "abstractionLayers": [
-              "component",
-              "hole-pattern",
-              "feature",
-              "fastener-group"
-            ],
-            "componentDrivesValues": true,
-            "directFastenerOverrides": true,
-            "valueBindingMode": "component-driven-with-direct-override",
             "parameterPaths": {
               "fastenerRef": "connections.postAnchorFastenerRef",
               "holeDiameter": "connections.postAnchorHoleDiameter",
               "length": "connections.postAnchorLength",
               "gripLength": "connections.postAnchorGripLength"
-            },
-            "valueBindings": {
-              "fastenerRef": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorFastenerRef",
-                "override": "direct-object-field-override"
-              },
-              "holeDiameter": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorHoleDiameter",
-                "override": "direct-object-field-override"
-              },
-              "length": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorLength",
-                "override": "direct-object-field-override"
-              },
-              "gripLength": {
-                "source": "component-parameter",
-                "path": "connections.postAnchorGripLength",
-                "override": "direct-object-field-override"
-              }
             }
           },
           "componentInstanceId": "sc_stair_system_connections",
@@ -13654,6 +12568,7 @@
       }
     },
     "welds": {},
+    "relations": {},
     "addonData": {},
     "referencePlanes": {},
     "trimJoints": {
@@ -13661,13 +12576,21 @@
         "id": "sc_stair_system_railing_left_handrail_post_miter_1_start",
         "type": "corner-trim",
         "gap": 0,
+        "fabrication": {
+          "operation": "ordered-corner-trim"
+        },
+        "bim": {
+          "name": "left handrail start post miter 1"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_left_handrail_1",
+            "memberEnd": "start",
             "enabled": true
           },
           {
             "memberId": "sc_stair_system_railing_left_post_1",
+            "memberEnd": "end",
             "enabled": true
           }
         ],
@@ -13684,12 +12607,6 @@
             "enabled": true
           }
         ],
-        "fabrication": {
-          "operation": "ordered-corner-trim"
-        },
-        "bim": {
-          "name": "left handrail start post miter 1"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "leftHandrailPostMiter1Start",
@@ -13700,13 +12617,21 @@
         "id": "sc_stair_system_railing_left_handrail_post_miter_2_end",
         "type": "corner-trim",
         "gap": 0,
+        "fabrication": {
+          "operation": "ordered-corner-trim"
+        },
+        "bim": {
+          "name": "left handrail end post miter 2"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_left_handrail_1",
+            "memberEnd": "end",
             "enabled": true
           },
           {
             "memberId": "sc_stair_system_railing_left_post_3",
+            "memberEnd": "end",
             "enabled": true
           }
         ],
@@ -13723,12 +12648,6 @@
             "enabled": true
           }
         ],
-        "fabrication": {
-          "operation": "ordered-corner-trim"
-        },
-        "bim": {
-          "name": "left handrail end post miter 2"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "leftHandrailPostMiter2End",
@@ -13739,9 +12658,26 @@
         "id": "sc_stair_system_railing_left_mid_rail1_post_trim_1_start",
         "type": "corner-trim",
         "gap": 0,
+        "placementIntent": {
+          "role": "railing-post-trim",
+          "side": "left",
+          "station": 0,
+          "host": {
+            "railId": "sc_stair_system_railing_left_midrail_1_1",
+            "postId": "sc_stair_system_railing_left_post_1",
+            "railEnd": "start"
+          }
+        },
+        "fabrication": {
+          "operation": "railing-member-to-post-trim"
+        },
+        "bim": {
+          "name": "left railing start post trim 1"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_left_midrail_1_1",
+            "memberEnd": "start",
             "enabled": true
           },
           {
@@ -13760,22 +12696,6 @@
             "enabled": true
           }
         ],
-        "placementIntent": {
-          "role": "railing-post-trim",
-          "side": "left",
-          "station": 0,
-          "host": {
-            "railId": "sc_stair_system_railing_left_midrail_1_1",
-            "postId": "sc_stair_system_railing_left_post_1",
-            "railEnd": "start"
-          }
-        },
-        "fabrication": {
-          "operation": "railing-member-to-post-trim"
-        },
-        "bim": {
-          "name": "left railing start post trim 1"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "leftMidRail1PostTrim1Start",
@@ -13786,9 +12706,26 @@
         "id": "sc_stair_system_railing_left_mid_rail1_post_trim_2_end",
         "type": "corner-trim",
         "gap": 0,
+        "placementIntent": {
+          "role": "railing-post-trim",
+          "side": "left",
+          "station": 2240,
+          "host": {
+            "railId": "sc_stair_system_railing_left_midrail_1_1",
+            "postId": "sc_stair_system_railing_left_post_3",
+            "railEnd": "end"
+          }
+        },
+        "fabrication": {
+          "operation": "railing-member-to-post-trim"
+        },
+        "bim": {
+          "name": "left railing end post trim 2"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_left_midrail_1_1",
+            "memberEnd": "end",
             "enabled": true
           },
           {
@@ -13807,22 +12744,6 @@
             "enabled": true
           }
         ],
-        "placementIntent": {
-          "role": "railing-post-trim",
-          "side": "left",
-          "station": 2240,
-          "host": {
-            "railId": "sc_stair_system_railing_left_midrail_1_1",
-            "postId": "sc_stair_system_railing_left_post_3",
-            "railEnd": "end"
-          }
-        },
-        "fabrication": {
-          "operation": "railing-member-to-post-trim"
-        },
-        "bim": {
-          "name": "left railing end post trim 2"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "leftMidRail1PostTrim2End",
@@ -13833,9 +12754,26 @@
         "id": "sc_stair_system_railing_left_mid_rail2_post_trim_1_start",
         "type": "corner-trim",
         "gap": 0,
+        "placementIntent": {
+          "role": "railing-post-trim",
+          "side": "left",
+          "station": 0,
+          "host": {
+            "railId": "sc_stair_system_railing_left_midrail_2_1",
+            "postId": "sc_stair_system_railing_left_post_1",
+            "railEnd": "start"
+          }
+        },
+        "fabrication": {
+          "operation": "railing-member-to-post-trim"
+        },
+        "bim": {
+          "name": "left railing start post trim 1"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_left_midrail_2_1",
+            "memberEnd": "start",
             "enabled": true
           },
           {
@@ -13854,22 +12792,6 @@
             "enabled": true
           }
         ],
-        "placementIntent": {
-          "role": "railing-post-trim",
-          "side": "left",
-          "station": 0,
-          "host": {
-            "railId": "sc_stair_system_railing_left_midrail_2_1",
-            "postId": "sc_stair_system_railing_left_post_1",
-            "railEnd": "start"
-          }
-        },
-        "fabrication": {
-          "operation": "railing-member-to-post-trim"
-        },
-        "bim": {
-          "name": "left railing start post trim 1"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "leftMidRail2PostTrim1Start",
@@ -13880,9 +12802,26 @@
         "id": "sc_stair_system_railing_left_mid_rail2_post_trim_2_end",
         "type": "corner-trim",
         "gap": 0,
+        "placementIntent": {
+          "role": "railing-post-trim",
+          "side": "left",
+          "station": 2240,
+          "host": {
+            "railId": "sc_stair_system_railing_left_midrail_2_1",
+            "postId": "sc_stair_system_railing_left_post_3",
+            "railEnd": "end"
+          }
+        },
+        "fabrication": {
+          "operation": "railing-member-to-post-trim"
+        },
+        "bim": {
+          "name": "left railing end post trim 2"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_left_midrail_2_1",
+            "memberEnd": "end",
             "enabled": true
           },
           {
@@ -13901,22 +12840,6 @@
             "enabled": true
           }
         ],
-        "placementIntent": {
-          "role": "railing-post-trim",
-          "side": "left",
-          "station": 2240,
-          "host": {
-            "railId": "sc_stair_system_railing_left_midrail_2_1",
-            "postId": "sc_stair_system_railing_left_post_3",
-            "railEnd": "end"
-          }
-        },
-        "fabrication": {
-          "operation": "railing-member-to-post-trim"
-        },
-        "bim": {
-          "name": "left railing end post trim 2"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "leftMidRail2PostTrim2End",
@@ -13927,13 +12850,21 @@
         "id": "sc_stair_system_railing_right_handrail_post_miter_1_start",
         "type": "corner-trim",
         "gap": 0,
+        "fabrication": {
+          "operation": "ordered-corner-trim"
+        },
+        "bim": {
+          "name": "right handrail start post miter 1"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_right_handrail_1",
+            "memberEnd": "start",
             "enabled": true
           },
           {
             "memberId": "sc_stair_system_railing_right_post_1",
+            "memberEnd": "end",
             "enabled": true
           }
         ],
@@ -13950,12 +12881,6 @@
             "enabled": true
           }
         ],
-        "fabrication": {
-          "operation": "ordered-corner-trim"
-        },
-        "bim": {
-          "name": "right handrail start post miter 1"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "rightHandrailPostMiter1Start",
@@ -13966,13 +12891,21 @@
         "id": "sc_stair_system_railing_right_handrail_post_miter_2_end",
         "type": "corner-trim",
         "gap": 0,
+        "fabrication": {
+          "operation": "ordered-corner-trim"
+        },
+        "bim": {
+          "name": "right handrail end post miter 2"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_right_handrail_1",
+            "memberEnd": "end",
             "enabled": true
           },
           {
             "memberId": "sc_stair_system_railing_right_post_3",
+            "memberEnd": "end",
             "enabled": true
           }
         ],
@@ -13989,12 +12922,6 @@
             "enabled": true
           }
         ],
-        "fabrication": {
-          "operation": "ordered-corner-trim"
-        },
-        "bim": {
-          "name": "right handrail end post miter 2"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "rightHandrailPostMiter2End",
@@ -14005,9 +12932,26 @@
         "id": "sc_stair_system_railing_right_mid_rail1_post_trim_1_start",
         "type": "corner-trim",
         "gap": 0,
+        "placementIntent": {
+          "role": "railing-post-trim",
+          "side": "right",
+          "station": 0,
+          "host": {
+            "railId": "sc_stair_system_railing_right_midrail_1_1",
+            "postId": "sc_stair_system_railing_right_post_1",
+            "railEnd": "start"
+          }
+        },
+        "fabrication": {
+          "operation": "railing-member-to-post-trim"
+        },
+        "bim": {
+          "name": "right railing start post trim 1"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_right_midrail_1_1",
+            "memberEnd": "start",
             "enabled": true
           },
           {
@@ -14026,22 +12970,6 @@
             "enabled": true
           }
         ],
-        "placementIntent": {
-          "role": "railing-post-trim",
-          "side": "right",
-          "station": 0,
-          "host": {
-            "railId": "sc_stair_system_railing_right_midrail_1_1",
-            "postId": "sc_stair_system_railing_right_post_1",
-            "railEnd": "start"
-          }
-        },
-        "fabrication": {
-          "operation": "railing-member-to-post-trim"
-        },
-        "bim": {
-          "name": "right railing start post trim 1"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "rightMidRail1PostTrim1Start",
@@ -14052,9 +12980,26 @@
         "id": "sc_stair_system_railing_right_mid_rail1_post_trim_2_end",
         "type": "corner-trim",
         "gap": 0,
+        "placementIntent": {
+          "role": "railing-post-trim",
+          "side": "right",
+          "station": 2240,
+          "host": {
+            "railId": "sc_stair_system_railing_right_midrail_1_1",
+            "postId": "sc_stair_system_railing_right_post_3",
+            "railEnd": "end"
+          }
+        },
+        "fabrication": {
+          "operation": "railing-member-to-post-trim"
+        },
+        "bim": {
+          "name": "right railing end post trim 2"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_right_midrail_1_1",
+            "memberEnd": "end",
             "enabled": true
           },
           {
@@ -14073,22 +13018,6 @@
             "enabled": true
           }
         ],
-        "placementIntent": {
-          "role": "railing-post-trim",
-          "side": "right",
-          "station": 2240,
-          "host": {
-            "railId": "sc_stair_system_railing_right_midrail_1_1",
-            "postId": "sc_stair_system_railing_right_post_3",
-            "railEnd": "end"
-          }
-        },
-        "fabrication": {
-          "operation": "railing-member-to-post-trim"
-        },
-        "bim": {
-          "name": "right railing end post trim 2"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "rightMidRail1PostTrim2End",
@@ -14099,9 +13028,26 @@
         "id": "sc_stair_system_railing_right_mid_rail2_post_trim_1_start",
         "type": "corner-trim",
         "gap": 0,
+        "placementIntent": {
+          "role": "railing-post-trim",
+          "side": "right",
+          "station": 0,
+          "host": {
+            "railId": "sc_stair_system_railing_right_midrail_2_1",
+            "postId": "sc_stair_system_railing_right_post_1",
+            "railEnd": "start"
+          }
+        },
+        "fabrication": {
+          "operation": "railing-member-to-post-trim"
+        },
+        "bim": {
+          "name": "right railing start post trim 1"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_right_midrail_2_1",
+            "memberEnd": "start",
             "enabled": true
           },
           {
@@ -14120,22 +13066,6 @@
             "enabled": true
           }
         ],
-        "placementIntent": {
-          "role": "railing-post-trim",
-          "side": "right",
-          "station": 0,
-          "host": {
-            "railId": "sc_stair_system_railing_right_midrail_2_1",
-            "postId": "sc_stair_system_railing_right_post_1",
-            "railEnd": "start"
-          }
-        },
-        "fabrication": {
-          "operation": "railing-member-to-post-trim"
-        },
-        "bim": {
-          "name": "right railing start post trim 1"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "rightMidRail2PostTrim1Start",
@@ -14146,9 +13076,26 @@
         "id": "sc_stair_system_railing_right_mid_rail2_post_trim_2_end",
         "type": "corner-trim",
         "gap": 0,
+        "placementIntent": {
+          "role": "railing-post-trim",
+          "side": "right",
+          "station": 2240,
+          "host": {
+            "railId": "sc_stair_system_railing_right_midrail_2_1",
+            "postId": "sc_stair_system_railing_right_post_3",
+            "railEnd": "end"
+          }
+        },
+        "fabrication": {
+          "operation": "railing-member-to-post-trim"
+        },
+        "bim": {
+          "name": "right railing end post trim 2"
+        },
         "participants": [
           {
             "memberId": "sc_stair_system_railing_right_midrail_2_1",
+            "memberEnd": "end",
             "enabled": true
           },
           {
@@ -14167,22 +13114,6 @@
             "enabled": true
           }
         ],
-        "placementIntent": {
-          "role": "railing-post-trim",
-          "side": "right",
-          "station": 2240,
-          "host": {
-            "railId": "sc_stair_system_railing_right_midrail_2_1",
-            "postId": "sc_stair_system_railing_right_post_3",
-            "railEnd": "end"
-          }
-        },
-        "fabrication": {
-          "operation": "railing-member-to-post-trim"
-        },
-        "bim": {
-          "name": "right railing end post trim 2"
-        },
         "authoring": {
           "componentInstanceId": "sc_stair_system_railing",
           "componentRole": "rightMidRail2PostTrim2End",
@@ -15299,6 +14230,7 @@
           "version": "0.1.0"
         },
         "inputs": {
+          "assemblyId": "sc_stair_system_connections_standardHardware_assembly",
           "connections": {
             "family": "stair-hardware",
             "weldSize": 6,
@@ -15371,8 +14303,7 @@
             "treadComponentId": "sc_stair_system_treads",
             "railingComponentId": "sc_stair_system_railing"
           },
-          "connectionZoneId": "sc_stair_system_connections_standardHardware_zone_3",
-          "assemblyId": "sc_stair_system_connections_standardHardware_assembly_3"
+          "connectionZoneId": "sc_stair_system_connections_standardHardware_zone"
         },
         "referenceParameters": {
           "meta": {
@@ -15704,7 +14635,6 @@
         "version": 1
       }
     },
-    "relations": {},
     "gridSystems": {
       "main_grid": {
         "id": "main_grid",

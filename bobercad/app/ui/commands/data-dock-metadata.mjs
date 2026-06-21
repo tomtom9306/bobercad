@@ -13,7 +13,6 @@ export const DATA_DOCK_COMMAND_TITLE = "Toggle data dock";
 export const DATA_DOCK_COMMAND_DESCRIPTION = "Show or hide the Files, Data, Model, and Components dock.";
 export const DATA_DOCK_COMMAND_ICON = DATA_DOCK_PANEL_ICON;
 export const DATA_DOCK_DEFAULT_TAB = "model";
-export const DATA_DOCK_LEGACY_TAB_STORAGE_KEY = "bobercad.ui.left-dock.active-tab.v1";
 
 export const DATA_DOCK_TABS = Object.freeze([
   {

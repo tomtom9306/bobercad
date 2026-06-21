@@ -6,7 +6,7 @@ import {
   dataPanelSearch,
   dataPanelSection,
   segmentedControl
-} from "../design-system/ui-elements.mjs?v=model-browser-1";
+} from "../design-system/ui-elements.mjs";
 import {
   groupedModelCollections,
   modelCollectionBrowserVisibility,
@@ -16,7 +16,7 @@ import {
   modelCollectionSpec,
   modelCollectionSelectable,
   modelCollectionSelectionKind
-} from "../commands/model-collection-metadata.mjs?v=model-collection-metadata-1";
+} from "../commands/model-collection-metadata.mjs";
 import {
   MODEL_BROWSER_DEFAULT_VISIBILITY,
   MODEL_BROWSER_PANEL_SPEC,
@@ -27,7 +27,7 @@ import {
   modelBrowserSelectLabel,
   modelBrowserSelectionStatus,
   modelBrowserVisibilityFilter
-} from "../commands/model-browser-metadata.mjs?v=model-browser-metadata-1";
+} from "../commands/model-browser-metadata.mjs";
 
 export {
   MODEL_BROWSER_DEFAULT_VISIBILITY,

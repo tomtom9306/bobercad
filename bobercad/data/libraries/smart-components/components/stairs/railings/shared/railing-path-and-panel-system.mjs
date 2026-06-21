@@ -194,6 +194,7 @@ function plateFaceReference(plate, face = "back") {
 
 function createPanelFixings(ctx, side, index, panel, postIds, panelWidth, panelHeight) {
   const patternRole = registerRole(ctx, `${side}PanelFixingPattern${index + 1}`, `_${side}_panel_fixing_pattern_${index + 1}`);
+  const featureRole = registerRole(ctx, `${side}PanelFixingHoles${index + 1}`, `_${side}_panel_fixing_holes_${index + 1}`);
   const groupRole = registerRole(ctx, `${side}PanelFixings${index + 1}`, `_${side}_panel_fixings_${index + 1}`);
   const holeDiameter = requiredPositiveInput(ctx, "railings.panelFixingHoleDiameter", "Panel fixing hole diameter");
   const fastenerRef = requiredInput(ctx, "railings.panelFastenerRef", "Panel fastener reference");
@@ -201,11 +202,24 @@ function createPanelFixings(ctx, side, index, panel, postIds, panelWidth, panelH
   if (!holeDiameter || !fastenerRef || !length) return null;
   const fasteners = ctx.fastener.patternedGroup(groupRole, {
     patternRole,
+    feature: {
+      role: featureRole,
+      ownerId: panel.id,
+      holePatternRef: ctx.id(patternRole),
+      depth: panel.thickness + 2,
+      reference: plateFaceReference(panel),
+      placementIntent: {
+        role: "railing-panel-fixing-holes",
+        side,
+        spanIndex: index
+      }
+    },
     holeDiameter,
     holeType: "round",
     positions: panelBoltPositions(panelWidth, panelHeight),
     fastenerRef,
     participants: [panel.id, ...postIds.filter(Boolean)],
+    through: { fromFeatureId: ctx.id(featureRole) },
     orientation: { axis: panel.normal, headSide: side },
     assembly: {
       length,
