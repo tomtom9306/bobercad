@@ -526,6 +526,7 @@
 }
 
 .bc-dock-resize-handle {
+  --bc-dock-resize-handle-half-width: 4px;
   position: absolute;
   top: 0;
   bottom: 0;
@@ -568,6 +569,18 @@
 .bc-right-dock[data-workspace-panel-dock="right"] > .bc-dock-resize-handle {
   right: auto;
   left: 0;
+}
+
+.bc-left-dock[data-workspace-panel-dock="left"]:has(.bc-dock-tabs) > .bc-dock-resize-handle,
+.bc-right-dock[data-workspace-panel-dock="left"]:has(.bc-dock-tabs) > .bc-dock-resize-handle {
+  right: calc(var(--bc-side-dock-tab-rail-width) - var(--bc-dock-resize-handle-half-width));
+  left: auto;
+}
+
+.bc-left-dock[data-workspace-panel-dock="right"]:has(.bc-dock-tabs) > .bc-dock-resize-handle,
+.bc-right-dock[data-workspace-panel-dock="right"]:has(.bc-dock-tabs) > .bc-dock-resize-handle {
+  right: auto;
+  left: calc(var(--bc-side-dock-tab-rail-width) - var(--bc-dock-resize-handle-half-width));
 }
 
 .bc-left-dock[data-workspace-panel-side-dock="false"] > .bc-dock-resize-handle,
