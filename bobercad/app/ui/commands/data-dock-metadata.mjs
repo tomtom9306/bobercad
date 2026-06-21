@@ -1,6 +1,6 @@
 export const DATA_DOCK_PANEL_ID = "library";
 export const DATA_DOCK_PANEL_LABEL = "Data";
-export const DATA_DOCK_PANEL_DESCRIPTION = "Files, data, model browser, and Smart Component library dock.";
+export const DATA_DOCK_PANEL_DESCRIPTION = "Project, files, data, model browser, and Smart Component library dock.";
 export const DATA_DOCK_PANEL_ICON = "database";
 export const DATA_DOCK_PANEL_DOCK = "left";
 export const DATA_DOCK_PANEL_DEFAULT_WIDTH = 300;
@@ -10,11 +10,21 @@ export const DATA_DOCK_PANEL_DEFAULT_VISIBLE = true;
 export const DATA_DOCK_PANEL_DEFAULT_PINNED = true;
 export const DATA_DOCK_COMMAND_LABEL = "Data Dock";
 export const DATA_DOCK_COMMAND_TITLE = "Toggle data dock";
-export const DATA_DOCK_COMMAND_DESCRIPTION = "Show or hide the Files, Data, Model, and Components dock.";
+export const DATA_DOCK_COMMAND_DESCRIPTION = "Show or hide the Project, Files, Data, Model, and Components dock.";
 export const DATA_DOCK_COMMAND_ICON = DATA_DOCK_PANEL_ICON;
 export const DATA_DOCK_DEFAULT_TAB = "model";
 
 export const DATA_DOCK_TABS = Object.freeze([
+  {
+    id: "project",
+    label: "Project",
+    icon: "file",
+    panelElementId: "project-properties-panel",
+    commandId: "data.dock.showProject",
+    action: "onDataDockShowProject",
+    title: "Show project properties",
+    description: "Show project identity, revision, client, and project metadata."
+  },
   {
     id: "files",
     label: "Files",

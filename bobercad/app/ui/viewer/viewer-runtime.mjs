@@ -29,6 +29,7 @@ import { mountModelingToolbar } from "./toolbar/modeling-toolbar.mjs";
 import { mountModelBrowser } from "./model-browser.mjs";
 import { mountProjectDataPanel } from "./project-data-panel.mjs";
 import { mountProjectFilesPanel } from "./project-files-panel.mjs";
+import { mountProjectPropertiesPanel } from "./project-properties-panel.mjs";
 import { mountSmartComponentBrowser } from "./smart-component-browser.mjs";
 import { mountNavCube } from "./nav-cube.mjs";
 import { mountViewerSettingsStrip } from "./viewer-settings-strip.mjs";
@@ -50,9 +51,11 @@ const viewerSettingsRoot = document.getElementById("viewer-settings-strip");
 const navCubeRoot = document.getElementById("nav-cube");
 const modelingToolbar = document.getElementById("modeling-toolbar");
 const modelingStatus = document.getElementById("modeling-status");
+const workspaceShell = document.querySelector(".bc-workspace-shell");
 const statusBarRoot = document.querySelector(".bc-statusbar");
 const memberTransformPanel = document.getElementById("member-transform-panel");
 const libraryPanel = document.getElementById("library-panel");
+const projectPropertiesPanelRoot = document.getElementById("project-properties-panel");
 const projectFilesPanelRoot = document.getElementById("project-files-panel");
 const projectDataPanelRoot = document.getElementById("project-data-panel");
 const modelBrowserRoot = document.getElementById("model-browser");
@@ -72,6 +75,12 @@ let authoringPreview = [];
 let authoringPreviewPlates = [];
 decorateResetAction(reset);
 decorateTopbarFileAction(topbarFileButton);
+
+function preventWorkspacePageZoom(event) {
+  if (!event.ctrlKey && !event.metaKey) return;
+  if (!workspaceShell?.contains(event.target)) return;
+  event.preventDefault();
+}
 
 function decorateResetAction(button) {
   if (!button) return;
@@ -222,6 +231,7 @@ async function main() {
     let navCubeUi = null;
     let modelBrowserUi = null;
     let smartComponentBrowserUi = null;
+    let projectPropertiesPanelUi = null;
     let projectFilesPanelUi = null;
     let projectDataPanelUi = null;
     let statusBar = null;
@@ -250,7 +260,7 @@ async function main() {
     const workspaceBindings = createViewerWorkspaceBindings({
       toolbar: modelingToolbar,
       topbarActions: document.querySelector(".bc-topbar-actions"),
-      shell: document.querySelector(".bc-workspace-shell"),
+      shell: workspaceShell,
       libraryPanel,
       libraryDock,
       inspectorDock,
@@ -265,6 +275,7 @@ async function main() {
       }) || [],
       onStatusChange: updateModelingStatus
     });
+    addDomListener(workspaceShell, "wheel", preventWorkspacePageZoom, { capture: true, passive: false });
     const objectEditor = workspaceBindings.inspectorContextPanel("properties");
     const featureEditorPanel = workspaceBindings.inspectorContextPanel("feature");
     const trimJointEditorPanel = objectEditor;
@@ -651,7 +662,7 @@ async function main() {
         dimensionEdit?.clearDimension();
         if (!commandController?.activeCommand?.() && !trimCreate?.active?.()) {
           editorApi?.selectScene?.();
-          updateModelingStatus("Scene selected.");
+          updateModelingStatus("View selected.");
           return;
         }
       }
@@ -931,6 +942,10 @@ async function main() {
         return viewerApp.focusSelection(objectIds);
       },
       onStatusChange: updateModelingStatus
+    }));
+    projectPropertiesPanelUi = trackDisposable(mountProjectPropertiesPanel({
+      root: projectPropertiesPanelRoot,
+      app: viewerApp
     }));
     projectFilesPanelUi = trackDisposable(mountProjectFilesPanel({
       root: projectFilesPanelRoot,

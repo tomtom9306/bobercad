@@ -43,16 +43,20 @@ export function ensurePanelRevealToggle(panel) {
 }
 
 export function ensurePanelPinToggle(panel) {
-  let button = panel.element.querySelector(":scope > .bc-dock-pin-toggle");
+  let button = panel.element.querySelector(".bc-dock-pin-toggle");
   if (!button) {
     button = dockPinToggleControl({ label: `Pin ${panel.label}` });
-    panel.element.append(button);
+  }
+  const host = panel.element.querySelector(".bc-dock-reveal-slot") || panel.element;
+  if (button.parentElement !== host) {
+    if (host.classList?.contains("bc-dock-reveal-slot")) host.prepend(button);
+    else host.append(button);
   }
   return button;
 }
 
 export function syncPanelPinToggle(panel, workspaceState = {}) {
-  const button = panel.element.querySelector(":scope > .bc-dock-pin-toggle");
+  const button = panel.element.querySelector(".bc-dock-pin-toggle");
   if (!button) return;
   const dock = workspacePanelDock(panel, workspaceState);
   const pinned = workspaceState.panels?.[panel.id]?.pinned !== false;

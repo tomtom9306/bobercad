@@ -91,11 +91,10 @@ export function inspectorEmptySelectionContext() {
   };
 }
 
-export function inspectorSceneContext({ project = {}, pointCount = 0 } = {}) {
-  const info = project.project || {};
+export function inspectorViewContext({ pointCount = 0 } = {}) {
   return {
-    title: "Scene",
-    subtitle: info.name || info.id || "Model space",
+    title: "View",
+    subtitle: "Model space",
     icon: "grid",
     badges: [
       { label: "Model space", state: "ok" },
@@ -104,25 +103,23 @@ export function inspectorSceneContext({ project = {}, pointCount = 0 } = {}) {
   };
 }
 
-export function inspectorScenePropertySections({ project = {}, bounds = null, counts = {}, pointCount = 0 } = {}) {
-  const info = project.project || {};
+export function inspectorViewPropertySections({ project = {}, bounds = null, counts = {}, pointCount = 0 } = {}) {
   const projectSettings = project.settings || {};
   const units = projectSettings.units || {};
   const coordinateSystem = projectSettings.coordinateSystem || {};
   return [
     {
-      id: "inspector.properties.scene.project",
-      label: "Project",
+      id: "inspector.properties.view.identity",
+      label: "View",
       fields: [
-        { label: "Name", value: info.name || "-" },
-        { label: "Project ID", value: info.id || "-" },
-        { label: "Schema", value: project.schema || "-" },
+        { label: "Name", value: "Model space" },
+        { label: "Type", value: "model-space-view" },
         { label: "Length unit", value: units.length || "-" },
         { label: "Angle unit", value: units.angle || "-" }
       ]
     },
     {
-      id: "inspector.properties.scene.coordinates",
+      id: "inspector.properties.view.coordinates",
       label: "Coordinates",
       fields: [
         { label: "System", value: coordinateSystem.id || "-" },
@@ -134,7 +131,7 @@ export function inspectorScenePropertySections({ project = {}, bounds = null, co
       ]
     },
     {
-      id: "inspector.properties.scene.workingArea",
+      id: "inspector.properties.view.workingArea",
       label: "Working Area",
       fields: [
         { label: "Min", value: bounds ? inspectorFormatVector(bounds.min) : "-" },
@@ -145,7 +142,7 @@ export function inspectorScenePropertySections({ project = {}, bounds = null, co
       ]
     },
     {
-      id: "inspector.properties.scene.contents",
+      id: "inspector.properties.view.contents",
       label: "Contents",
       fields: [
         { label: "Members", value: String(counts.members || 0) },

@@ -42,9 +42,11 @@ function availablePanels(panelSpecs) {
   return panelSpecs.filter((spec) => spec.panel.hidden !== true);
 }
 
-function syncRevealButton(root, tabbar) {
+function syncDockChromeControls(root, tabbar) {
   const revealSlot = tabbar?.querySelector(":scope > .bc-dock-reveal-slot");
+  const pinButton = root.querySelector(".bc-dock-pin-toggle");
   const revealButton = root.querySelector(".bc-dock-reveal-toggle");
+  if (revealSlot && pinButton && !revealSlot.contains(pinButton)) revealSlot.prepend(pinButton);
   if (revealSlot && revealButton && !revealSlot.contains(revealButton)) revealSlot.append(revealButton);
 }
 
@@ -116,7 +118,7 @@ export function mountInspectorDock({
   const render = () => {
     const available = availablePanels(panelSpecs);
     shell.hidden = available.length === 0;
-    syncRevealButton(root, tabbar);
+    syncDockChromeControls(root, tabbar);
 
     if (!available.some((spec) => spec.id === activeId)) {
       activeId = available[0]?.id || fallbackId;
@@ -237,6 +239,10 @@ export function mountInspectorDock({
     activate,
     destroy: () => {
       observers.forEach((observer) => observer.disconnect());
+      for (const selector of [".bc-dock-pin-toggle", ".bc-dock-reveal-toggle"]) {
+        const control = shell.querySelector(selector);
+        if (control) root.append(control);
+      }
       for (const spec of knownPanels.values()) {
         delete spec.panel.dataset.inspectorContext;
         delete spec.panel.dataset.inspectorLabel;

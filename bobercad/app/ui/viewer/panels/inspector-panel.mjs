@@ -21,8 +21,8 @@ import {
   inspectorObjectGeneratedBySection,
   inspectorObjectIdentitySection,
   inspectorObjectPropertySections,
-  inspectorSceneContext,
-  inspectorScenePropertySections,
+  inspectorViewContext,
+  inspectorViewPropertySections,
   inspectorSmartComponentContext,
   inspectorSmartComponentDiagnosticsSummary,
   inspectorSmartComponentPropertySections,
@@ -707,17 +707,18 @@ export function mountEditorUi({
     if (gridEditorEmpty) return gridEditorEmptyPropertiesPanel();
     const activeTool = activeToolPropertiesPanel();
     if (activeTool) return activeTool;
-    if (sceneSelected) return scenePropertiesPanel();
+    if (sceneSelected) return viewPropertiesPanel();
     return null;
   };
 
-  const scenePropertiesPanel = () => {
+  const viewPropertiesPanel = () => {
     const project = api.project();
     const points = sceneReferencePoints(project);
     const bounds = points.length ? bounds3(points) : null;
     return generatedPropertiesPanel({
-      context: inspectorSceneContext({ project, pointCount: points.length }),
-      sections: bindGeneratedPropertySections(inspectorScenePropertySections({
+      title: "View Properties",
+      context: inspectorViewContext({ pointCount: points.length }),
+      sections: bindGeneratedPropertySections(inspectorViewPropertySections({
         project,
         bounds,
         counts: sceneCollectionCounts(project),

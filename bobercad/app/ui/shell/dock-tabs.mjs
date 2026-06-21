@@ -14,8 +14,10 @@ function activeTabId(id, tabs, fallbackId) {
 function removeExistingTabbar(root) {
   const tabbar = root.querySelector(":scope > .bc-dock-tabs");
   const revealButton = tabbar?.querySelector(".bc-dock-reveal-toggle");
+  const pinButton = tabbar?.querySelector(".bc-dock-pin-toggle");
   const dock = root.closest?.(".bc-left-dock, .bc-right-dock");
   if (revealButton && dock) dock.append(revealButton);
+  if (pinButton && dock) dock.append(pinButton);
   tabbar?.remove();
 }
 
@@ -118,11 +120,14 @@ export function mountDockTabs({
     }
     const revealSlot = document.createElement("div");
     revealSlot.className = "bc-dock-reveal-slot";
-    const revealButton = root.closest?.(".bc-left-dock, .bc-right-dock")?.querySelector(".bc-dock-reveal-toggle");
+    const dock = root.closest?.(".bc-left-dock, .bc-right-dock");
+    const pinButton = dock?.querySelector(".bc-dock-pin-toggle");
+    const revealButton = dock?.querySelector(".bc-dock-reveal-toggle");
+    if (pinButton) revealSlot.append(pinButton);
     if (revealButton) revealSlot.append(revealButton);
     tabbar.append(revealSlot, tablist);
     tabbar.addEventListener("click", (event) => {
-      if (event.target?.closest?.(".bc-dock-reveal-toggle")) return;
+      if (event.target?.closest?.(".bc-dock-reveal-toggle, .bc-dock-pin-toggle")) return;
       revealParentDock(root);
     });
     root.prepend(tabbar);

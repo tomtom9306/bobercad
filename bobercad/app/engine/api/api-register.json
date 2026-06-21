@@ -1439,6 +1439,15 @@
       "returns": "store method result"
     },
     {
+      "id": "store.updateProjectMetadata",
+      "module": "../store/project-command-store.mjs",
+      "description": "Patch project-level metadata such as name, revision, customer, and draughtsman.",
+      "parameters": {
+        "patch": "project metadata patch"
+      },
+      "returns": "project JSON"
+    },
+    {
       "id": "store.updateSmartComponent",
       "module": "../store/project-command-store.mjs",
       "description": "Regenerate a Smart Component with new parameters.",

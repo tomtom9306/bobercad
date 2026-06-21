@@ -1,6 +1,6 @@
 export const WORKSPACE_STORAGE_KEY = "bobercad.ui.workspace.v1";
 export const WORKSPACE_SCHEMA = "bobercad-ui-workspace";
-export const CURRENT_WORKSPACE_SCHEMA_VERSION = "0.1.0";
+export const CURRENT_WORKSPACE_SCHEMA_VERSION = "0.2.0";
 export const WORKSPACE_SCHEMA_REF = "../../schemas/ui-workspace.schema.json";
 export const WORKSPACE_SECTIONS_RESET_EVENT = "bobercad:workspace-sections-reset";
 

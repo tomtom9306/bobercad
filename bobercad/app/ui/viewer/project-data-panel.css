@@ -1,4 +1,36 @@
 .bc-project-data-panel,
+.bc-project-properties-panel,
 .bc-project-files-panel {
   min-width: 0;
+}
+
+.bc-project-properties-field {
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: var(--bc-space-2);
+  min-width: 0;
+  padding: var(--bc-space-2) var(--bc-space-1);
+  border-bottom: 1px solid color-mix(in srgb, var(--bc-color-border) 50%, transparent);
+}
+
+.bc-project-properties-field:last-child {
+  border-bottom: 0;
+}
+
+.bc-project-properties-field.bc-field-stack {
+  grid-template-columns: 1fr;
+}
+
+.bc-project-properties-field .bc-field-label {
+  font-size: 11px;
+}
+
+.bc-project-properties-field .bc-input {
+  width: 100%;
+  height: 26px;
+  font-size: 11px;
+}
+
+textarea.bc-input[data-project-properties-field] {
+  min-height: 64px;
+  height: auto;
 }

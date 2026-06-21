@@ -34,8 +34,38 @@ LIVE_RELOAD_SNIPPET = """
 (() => {
   if (window.__bobercadDevReload) return;
   window.__bobercadDevReload = true;
-  const source = new EventSource("/__bobercad_dev/events");
-  source.addEventListener("reload", () => window.location.reload());
+  let reloading = false;
+  let lastVersion = null;
+  const reload = () => {
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
+  };
+  const readVersion = async () => {
+    const response = await fetch("/__bobercad_dev/version", { cache: "no-store" });
+    if (!response.ok) throw new Error(`dev reload version failed: ${response.status}`);
+    return response.json();
+  };
+  readVersion()
+    .then((payload) => { lastVersion = payload.version; })
+    .catch(() => {});
+  try {
+    const source = new EventSource("/__bobercad_dev/events");
+    source.addEventListener("reload", reload);
+  } catch (error) {
+    console.warn(`Bobercad dev reload SSE unavailable: ${error?.message || error}`);
+  }
+  window.setInterval(() => {
+    readVersion()
+      .then((payload) => {
+        if (lastVersion === null) {
+          lastVersion = payload.version;
+          return;
+        }
+        if (payload.version !== lastVersion) reload();
+      })
+      .catch(() => {});
+  }, 1000);
 })();
 </script>
 """
@@ -45,6 +75,9 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.split("?", 1)[0] == "/__bobercad_dev/events":
             self.handle_reload_events()
+            return
+        if self.path.split("?", 1)[0] == "/__bobercad_dev/version":
+            self.handle_reload_version()
             return
         if self.server.live_reload and self.serve_html_with_reload(head_only=False):
             return
@@ -82,6 +115,14 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
             with self.server.reload_clients_lock:
                 self.server.reload_clients.discard(events)
 
+    def handle_reload_version(self):
+        payload = json.dumps({"version": self.server.reload_version}).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
     def serve_html_with_reload(self, head_only=False):
         path = Path(self.translate_path(self.path))
         if path.is_dir():
@@ -114,6 +155,7 @@ def main():
     server.live_reload = args["live_reload"]
     server.reload_clients = set()
     server.reload_clients_lock = threading.Lock()
+    server.reload_version = time.time_ns()
     if server.live_reload:
         threading.Thread(target=watch_files, args=(server, directory), daemon=True).start()
     reload_label = " and live reload" if server.live_reload else ""
@@ -153,7 +195,8 @@ def watch_files(server, directory):
 
 
 def notify_reload_clients(server, paths):
-    payload = {"paths": paths, "time": time.time()}
+    server.reload_version = time.time_ns()
+    payload = {"paths": paths, "time": time.time(), "version": server.reload_version}
     with server.reload_clients_lock:
         clients = list(server.reload_clients)
     for client in clients:

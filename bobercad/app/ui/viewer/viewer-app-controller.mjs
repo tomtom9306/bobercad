@@ -20,6 +20,10 @@ export function createViewerAppController({
       return projectStore?.subscribe?.(listener) || (() => {});
     },
 
+    updateProjectMetadata(patch = {}) {
+      return projectStore?.updateProjectMetadata?.(patch) || app.project();
+    },
+
     registerCommand(commandId, handler) {
       if (!commandId || typeof handler !== "function") return () => {};
       handlers.set(commandId, handler);

@@ -598,6 +598,16 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     recordSmartComponentFieldOverride(next, weld, updated);
     return commitTransaction(transaction);
   };
+  const updateProjectMetadata = (patch) => {
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) fail("project metadata patch must be an object");
+    const nextInfo = mergePatch(currentProject.project || {}, clone(patch));
+    if (typeof nextInfo.id !== "string" || !nextInfo.id.trim()) fail("project id must be a non-empty string");
+    if (typeof nextInfo.name !== "string" || !nextInfo.name.trim()) fail("project name must be a non-empty string");
+    if (JSON.stringify(nextInfo) === JSON.stringify(currentProject.project || {})) return currentProject;
+    const next = clone(currentProject);
+    next.project = nextInfo;
+    return commitProject("project.metadata.update", next, { changedObjectIds: [] });
+  };
 
   return {
     subscribe(listener) {
@@ -612,6 +622,8 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     lastCommandResult() {
       return lastCommandResult;
     },
+
+    updateProjectMetadata,
 
     historyState() {
       return {

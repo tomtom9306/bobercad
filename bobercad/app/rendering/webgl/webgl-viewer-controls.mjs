@@ -359,7 +359,8 @@ export function attachWebglViewerControls({
   });
   canvas.addEventListener("wheel", (event) => {
     if (!state.scene) return;
+    event.preventDefault();
     requestWheelZoom(event.deltaY, event.clientX, event.clientY);
-  }, { passive: true });
+  }, { passive: false });
   domRuntime.resetAction?.addEventListener("click", () => resetView());
 }

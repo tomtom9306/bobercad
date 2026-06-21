@@ -19,6 +19,14 @@
   display: none;
 }
 
+.bc-right-dock[data-workspace-panel-side-dock="true"]:has(.bc-inspector-dock-shell:not([hidden])) {
+  background: transparent;
+}
+
+.bc-right-dock[data-workspace-panel-side-dock="true"] .bc-inspector-dock-shell {
+  background: transparent;
+}
+
 .bc-inspector-dock-tabs {
   flex: none;
 }

@@ -305,18 +305,7 @@ export function createToolbarWorkspaceManager({ toolbar, commands, panels = [], 
       return workspace.viewerOverlays[spec.id]?.corner || cornerSpec.id;
     },
     setPanelVisible(panelId, visible, customizer) {
-      customizerRef = customizer || customizerRef;
-      const panel = panelConfigById(panelConfigs, panelId);
-      if (!panel) return false;
-      workspace.panels[panel.id] = normalizePanelState({
-        ...(workspace.panels[panel.id] || {}),
-        visible: Boolean(visible)
-      }, panel);
-      saveToolbarWorkspace(workspace);
-      applyPanelWorkspace();
-      syncCustomizer();
-      setToolbarStatus(`${panel.label} ${workspace.panels[panel.id].visible ? "shown" : "hidden"}.`);
-      return workspace.panels[panel.id].visible;
+      return setPanelVisible(panelId, visible, customizer);
     },
     setPanelWidth(panelId, width, customizer, options = {}) {
       customizerRef = customizer || customizerRef;
@@ -936,6 +925,21 @@ export function createToolbarWorkspaceManager({ toolbar, commands, panels = [], 
     return workspace.panels[panel.id].pinned;
   }
 
+  function setPanelVisible(panelId, visible, customizer, options = {}) {
+    customizerRef = customizer || customizerRef;
+    const panel = panelConfigById(panelConfigs, panelId);
+    if (!panel) return false;
+    workspace.panels[panel.id] = normalizePanelState({
+      ...(workspace.panels[panel.id] || {}),
+      visible: Boolean(visible)
+    }, panel);
+    saveToolbarWorkspace(workspace);
+    applyPanelWorkspace();
+    syncCustomizer();
+    if (options.notify !== false) setToolbarStatus(`${panel.label} ${workspace.panels[panel.id].visible ? "shown" : "hidden"}.`);
+    return workspace.panels[panel.id].visible;
+  }
+
   function bindPanelRevealToggle(panel) {
     const dock = workspacePanelDock(panel, workspace);
     if (!isSidePanelDock(dock)) return;
@@ -980,7 +984,7 @@ export function createToolbarWorkspaceManager({ toolbar, commands, panels = [], 
       event.preventDefault();
       event.stopPropagation();
       if (workspace.panels[panel.id]?.pinned !== false) {
-        setPanelPinned(panel.id, false);
+        setPanelVisible(panel.id, false);
         panel.element.dataset.workspacePanelRevealed = "false";
         syncPanelDockOffset(panel, workspace);
         event.currentTarget.blur();

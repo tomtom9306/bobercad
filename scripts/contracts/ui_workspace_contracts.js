@@ -501,8 +501,8 @@ async function checkUiWorkspace(errors) {
     if (tab.icon && !iconNames.has(tab.icon)) fail(errors, `data-dock-metadata tab ${tab.id} references unknown icon: ${tab.icon}`);
   }
   const metadataDataDockTabOrder = (dataDockMetadata.DATA_DOCK_TABS || []).map((tab) => tab.id);
-  if (JSON.stringify(metadataDataDockTabOrder) !== JSON.stringify(["files", "data", "model", "components"])) {
-    fail(errors, `data-dock-metadata must keep Files/Data/Model/Components tab order: ${JSON.stringify(metadataDataDockTabOrder)}`);
+  if (JSON.stringify(metadataDataDockTabOrder) !== JSON.stringify(["project", "files", "data", "model", "components"])) {
+    fail(errors, `data-dock-metadata must keep Project/Files/Data/Model/Components tab order: ${JSON.stringify(metadataDataDockTabOrder)}`);
   }
   if (!dataDockMetadata.DATA_DOCK_PANEL_DESCRIPTION || !dataDockMetadata.DATA_DOCK_PANEL_ICON || !dataDockMetadata.DATA_DOCK_PANEL_DOCK) {
     fail(errors, "data-dock-metadata must declare panel description, icon, and dock constants");
@@ -556,13 +556,13 @@ async function checkUiWorkspace(errors) {
     width: 300,
     dock: "left",
     pinned: true,
-    tabIds: ["files", "data", "model", "components"],
+    tabIds: ["project", "files", "data", "model", "components"],
     hiddenTabIds: ["model"],
     activeTab: "components"
   };
   const panelTabReordered = workspaceCustomizer.movePanelTabBefore?.(panelTabReorderInput, panelTabConfig, "components", "data");
   if (
-    JSON.stringify(panelTabReordered?.tabIds) !== JSON.stringify(["files", "components", "data", "model"])
+    JSON.stringify(panelTabReordered?.tabIds) !== JSON.stringify(["project", "files", "components", "data", "model"])
     || JSON.stringify(panelTabReordered?.hiddenTabIds) !== JSON.stringify(["model"])
     || panelTabReordered?.activeTab !== "components"
     || workspaceCustomizer.movePanelTabBefore?.(panelTabReorderInput, panelTabConfig, "missing", "data") !== panelTabReorderInput

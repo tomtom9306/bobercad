@@ -24,6 +24,10 @@
   scrollbar-width: none;
 }
 
+.bc-dock-tabs:has(.bc-dock-reveal-slot > .bc-dock-pin-toggle) {
+  padding-top: calc(56px + var(--bc-space-2));
+}
+
 .bc-dock-tabs::-webkit-scrollbar {
   display: none;
 }
@@ -110,15 +114,33 @@
   pointer-events: auto;
 }
 
-.bc-dock-reveal-slot > .bc-dock-reveal-toggle {
+.bc-dock-reveal-slot:has(> .bc-dock-pin-toggle) {
+  grid-template-rows: 26px 26px;
+  gap: var(--bc-space-1);
+  height: calc(52px + var(--bc-space-1));
+}
+
+.bc-dock-reveal-slot > .bc-dock-reveal-toggle,
+.bc-dock-reveal-slot > .bc-dock-pin-toggle {
   position: static;
   width: 100%;
-  height: 100%;
+  height: 26px;
   border: 0;
   border-radius: var(--bc-radius-2);
   background: transparent;
   box-shadow: none;
   transform: none;
+}
+
+.bc-dock-reveal-slot > .bc-dock-pin-toggle[data-panel-pinned="true"] {
+  background: var(--bc-color-active);
+  color: var(--bc-color-accent-strong);
+}
+
+.bc-dock-reveal-slot > .bc-dock-pin-toggle .bc-icon,
+.bc-dock-reveal-slot > .bc-dock-reveal-toggle .bc-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .bc-dock-tab-panel {
@@ -155,12 +177,36 @@
   pointer-events: none;
 }
 
+.bc-left-dock[data-workspace-panel-side-dock="true"]:has(#library-panel:not([hidden])) {
+  background: transparent;
+}
+
+.bc-left-dock[data-workspace-panel-side-dock="true"] #library-panel {
+  background: transparent;
+}
+
 .bc-left-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) #library-panel .bc-dock-tabs {
   transform: translateX(var(--bc-side-dock-tab-rail-width));
 }
 
 .bc-left-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) #library-panel .bc-dock-tab-list {
   display: none;
+}
+
+.bc-left-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-dock-reveal-slot > .bc-dock-pin-toggle,
+.bc-right-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-dock-reveal-slot > .bc-dock-pin-toggle {
+  display: none;
+}
+
+.bc-left-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-dock-tabs,
+.bc-right-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-dock-tabs {
+  padding-top: calc(26px + var(--bc-space-2));
+}
+
+.bc-left-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-dock-reveal-slot,
+.bc-right-dock[data-workspace-panel-pinned="false"]:not([data-workspace-panel-revealed="true"]) .bc-dock-reveal-slot {
+  grid-template-rows: 26px;
+  height: 26px;
 }
 
 .bc-left-dock .bc-dock-tabs {
