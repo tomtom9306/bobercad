@@ -38,6 +38,10 @@ function readConfig() {
 
 function applyArgs(config) {
   const next = { ...config };
+  const explicit = {
+    port: false,
+    path: false
+  };
   for (let index = 2; index < process.argv.length; index += 1) {
     const arg = process.argv[index];
     if (arg === "--no-replace") {
@@ -46,9 +50,11 @@ function applyArgs(config) {
       next.replaceExisting = true;
     } else if (arg === "--port") {
       next.port = Number(process.argv[index + 1]);
+      explicit.port = true;
       index += 1;
     } else if (arg.startsWith("--port=")) {
       next.port = Number(arg.slice("--port=".length));
+      explicit.port = true;
     } else if (arg === "--host") {
       next.host = process.argv[index + 1];
       index += 1;
@@ -56,22 +62,60 @@ function applyArgs(config) {
       next.host = arg.slice("--host=".length);
     } else if (arg === "--path") {
       next.defaultPath = process.argv[index + 1];
+      explicit.path = true;
       index += 1;
     } else if (arg.startsWith("--path=")) {
       next.defaultPath = arg.slice("--path=".length);
+      explicit.path = true;
     }
   }
+  next.explicitArgs = explicit;
   return next;
 }
 
+function gitOutput(args) {
+  const result = spawnSync("git", args, {
+    cwd: ROOT,
+    encoding: "utf8",
+    windowsHide: true
+  });
+  if (result.status !== 0) return "";
+  return result.stdout.trim();
+}
+
+function currentBranch() {
+  return gitOutput(["branch", "--show-current"]);
+}
+
+function agentNumberFor(rootName, branch) {
+  const rootMatch = /^agent(\d+)$/i.exec(rootName);
+  if (rootMatch) return Number(rootMatch[1]);
+  const branchMatch = /^codex\/agent(\d+)$/i.exec(branch || "");
+  if (branchMatch) return Number(branchMatch[1]);
+  return null;
+}
+
+function addBranchQuery(defaultPath, branch) {
+  if (!branch) return defaultPath;
+  const url = new URL(defaultPath.startsWith("/") ? `http://local${defaultPath}` : `http://local/${defaultPath}`);
+  if (!url.searchParams.has("branch")) {
+    url.searchParams.set("branch", branch);
+  }
+  return `${url.pathname}${url.search}`;
+}
+
 function normalizeConfig(config) {
-  const port = Number(config.port);
+  const branch = currentBranch();
+  const rootName = path.basename(ROOT);
+  const agentNumber = agentNumberFor(rootName, branch);
+  const port = Number(agentNumber && !config.explicitArgs?.port ? 5180 + agentNumber : config.port);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error(`Invalid dev server port: ${config.port}`);
   }
   const host = String(config.host || DEFAULT_CONFIG.host);
-  const defaultPath = String(config.defaultPath || DEFAULT_CONFIG.defaultPath);
+  const defaultPath = addBranchQuery(String(config.defaultPath || DEFAULT_CONFIG.defaultPath), branch);
   return {
+    branch,
     host,
     port,
     replaceExisting: config.replaceExisting !== false,
@@ -203,6 +247,7 @@ server.listen(config.port, config.host, () => {
   const baseUrl = `http://${config.host}:${config.port}`;
   console.log("Bobercad viewer dev server");
   console.log(`Serving: ${ROOT}`);
+  console.log(`Branch: ${config.branch || "unknown"}`);
   console.log(`URL: ${baseUrl}${config.defaultPath}`);
   console.log(`Port policy: ${config.replaceExisting ? "replace existing listener" : "do not replace existing listener"}`);
 });

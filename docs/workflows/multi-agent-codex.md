@@ -8,7 +8,9 @@ Use this workflow whenever an agent changes code, docs, schemas, scripts, or app
 - In the local `C:\boberos` workspace, agent folders are already provisioned: `C:\boberos\agent1` through `C:\boberos\agent10`.
 - If you are assigned to one of those folders, do not create another worktree, checkout, or clone. For example, agent1 always works in `C:\boberos\agent1` on branch `codex/agent1`.
 - Make all edits, checks, and browser verification inside that copy.
-- Run the app from the copy. The preview URL given to the user must identify the copy being tested, preferably through a `/w/<copy-name>/...` route or an equivalent configured worktree server URL.
+- Run the app from the copy with `npm run dev` or `node .\scripts\serve_viewer.js`.
+- The server assigns stable ports by worktree: `main` uses `5173`, `agent1` uses `5181`, `agent2` uses `5182`, through `agent10` on `5190`.
+- The preview URL given to the user must include the branch query parameter printed by the server, for example `branch=codex%2Fagent2`. A review URL on port `5173` or without the agent branch parameter is invalid for agent work.
 - Keep `main` unchanged while the user is reviewing the copy.
 - When implementation and checks are complete, set `INTEGRATION_REQUEST.txt` to `STATUS: USER_REVIEW` and summarize the result for the user.
 - Do not set `STATUS: READY` until the user explicitly confirms in chat that the change is correct and approved for integration.
