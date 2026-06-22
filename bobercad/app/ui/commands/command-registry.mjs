@@ -122,6 +122,64 @@ export const MODELING_TOOLBAR_COMMANDS = [
   }
 ];
 
+export const MODEL_CONNECTION_COMMANDS = [
+  {
+    id: "model.connectionComponent.open",
+    action: "onConnectionComponentOpen",
+    label: "Connection Component",
+    title: "Show connection components",
+    description: "Open connection component presets in the Connections panel.",
+    group: "model",
+    navSurface: FEATURE_NAVBAR_SURFACE,
+    ribbonSection: "connections",
+    icon: "smart-component"
+  },
+  {
+    id: "model.weld.open",
+    action: "onWeldOpen",
+    label: "Weld",
+    title: "Show welds",
+    description: "Open weld objects in the Model Browser.",
+    group: "model",
+    navSurface: FEATURE_NAVBAR_SURFACE,
+    ribbonSection: "connections",
+    icon: "weld"
+  },
+  {
+    id: "model.boltGroup.open",
+    action: "onBoltGroupOpen",
+    label: "Bolt Group",
+    title: "Show bolt groups",
+    description: "Open bolt group objects in the Model Browser.",
+    group: "model",
+    navSurface: FEATURE_NAVBAR_SURFACE,
+    ribbonSection: "connections",
+    icon: "fastener"
+  },
+  {
+    id: "model.bolt.open",
+    action: "onBoltOpen",
+    label: "Bolt",
+    title: "Show bolts",
+    description: "Open bolt hole patterns in the Model Browser.",
+    group: "model",
+    navSurface: FEATURE_NAVBAR_SURFACE,
+    ribbonSection: "connections",
+    icon: "hole-pattern"
+  },
+  {
+    id: "model.autoConnection.open",
+    action: "onAutoConnectionOpen",
+    label: "Auto",
+    title: "Show auto connections",
+    description: "Open automatic connection zones in the Model Browser.",
+    group: "model",
+    navSurface: FEATURE_NAVBAR_SURFACE,
+    ribbonSection: "connections",
+    icon: "connection-zone"
+  }
+];
+
 export const MODEL_REFERENCE_COMMANDS = [
   {
     id: "model.grid.create",
@@ -281,7 +339,7 @@ export const DATA_DOCK_COMMANDS = DATA_DOCK_TABS.map((tab) => ({
   title: tab.title,
   description: tab.description,
   group: "tools",
-  ribbonSection: tab.id === "components" ? "libraries" : "project-data",
+  ribbonSection: ["components", "connections"].includes(tab.id) ? "libraries" : "project-data",
   icon: tab.icon
 }));
 
@@ -436,6 +494,7 @@ export const SETTINGS_COMMANDS = [
 export function commandPaletteSpecs() {
   return [
     ...MODELING_TOOLBAR_COMMANDS,
+    ...MODEL_CONNECTION_COMMANDS,
     ...MODEL_REFERENCE_COMMANDS,
     ...TOOLS_WORKFLOW_COMMANDS,
     ...STRUCTURAL_ANALYSIS_COMMANDS,

@@ -1,4 +1,4 @@
-import { actionFieldControl, actionListControl, actionRow, actionRowControl, axisTransformGridControl, button, checkboxInput, descriptorActions, diagnosticListControl, disclosureSection, messageControl, numberChoiceControl, numberListControl, numericControl, numericInput, objectRefControl, objectRefListControl, optionGridControl, propertiesPanelShell, propertyButtonClass, readout, readoutListControl, segmentedFieldControl, selectInput, statusGroupTitleControl, statusListRowControl, statusRowControl, summaryCardControl, tabListControl, text, textInput, vectorControl } from "./panel-elements.mjs";
+import { actionFieldControl, actionListControl, actionRow, actionRowControl, axisTransformGridControl, button, checkboxInput, descriptorActions, diagnosticListControl, disclosureSection, messageControl, numberChoiceControl, numberListControl, numericControl, numericInput, objectRefControl, objectRefListControl, optionGridControl, previewImageControl, propertiesPanelShell, propertyButtonClass, readout, readoutListControl, segmentedFieldControl, selectInput, statusGroupTitleControl, statusListRowControl, statusRowControl, summaryCardControl, tabListControl, text, textInput, vectorControl } from "./panel-elements.mjs";
 import { normalizeInspectorPropertySections } from "../../commands/inspector-property-metadata.mjs";
 
 export function generatedPropertiesPanel({
@@ -105,6 +105,7 @@ function renderPropertyFieldControl(field) {
   if (field.type === "nestedFieldCard") return nestedFieldCardField(field);
   if (field.type === "diagnosticList") return diagnosticListField(field);
   if (field.type === "message") return messageControl(field);
+  if (field.type === "previewImage") return previewImageControl(field);
   return readout(field.label, formatPropertyValue(field.value));
 }
 

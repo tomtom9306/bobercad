@@ -2,6 +2,14 @@
   "type": "fin-plate",
   "title": "Fin Plate",
   "version": 1,
+  "preview": {
+    "contexts": [
+      "beam-to-column-fin-plate",
+      "beam-to-beam-fin-plate",
+      "connection-test-frame"
+    ],
+    "focusMode": "generated-with-inputs"
+  },
   "recipe": [
     {
       "operation": "secondary-web-plate",
@@ -46,10 +54,10 @@
     }
   ],
   "presets": {
-    "beam_to_column_fin_plate_m16_1x3": {
-      "id": "beam_to_column_fin_plate_m16_1x3",
+    "fin-plate": {
+      "id": "fin-plate",
       "version": "0.1.0",
-      "name": "Fin plate, M16 1x3",
+      "name": "Fin plate",
       "parameters": {
         "plate": {
           "thickness": 10,

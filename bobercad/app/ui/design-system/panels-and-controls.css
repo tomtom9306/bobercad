@@ -1293,6 +1293,83 @@ textarea.bc-input {
   line-height: 1.2;
 }
 
+.bc-preview-image-field {
+  display: grid;
+  gap: var(--bc-space-3);
+  min-width: 0;
+}
+
+.bc-preview-image-frame {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 132px;
+  border: 1px solid color-mix(in srgb, var(--bc-color-border) 72%, transparent);
+  border-radius: var(--bc-radius-2);
+  background: color-mix(in srgb, var(--bc-color-surface-solid) 92%, var(--bc-color-border));
+  overflow: hidden;
+}
+
+.bc-preview-image-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bc-preview-image-frame .bc-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--bc-color-text-muted);
+}
+
+.bc-preview-image-copy {
+  display: grid;
+  gap: var(--bc-space-1);
+  min-width: 0;
+}
+
+.bc-preview-image-title,
+.bc-preview-image-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bc-preview-image-title {
+  color: var(--bc-color-text);
+  font: var(--bc-font-weight-bold) var(--bc-font-size-12) / var(--bc-line-tight) var(--bc-font-family);
+}
+
+.bc-preview-image-meta {
+  color: var(--bc-color-text-muted);
+  font: var(--bc-font-weight-medium) var(--bc-font-size-11) / var(--bc-line-tight) var(--bc-font-family);
+}
+
+.bc-preview-image-field[data-preview-state="pending"] .bc-preview-image-frame {
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--bc-color-active) 58%, transparent), transparent),
+    color-mix(in srgb, var(--bc-color-surface-solid) 92%, var(--bc-color-border));
+  background-size: 220% 100%, auto;
+  animation: bc-preview-image-pulse 1.35s linear infinite;
+}
+
+.bc-preview-image-field[data-preview-state="unavailable"] .bc-preview-image-frame,
+.bc-preview-image-field[data-preview-state="no-preview"] .bc-preview-image-frame {
+  background: color-mix(in srgb, var(--bc-color-surface-solid) 86%, var(--bc-color-border));
+}
+
+@keyframes bc-preview-image-pulse {
+  from {
+    background-position: 120% 0, 0 0;
+  }
+
+  to {
+    background-position: -120% 0, 0 0;
+  }
+}
+
 .bc-readout {
   display: grid;
   grid-template-columns: minmax(86px, 0.42fr) minmax(0, 1fr);

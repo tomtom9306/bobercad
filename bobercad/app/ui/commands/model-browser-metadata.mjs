@@ -5,6 +5,7 @@ export const MODEL_BROWSER_PANEL_SPEC = Object.freeze({
   searchLabel: "Search model browser",
   scopeLabel: "Model browser scope",
   emptyMessage: "No matching model items.",
+  emptyCollectionMessage: "No items yet.",
   itemCountLabel: "model items",
   focusIcon: "zoom-fit",
   selectVerb: "Select",

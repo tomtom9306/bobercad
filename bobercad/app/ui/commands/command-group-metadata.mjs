@@ -24,7 +24,7 @@ export const COMMAND_GROUPS = Object.fromEntries(COMMAND_GROUP_SPECS.map((group)
 
 export const RIBBON_SECTION_ORDER = {
   view: ["camera", "display", "orientation"],
-  model: ["members", "plates", "sketching", "references", "modify"],
+  model: ["members", "plates", "connections", "sketching", "references", "modify"],
   annotations: ["relations", "dimensions"],
   tools: ["coordination"],
   "structural-analysis": ["analysis"],
@@ -34,6 +34,7 @@ export const RIBBON_SECTION_ORDER = {
 export const RIBBON_SECTION_LABELS = {
   members: "Members",
   plates: "Plates",
+  connections: "Connections",
   sketching: "Sketch & Planes",
   references: "References",
   modify: "Modify",
@@ -81,6 +82,7 @@ export function inferCommandRibbonSection(groupId, command) {
   if (groupId === "model") {
     if (id.includes(".beam.") || id.includes(".column.")) return "members";
     if (id.includes(".plate") || id.includes(".bend")) return "plates";
+    if (id.includes(".connection") || id.includes(".weld") || id.includes(".bolt")) return "connections";
     if (id.includes(".sketch") || id.includes(".workPlane")) return "sketching";
     return "modify";
   }

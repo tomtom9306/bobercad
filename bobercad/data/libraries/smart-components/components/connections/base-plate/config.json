@@ -2,6 +2,13 @@
   "type": "base-plate",
   "title": "Base Plate",
   "version": 1,
+  "preview": {
+    "contexts": [
+      "warehouse-frame-connections",
+      "connection-test-frame"
+    ],
+    "focusMode": "generated-with-inputs"
+  },
   "recipe": [
     {
       "operation": "base-plate",
@@ -23,10 +30,10 @@
     }
   ],
   "presets": {
-    "column_base_plate_m16_2x2": {
-      "id": "column_base_plate_m16_2x2",
+    "base-plate": {
+      "id": "base-plate",
       "version": "0.1.0",
-      "name": "Base plate, M16 2x2",
+      "name": "Base plate",
       "parameters": {
         "plate": {
           "thickness": 16,

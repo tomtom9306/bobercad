@@ -9301,7 +9301,7 @@
       "cz_foundation_f1_left_column_f1_left_base_plate": {
         "id": "cz_foundation_f1_left_column_f1_left_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f1_left",
         "secondaryObjectIds": [
           "column_f1_left"
@@ -9336,7 +9336,7 @@
       "cz_foundation_f1_right_column_f1_right_base_plate": {
         "id": "cz_foundation_f1_right_column_f1_right_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f1_right",
         "secondaryObjectIds": [
           "column_f1_right"
@@ -9371,7 +9371,7 @@
       "cz_column_f1_left_rafter_f1_left_moment_end_plate": {
         "id": "cz_column_f1_left_rafter_f1_left_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f1_left",
         "secondaryObjectIds": [
           "rafter_f1_left"
@@ -9408,7 +9408,7 @@
       "cz_column_f1_right_rafter_f1_right_moment_end_plate": {
         "id": "cz_column_f1_right_rafter_f1_right_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f1_right",
         "secondaryObjectIds": [
           "rafter_f1_right"
@@ -9445,7 +9445,7 @@
       "cz_rafter_f1_left_rafter_f1_right_apex_gusset": {
         "id": "cz_rafter_f1_left_rafter_f1_right_apex_gusset",
         "type": "apex-gusset-zone",
-        "name": "Apex gusset, M16 2+2 zone",
+        "name": "Apex gusset zone",
         "mainObjectId": "rafter_f1_left",
         "secondaryObjectIds": [
           "rafter_f1_right"
@@ -9487,7 +9487,7 @@
       "cz_foundation_f2_left_column_f2_left_base_plate": {
         "id": "cz_foundation_f2_left_column_f2_left_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f2_left",
         "secondaryObjectIds": [
           "column_f2_left"
@@ -9522,7 +9522,7 @@
       "cz_foundation_f2_right_column_f2_right_base_plate": {
         "id": "cz_foundation_f2_right_column_f2_right_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f2_right",
         "secondaryObjectIds": [
           "column_f2_right"
@@ -9557,7 +9557,7 @@
       "cz_column_f2_left_rafter_f2_left_moment_end_plate": {
         "id": "cz_column_f2_left_rafter_f2_left_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f2_left",
         "secondaryObjectIds": [
           "rafter_f2_left"
@@ -9594,7 +9594,7 @@
       "cz_column_f2_right_rafter_f2_right_moment_end_plate": {
         "id": "cz_column_f2_right_rafter_f2_right_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f2_right",
         "secondaryObjectIds": [
           "rafter_f2_right"
@@ -9631,7 +9631,7 @@
       "cz_rafter_f2_left_rafter_f2_right_apex_gusset": {
         "id": "cz_rafter_f2_left_rafter_f2_right_apex_gusset",
         "type": "apex-gusset-zone",
-        "name": "Apex gusset, M16 2+2 zone",
+        "name": "Apex gusset zone",
         "mainObjectId": "rafter_f2_left",
         "secondaryObjectIds": [
           "rafter_f2_right"
@@ -9673,7 +9673,7 @@
       "cz_foundation_f3_left_column_f3_left_base_plate": {
         "id": "cz_foundation_f3_left_column_f3_left_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f3_left",
         "secondaryObjectIds": [
           "column_f3_left"
@@ -9708,7 +9708,7 @@
       "cz_foundation_f3_right_column_f3_right_base_plate": {
         "id": "cz_foundation_f3_right_column_f3_right_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f3_right",
         "secondaryObjectIds": [
           "column_f3_right"
@@ -9743,7 +9743,7 @@
       "cz_column_f3_left_rafter_f3_left_moment_end_plate": {
         "id": "cz_column_f3_left_rafter_f3_left_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f3_left",
         "secondaryObjectIds": [
           "rafter_f3_left"
@@ -9780,7 +9780,7 @@
       "cz_column_f3_right_rafter_f3_right_moment_end_plate": {
         "id": "cz_column_f3_right_rafter_f3_right_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f3_right",
         "secondaryObjectIds": [
           "rafter_f3_right"
@@ -9817,7 +9817,7 @@
       "cz_rafter_f3_left_rafter_f3_right_apex_gusset": {
         "id": "cz_rafter_f3_left_rafter_f3_right_apex_gusset",
         "type": "apex-gusset-zone",
-        "name": "Apex gusset, M16 2+2 zone",
+        "name": "Apex gusset zone",
         "mainObjectId": "rafter_f3_left",
         "secondaryObjectIds": [
           "rafter_f3_right"
@@ -9859,7 +9859,7 @@
       "cz_foundation_f4_left_column_f4_left_base_plate": {
         "id": "cz_foundation_f4_left_column_f4_left_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f4_left",
         "secondaryObjectIds": [
           "column_f4_left"
@@ -9894,7 +9894,7 @@
       "cz_foundation_f4_right_column_f4_right_base_plate": {
         "id": "cz_foundation_f4_right_column_f4_right_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f4_right",
         "secondaryObjectIds": [
           "column_f4_right"
@@ -9929,7 +9929,7 @@
       "cz_column_f4_left_rafter_f4_left_moment_end_plate": {
         "id": "cz_column_f4_left_rafter_f4_left_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f4_left",
         "secondaryObjectIds": [
           "rafter_f4_left"
@@ -9966,7 +9966,7 @@
       "cz_column_f4_right_rafter_f4_right_moment_end_plate": {
         "id": "cz_column_f4_right_rafter_f4_right_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f4_right",
         "secondaryObjectIds": [
           "rafter_f4_right"
@@ -10003,7 +10003,7 @@
       "cz_rafter_f4_left_rafter_f4_right_apex_gusset": {
         "id": "cz_rafter_f4_left_rafter_f4_right_apex_gusset",
         "type": "apex-gusset-zone",
-        "name": "Apex gusset, M16 2+2 zone",
+        "name": "Apex gusset zone",
         "mainObjectId": "rafter_f4_left",
         "secondaryObjectIds": [
           "rafter_f4_right"
@@ -10045,7 +10045,7 @@
       "cz_foundation_f5_left_column_f5_left_base_plate": {
         "id": "cz_foundation_f5_left_column_f5_left_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f5_left",
         "secondaryObjectIds": [
           "column_f5_left"
@@ -10080,7 +10080,7 @@
       "cz_foundation_f5_right_column_f5_right_base_plate": {
         "id": "cz_foundation_f5_right_column_f5_right_base_plate",
         "type": "base-plate-zone",
-        "name": "Base plate, M16 2x2 zone",
+        "name": "Base plate zone",
         "mainObjectId": "foundation_f5_right",
         "secondaryObjectIds": [
           "column_f5_right"
@@ -10115,7 +10115,7 @@
       "cz_column_f5_left_rafter_f5_left_moment_end_plate": {
         "id": "cz_column_f5_left_rafter_f5_left_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f5_left",
         "secondaryObjectIds": [
           "rafter_f5_left"
@@ -10152,7 +10152,7 @@
       "cz_column_f5_right_rafter_f5_right_moment_end_plate": {
         "id": "cz_column_f5_right_rafter_f5_right_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "Moment end plate, M16 2x4 zone",
+        "name": "Moment end plate zone",
         "mainObjectId": "column_f5_right",
         "secondaryObjectIds": [
           "rafter_f5_right"
@@ -10189,7 +10189,7 @@
       "cz_rafter_f5_left_rafter_f5_right_apex_gusset": {
         "id": "cz_rafter_f5_left_rafter_f5_right_apex_gusset",
         "type": "apex-gusset-zone",
-        "name": "Apex gusset, M16 2+2 zone",
+        "name": "Apex gusset zone",
         "mainObjectId": "rafter_f5_left",
         "secondaryObjectIds": [
           "rafter_f5_right"
@@ -10231,7 +10231,7 @@
       "cz_rafter_f1_left_purlin_b1_left_1_moment_end_plate": {
         "id": "cz_rafter_f1_left_purlin_b1_left_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f1_left",
         "secondaryObjectIds": [
           "purlin_b1_left_1"
@@ -10268,7 +10268,7 @@
       "cz_rafter_f2_left_purlin_b1_left_1_moment_end_plate": {
         "id": "cz_rafter_f2_left_purlin_b1_left_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_left",
         "secondaryObjectIds": [
           "purlin_b1_left_1"
@@ -10305,7 +10305,7 @@
       "cz_rafter_f1_left_purlin_b1_left_2_moment_end_plate": {
         "id": "cz_rafter_f1_left_purlin_b1_left_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f1_left",
         "secondaryObjectIds": [
           "purlin_b1_left_2"
@@ -10342,7 +10342,7 @@
       "cz_rafter_f2_left_purlin_b1_left_2_moment_end_plate": {
         "id": "cz_rafter_f2_left_purlin_b1_left_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_left",
         "secondaryObjectIds": [
           "purlin_b1_left_2"
@@ -10379,7 +10379,7 @@
       "cz_rafter_f1_left_purlin_b1_left_3_moment_end_plate": {
         "id": "cz_rafter_f1_left_purlin_b1_left_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f1_left",
         "secondaryObjectIds": [
           "purlin_b1_left_3"
@@ -10416,7 +10416,7 @@
       "cz_rafter_f2_left_purlin_b1_left_3_moment_end_plate": {
         "id": "cz_rafter_f2_left_purlin_b1_left_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_left",
         "secondaryObjectIds": [
           "purlin_b1_left_3"
@@ -10453,7 +10453,7 @@
       "cz_rafter_f1_right_purlin_b1_right_1_moment_end_plate": {
         "id": "cz_rafter_f1_right_purlin_b1_right_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f1_right",
         "secondaryObjectIds": [
           "purlin_b1_right_1"
@@ -10490,7 +10490,7 @@
       "cz_rafter_f2_right_purlin_b1_right_1_moment_end_plate": {
         "id": "cz_rafter_f2_right_purlin_b1_right_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_right",
         "secondaryObjectIds": [
           "purlin_b1_right_1"
@@ -10527,7 +10527,7 @@
       "cz_rafter_f1_right_purlin_b1_right_2_moment_end_plate": {
         "id": "cz_rafter_f1_right_purlin_b1_right_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f1_right",
         "secondaryObjectIds": [
           "purlin_b1_right_2"
@@ -10564,7 +10564,7 @@
       "cz_rafter_f2_right_purlin_b1_right_2_moment_end_plate": {
         "id": "cz_rafter_f2_right_purlin_b1_right_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_right",
         "secondaryObjectIds": [
           "purlin_b1_right_2"
@@ -10601,7 +10601,7 @@
       "cz_rafter_f1_right_purlin_b1_right_3_moment_end_plate": {
         "id": "cz_rafter_f1_right_purlin_b1_right_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f1_right",
         "secondaryObjectIds": [
           "purlin_b1_right_3"
@@ -10638,7 +10638,7 @@
       "cz_rafter_f2_right_purlin_b1_right_3_moment_end_plate": {
         "id": "cz_rafter_f2_right_purlin_b1_right_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_right",
         "secondaryObjectIds": [
           "purlin_b1_right_3"
@@ -10675,7 +10675,7 @@
       "cz_rafter_f2_left_purlin_b2_left_1_moment_end_plate": {
         "id": "cz_rafter_f2_left_purlin_b2_left_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_left",
         "secondaryObjectIds": [
           "purlin_b2_left_1"
@@ -10712,7 +10712,7 @@
       "cz_rafter_f3_left_purlin_b2_left_1_moment_end_plate": {
         "id": "cz_rafter_f3_left_purlin_b2_left_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_left",
         "secondaryObjectIds": [
           "purlin_b2_left_1"
@@ -10749,7 +10749,7 @@
       "cz_rafter_f2_left_purlin_b2_left_2_moment_end_plate": {
         "id": "cz_rafter_f2_left_purlin_b2_left_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_left",
         "secondaryObjectIds": [
           "purlin_b2_left_2"
@@ -10786,7 +10786,7 @@
       "cz_rafter_f3_left_purlin_b2_left_2_moment_end_plate": {
         "id": "cz_rafter_f3_left_purlin_b2_left_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_left",
         "secondaryObjectIds": [
           "purlin_b2_left_2"
@@ -10823,7 +10823,7 @@
       "cz_rafter_f2_left_purlin_b2_left_3_moment_end_plate": {
         "id": "cz_rafter_f2_left_purlin_b2_left_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_left",
         "secondaryObjectIds": [
           "purlin_b2_left_3"
@@ -10860,7 +10860,7 @@
       "cz_rafter_f3_left_purlin_b2_left_3_moment_end_plate": {
         "id": "cz_rafter_f3_left_purlin_b2_left_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_left",
         "secondaryObjectIds": [
           "purlin_b2_left_3"
@@ -10897,7 +10897,7 @@
       "cz_rafter_f2_right_purlin_b2_right_1_moment_end_plate": {
         "id": "cz_rafter_f2_right_purlin_b2_right_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_right",
         "secondaryObjectIds": [
           "purlin_b2_right_1"
@@ -10934,7 +10934,7 @@
       "cz_rafter_f3_right_purlin_b2_right_1_moment_end_plate": {
         "id": "cz_rafter_f3_right_purlin_b2_right_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_right",
         "secondaryObjectIds": [
           "purlin_b2_right_1"
@@ -10971,7 +10971,7 @@
       "cz_rafter_f2_right_purlin_b2_right_2_moment_end_plate": {
         "id": "cz_rafter_f2_right_purlin_b2_right_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_right",
         "secondaryObjectIds": [
           "purlin_b2_right_2"
@@ -11008,7 +11008,7 @@
       "cz_rafter_f3_right_purlin_b2_right_2_moment_end_plate": {
         "id": "cz_rafter_f3_right_purlin_b2_right_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_right",
         "secondaryObjectIds": [
           "purlin_b2_right_2"
@@ -11045,7 +11045,7 @@
       "cz_rafter_f2_right_purlin_b2_right_3_moment_end_plate": {
         "id": "cz_rafter_f2_right_purlin_b2_right_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f2_right",
         "secondaryObjectIds": [
           "purlin_b2_right_3"
@@ -11082,7 +11082,7 @@
       "cz_rafter_f3_right_purlin_b2_right_3_moment_end_plate": {
         "id": "cz_rafter_f3_right_purlin_b2_right_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_right",
         "secondaryObjectIds": [
           "purlin_b2_right_3"
@@ -11119,7 +11119,7 @@
       "cz_rafter_f3_left_purlin_b3_left_1_moment_end_plate": {
         "id": "cz_rafter_f3_left_purlin_b3_left_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_left",
         "secondaryObjectIds": [
           "purlin_b3_left_1"
@@ -11156,7 +11156,7 @@
       "cz_rafter_f4_left_purlin_b3_left_1_moment_end_plate": {
         "id": "cz_rafter_f4_left_purlin_b3_left_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_left",
         "secondaryObjectIds": [
           "purlin_b3_left_1"
@@ -11193,7 +11193,7 @@
       "cz_rafter_f3_left_purlin_b3_left_2_moment_end_plate": {
         "id": "cz_rafter_f3_left_purlin_b3_left_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_left",
         "secondaryObjectIds": [
           "purlin_b3_left_2"
@@ -11230,7 +11230,7 @@
       "cz_rafter_f4_left_purlin_b3_left_2_moment_end_plate": {
         "id": "cz_rafter_f4_left_purlin_b3_left_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_left",
         "secondaryObjectIds": [
           "purlin_b3_left_2"
@@ -11267,7 +11267,7 @@
       "cz_rafter_f3_left_purlin_b3_left_3_moment_end_plate": {
         "id": "cz_rafter_f3_left_purlin_b3_left_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_left",
         "secondaryObjectIds": [
           "purlin_b3_left_3"
@@ -11304,7 +11304,7 @@
       "cz_rafter_f4_left_purlin_b3_left_3_moment_end_plate": {
         "id": "cz_rafter_f4_left_purlin_b3_left_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_left",
         "secondaryObjectIds": [
           "purlin_b3_left_3"
@@ -11341,7 +11341,7 @@
       "cz_rafter_f3_right_purlin_b3_right_1_moment_end_plate": {
         "id": "cz_rafter_f3_right_purlin_b3_right_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_right",
         "secondaryObjectIds": [
           "purlin_b3_right_1"
@@ -11378,7 +11378,7 @@
       "cz_rafter_f4_right_purlin_b3_right_1_moment_end_plate": {
         "id": "cz_rafter_f4_right_purlin_b3_right_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_right",
         "secondaryObjectIds": [
           "purlin_b3_right_1"
@@ -11415,7 +11415,7 @@
       "cz_rafter_f3_right_purlin_b3_right_2_moment_end_plate": {
         "id": "cz_rafter_f3_right_purlin_b3_right_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_right",
         "secondaryObjectIds": [
           "purlin_b3_right_2"
@@ -11452,7 +11452,7 @@
       "cz_rafter_f4_right_purlin_b3_right_2_moment_end_plate": {
         "id": "cz_rafter_f4_right_purlin_b3_right_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_right",
         "secondaryObjectIds": [
           "purlin_b3_right_2"
@@ -11489,7 +11489,7 @@
       "cz_rafter_f3_right_purlin_b3_right_3_moment_end_plate": {
         "id": "cz_rafter_f3_right_purlin_b3_right_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f3_right",
         "secondaryObjectIds": [
           "purlin_b3_right_3"
@@ -11526,7 +11526,7 @@
       "cz_rafter_f4_right_purlin_b3_right_3_moment_end_plate": {
         "id": "cz_rafter_f4_right_purlin_b3_right_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_right",
         "secondaryObjectIds": [
           "purlin_b3_right_3"
@@ -11563,7 +11563,7 @@
       "cz_rafter_f4_left_purlin_b4_left_1_moment_end_plate": {
         "id": "cz_rafter_f4_left_purlin_b4_left_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_left",
         "secondaryObjectIds": [
           "purlin_b4_left_1"
@@ -11600,7 +11600,7 @@
       "cz_rafter_f5_left_purlin_b4_left_1_moment_end_plate": {
         "id": "cz_rafter_f5_left_purlin_b4_left_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f5_left",
         "secondaryObjectIds": [
           "purlin_b4_left_1"
@@ -11637,7 +11637,7 @@
       "cz_rafter_f4_left_purlin_b4_left_2_moment_end_plate": {
         "id": "cz_rafter_f4_left_purlin_b4_left_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_left",
         "secondaryObjectIds": [
           "purlin_b4_left_2"
@@ -11674,7 +11674,7 @@
       "cz_rafter_f5_left_purlin_b4_left_2_moment_end_plate": {
         "id": "cz_rafter_f5_left_purlin_b4_left_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f5_left",
         "secondaryObjectIds": [
           "purlin_b4_left_2"
@@ -11711,7 +11711,7 @@
       "cz_rafter_f4_left_purlin_b4_left_3_moment_end_plate": {
         "id": "cz_rafter_f4_left_purlin_b4_left_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_left",
         "secondaryObjectIds": [
           "purlin_b4_left_3"
@@ -11748,7 +11748,7 @@
       "cz_rafter_f5_left_purlin_b4_left_3_moment_end_plate": {
         "id": "cz_rafter_f5_left_purlin_b4_left_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f5_left",
         "secondaryObjectIds": [
           "purlin_b4_left_3"
@@ -11785,7 +11785,7 @@
       "cz_rafter_f4_right_purlin_b4_right_1_moment_end_plate": {
         "id": "cz_rafter_f4_right_purlin_b4_right_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_right",
         "secondaryObjectIds": [
           "purlin_b4_right_1"
@@ -11822,7 +11822,7 @@
       "cz_rafter_f5_right_purlin_b4_right_1_moment_end_plate": {
         "id": "cz_rafter_f5_right_purlin_b4_right_1_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f5_right",
         "secondaryObjectIds": [
           "purlin_b4_right_1"
@@ -11859,7 +11859,7 @@
       "cz_rafter_f4_right_purlin_b4_right_2_moment_end_plate": {
         "id": "cz_rafter_f4_right_purlin_b4_right_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_right",
         "secondaryObjectIds": [
           "purlin_b4_right_2"
@@ -11896,7 +11896,7 @@
       "cz_rafter_f5_right_purlin_b4_right_2_moment_end_plate": {
         "id": "cz_rafter_f5_right_purlin_b4_right_2_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f5_right",
         "secondaryObjectIds": [
           "purlin_b4_right_2"
@@ -11933,7 +11933,7 @@
       "cz_rafter_f4_right_purlin_b4_right_3_moment_end_plate": {
         "id": "cz_rafter_f4_right_purlin_b4_right_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f4_right",
         "secondaryObjectIds": [
           "purlin_b4_right_3"
@@ -11970,7 +11970,7 @@
       "cz_rafter_f5_right_purlin_b4_right_3_moment_end_plate": {
         "id": "cz_rafter_f5_right_purlin_b4_right_3_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "rafter_f5_right",
         "secondaryObjectIds": [
           "purlin_b4_right_3"
@@ -12007,7 +12007,7 @@
       "cz_column_f1_left_side_rail_b1_left_2200_moment_end_plate": {
         "id": "cz_column_f1_left_side_rail_b1_left_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f1_left",
         "secondaryObjectIds": [
           "side_rail_b1_left_2200"
@@ -12044,7 +12044,7 @@
       "cz_column_f2_left_side_rail_b1_left_2200_moment_end_plate": {
         "id": "cz_column_f2_left_side_rail_b1_left_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f2_left",
         "secondaryObjectIds": [
           "side_rail_b1_left_2200"
@@ -12081,7 +12081,7 @@
       "cz_column_f1_left_side_rail_b1_left_3800_moment_end_plate": {
         "id": "cz_column_f1_left_side_rail_b1_left_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f1_left",
         "secondaryObjectIds": [
           "side_rail_b1_left_3800"
@@ -12118,7 +12118,7 @@
       "cz_column_f2_left_side_rail_b1_left_3800_moment_end_plate": {
         "id": "cz_column_f2_left_side_rail_b1_left_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f2_left",
         "secondaryObjectIds": [
           "side_rail_b1_left_3800"
@@ -12155,7 +12155,7 @@
       "cz_column_f1_right_side_rail_b1_right_2200_moment_end_plate": {
         "id": "cz_column_f1_right_side_rail_b1_right_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f1_right",
         "secondaryObjectIds": [
           "side_rail_b1_right_2200"
@@ -12192,7 +12192,7 @@
       "cz_column_f2_right_side_rail_b1_right_2200_moment_end_plate": {
         "id": "cz_column_f2_right_side_rail_b1_right_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f2_right",
         "secondaryObjectIds": [
           "side_rail_b1_right_2200"
@@ -12229,7 +12229,7 @@
       "cz_column_f1_right_side_rail_b1_right_3800_moment_end_plate": {
         "id": "cz_column_f1_right_side_rail_b1_right_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f1_right",
         "secondaryObjectIds": [
           "side_rail_b1_right_3800"
@@ -12266,7 +12266,7 @@
       "cz_column_f2_right_side_rail_b1_right_3800_moment_end_plate": {
         "id": "cz_column_f2_right_side_rail_b1_right_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f2_right",
         "secondaryObjectIds": [
           "side_rail_b1_right_3800"
@@ -12303,7 +12303,7 @@
       "cz_column_f2_left_side_rail_b2_left_2200_moment_end_plate": {
         "id": "cz_column_f2_left_side_rail_b2_left_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f2_left",
         "secondaryObjectIds": [
           "side_rail_b2_left_2200"
@@ -12340,7 +12340,7 @@
       "cz_column_f3_left_side_rail_b2_left_2200_moment_end_plate": {
         "id": "cz_column_f3_left_side_rail_b2_left_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f3_left",
         "secondaryObjectIds": [
           "side_rail_b2_left_2200"
@@ -12377,7 +12377,7 @@
       "cz_column_f2_left_side_rail_b2_left_3800_moment_end_plate": {
         "id": "cz_column_f2_left_side_rail_b2_left_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f2_left",
         "secondaryObjectIds": [
           "side_rail_b2_left_3800"
@@ -12414,7 +12414,7 @@
       "cz_column_f3_left_side_rail_b2_left_3800_moment_end_plate": {
         "id": "cz_column_f3_left_side_rail_b2_left_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f3_left",
         "secondaryObjectIds": [
           "side_rail_b2_left_3800"
@@ -12451,7 +12451,7 @@
       "cz_column_f2_right_side_rail_b2_right_2200_moment_end_plate": {
         "id": "cz_column_f2_right_side_rail_b2_right_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f2_right",
         "secondaryObjectIds": [
           "side_rail_b2_right_2200"
@@ -12488,7 +12488,7 @@
       "cz_column_f3_right_side_rail_b2_right_2200_moment_end_plate": {
         "id": "cz_column_f3_right_side_rail_b2_right_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f3_right",
         "secondaryObjectIds": [
           "side_rail_b2_right_2200"
@@ -12525,7 +12525,7 @@
       "cz_column_f2_right_side_rail_b2_right_3800_moment_end_plate": {
         "id": "cz_column_f2_right_side_rail_b2_right_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f2_right",
         "secondaryObjectIds": [
           "side_rail_b2_right_3800"
@@ -12562,7 +12562,7 @@
       "cz_column_f3_right_side_rail_b2_right_3800_moment_end_plate": {
         "id": "cz_column_f3_right_side_rail_b2_right_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f3_right",
         "secondaryObjectIds": [
           "side_rail_b2_right_3800"
@@ -12599,7 +12599,7 @@
       "cz_column_f3_left_side_rail_b3_left_2200_moment_end_plate": {
         "id": "cz_column_f3_left_side_rail_b3_left_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f3_left",
         "secondaryObjectIds": [
           "side_rail_b3_left_2200"
@@ -12636,7 +12636,7 @@
       "cz_column_f4_left_side_rail_b3_left_2200_moment_end_plate": {
         "id": "cz_column_f4_left_side_rail_b3_left_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f4_left",
         "secondaryObjectIds": [
           "side_rail_b3_left_2200"
@@ -12673,7 +12673,7 @@
       "cz_column_f3_left_side_rail_b3_left_3800_moment_end_plate": {
         "id": "cz_column_f3_left_side_rail_b3_left_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f3_left",
         "secondaryObjectIds": [
           "side_rail_b3_left_3800"
@@ -12710,7 +12710,7 @@
       "cz_column_f4_left_side_rail_b3_left_3800_moment_end_plate": {
         "id": "cz_column_f4_left_side_rail_b3_left_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f4_left",
         "secondaryObjectIds": [
           "side_rail_b3_left_3800"
@@ -12747,7 +12747,7 @@
       "cz_column_f3_right_side_rail_b3_right_2200_moment_end_plate": {
         "id": "cz_column_f3_right_side_rail_b3_right_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f3_right",
         "secondaryObjectIds": [
           "side_rail_b3_right_2200"
@@ -12784,7 +12784,7 @@
       "cz_column_f4_right_side_rail_b3_right_2200_moment_end_plate": {
         "id": "cz_column_f4_right_side_rail_b3_right_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f4_right",
         "secondaryObjectIds": [
           "side_rail_b3_right_2200"
@@ -12821,7 +12821,7 @@
       "cz_column_f3_right_side_rail_b3_right_3800_moment_end_plate": {
         "id": "cz_column_f3_right_side_rail_b3_right_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f3_right",
         "secondaryObjectIds": [
           "side_rail_b3_right_3800"
@@ -12858,7 +12858,7 @@
       "cz_column_f4_right_side_rail_b3_right_3800_moment_end_plate": {
         "id": "cz_column_f4_right_side_rail_b3_right_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f4_right",
         "secondaryObjectIds": [
           "side_rail_b3_right_3800"
@@ -12895,7 +12895,7 @@
       "cz_column_f4_left_side_rail_b4_left_2200_moment_end_plate": {
         "id": "cz_column_f4_left_side_rail_b4_left_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f4_left",
         "secondaryObjectIds": [
           "side_rail_b4_left_2200"
@@ -12932,7 +12932,7 @@
       "cz_column_f5_left_side_rail_b4_left_2200_moment_end_plate": {
         "id": "cz_column_f5_left_side_rail_b4_left_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f5_left",
         "secondaryObjectIds": [
           "side_rail_b4_left_2200"
@@ -12969,7 +12969,7 @@
       "cz_column_f4_left_side_rail_b4_left_3800_moment_end_plate": {
         "id": "cz_column_f4_left_side_rail_b4_left_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f4_left",
         "secondaryObjectIds": [
           "side_rail_b4_left_3800"
@@ -13006,7 +13006,7 @@
       "cz_column_f5_left_side_rail_b4_left_3800_moment_end_plate": {
         "id": "cz_column_f5_left_side_rail_b4_left_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f5_left",
         "secondaryObjectIds": [
           "side_rail_b4_left_3800"
@@ -13043,7 +13043,7 @@
       "cz_column_f4_right_side_rail_b4_right_2200_moment_end_plate": {
         "id": "cz_column_f4_right_side_rail_b4_right_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f4_right",
         "secondaryObjectIds": [
           "side_rail_b4_right_2200"
@@ -13080,7 +13080,7 @@
       "cz_column_f5_right_side_rail_b4_right_2200_moment_end_plate": {
         "id": "cz_column_f5_right_side_rail_b4_right_2200_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f5_right",
         "secondaryObjectIds": [
           "side_rail_b4_right_2200"
@@ -13117,7 +13117,7 @@
       "cz_column_f4_right_side_rail_b4_right_3800_moment_end_plate": {
         "id": "cz_column_f4_right_side_rail_b4_right_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f4_right",
         "secondaryObjectIds": [
           "side_rail_b4_right_3800"
@@ -13154,7 +13154,7 @@
       "cz_column_f5_right_side_rail_b4_right_3800_moment_end_plate": {
         "id": "cz_column_f5_right_side_rail_b4_right_3800_moment_end_plate",
         "type": "moment-end-plate-zone",
-        "name": "End plate, M12 1x2 zone",
+        "name": "End plate zone",
         "mainObjectId": "column_f5_right",
         "secondaryObjectIds": [
           "side_rail_b4_right_3800"
@@ -13381,7 +13381,7 @@
       "assembly_foundation_f1_left_column_f1_left_base_plate": {
         "id": "assembly_foundation_f1_left_column_f1_left_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13406,7 +13406,7 @@
       "assembly_foundation_f1_right_column_f1_right_base_plate": {
         "id": "assembly_foundation_f1_right_column_f1_right_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13431,7 +13431,7 @@
       "assembly_column_f1_left_rafter_f1_left_moment_end_plate": {
         "id": "assembly_column_f1_left_rafter_f1_left_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13456,7 +13456,7 @@
       "assembly_column_f1_right_rafter_f1_right_moment_end_plate": {
         "id": "assembly_column_f1_right_rafter_f1_right_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13481,7 +13481,7 @@
       "assembly_rafter_f1_left_rafter_f1_right_apex_gusset": {
         "id": "assembly_rafter_f1_left_rafter_f1_right_apex_gusset",
         "type": "connection-assembly",
-        "name": "Apex gusset, M16 2+2 assembly",
+        "name": "Apex gusset assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13506,7 +13506,7 @@
       "assembly_foundation_f2_left_column_f2_left_base_plate": {
         "id": "assembly_foundation_f2_left_column_f2_left_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13531,7 +13531,7 @@
       "assembly_foundation_f2_right_column_f2_right_base_plate": {
         "id": "assembly_foundation_f2_right_column_f2_right_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13556,7 +13556,7 @@
       "assembly_column_f2_left_rafter_f2_left_moment_end_plate": {
         "id": "assembly_column_f2_left_rafter_f2_left_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13581,7 +13581,7 @@
       "assembly_column_f2_right_rafter_f2_right_moment_end_plate": {
         "id": "assembly_column_f2_right_rafter_f2_right_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13606,7 +13606,7 @@
       "assembly_rafter_f2_left_rafter_f2_right_apex_gusset": {
         "id": "assembly_rafter_f2_left_rafter_f2_right_apex_gusset",
         "type": "connection-assembly",
-        "name": "Apex gusset, M16 2+2 assembly",
+        "name": "Apex gusset assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13631,7 +13631,7 @@
       "assembly_foundation_f3_left_column_f3_left_base_plate": {
         "id": "assembly_foundation_f3_left_column_f3_left_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13656,7 +13656,7 @@
       "assembly_foundation_f3_right_column_f3_right_base_plate": {
         "id": "assembly_foundation_f3_right_column_f3_right_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13681,7 +13681,7 @@
       "assembly_column_f3_left_rafter_f3_left_moment_end_plate": {
         "id": "assembly_column_f3_left_rafter_f3_left_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13706,7 +13706,7 @@
       "assembly_column_f3_right_rafter_f3_right_moment_end_plate": {
         "id": "assembly_column_f3_right_rafter_f3_right_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13731,7 +13731,7 @@
       "assembly_rafter_f3_left_rafter_f3_right_apex_gusset": {
         "id": "assembly_rafter_f3_left_rafter_f3_right_apex_gusset",
         "type": "connection-assembly",
-        "name": "Apex gusset, M16 2+2 assembly",
+        "name": "Apex gusset assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13756,7 +13756,7 @@
       "assembly_foundation_f4_left_column_f4_left_base_plate": {
         "id": "assembly_foundation_f4_left_column_f4_left_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13781,7 +13781,7 @@
       "assembly_foundation_f4_right_column_f4_right_base_plate": {
         "id": "assembly_foundation_f4_right_column_f4_right_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13806,7 +13806,7 @@
       "assembly_column_f4_left_rafter_f4_left_moment_end_plate": {
         "id": "assembly_column_f4_left_rafter_f4_left_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13831,7 +13831,7 @@
       "assembly_column_f4_right_rafter_f4_right_moment_end_plate": {
         "id": "assembly_column_f4_right_rafter_f4_right_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13856,7 +13856,7 @@
       "assembly_rafter_f4_left_rafter_f4_right_apex_gusset": {
         "id": "assembly_rafter_f4_left_rafter_f4_right_apex_gusset",
         "type": "connection-assembly",
-        "name": "Apex gusset, M16 2+2 assembly",
+        "name": "Apex gusset assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13881,7 +13881,7 @@
       "assembly_foundation_f5_left_column_f5_left_base_plate": {
         "id": "assembly_foundation_f5_left_column_f5_left_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13906,7 +13906,7 @@
       "assembly_foundation_f5_right_column_f5_right_base_plate": {
         "id": "assembly_foundation_f5_right_column_f5_right_base_plate",
         "type": "connection-assembly",
-        "name": "Base plate, M16 2x2 assembly",
+        "name": "Base plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13931,7 +13931,7 @@
       "assembly_column_f5_left_rafter_f5_left_moment_end_plate": {
         "id": "assembly_column_f5_left_rafter_f5_left_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13956,7 +13956,7 @@
       "assembly_column_f5_right_rafter_f5_right_moment_end_plate": {
         "id": "assembly_column_f5_right_rafter_f5_right_moment_end_plate",
         "type": "connection-assembly",
-        "name": "Moment end plate, M16 2x4 assembly",
+        "name": "Moment end plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -13981,7 +13981,7 @@
       "assembly_rafter_f5_left_rafter_f5_right_apex_gusset": {
         "id": "assembly_rafter_f5_left_rafter_f5_right_apex_gusset",
         "type": "connection-assembly",
-        "name": "Apex gusset, M16 2+2 assembly",
+        "name": "Apex gusset assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14006,7 +14006,7 @@
       "assembly_rafter_f1_left_purlin_b1_left_1_moment_end_plate": {
         "id": "assembly_rafter_f1_left_purlin_b1_left_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14031,7 +14031,7 @@
       "assembly_rafter_f2_left_purlin_b1_left_1_moment_end_plate": {
         "id": "assembly_rafter_f2_left_purlin_b1_left_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14056,7 +14056,7 @@
       "assembly_rafter_f1_left_purlin_b1_left_2_moment_end_plate": {
         "id": "assembly_rafter_f1_left_purlin_b1_left_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14081,7 +14081,7 @@
       "assembly_rafter_f2_left_purlin_b1_left_2_moment_end_plate": {
         "id": "assembly_rafter_f2_left_purlin_b1_left_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14106,7 +14106,7 @@
       "assembly_rafter_f1_left_purlin_b1_left_3_moment_end_plate": {
         "id": "assembly_rafter_f1_left_purlin_b1_left_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14131,7 +14131,7 @@
       "assembly_rafter_f2_left_purlin_b1_left_3_moment_end_plate": {
         "id": "assembly_rafter_f2_left_purlin_b1_left_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14156,7 +14156,7 @@
       "assembly_rafter_f1_right_purlin_b1_right_1_moment_end_plate": {
         "id": "assembly_rafter_f1_right_purlin_b1_right_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14181,7 +14181,7 @@
       "assembly_rafter_f2_right_purlin_b1_right_1_moment_end_plate": {
         "id": "assembly_rafter_f2_right_purlin_b1_right_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14206,7 +14206,7 @@
       "assembly_rafter_f1_right_purlin_b1_right_2_moment_end_plate": {
         "id": "assembly_rafter_f1_right_purlin_b1_right_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14231,7 +14231,7 @@
       "assembly_rafter_f2_right_purlin_b1_right_2_moment_end_plate": {
         "id": "assembly_rafter_f2_right_purlin_b1_right_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14256,7 +14256,7 @@
       "assembly_rafter_f1_right_purlin_b1_right_3_moment_end_plate": {
         "id": "assembly_rafter_f1_right_purlin_b1_right_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14281,7 +14281,7 @@
       "assembly_rafter_f2_right_purlin_b1_right_3_moment_end_plate": {
         "id": "assembly_rafter_f2_right_purlin_b1_right_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14306,7 +14306,7 @@
       "assembly_rafter_f2_left_purlin_b2_left_1_moment_end_plate": {
         "id": "assembly_rafter_f2_left_purlin_b2_left_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14331,7 +14331,7 @@
       "assembly_rafter_f3_left_purlin_b2_left_1_moment_end_plate": {
         "id": "assembly_rafter_f3_left_purlin_b2_left_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14356,7 +14356,7 @@
       "assembly_rafter_f2_left_purlin_b2_left_2_moment_end_plate": {
         "id": "assembly_rafter_f2_left_purlin_b2_left_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14381,7 +14381,7 @@
       "assembly_rafter_f3_left_purlin_b2_left_2_moment_end_plate": {
         "id": "assembly_rafter_f3_left_purlin_b2_left_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14406,7 +14406,7 @@
       "assembly_rafter_f2_left_purlin_b2_left_3_moment_end_plate": {
         "id": "assembly_rafter_f2_left_purlin_b2_left_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14431,7 +14431,7 @@
       "assembly_rafter_f3_left_purlin_b2_left_3_moment_end_plate": {
         "id": "assembly_rafter_f3_left_purlin_b2_left_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14456,7 +14456,7 @@
       "assembly_rafter_f2_right_purlin_b2_right_1_moment_end_plate": {
         "id": "assembly_rafter_f2_right_purlin_b2_right_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14481,7 +14481,7 @@
       "assembly_rafter_f3_right_purlin_b2_right_1_moment_end_plate": {
         "id": "assembly_rafter_f3_right_purlin_b2_right_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14506,7 +14506,7 @@
       "assembly_rafter_f2_right_purlin_b2_right_2_moment_end_plate": {
         "id": "assembly_rafter_f2_right_purlin_b2_right_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14531,7 +14531,7 @@
       "assembly_rafter_f3_right_purlin_b2_right_2_moment_end_plate": {
         "id": "assembly_rafter_f3_right_purlin_b2_right_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14556,7 +14556,7 @@
       "assembly_rafter_f2_right_purlin_b2_right_3_moment_end_plate": {
         "id": "assembly_rafter_f2_right_purlin_b2_right_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14581,7 +14581,7 @@
       "assembly_rafter_f3_right_purlin_b2_right_3_moment_end_plate": {
         "id": "assembly_rafter_f3_right_purlin_b2_right_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14606,7 +14606,7 @@
       "assembly_rafter_f3_left_purlin_b3_left_1_moment_end_plate": {
         "id": "assembly_rafter_f3_left_purlin_b3_left_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14631,7 +14631,7 @@
       "assembly_rafter_f4_left_purlin_b3_left_1_moment_end_plate": {
         "id": "assembly_rafter_f4_left_purlin_b3_left_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14656,7 +14656,7 @@
       "assembly_rafter_f3_left_purlin_b3_left_2_moment_end_plate": {
         "id": "assembly_rafter_f3_left_purlin_b3_left_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14681,7 +14681,7 @@
       "assembly_rafter_f4_left_purlin_b3_left_2_moment_end_plate": {
         "id": "assembly_rafter_f4_left_purlin_b3_left_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14706,7 +14706,7 @@
       "assembly_rafter_f3_left_purlin_b3_left_3_moment_end_plate": {
         "id": "assembly_rafter_f3_left_purlin_b3_left_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14731,7 +14731,7 @@
       "assembly_rafter_f4_left_purlin_b3_left_3_moment_end_plate": {
         "id": "assembly_rafter_f4_left_purlin_b3_left_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14756,7 +14756,7 @@
       "assembly_rafter_f3_right_purlin_b3_right_1_moment_end_plate": {
         "id": "assembly_rafter_f3_right_purlin_b3_right_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14781,7 +14781,7 @@
       "assembly_rafter_f4_right_purlin_b3_right_1_moment_end_plate": {
         "id": "assembly_rafter_f4_right_purlin_b3_right_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14806,7 +14806,7 @@
       "assembly_rafter_f3_right_purlin_b3_right_2_moment_end_plate": {
         "id": "assembly_rafter_f3_right_purlin_b3_right_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14831,7 +14831,7 @@
       "assembly_rafter_f4_right_purlin_b3_right_2_moment_end_plate": {
         "id": "assembly_rafter_f4_right_purlin_b3_right_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14856,7 +14856,7 @@
       "assembly_rafter_f3_right_purlin_b3_right_3_moment_end_plate": {
         "id": "assembly_rafter_f3_right_purlin_b3_right_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14881,7 +14881,7 @@
       "assembly_rafter_f4_right_purlin_b3_right_3_moment_end_plate": {
         "id": "assembly_rafter_f4_right_purlin_b3_right_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14906,7 +14906,7 @@
       "assembly_rafter_f4_left_purlin_b4_left_1_moment_end_plate": {
         "id": "assembly_rafter_f4_left_purlin_b4_left_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14931,7 +14931,7 @@
       "assembly_rafter_f5_left_purlin_b4_left_1_moment_end_plate": {
         "id": "assembly_rafter_f5_left_purlin_b4_left_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14956,7 +14956,7 @@
       "assembly_rafter_f4_left_purlin_b4_left_2_moment_end_plate": {
         "id": "assembly_rafter_f4_left_purlin_b4_left_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -14981,7 +14981,7 @@
       "assembly_rafter_f5_left_purlin_b4_left_2_moment_end_plate": {
         "id": "assembly_rafter_f5_left_purlin_b4_left_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15006,7 +15006,7 @@
       "assembly_rafter_f4_left_purlin_b4_left_3_moment_end_plate": {
         "id": "assembly_rafter_f4_left_purlin_b4_left_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15031,7 +15031,7 @@
       "assembly_rafter_f5_left_purlin_b4_left_3_moment_end_plate": {
         "id": "assembly_rafter_f5_left_purlin_b4_left_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15056,7 +15056,7 @@
       "assembly_rafter_f4_right_purlin_b4_right_1_moment_end_plate": {
         "id": "assembly_rafter_f4_right_purlin_b4_right_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15081,7 +15081,7 @@
       "assembly_rafter_f5_right_purlin_b4_right_1_moment_end_plate": {
         "id": "assembly_rafter_f5_right_purlin_b4_right_1_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15106,7 +15106,7 @@
       "assembly_rafter_f4_right_purlin_b4_right_2_moment_end_plate": {
         "id": "assembly_rafter_f4_right_purlin_b4_right_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15131,7 +15131,7 @@
       "assembly_rafter_f5_right_purlin_b4_right_2_moment_end_plate": {
         "id": "assembly_rafter_f5_right_purlin_b4_right_2_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15156,7 +15156,7 @@
       "assembly_rafter_f4_right_purlin_b4_right_3_moment_end_plate": {
         "id": "assembly_rafter_f4_right_purlin_b4_right_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15181,7 +15181,7 @@
       "assembly_rafter_f5_right_purlin_b4_right_3_moment_end_plate": {
         "id": "assembly_rafter_f5_right_purlin_b4_right_3_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15206,7 +15206,7 @@
       "assembly_column_f1_left_side_rail_b1_left_2200_moment_end_plate": {
         "id": "assembly_column_f1_left_side_rail_b1_left_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15231,7 +15231,7 @@
       "assembly_column_f2_left_side_rail_b1_left_2200_moment_end_plate": {
         "id": "assembly_column_f2_left_side_rail_b1_left_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15256,7 +15256,7 @@
       "assembly_column_f1_left_side_rail_b1_left_3800_moment_end_plate": {
         "id": "assembly_column_f1_left_side_rail_b1_left_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15281,7 +15281,7 @@
       "assembly_column_f2_left_side_rail_b1_left_3800_moment_end_plate": {
         "id": "assembly_column_f2_left_side_rail_b1_left_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15306,7 +15306,7 @@
       "assembly_column_f1_right_side_rail_b1_right_2200_moment_end_plate": {
         "id": "assembly_column_f1_right_side_rail_b1_right_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15331,7 +15331,7 @@
       "assembly_column_f2_right_side_rail_b1_right_2200_moment_end_plate": {
         "id": "assembly_column_f2_right_side_rail_b1_right_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15356,7 +15356,7 @@
       "assembly_column_f1_right_side_rail_b1_right_3800_moment_end_plate": {
         "id": "assembly_column_f1_right_side_rail_b1_right_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15381,7 +15381,7 @@
       "assembly_column_f2_right_side_rail_b1_right_3800_moment_end_plate": {
         "id": "assembly_column_f2_right_side_rail_b1_right_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15406,7 +15406,7 @@
       "assembly_column_f2_left_side_rail_b2_left_2200_moment_end_plate": {
         "id": "assembly_column_f2_left_side_rail_b2_left_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15431,7 +15431,7 @@
       "assembly_column_f3_left_side_rail_b2_left_2200_moment_end_plate": {
         "id": "assembly_column_f3_left_side_rail_b2_left_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15456,7 +15456,7 @@
       "assembly_column_f2_left_side_rail_b2_left_3800_moment_end_plate": {
         "id": "assembly_column_f2_left_side_rail_b2_left_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15481,7 +15481,7 @@
       "assembly_column_f3_left_side_rail_b2_left_3800_moment_end_plate": {
         "id": "assembly_column_f3_left_side_rail_b2_left_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15506,7 +15506,7 @@
       "assembly_column_f2_right_side_rail_b2_right_2200_moment_end_plate": {
         "id": "assembly_column_f2_right_side_rail_b2_right_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15531,7 +15531,7 @@
       "assembly_column_f3_right_side_rail_b2_right_2200_moment_end_plate": {
         "id": "assembly_column_f3_right_side_rail_b2_right_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15556,7 +15556,7 @@
       "assembly_column_f2_right_side_rail_b2_right_3800_moment_end_plate": {
         "id": "assembly_column_f2_right_side_rail_b2_right_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15581,7 +15581,7 @@
       "assembly_column_f3_right_side_rail_b2_right_3800_moment_end_plate": {
         "id": "assembly_column_f3_right_side_rail_b2_right_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15606,7 +15606,7 @@
       "assembly_column_f3_left_side_rail_b3_left_2200_moment_end_plate": {
         "id": "assembly_column_f3_left_side_rail_b3_left_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15631,7 +15631,7 @@
       "assembly_column_f4_left_side_rail_b3_left_2200_moment_end_plate": {
         "id": "assembly_column_f4_left_side_rail_b3_left_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15656,7 +15656,7 @@
       "assembly_column_f3_left_side_rail_b3_left_3800_moment_end_plate": {
         "id": "assembly_column_f3_left_side_rail_b3_left_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15681,7 +15681,7 @@
       "assembly_column_f4_left_side_rail_b3_left_3800_moment_end_plate": {
         "id": "assembly_column_f4_left_side_rail_b3_left_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15706,7 +15706,7 @@
       "assembly_column_f3_right_side_rail_b3_right_2200_moment_end_plate": {
         "id": "assembly_column_f3_right_side_rail_b3_right_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15731,7 +15731,7 @@
       "assembly_column_f4_right_side_rail_b3_right_2200_moment_end_plate": {
         "id": "assembly_column_f4_right_side_rail_b3_right_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15756,7 +15756,7 @@
       "assembly_column_f3_right_side_rail_b3_right_3800_moment_end_plate": {
         "id": "assembly_column_f3_right_side_rail_b3_right_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15781,7 +15781,7 @@
       "assembly_column_f4_right_side_rail_b3_right_3800_moment_end_plate": {
         "id": "assembly_column_f4_right_side_rail_b3_right_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15806,7 +15806,7 @@
       "assembly_column_f4_left_side_rail_b4_left_2200_moment_end_plate": {
         "id": "assembly_column_f4_left_side_rail_b4_left_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15831,7 +15831,7 @@
       "assembly_column_f5_left_side_rail_b4_left_2200_moment_end_plate": {
         "id": "assembly_column_f5_left_side_rail_b4_left_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15856,7 +15856,7 @@
       "assembly_column_f4_left_side_rail_b4_left_3800_moment_end_plate": {
         "id": "assembly_column_f4_left_side_rail_b4_left_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15881,7 +15881,7 @@
       "assembly_column_f5_left_side_rail_b4_left_3800_moment_end_plate": {
         "id": "assembly_column_f5_left_side_rail_b4_left_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15906,7 +15906,7 @@
       "assembly_column_f4_right_side_rail_b4_right_2200_moment_end_plate": {
         "id": "assembly_column_f4_right_side_rail_b4_right_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15931,7 +15931,7 @@
       "assembly_column_f5_right_side_rail_b4_right_2200_moment_end_plate": {
         "id": "assembly_column_f5_right_side_rail_b4_right_2200_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15956,7 +15956,7 @@
       "assembly_column_f4_right_side_rail_b4_right_3800_moment_end_plate": {
         "id": "assembly_column_f4_right_side_rail_b4_right_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -15981,7 +15981,7 @@
       "assembly_column_f5_right_side_rail_b4_right_3800_moment_end_plate": {
         "id": "assembly_column_f5_right_side_rail_b4_right_3800_moment_end_plate",
         "type": "connection-assembly",
-        "name": "End plate, M12 1x2 assembly",
+        "name": "End plate assembly",
         "parentAssemblyId": null,
         "childAssemblyIds": [
           "assembly_warehouse_12x24"
@@ -62686,7 +62686,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -62768,12 +62768,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -62783,7 +62783,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -62865,12 +62865,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -62880,7 +62880,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -62961,12 +62961,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -62976,7 +62976,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63057,12 +63057,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -63072,7 +63072,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "apex_gusset_m16_2x2",
+          "id": "apex-gusset",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63158,12 +63158,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "apex_gusset_m16_2x2",
+            "id": "apex-gusset",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Apex gusset, M16 2+2"
+          "name": "Apex gusset"
         },
         "outputs": {}
       },
@@ -63173,7 +63173,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63255,12 +63255,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -63270,7 +63270,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63352,12 +63352,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -63367,7 +63367,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63448,12 +63448,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -63463,7 +63463,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63544,12 +63544,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -63559,7 +63559,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "apex_gusset_m16_2x2",
+          "id": "apex-gusset",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63645,12 +63645,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "apex_gusset_m16_2x2",
+            "id": "apex-gusset",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Apex gusset, M16 2+2"
+          "name": "Apex gusset"
         },
         "outputs": {}
       },
@@ -63660,7 +63660,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63742,12 +63742,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -63757,7 +63757,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63839,12 +63839,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -63854,7 +63854,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -63935,12 +63935,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -63950,7 +63950,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64031,12 +64031,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -64046,7 +64046,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "apex_gusset_m16_2x2",
+          "id": "apex-gusset",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64132,12 +64132,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "apex_gusset_m16_2x2",
+            "id": "apex-gusset",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Apex gusset, M16 2+2"
+          "name": "Apex gusset"
         },
         "outputs": {}
       },
@@ -64147,7 +64147,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64229,12 +64229,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -64244,7 +64244,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64326,12 +64326,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -64341,7 +64341,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64422,12 +64422,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -64437,7 +64437,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64518,12 +64518,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -64533,7 +64533,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "apex_gusset_m16_2x2",
+          "id": "apex-gusset",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64619,12 +64619,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "apex_gusset_m16_2x2",
+            "id": "apex-gusset",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Apex gusset, M16 2+2"
+          "name": "Apex gusset"
         },
         "outputs": {}
       },
@@ -64634,7 +64634,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64716,12 +64716,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -64731,7 +64731,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "column_base_plate_m16_2x2",
+          "id": "base-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64813,12 +64813,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "column_base_plate_m16_2x2",
+            "id": "base-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Base plate, M16 2x2"
+          "name": "Base plate"
         },
         "outputs": {}
       },
@@ -64828,7 +64828,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -64909,12 +64909,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -64924,7 +64924,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65005,12 +65005,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Moment end plate, M16 2x4"
+          "name": "Moment end plate"
         },
         "outputs": {}
       },
@@ -65020,7 +65020,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "apex_gusset_m16_2x2",
+          "id": "apex-gusset",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65106,12 +65106,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "apex_gusset_m16_2x2",
+            "id": "apex-gusset",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "Apex gusset, M16 2+2"
+          "name": "Apex gusset"
         },
         "outputs": {}
       },
@@ -65121,7 +65121,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65202,12 +65202,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65217,7 +65217,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65298,12 +65298,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65313,7 +65313,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65394,12 +65394,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65409,7 +65409,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65490,12 +65490,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65505,7 +65505,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65586,12 +65586,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65601,7 +65601,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65682,12 +65682,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65697,7 +65697,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65778,12 +65778,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65793,7 +65793,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65874,12 +65874,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65889,7 +65889,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -65970,12 +65970,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -65985,7 +65985,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66066,12 +66066,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66081,7 +66081,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66162,12 +66162,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66177,7 +66177,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66258,12 +66258,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66273,7 +66273,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66354,12 +66354,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66369,7 +66369,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66450,12 +66450,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66465,7 +66465,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66546,12 +66546,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66561,7 +66561,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66642,12 +66642,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66657,7 +66657,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66738,12 +66738,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66753,7 +66753,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66834,12 +66834,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66849,7 +66849,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -66930,12 +66930,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -66945,7 +66945,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67026,12 +67026,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67041,7 +67041,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67122,12 +67122,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67137,7 +67137,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67218,12 +67218,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67233,7 +67233,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67314,12 +67314,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67329,7 +67329,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67410,12 +67410,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67425,7 +67425,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67506,12 +67506,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67521,7 +67521,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67602,12 +67602,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67617,7 +67617,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67698,12 +67698,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67713,7 +67713,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67794,12 +67794,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67809,7 +67809,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67890,12 +67890,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -67905,7 +67905,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -67986,12 +67986,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68001,7 +68001,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68082,12 +68082,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68097,7 +68097,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68178,12 +68178,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68193,7 +68193,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68274,12 +68274,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68289,7 +68289,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68370,12 +68370,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68385,7 +68385,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68466,12 +68466,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68481,7 +68481,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68562,12 +68562,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68577,7 +68577,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68658,12 +68658,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68673,7 +68673,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68754,12 +68754,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68769,7 +68769,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68850,12 +68850,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68865,7 +68865,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -68946,12 +68946,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -68961,7 +68961,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69042,12 +69042,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69057,7 +69057,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69138,12 +69138,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69153,7 +69153,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69234,12 +69234,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69249,7 +69249,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69330,12 +69330,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69345,7 +69345,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69426,12 +69426,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69441,7 +69441,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69522,12 +69522,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69537,7 +69537,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69618,12 +69618,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69633,7 +69633,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69714,12 +69714,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69729,7 +69729,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69810,12 +69810,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69825,7 +69825,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -69906,12 +69906,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -69921,7 +69921,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70002,12 +70002,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70017,7 +70017,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70098,12 +70098,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70113,7 +70113,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70194,12 +70194,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70209,7 +70209,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70290,12 +70290,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70305,7 +70305,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70386,12 +70386,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70401,7 +70401,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70482,12 +70482,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70497,7 +70497,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70578,12 +70578,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70593,7 +70593,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70674,12 +70674,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70689,7 +70689,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70770,12 +70770,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70785,7 +70785,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70866,12 +70866,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70881,7 +70881,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -70962,12 +70962,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -70977,7 +70977,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71058,12 +71058,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71073,7 +71073,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71154,12 +71154,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71169,7 +71169,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71250,12 +71250,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71265,7 +71265,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71346,12 +71346,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71361,7 +71361,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71442,12 +71442,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71457,7 +71457,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71538,12 +71538,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71553,7 +71553,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71634,12 +71634,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71649,7 +71649,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71730,12 +71730,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71745,7 +71745,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71826,12 +71826,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71841,7 +71841,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -71922,12 +71922,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -71937,7 +71937,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72018,12 +72018,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -72033,7 +72033,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72114,12 +72114,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -72129,7 +72129,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72210,12 +72210,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -72225,7 +72225,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72306,12 +72306,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -72321,7 +72321,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72402,12 +72402,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -72417,7 +72417,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72498,12 +72498,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -72513,7 +72513,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72594,12 +72594,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -72609,7 +72609,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72690,12 +72690,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       },
@@ -72705,7 +72705,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "light_end_plate_m12_1x2",
+          "id": "end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -72786,12 +72786,12 @@
           "notes": "Created from selected library preset and an automatically generated smart component zone.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "light_end_plate_m12_1x2",
+            "id": "end-plate",
             "version": "0.1.0"
           }
         },
         "bim": {
-          "name": "End plate, M12 1x2"
+          "name": "End plate"
         },
         "outputs": {}
       }

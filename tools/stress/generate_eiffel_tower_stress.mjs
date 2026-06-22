@@ -693,7 +693,7 @@ async function main() {
   const failures = [];
 
   for (let corner = 0; corner < CORNERS.length; corner += 1) {
-    addConnection(store, "column_base_plate_m16_2x2", [supports[corner], legSegments[corner][0]], `base plate ${CORNERS[corner].id}`, failures);
+    addConnection(store, "base-plate", [supports[corner], legSegments[corner][0]], `base plate ${CORNERS[corner].id}`, failures);
   }
 
   const seen = new Set();
@@ -701,7 +701,7 @@ async function main() {
     const key = `${primaryId}:${secondaryId}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    addConnection(store, "light_end_plate_m12_1x2", [primaryId, secondaryId], `end plate ${primaryId} to ${secondaryId}`, failures);
+    addConnection(store, "end-plate", [primaryId, secondaryId], `end plate ${primaryId} to ${secondaryId}`, failures);
   }
 
   const generated = store.project();

@@ -158,14 +158,16 @@ export function mountModelBrowser({
 
   function renderCollection(spec, items) {
     const collectionItems = items.filter((item) => item.collection === spec.id);
-    if (!collectionItems.length) return null;
+    if (!collectionItems.length && spec.showWhenEmpty !== true) return null;
     return dataPanelCollection({
       namespace: "bc-model-browser",
       icon: spec.icon,
       label: spec.label,
       count: collectionItems.length,
-      rows: collectionItems.map((item) => renderRow(item, spec)),
-      open: state.query.trim() ? true : modelCollectionDefaultOpen(spec.id)
+      rows: collectionItems.length
+        ? collectionItems.map((item) => renderRow(item, spec))
+        : [dataPanelEmpty({ namespace: "bc-model-browser", message: MODEL_BROWSER_PANEL_SPEC.emptyCollectionMessage })],
+      open: state.query.trim() ? true : modelCollectionDefaultOpen(spec.id) || spec.showWhenEmpty === true
     });
   }
 

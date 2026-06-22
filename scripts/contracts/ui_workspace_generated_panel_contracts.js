@@ -520,6 +520,16 @@ function checkGeneratedPanelContracts(context) {
     fail(errors, "Design-system panels-and-controls CSS must own generated tab-list styling");
   }
   const smartComponentBrowserText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/smart-component-browser.mjs"), "utf8");
+  const smartComponentBrowserCssText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/smart-component-browser.css"), "utf8");
+  const connectionArtworkAssets = [
+    "apex-gusset.png",
+    "base-plate.png",
+    "end-plate.png",
+    "fin-plate.png",
+    "hardware.png",
+    "member-splice.png",
+    "moment-end-plate.png"
+  ];
   const commandPaletteText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/shell/command-palette.mjs"), "utf8");
   const commandPaletteCssText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/design-system/command-palette.css"), "utf8");
   const commandRegistryText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/commands/command-registry.mjs"), "utf8");
@@ -534,6 +544,7 @@ function checkGeneratedPanelContracts(context) {
   const inspectorDockCssText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/shell/inspector-dock.css"), "utf8");
   const designTokensText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/design-system/tokens.css"), "utf8");
   const workspaceShellText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/shell/workspace-shell.css"), "utf8");
+  const viewerStyleText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/style.css"), "utf8");
   const viewerIndexText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/index.html"), "utf8");
   const viewerRuntimeTextForInspector = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/viewer-runtime.mjs"), "utf8");
   const viewerCommandRegistrationText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/viewer-command-registration.mjs"), "utf8");
@@ -718,12 +729,17 @@ function checkGeneratedPanelContracts(context) {
     .flatMap((group) => group.collections.map((collection) => collection.id)) || [];
   const advancedBrowserCollections = modelCollectionMetadata.groupedModelCollections?.({ browserVisibility: modelBrowserMetadata.modelBrowserVisibilityFilter("advanced") })
     .flatMap((group) => group.collections.map((collection) => collection.id)) || [];
-  for (const advancedOnlyCollection of ["interfaces", "connectionZones", "holePatterns"]) {
+  for (const advancedOnlyCollection of ["interfaces"]) {
     if (primaryBrowserCollections.includes(advancedOnlyCollection)) {
       fail(errors, `Model Browser primary mode must not include advanced collection ${advancedOnlyCollection}`);
     }
     if (!advancedBrowserCollections.includes(advancedOnlyCollection)) {
       fail(errors, `Model Browser advanced mode must include advanced collection ${advancedOnlyCollection}`);
+    }
+  }
+  for (const primaryConnectionCollection of ["smartComponentInstances", "welds", "fastenerGroups", "holePatterns", "connectionZones"]) {
+    if (!primaryBrowserCollections.includes(primaryConnectionCollection)) {
+      fail(errors, `Model Browser primary mode must include connection collection ${primaryConnectionCollection}`);
     }
   }
   if (!advancedBrowserCollections.includes("members")) {
@@ -854,12 +870,39 @@ function checkGeneratedPanelContracts(context) {
     || !smartComponentBrowserText.includes("smartComponentPresetActionSpec")
     || !smartComponentBrowserText.includes("smartComponentPresetActionLabel")
     || !smartComponentBrowserText.includes("smartComponentStatusIcon")
+    || smartComponentBrowserMetadata.SMART_COMPONENT_CONNECTION_BROWSER_PANEL_SPEC?.layout !== "tiles"
+    || !smartComponentBrowserText.includes('spec.layout === "tiles"')
+    || !smartComponentBrowserText.includes("renderPresetTile")
+    || !smartComponentBrowserText.includes("bc-smart-component-browser-preset-tile")
+    || !smartComponentBrowserText.includes("bc-smart-component-browser-preset-tile-icon")
+    || !smartComponentBrowserText.includes("bc-smart-component-browser-preset-tile-preview")
+    || !smartComponentBrowserText.includes("smartComponentPresetArtworkUrl")
+    || !smartComponentBrowserText.includes("CONNECTION_ARTWORK_BY_VARIANT")
+    || !smartComponentBrowserText.includes("./assets/connection-artwork/")
+    || smartComponentBrowserText.includes("data:image/svg+xml")
+    || smartComponentBrowserText.includes("bc-smart-component-browser-preset-tile-action")
+    || smartComponentBrowserText.includes("bc-smart-component-browser-preset-tile-value")
+    || !smartComponentBrowserText.includes("includeThumbnail: spec.showPreviewImages !== false")
+    || !smartComponentBrowserCssText.includes(".bc-smart-component-browser-preset-tile")
+    || !smartComponentBrowserCssText.includes('grid-template-columns: repeat(auto-fit, minmax(138px, 1fr))')
+    || !smartComponentBrowserCssText.includes(".bc-smart-component-browser-preset-tile-icon")
+    || !smartComponentBrowserCssText.includes(".bc-smart-component-browser-preset-tile-preview")
+    || smartComponentBrowserCssText.includes(".bc-smart-component-browser-preset-tile-action")
+    || smartComponentBrowserCssText.includes(".bc-smart-component-browser-preset-tile-value")
+    || smartComponentBrowserMetadata.SMART_COMPONENT_CONNECTION_BROWSER_PANEL_SPEC?.showPreviewImages !== false
+    || smartComponentBrowserMetadata.SMART_COMPONENT_CONNECTION_BROWSER_PANEL_SPEC?.previewArtworkMode !== "generated"
+    || !viewerStyleText.includes('./smart-component-browser.css')
     || smartComponentBrowserText.includes("function kindIcon")
     || smartComponentBrowserText.includes("function actionLabel")
     || smartComponentBrowserText.includes("function actionIcon")
     || smartComponentBrowserText.includes("function statusIcon")
   ) {
     fail(errors, "Smart Component browser must be a viewer-owned bc-data-panel surface over public Smart Component APIs");
+  }
+  for (const assetName of connectionArtworkAssets) {
+    if (!fs.existsSync(path.join(ROOT, "bobercad/app/ui/viewer/assets/connection-artwork", assetName))) {
+      fail(errors, `Smart Component browser generated bitmap artwork asset is missing: ${assetName}`);
+    }
   }
 }
 

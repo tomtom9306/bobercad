@@ -602,6 +602,16 @@
       "returns": "project and smartComponentId"
     },
     {
+      "id": "store.previewSmartComponentFromPreset",
+      "module": "../store/project-command-store.mjs",
+      "description": "Generate a Smart Component preview project from a preset without committing it to the store.",
+      "parameters": {
+        "presetId": "string",
+        "memberIds": "member ids or empty for standalone presets"
+      },
+      "returns": "preview project, smartComponentId, focus object ids, owned object ids, helper object ids and diagnostics"
+    },
+    {
       "id": "store.createTrimJoint",
       "module": "../store/project-command-store.mjs",
       "description": "Create a semantic trim joint with one initial trim operation.",
@@ -1287,6 +1297,15 @@
       "id": "store.toggleSmartComponentRoleFromFace",
       "module": "../store/project-command-store.mjs",
       "description": "Public project store API for toggle smart component role from face.",
+      "parameters": {
+        "face": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.toggleSmartComponentZoneObjectFromFace",
+      "module": "../store/project-command-store.mjs",
+      "description": "Toggle ghost visibility for a manual connection-zone object from a picked face.",
       "parameters": {
         "face": "method parameter"
       },

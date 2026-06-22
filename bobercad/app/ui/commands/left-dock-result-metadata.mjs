@@ -8,6 +8,7 @@ export const LEFT_DOCK_RESULT_GROUP_LABELS = Object.freeze({
   files: "Files",
   data: "Data",
   model: "Model",
+  connections: "Connections",
   components: "Components"
 });
 
@@ -158,17 +159,18 @@ function smartComponentPresetResults(presets = [], catalog = null) {
     .map((preset) => {
       const definition = definitions[preset?.type] || {};
       const kind = preset?.kind || definition.kind || "component";
+      const tab = kind === "connection" ? "connections" : "components";
       return result({
         id: `leftDock.components.preset.${safeId(preset?.id || preset?.name)}`,
         kind: "smart-component-preset",
         title: preset?.name || preset?.id,
         description: [definition.title || smartComponentTitleCase(preset?.type || ""), kind, preset?.version ? `v${preset.version}` : ""].filter(Boolean).join(" - "),
-        groupLabel: LEFT_DOCK_RESULT_GROUP_LABELS.components,
+        groupLabel: LEFT_DOCK_RESULT_GROUP_LABELS[tab],
         icon: smartComponentKindIcon(kind),
         keywords: [preset?.id, preset?.name, preset?.description, preset?.type, kind, definition.title],
         action: {
           type: "showSmartComponentPreset",
-          tab: "components",
+          tab,
           presetId: preset?.id
         }
       });

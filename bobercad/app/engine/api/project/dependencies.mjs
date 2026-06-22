@@ -103,6 +103,30 @@ function indexedValues(map, key) {
   return map.get(key) || [];
 }
 
+function connectionZoneObjectIds(zone) {
+  return requiredStringArray(zone?.objectIds || [], `${zone?.id || "connectionZone"}.objectIds`);
+}
+
+function connectionZoneSmartComponentInstanceIds(zone) {
+  return requiredStringArray(zone?.smartComponentInstanceIds || [], `${zone?.id || "connectionZone"}.smartComponentInstanceIds`);
+}
+
+function smartComponentConnectionZoneObjectIds(project, instance) {
+  const zones = modelCollection(project, "connectionZones");
+  const zoneIds = new Set();
+  const inputZoneId = smartComponentConnectionZoneId(instance);
+  if (inputZoneId) zoneIds.add(inputZoneId);
+  for (const zone of Object.values(zones)) {
+    if (connectionZoneSmartComponentInstanceIds(zone).includes(instance.id)) zoneIds.add(zone.id);
+  }
+  const ids = [];
+  for (const zoneId of zoneIds) {
+    const zone = zones[zoneId];
+    if (zone) ids.push(...connectionZoneObjectIds(zone));
+  }
+  return unique(ids);
+}
+
 function projectDependencyIndex(project) {
   let cached = PROJECT_DEPENDENCY_INDEX.get(project);
   if (cached) return cached;
@@ -118,7 +142,8 @@ function projectDependencyIndex(project) {
     for (const objectId of unique([
       instance.id,
       ...smartComponentOwnedObjectIds(instance),
-      ...smartComponentDetachedObjectIds(instance)
+      ...smartComponentDetachedObjectIds(instance),
+      ...smartComponentConnectionZoneObjectIds(project, instance)
     ])) {
       pushIndexedValue(index.smartComponentsByObjectId, objectId, instance);
     }
@@ -163,7 +188,8 @@ export function smartComponentObjectIds(project, instance, options = {}) {
   const directIds = [
     instance.id,
     ...smartComponentOwnedObjectIds(instance),
-    ...smartComponentDetachedObjectIds(instance)
+    ...smartComponentDetachedObjectIds(instance),
+    ...smartComponentConnectionZoneObjectIds(project, instance)
   ];
   const childIds = directIds.flatMap((objectId) => {
     const child = objectId !== instance.id ? modelCollection(project, "smartComponentInstances")[objectId] : null;
@@ -188,7 +214,7 @@ export function smartComponentRoot(project, instance) {
 export function smartComponentForObject(project, objectId) {
   return Object.values(modelCollection(project, "smartComponentInstances")).find((instance) => (
     smartComponentReferencesObject(instance, objectId)
-  )) || null;
+  )) || indexedValues(projectDependencyIndex(project).smartComponentsByObjectId, objectId)[0] || null;
 }
 
 export function smartComponentRootForObject(project, objectId) {

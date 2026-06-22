@@ -102,6 +102,7 @@ export function mountEditorUi({
   selection,
   memberEdit,
   smartComponentHighlightObjectIds,
+  previewService = null,
   onProjectChange,
   onLocalMemberProjectChange,
   onSmartComponentSelected,
@@ -116,6 +117,8 @@ export function mountEditorUi({
   let sceneSelected = true;
   let gridEditorEmpty = false;
   const memberCustomProfileDrafts = new Map();
+  const smartComponentPreviewResults = new Map();
+  const smartComponentPreviewRequests = new Set();
   const panelMessage = createPanelMessageState(() => render());
   const setMessage = panelMessage.set;
   const showError = (error) => setMessage(error.message, "error");
@@ -912,6 +915,14 @@ export function mountEditorUi({
     ? api.smartComponentRoleOptions(smartComponentId)
     : [];
 
+  const smartComponentDefinitionOrNull = (smartComponentId) => {
+    try {
+      return api.definition(smartComponentId);
+    } catch {
+      return null;
+    }
+  };
+
   const smartComponentObjectIndex = () => api.project().objectIndex || {};
 
   const objectGeneratedByCapabilities = () => ({
@@ -923,8 +934,11 @@ export function mountEditorUi({
   const smartComponentPropertiesPanel = () => {
     const smartComponent = api.smartComponent(selectedSmartComponentId);
     if (!smartComponent) return generatedPropertiesPanel({ emptyMessage: "Selected Smart Component is no longer in the project." });
-    const definition = api.definition(selectedSmartComponentId);
+    const definition = smartComponentDefinitionOrNull(selectedSmartComponentId);
     const diagnosticsSummary = inspectorSmartComponentDiagnosticsSummary(smartComponent);
+    const preview = definition
+      ? smartComponentPreviewState(selectedSmartComponentId, smartComponent)
+      : { state: "unavailable", reason: "Smart Component definition is not registered." };
     return generatedPropertiesPanel({
       context: inspectorSmartComponentContext({
         smartComponentId: selectedSmartComponentId,
@@ -936,19 +950,56 @@ export function mountEditorUi({
         smartComponent,
         definition,
         diagnosticsSummary,
-        quickParameterFields: smartComponentQuickParameterFields({
+        preview,
+        quickParameterFields: definition ? smartComponentQuickParameterFields({
           api,
           smartComponent,
           definition,
           labelFor: inspectorMetadataLabel,
           catalogOptions: (catalog, currentId) => catalogOptions(api, catalog, String(currentId || ""))
-        }),
-        liveRoleOptions: smartComponentLiveRoleOptions(selectedSmartComponentId),
+        }) : [],
+        liveRoleOptions: definition ? smartComponentLiveRoleOptions(selectedSmartComponentId) : [],
         objectIndex: smartComponentObjectIndex(),
-        capabilities: smartComponentCapabilities()
+        capabilities: { ...smartComponentCapabilities(), openParameters: Boolean(definition) }
       }), generatedSmartComponentBindings())
     });
   };
+
+  const smartComponentPreviewState = (smartComponentId, smartComponent) => {
+    const key = smartComponentPreviewKey(smartComponentId, smartComponent);
+    if (smartComponentPreviewResults.has(key)) return smartComponentPreviewResults.get(key);
+    if (!previewService?.resolveSmartComponentInstancePreview) {
+      return { state: "unavailable", reason: "Preview service is unavailable." };
+    }
+    if (!smartComponentPreviewRequests.has(key)) {
+      smartComponentPreviewRequests.add(key);
+      previewService.resolveSmartComponentInstancePreview({ smartComponentId })
+        .then((result) => {
+          smartComponentPreviewResults.set(key, result || { state: "unavailable", reason: "Preview is unavailable." });
+          smartComponentPreviewRequests.delete(key);
+          if (selectedSmartComponentId === smartComponentId) render();
+        })
+        .catch((error) => {
+          smartComponentPreviewResults.set(key, { state: "unavailable", reason: error?.message || "Preview is unavailable." });
+          smartComponentPreviewRequests.delete(key);
+          if (selectedSmartComponentId === smartComponentId) render();
+        });
+    }
+    return { state: "pending", reason: "Generating preview." };
+  };
+
+  const smartComponentPreviewKey = (smartComponentId, smartComponent = {}) => JSON.stringify([
+    smartComponentId,
+    smartComponent?.sourceComponent?.id,
+    smartComponent?.health,
+    smartComponent?.ownedObjectIds,
+    smartComponent?.objectRoles,
+    smartComponent?.detachedObjectIds,
+    smartComponent?.suppressedRoles,
+    smartComponent?.suppressedPatternPositions,
+    smartComponent?.referenceParameters,
+    smartComponent?.diagnostics
+  ]);
 
   const objectPropertiesPanel = () => {
     const project = api.project();

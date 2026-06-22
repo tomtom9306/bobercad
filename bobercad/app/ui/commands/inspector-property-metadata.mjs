@@ -567,6 +567,7 @@ export function inspectorSmartComponentPropertySections({
   smartComponent = null,
   definition = null,
   diagnosticsSummary = null,
+  preview = null,
   quickParameterFields = [],
   liveRoleOptions = [],
   objectIndex = {},
@@ -587,6 +588,7 @@ export function inspectorSmartComponentPropertySections({
       detachedObjectCount: detachedObjectIds.size,
       overrideObjectCount: overrideObjectIds.size
     }),
+    smartComponentPreviewSection({ smartComponent, preview }),
     smartComponentDiagnosticsSection({ diagnosticsSummary: summary }),
     smartComponentQuickParameterSection(quickParameterFields),
     smartComponentRoleSection({ smartComponent, definition, liveRoleOptions }),
@@ -601,6 +603,31 @@ export function inspectorSmartComponentPropertySections({
     }),
     smartComponentActionsSection({ smartComponentId, diagnosticsSummary: summary, capabilities })
   ].filter(Boolean);
+}
+
+function smartComponentPreviewSection({ smartComponent = null, preview = null } = {}) {
+  if (!smartComponent) return null;
+  const state = preview?.state || "pending";
+  const title = smartComponent.bim?.name || smartComponent.sourceComponent?.id || smartComponent.id || "Preview";
+  return {
+    id: "inspector.properties.smartComponent.preview",
+    label: "Preview",
+    placement: "main",
+    priority: -10,
+    open: true,
+    fields: [
+      {
+        type: "previewImage",
+        label: "Generated preview",
+        title,
+        value: state === "pending" ? "Generating preview" : preview?.reason || state,
+        reason: preview?.reason || "",
+        state,
+        dataUrl: preview?.dataUrl || "",
+        icon: "smart-component"
+      }
+    ]
+  };
 }
 
 export function inspectorObjectGeneratedBySection({
@@ -1080,7 +1107,9 @@ function smartComponentActionsSection({ smartComponentId = "", diagnosticsSummar
       arrayValues(diagnosticsSummary.diagnostics).length && capabilities.resolveDiagnostics
         ? { type: "action", label: "Resolve Diagnostics", icon: "reset-view", action: "smartComponent.diagnostics.resolve", payload: { smartComponentId } }
         : null,
-      { type: "action", label: "Open Parameters", icon: "smart-component", primary: true, action: "smartComponent.parameters.open", payload: { smartComponentId } },
+      capabilities.openParameters !== false
+        ? { type: "action", label: "Open Parameters", icon: "smart-component", primary: true, action: "smartComponent.parameters.open", payload: { smartComponentId } }
+        : null,
       capabilities.deleteSmartComponent !== false
         ? { type: "action", label: "Remove Smart Component", icon: "cancel", danger: true, action: "smartComponent.delete", payload: { smartComponentId } }
         : null

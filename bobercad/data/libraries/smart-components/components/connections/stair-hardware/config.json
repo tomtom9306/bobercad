@@ -4,6 +4,12 @@
   "kind": "connection",
   "title": "Stair Hardware",
   "version": 1,
+  "preview": {
+    "contexts": [
+      "stair-hardware-basic"
+    ],
+    "focusMode": "generated-with-inputs"
+  },
   "interfaces": [
     {
       "role": "main",

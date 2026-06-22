@@ -15,9 +15,17 @@ function readJson(relative) {
 async function checkSmartComponentQuickProperties(errors) {
   const parameterValuesPath = path.join(ROOT, "bobercad/app/engine/api/model/smart-component-parameter-values.mjs");
   const parameterValues = await import(pathToFileURL(parameterValuesPath).href);
+  const parameterTabs = await import(pathToFileURL(path.join(ROOT, "bobercad/app/ui/viewer/smart-component-parameter-tabs.mjs")).href);
   const generatedPropertyBindings = await import(pathToFileURL(path.join(ROOT, "bobercad/app/ui/viewer/panels/generated-property-bindings.mjs")).href);
   const parameterValuesText = fs.readFileSync(parameterValuesPath, "utf8");
   const quickPaths = (definition) => parameterValues.uiQuickParameterEntries(definition, firstPresetParameters(definition)).map((entry) => entry.path);
+  const viewerQuickPaths = (definition) => parameterValues.uiQuickParameterEntries({
+    ...definition,
+    ui: {
+      ...(definition.ui || {}),
+      tabs: parameterTabs.smartComponentParameterTabs(definition)
+    }
+  }, firstPresetParameters(definition)).map((entry) => entry.path);
   const momentEndPlate = readJson("bobercad/data/libraries/smart-components/components/connections/moment-end-plate/config.json");
   const expectedMoment = ["plate.thickness", "plate.width", "plate.height", "bolts.rows", "bolts.columns", "bolts.pitch"];
   if (!momentEndPlate.parameters?.["plate.offset"]) {
@@ -29,6 +37,30 @@ async function checkSmartComponentQuickProperties(errors) {
   const momentPaths = quickPaths(momentEndPlate);
   if (JSON.stringify(momentPaths) !== JSON.stringify(expectedMoment)) {
     fail(errors, `Smart Component quick properties should follow ui.tabs order and skip hidden/read-only fields for moment-end-plate, got ${JSON.stringify(momentPaths)}`);
+  }
+  const finPlate = readJson("bobercad/data/libraries/smart-components/components/connections/fin-plate/config.json");
+  const expectedFinViewerPrefix = ["plate.thickness", "plate.length", "plate.height", "plate.edgeOffset", "fit.beamGap", "fit.clipBeam"];
+  const finViewerPaths = viewerQuickPaths(finPlate);
+  if (JSON.stringify(finViewerPaths) !== JSON.stringify(expectedFinViewerPrefix)) {
+    fail(errors, `Connection quick properties should start from normalized Properties tab before bolt details for fin-plate, got ${JSON.stringify(finViewerPaths)}`);
+  }
+  const basePlate = readJson("bobercad/data/libraries/smart-components/components/connections/base-plate/config.json");
+  const expectedBaseViewerPrefix = ["plate.thickness", "plate.width", "plate.depth", "plate.offset", "anchors.fastenerRef", "anchors.rows"];
+  const baseViewerPaths = viewerQuickPaths(basePlate);
+  if (JSON.stringify(baseViewerPaths) !== JSON.stringify(expectedBaseViewerPrefix)) {
+    fail(errors, `Connection quick properties should place base-plate primary plate parameters before anchors, got ${JSON.stringify(baseViewerPaths)}`);
+  }
+  const memberSplice = readJson("bobercad/data/libraries/smart-components/components/connections/member-splice/config.json");
+  const spliceTabs = parameterTabs.smartComponentParameterTabs(memberSplice);
+  const spliceProperties = parameterTabs.uiItemParameterPaths({ kind: "section", items: spliceTabs[0]?.items || [] });
+  const spliceBolts = parameterTabs.uiItemParameterPaths({ kind: "section", items: spliceTabs[1]?.items || [] });
+  if (
+    spliceTabs[0]?.id !== "properties"
+    || spliceTabs[1]?.id !== "bolts"
+    || JSON.stringify(spliceProperties) !== JSON.stringify(["connections.splicePlateThickness", "connections.splicePlateWidth", "connections.splicePlateHeight", "connections.spliceCutGap"])
+    || JSON.stringify(spliceBolts) !== JSON.stringify(["connections.spliceFastenerRef", "connections.spliceHoleDiameter", "connections.spliceBoltLength", "connections.spliceGripLength"])
+  ) {
+    fail(errors, `Connection parameter tabs should split member-splice primary and bolt settings, got ${JSON.stringify(spliceTabs)}`);
   }
   if (typeof parameterValues.parameterFieldDescriptor !== "function") {
     fail(errors, "Smart Component parameter values must export parameterFieldDescriptor for generated UI surfaces");
@@ -158,8 +190,8 @@ async function checkSmartComponentQuickProperties(errors) {
   if (!inspectorText.includes("contributions/smart-component-properties.mjs") || inspectorText.includes("uiQuickParameterEntries(definition") || inspectorText.includes("parameterFieldDescriptor(definition")) {
     fail(errors, "Smart Component quick properties: Inspector must delegate quick field assembly to the Smart Component properties contribution");
   }
-  if (!smartComponentPropertiesText.includes("uiQuickParameterEntries(definition") || !smartComponentPropertiesText.includes("parameterFieldDescriptor(definition")) {
-    fail(errors, "Smart Component quick properties contribution must generate fields from definition.ui order through parameterFieldDescriptor");
+  if (!smartComponentPropertiesText.includes("smartComponentParameterTabs(definition)") || !smartComponentPropertiesText.includes("uiQuickParameterEntries(uiDefinition") || !smartComponentPropertiesText.includes("parameterFieldDescriptor(definition")) {
+    fail(errors, "Smart Component quick properties contribution must normalize connection tabs, then generate fields through parameterFieldDescriptor");
   }
   if (!parameterValuesText.includes("parameterValue(definition") || !parameterValuesText.includes("spec.writePath || path") || !parameterValuesText.includes("conditionMatches(spec.editableWhen")) {
     fail(errors, "Smart Component parameterFieldDescriptor must resolve values, honor writePath, and share editableWhen behavior");

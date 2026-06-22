@@ -7,28 +7,35 @@ export const SMART_COMPONENT_BROWSER_PANEL_SPEC = Object.freeze({
   itemCountLabel: "presets",
   collectionLabel: "Presets",
   readyLabel: "Ready",
-  statusMetaFallback: "status",
-  cancelPickLabel: "Cancel member pick",
-  cancelPickStatus: "Member pick cancelled.",
-  memberPickUnavailableStatus: "Member picking is unavailable.",
-  secondMemberPickStatus: "Pick the second member."
+  statusMetaFallback: "status"
+});
+
+export const SMART_COMPONENT_CONNECTION_BROWSER_PANEL_SPEC = Object.freeze({
+  ...SMART_COMPONENT_BROWSER_PANEL_SPEC,
+  title: "Connections",
+  icon: "interface",
+  layout: "tiles",
+  showPreviewImages: false,
+  previewArtworkMode: "generated",
+  searchPlaceholder: "Search connections",
+  searchLabel: "Search connection components",
+  emptyMessage: "No matching connection components."
 });
 
 export const SMART_COMPONENT_STATUS_SPECS = Object.freeze({
   default: status("default", "smart-component"),
   error: status("error", "cancel"),
-  pick: status("pick", "link"),
   created: status("created", "smart-component"),
   cancelled: status("cancelled", "smart-component")
 });
 
 export const SMART_COMPONENT_PRESET_ACTIONS = Object.freeze({
   create: action("create", "smart-component", "Create"),
-  memberPick: action("member-pick", "link", "Pick members for")
+  select: action("select", "inspector", "Open")
 });
 
 export const SMART_COMPONENT_KIND_SPECS = Object.freeze([
-  kind("connection", "Connection Components", "interface", { actionMode: "member-pick" }),
+  kind("connection", "Connection Components", "interface", { actionMode: "select" }),
   kind("frame", "Frame Components", "beam"),
   kind("building", "Building Components", "assembly"),
   kind("sectioning", "Sectioning Components", "work-plane"),
@@ -67,7 +74,6 @@ export function smartComponentPresetActionSpec(kindId) {
 }
 
 export function smartComponentPresetActionLabel(item = {}, { active = false } = {}) {
-  if (active) return SMART_COMPONENT_BROWSER_PANEL_SPEC.cancelPickLabel;
   const actionSpec = smartComponentPresetActionSpec(item.kind);
   return `${actionSpec.verb} ${item.name || item.id || ""}`.trim();
 }
@@ -80,10 +86,6 @@ export function smartComponentStatusIcon(statusState = "") {
   return (SMART_COMPONENT_STATUS_SPECS[statusState] || SMART_COMPONENT_STATUS_SPECS.default).icon;
 }
 
-export function smartComponentStatusValue(pickedMemberIds = []) {
-  return pickedMemberIds.length ? `Picked ${pickedMemberIds.join(", ")}` : SMART_COMPONENT_BROWSER_PANEL_SPEC.readyLabel;
-}
-
 export function smartComponentSelectionStatus(item = {}) {
   return item.description || smartComponentSelectedStatus(item);
 }
@@ -94,10 +96,6 @@ export function smartComponentSelectedStatus(item = {}) {
 
 export function smartComponentCreatedStatus(smartComponentId) {
   return `Created ${smartComponentId}.`;
-}
-
-export function smartComponentPickStatus(item = {}) {
-  return `${SMART_COMPONENT_PRESET_ACTIONS.memberPick.verb} ${item.name || item.id || "component"}.`;
 }
 
 export function smartComponentTitleCase(value = "") {

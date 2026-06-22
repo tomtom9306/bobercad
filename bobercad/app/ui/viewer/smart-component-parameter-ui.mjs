@@ -2,6 +2,7 @@ import { cloneParameterValue as clone, conditionDependsOn, conditionMatches, opt
 import { bindGeneratedPropertyField } from "./panels/generated-property-bindings.mjs";
 import { generatedPropertyField } from "./panels/generated-properties-panel.mjs";
 import { disclosureSection as sharedDisclosureSection } from "./panels/panel-elements.mjs";
+import { smartComponentParameterTabs } from "./smart-component-parameter-tabs.mjs";
 
 import { ensureSmartComponentParameterUiStyle } from "./smart-component-parameter-ui-style.mjs";
 
@@ -746,6 +747,98 @@ function renderStairRouteModules(parameters, path, update, uiState) {
   return root;
 }
 
+function renderPresetParameter(definition, parameters, path, api, uiState) {
+  const descriptor = parameterFieldDescriptor(definition, parameters, path, {
+    api,
+    focusPath: uiState.focusPath,
+    catalogOptions: (entrySpec, entryValue) => catalogParameterOptions(api, entrySpec, entryValue)
+  });
+  if (!descriptor) return null;
+  return parameterRow(generatedPropertyField(descriptor), path, uiState);
+}
+
+export function mountPresetSmartComponentUi({ panel, definition, preset, api, onPanelFocus, focusPath = null } = {}) {
+  ensureSmartComponentParameterUiStyle();
+  if (!panel || !definition || !preset) return null;
+
+  const parameters = clone(preset.parameters || {});
+  const definitionTabs = smartComponentParameterTabs(definition);
+  const tabFields = (item) => {
+    if (typeof item === "string") return [item];
+    if (item?.kind === "parameter") return [item.path];
+    if (item?.kind === "section") return (item.items || []).flatMap(tabFields);
+    return [];
+  };
+  const tabForFocus = focusPath ? definitionTabs.find((tab) => (tab.items || []).flatMap(tabFields).includes(focusPath)) : null;
+  let activeTab = tabForFocus?.id || definitionTabs[0]?.id || "parameters";
+  const body = document.createElement("div");
+  const tabs = document.createElement("div");
+  const status = text("div", "connection-status", "preset");
+  const tabPanelId = `smart-component-preset-${String(preset.id).replace(/[^A-Za-z0-9_-]+/g, "-") || "panel"}`;
+  const uiState = { focusPath };
+
+  body.addEventListener("pointerdown", (event) => {
+    if (event.target?.closest?.("input, select, button")) onPanelFocus?.();
+  });
+
+  const renderPresetTabStrip = () => generatedPropertyField(bindGeneratedPropertyField(
+    smartComponentTabStripDescriptor(definitionTabs, activeTab, tabPanelId),
+    {
+      commits: {
+        "smartComponent.parameterPanel.tab.set": (nextTabId) => {
+          if (!definitionTabs.some((tab) => tab.id === nextTabId)) return;
+          activeTab = nextTabId;
+          renderTabs();
+          renderBody();
+        }
+      }
+    }
+  ));
+
+  const renderItem = (item) => {
+    if (item?.visibleWhen && !conditionMatches(item.visibleWhen, parameters)) return [];
+    if (typeof item === "string") return renderPresetParameter(definition, parameters, item, api, uiState);
+    if (item?.kind === "parameter") return renderPresetParameter(definition, parameters, item.path, api, uiState);
+    if (item?.kind === "section") {
+      const section = sharedDisclosureSection(item.label, (item.items || []).flatMap(renderItem).filter(Boolean), {
+        open: Boolean(item.open),
+        className: "bc-disclosure-nested",
+        bodyClassName: "bc-parameter-section-body"
+      });
+      return section;
+    }
+    return [];
+  };
+
+  function renderTabs() {
+    tabs.replaceChildren(renderPresetTabStrip());
+  }
+
+  function renderBody() {
+    const tab = definitionTabs.find((entry) => entry.id === activeTab) || definitionTabs[0];
+    body.className = "bc-parameter-tab-body bc-properties-body";
+    body.id = tabPanelId;
+    body.setAttribute("role", "tabpanel");
+    body.setAttribute("aria-label", tab?.label || "Parameters");
+    body.replaceChildren(...(tab?.items || []).flatMap(renderItem).filter(Boolean));
+  }
+
+  const header = document.createElement("header");
+  header.className = "connection-header";
+  header.append(
+    text("div", "connection-kicker", preset.id),
+    text("h1", "connection-title", preset.name || definition.title || preset.id),
+    status
+  );
+
+  renderTabs();
+  renderBody();
+  panel.classList.add("connection-ui", "bc-inspector");
+  panel.hidden = false;
+  panel.replaceChildren(header, tabs, body);
+  return { presetId: preset.id };
+}
+
 export function mountParameterSmartComponentUi({ panel, definition, smartComponentId, api, onProjectChange, onSmartComponentDeleted, onPanelFocus, focusPath = null, focusMode = "select", focusInput = true }) {
   ensureSmartComponentParameterUiStyle();
   definition ||= api.definition(smartComponentId);
@@ -757,14 +850,15 @@ export function mountParameterSmartComponentUi({ panel, definition, smartCompone
   const tabs = document.createElement("div");
   const message = text("div", "connection-message", "Ready");
   const status = text("div", "connection-status", "");
+  const definitionTabs = smartComponentParameterTabs(definition);
   const tabFields = (item) => {
     if (typeof item === "string") return [item];
     if (item?.kind === "parameter") return [item.path];
     if (item?.kind === "section") return (item.items || []).flatMap(tabFields);
     return [];
   };
-  const tabForFocus = focusPath ? definition.ui.tabs.find((tab) => (tab.items || []).flatMap(tabFields).includes(focusPath)) : null;
-  let activeTab = tabForFocus?.id || definition.ui.tabs[0].id;
+  const tabForFocus = focusPath ? definitionTabs.find((tab) => (tab.items || []).flatMap(tabFields).includes(focusPath)) : null;
+  let activeTab = tabForFocus?.id || definitionTabs[0]?.id || "parameters";
   const tabPanelId = `smart-component-parameters-${String(smartComponentId).replace(/[^A-Za-z0-9_-]+/g, "-") || "panel"}`;
   const uiState = { customNumberPaths: new Set(), focusPath, focusMode, focusInput, sectionOpen: new Map(), renderBody: () => renderBody() };
   body.addEventListener("pointerdown", (event) => {
@@ -809,7 +903,7 @@ export function mountParameterSmartComponentUi({ panel, definition, smartCompone
     || spec.derive?.countPath === path || spec.derive?.defaultPath === path || spec.derive?.sizePath === path
     || spec.derive?.spacingModePath === path || spec.derive?.equalSpacingPath === path || spec.derive?.customSpacingPath === path
     || spec.derive?.sourcePath === path
-  )) || (definition.ui.tabs || []).some((tab) => (tab.items || []).some((item) => itemDependsOn(item, path)));
+  )) || definitionTabs.some((tab) => (tab.items || []).some((item) => itemDependsOn(item, path)));
 
   const refreshReadouts = () => {
     for (const row of body.querySelectorAll(".bc-readout[data-path]")) {
@@ -898,7 +992,7 @@ export function mountParameterSmartComponentUi({ panel, definition, smartCompone
   const bindSmartComponentTabStripDescriptor = (descriptor) => bindGeneratedPropertyField(descriptor, {
     commits: {
       "smartComponent.parameterPanel.tab.set": (nextTabId) => {
-        if (!definition.ui.tabs.some((tab) => tab.id === nextTabId)) return;
+        if (!definitionTabs.some((tab) => tab.id === nextTabId)) return;
         activeTab = nextTabId;
         renderTabs();
         renderBody();
@@ -906,7 +1000,7 @@ export function mountParameterSmartComponentUi({ panel, definition, smartCompone
     }
   });
   const renderSmartComponentTabStrip = () => generatedPropertyField(
-    bindSmartComponentTabStripDescriptor(smartComponentTabStripDescriptor(definition.ui.tabs, activeTab, tabPanelId))
+    bindSmartComponentTabStripDescriptor(smartComponentTabStripDescriptor(definitionTabs, activeTab, tabPanelId))
   );
 
   const removeSmartComponent = () => {
@@ -981,12 +1075,12 @@ export function mountParameterSmartComponentUi({ panel, definition, smartCompone
   };
 
   function renderBody() {
-    const tab = definition.ui.tabs.find((entry) => entry.id === activeTab);
+    const tab = definitionTabs.find((entry) => entry.id === activeTab) || definitionTabs[0];
     body.className = "bc-parameter-tab-body bc-properties-body";
     body.id = tabPanelId;
     body.setAttribute("role", "tabpanel");
     body.setAttribute("aria-label", tab?.label || "Parameters");
-    body.replaceChildren(...tab.items.flatMap(renderItem));
+    body.replaceChildren(...(tab?.items || []).flatMap(renderItem));
     requestAnimationFrame(focusParameter);
   }
 

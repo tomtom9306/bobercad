@@ -66,6 +66,9 @@ async function checkAutoSmartComponentLifecycle(errors) {
     const { createProjectStore } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/store/project-command-store.mjs")).href);
     const { buildSmartComponentDimensions } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/annotations/build-dimensions.mjs")).href);
     const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/scene/scene-geometry-builder.mjs")).href);
+    const { renderSceneThumbnailDataUrl, sceneRenderableCounts } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/rendering/preview/scene-thumbnail-renderer.mjs")).href);
+    const { createSmartComponentPreviewService } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/ui/viewer/smart-component-preview-service.mjs")).href);
+    const { knownSmartComponentPreviewContextIds, smartComponentPreviewContextsForPreset } = await import(pathToFileURL(path.join(ROOT, "bobercad/app/engine/modules/smart-components/smart-component-preview-contexts.mjs")).href);
 
     const baseProject = readJson("bobercad/data/projects/sample_beam_to_column_fin_plate.json");
     const profilesLibrary = readJson("bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json");
@@ -82,6 +85,125 @@ async function checkAutoSmartComponentLifecycle(errors) {
       trimCallouts: scene.callouts.filter((item) => item.collection === "trimJoints").length,
       trimHandles: scene.lines.filter((item) => item.componentKind === "trim-operation" && !item.referencePlaneId).length
     });
+
+    const previewStore = createProjectStore({
+      project: readJson("bobercad/data/projects/sample_connection_test_frame.json"),
+      profiles,
+      smartComponentCatalog,
+      fasteners,
+      materials
+    });
+    const beforePreview = JSON.stringify(previewStore.project());
+    const preview = previewStore.previewSmartComponentFromPreset("moment-end-plate", ["column_c1", "beam_b1_south"]);
+    const afterPreview = JSON.stringify(previewStore.project());
+    if (beforePreview !== afterPreview) fail(errors, "Smart Component preview: dry-run must not mutate the active store project");
+    if (!preview.project?.model?.smartComponentInstances?.[preview.smartComponentId]) fail(errors, "Smart Component preview: dry-run project should contain the preview Smart Component");
+    if (!preview.focusObjectIds?.includes("column_c1") || !preview.focusObjectIds?.includes("beam_b1_south") || !preview.ownedObjectIds?.length) {
+      fail(errors, `Smart Component preview: expected selected members and generated objects in preview focus ids, got ${JSON.stringify(preview.focusObjectIds)}`);
+    }
+    const previewScene = buildScene(preview.project, profiles, fasteners, viewerSettings, {
+      activeSmartComponentId: preview.smartComponentId,
+      renderObjectIds: preview.focusObjectIds
+    });
+    const previewCounts = sceneRenderableCounts(previewScene, [...preview.ownedObjectIds, ...preview.helperObjectIds]);
+    if (previewCounts.faces <= 0 && previewCounts.lines <= 0) {
+      fail(errors, `Smart Component preview: expected generated scene geometry, got ${JSON.stringify(previewCounts)}`);
+    }
+    const previewDataUrl = renderSceneThumbnailDataUrl(previewScene, { objectIds: preview.focusObjectIds });
+    if (!previewDataUrl?.startsWith("data:image/svg+xml")) {
+      fail(errors, "Smart Component preview: thumbnail renderer must return a generated SVG data URL");
+    }
+    const currentPreviewStore = createProjectStore({
+      project: readJson("bobercad/data/projects/sample_connection_test_frame.json"),
+      profiles,
+      smartComponentCatalog,
+      fasteners,
+      materials
+    });
+    const currentPreviewCreated = currentPreviewStore.createSmartComponentFromPreset("moment-end-plate", ["column_c1", "beam_b1_south"]);
+    const currentPreviewService = createSmartComponentPreviewService({
+      api: currentPreviewStore,
+      profiles,
+      fasteners,
+      materials,
+      smartComponentCatalog,
+      viewerSettings
+    });
+    const currentPreview = await currentPreviewService.resolveSmartComponentInstancePreview({ smartComponentId: currentPreviewCreated.smartComponentId });
+    if (currentPreview.state !== "available" || !currentPreview.dataUrl?.startsWith("data:image/svg+xml")) {
+      fail(errors, `Smart Component preview: current-project instance preview should return an available data URL, got ${JSON.stringify({ state: currentPreview.state, reason: currentPreview.reason })}`);
+    }
+    const connectionPresetIds = Object.values(smartComponentCatalog.smartComponents || {})
+      .filter((preset) => preset.kind === "connection")
+      .map((preset) => preset.id);
+    const nestedSystemConnectionPresetIds = new Set(["stair-hardware", "member-splice"]);
+    const knownPreviewContextIds = new Set(knownSmartComponentPreviewContextIds());
+    for (const presetId of connectionPresetIds) {
+      const preset = smartComponentCatalog.smartComponents[presetId];
+      const definition = smartComponentCatalog.definitions?.[preset.type];
+      const contextIds = preset.preview?.contexts || definition?.preview?.contexts || [];
+      if (!Array.isArray(contextIds) || !contextIds.length) {
+        fail(errors, `Smart Component preview: connection preset ${presetId} must declare preview.contexts in its Smart Component definition or preset`);
+        continue;
+      }
+      for (const contextId of contextIds) {
+        if (!knownPreviewContextIds.has(contextId)) {
+          fail(errors, `Smart Component preview: connection preset ${presetId} references unknown preview context ${contextId}`);
+        }
+      }
+      const orderedContexts = smartComponentPreviewContextsForPreset(preset);
+      if (orderedContexts[0]?.id !== contextIds[0]) {
+        fail(errors, `Smart Component preview: preset ${presetId} must resolve preview contexts from metadata, got first=${orderedContexts[0]?.id || "none"} expected=${contextIds[0]}`);
+      }
+    }
+    for (const presetId of connectionPresetIds) {
+      const presetPreview = await currentPreviewService.resolvePresetPreview({ presetId, selectedObjectIds: [] });
+      if (presetPreview.state !== "available" || !presetPreview.dataUrl?.startsWith("data:image/svg+xml")) {
+        fail(errors, `Smart Component preview: connection preset ${presetId} should have a real default preview, got ${JSON.stringify({ state: presetPreview.state, reason: presetPreview.reason, source: presetPreview.source })}`);
+      }
+      if (!nestedSystemConnectionPresetIds.has(presetId) && presetPreview.generationMode !== "dry-run") {
+        fail(errors, `Smart Component preview: connection preset ${presetId} default preview must be generated by dry-run, got ${JSON.stringify({ source: presetPreview.source, generationMode: presetPreview.generationMode })}`);
+      }
+      if (nestedSystemConnectionPresetIds.has(presetId) && presetPreview.generationMode !== "context-regenerate") {
+        fail(errors, `Smart Component preview: nested connection preset ${presetId} default preview must regenerate an existing context instance, got ${JSON.stringify({ source: presetPreview.source, generationMode: presetPreview.generationMode })}`);
+      }
+    }
+    const selectionPreviewStore = createProjectStore({
+      project: readJson("bobercad/data/projects/sample_connection_test_frame.json"),
+      profiles,
+      smartComponentCatalog,
+      fasteners,
+      materials
+    });
+    const selectionPreviewService = createSmartComponentPreviewService({
+      api: selectionPreviewStore,
+      profiles,
+      fasteners,
+      materials,
+      smartComponentCatalog,
+      viewerSettings
+    });
+    const compatibleSelectedPreview = await selectionPreviewService.resolvePresetPreview({
+      presetId: "moment-end-plate",
+      selectedObjectIds: ["column_c1", "beam_b1_south"]
+    });
+    if (compatibleSelectedPreview.state !== "available" || compatibleSelectedPreview.selectionActive !== true) {
+      fail(errors, `Smart Component preview: compatible selected members should rank as available, got ${JSON.stringify({ state: compatibleSelectedPreview.state, reason: compatibleSelectedPreview.reason })}`);
+    }
+    const singleSelectedPreview = await selectionPreviewService.resolvePresetPreview({
+      presetId: "moment-end-plate",
+      selectedObjectIds: ["beam_b1_south"]
+    });
+    if (singleSelectedPreview.state !== "available" || singleSelectedPreview.selectionActive !== true || singleSelectedPreview.source !== "selection-member") {
+      fail(errors, `Smart Component preview: one selected member should evaluate compatible connection candidates, got ${JSON.stringify({ state: singleSelectedPreview.state, source: singleSelectedPreview.source, reason: singleSelectedPreview.reason })}`);
+    }
+    const incompatibleSelectedPreview = await selectionPreviewService.resolvePresetPreview({
+      presetId: "fin-plate",
+      selectedObjectIds: ["column_c1", "beam_b1_south"]
+    });
+    if (incompatibleSelectedPreview.state !== "unavailable" || incompatibleSelectedPreview.selectionActive !== true || !incompatibleSelectedPreview.reason) {
+      fail(errors, `Smart Component preview: incompatible selected members should remain visible with an unavailable reason, got ${JSON.stringify({ state: incompatibleSelectedPreview.state, reason: incompatibleSelectedPreview.reason })}`);
+    }
 
     const booleanTrimProject = readJson("bobercad/data/projects/sample_boolean_beam.json");
     const visibleScene = buildScene(booleanTrimProject, profilesLibrary, fasteners, viewerSettings);
@@ -193,7 +315,7 @@ async function checkAutoSmartComponentLifecycle(errors) {
 
     const project = emptyGeneratedSmartComponentModel(baseProject);
     const store = createProjectStore({ project, profiles, smartComponentCatalog, fasteners, materials });
-    const created = store.createSmartComponentFromPreset("beam_to_column_fin_plate_m16_1x3", ["column_1", "beam_1"]);
+    const created = store.createSmartComponentFromPreset("fin-plate", ["column_1", "beam_1"]);
     const afterCreate = store.project();
     const smartComponent = afterCreate.model.smartComponentInstances?.[created.smartComponentId];
     const zone = afterCreate.model.connectionZones?.[smartComponent?.inputs?.connectionZoneId];

@@ -59,6 +59,29 @@ export function createSmartComponentStoreMethods({
   validateGridSystem,
   validateLevel
 }) {
+  function connectionZoneObjectIds(zone) {
+    return requiredStringList(zone?.objectIds || [], `${zone?.id || "connectionZone"}.objectIds`);
+  }
+
+  function connectionZoneSmartComponentInstanceIds(zone) {
+    return requiredStringList(zone?.smartComponentInstanceIds || [], `${zone?.id || "connectionZone"}.smartComponentInstanceIds`);
+  }
+
+  function connectionZoneForObject(project, objectId, smartComponentId) {
+    const zones = projectCollection(project, "connectionZones");
+    const smartComponent = smartComponentId ? projectCollection(project, "smartComponentInstances")[smartComponentId] : null;
+    const inputZoneId = smartComponent?.inputs?.connectionZoneId || null;
+    const candidates = [];
+    if (inputZoneId && zones[inputZoneId]) candidates.push(zones[inputZoneId]);
+    candidates.push(...Object.values(zones).filter((zone) => zone && zone.id !== inputZoneId));
+    return candidates.find((zone) => {
+      if (!connectionZoneObjectIds(zone).includes(objectId)) return false;
+      if (!smartComponentId) return true;
+      const componentIds = connectionZoneSmartComponentInstanceIds(zone);
+      return zone.id === inputZoneId || componentIds.includes(smartComponentId);
+    }) || null;
+  }
+
   return {
     object(objectId) {
       if (!projectObjectIndex(state.currentProject)[objectId]) fail(`object not found: ${objectId}`);
@@ -112,6 +135,51 @@ export function createSmartComponentStoreMethods({
 
       const updated = commitRegeneratedSmartComponent("smartComponent.role.toggleFromFace", next, component.smartComponentId);
       return { project: updated, component, included };
+    },
+
+    toggleSmartComponentZoneObjectFromFace(face) {
+      const objectId = face?.objectId || null;
+      if (!objectId) return null;
+      const collection = objectCollection(state.currentProject, objectId);
+      if (!collection || collection === "members" || collection === "smartComponentInstances") return null;
+      const smartComponent = projectSmartComponentForObject(state.currentProject, objectId);
+      if (!smartComponent) return null;
+      const zone = connectionZoneForObject(state.currentProject, objectId, smartComponent.id);
+      if (!zone) return null;
+
+      const next = clone(state.currentProject);
+      smartComponentById(next, smartComponent.id);
+      const nextZone = projectCollection(next, "connectionZones")[zone.id];
+      const object = projectCollection(next, collection)[objectId];
+      if (!object) fail(`object not found: ${objectId}`);
+
+      const display = optionalObject(object.display, `${objectId}.display`);
+      const included = Boolean(display.suppressed);
+      object.display = { ...display };
+      if (included) {
+        delete object.display.suppressed;
+        object.display.visible = true;
+      } else {
+        object.display.suppressed = true;
+        delete object.display.visible;
+      }
+      nextZone.objectIds = unique([...connectionZoneObjectIds(nextZone), objectId]);
+      nextZone.smartComponentInstanceIds = unique([...connectionZoneSmartComponentInstanceIds(nextZone), smartComponent.id]);
+
+      const updated = commitProject("smartComponent.zoneObject.toggleFromFace", next, {
+        changedObjectIds: [smartComponent.id, objectId, zone.id]
+      });
+      return {
+        project: updated,
+        component: {
+          kind: "connection-zone-object",
+          smartComponentId: smartComponent.id,
+          objectId,
+          collection,
+          connectionZoneId: zone.id
+        },
+        included
+      };
     },
 
     smartComponentObjectIds(smartComponentId) {
@@ -182,6 +250,32 @@ export function createSmartComponentStoreMethods({
 
     smartComponentPresets() {
       return supportedSmartComponentPresetsApi(smartComponentCatalog);
+    },
+
+    previewSmartComponentFromPreset(presetId, memberIds = []) {
+      const preset = smartComponentCatalog.smartComponents[presetId];
+      if (!preset) fail(`smart component preset not found: ${presetId}`);
+      const definition = smartComponentDefinition(smartComponentCatalog, { type: preset.type, sourceComponent: { id: presetId } });
+      const created = createProjectSmartComponentFromPreset(state.currentProject, smartComponentCatalog, presetId, memberIds, { definition });
+      const projectWithLockedFaces = preset.kind === "connection"
+        ? lockSmartComponentZoneFaces(created.project, profilesFor(created.project), created.smartComponentId)
+        : created.project;
+      const next = reconcileGeneratedSmartComponents(regenerateSmartComponent(projectWithLockedFaces, created.smartComponentId));
+      const smartComponent = smartComponentById(next, created.smartComponentId);
+      const ownedObjectIds = smartComponentOwnedObjectIds(smartComponent);
+      const helperObjectIds = smartComponentGeneratedHelperIds(next, smartComponent);
+      const objectIds = smartComponentObjectIds(next, smartComponent);
+      return {
+        project: next,
+        smartComponentId: created.smartComponentId,
+        presetId,
+        memberIds: Array.isArray(memberIds) ? [...memberIds] : [],
+        objectIds,
+        ownedObjectIds,
+        helperObjectIds,
+        focusObjectIds: unique([...memberIds, ...ownedObjectIds, ...helperObjectIds, created.smartComponentId]),
+        diagnostics: Array.isArray(smartComponent.diagnostics) ? clone(smartComponent.diagnostics) : []
+      };
     },
 
     catalogEntries(catalog) {

@@ -1,14 +1,11 @@
-import { smartComponentDetachedObjectIds, smartComponentOwnedObjectIds } from "../../engine/api/project/dependencies.mjs";
+import { smartComponentObjectIds } from "../../engine/api/project/dependencies.mjs";
 
 export const DEFAULT_GHOST_OPACITY = 0.01;
 
 export function activeSmartComponentObjectIds(project, smartComponentId) {
   const smartComponent = smartComponentId ? project.model.smartComponentInstances?.[smartComponentId] : null;
   if (!smartComponent) return new Set();
-  return new Set([
-    ...smartComponentOwnedObjectIds(smartComponent),
-    ...smartComponentDetachedObjectIds(smartComponent)
-  ]);
+  return new Set(smartComponentObjectIds(project, smartComponent));
 }
 
 export function isActiveSmartComponentObject(scene, objectId) {

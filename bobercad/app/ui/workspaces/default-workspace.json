@@ -70,6 +70,7 @@
         "files",
         "data",
         "model",
+        "connections",
         "components"
       ],
       "hiddenTabIds": [],

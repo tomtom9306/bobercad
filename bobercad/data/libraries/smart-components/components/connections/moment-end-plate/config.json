@@ -2,6 +2,13 @@
   "type": "moment-end-plate",
   "title": "Moment End Plate",
   "version": 1,
+  "preview": {
+    "contexts": [
+      "connection-test-frame",
+      "beam-to-beam-end-plate"
+    ],
+    "focusMode": "generated-with-inputs"
+  },
   "recipe": [
     {
       "operation": "member-end-plate",
@@ -25,10 +32,10 @@
     }
   ],
   "presets": {
-    "beam_to_column_end_plate_m16_2x4": {
-      "id": "beam_to_column_end_plate_m16_2x4",
+    "moment-end-plate": {
+      "id": "moment-end-plate",
       "version": "0.1.0",
-      "name": "Moment end plate, M16 2x4",
+      "name": "Moment end plate",
       "parameters": {
         "plate": {
           "thickness": 12,
@@ -61,10 +68,10 @@
         }
       }
     },
-    "light_end_plate_m12_1x2": {
-      "id": "light_end_plate_m12_1x2",
+    "end-plate": {
+      "id": "end-plate",
       "version": "0.1.0",
-      "name": "End plate, M12 1x2",
+      "name": "End plate",
       "parameters": {
         "plate": {
           "thickness": 8,

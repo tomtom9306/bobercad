@@ -17,7 +17,7 @@ const FOUNDATION_DEPTH = 300;
 const MEMBER_PROFILE = "DEMO_I_300X150X8X12";
 const PURLIN_PROFILE = "DEMO_RHS_100X50X5";
 const FOUNDATION_PROFILE = "DEMO_SHS_100X100X5";
-const LIGHT_END_PLATE_PRESET = "light_end_plate_m12_1x2";
+const LIGHT_END_PLATE_PRESET = "end-plate";
 
 function readJson(...parts) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, ...parts), "utf8"));
@@ -314,11 +314,11 @@ async function main() {
   const store = createProjectStore({ project, profiles: profiles.profiles, smartComponentCatalog, fasteners });
 
   for (const [indexY, item] of frame.entries()) {
-    addConnection(store, "column_base_plate_m16_2x2", [item.foundationLeft, item.leftColumn], `base plate left frame ${indexY + 1}`);
-    addConnection(store, "column_base_plate_m16_2x2", [item.foundationRight, item.rightColumn], `base plate right frame ${indexY + 1}`);
-    addConnection(store, "beam_to_column_end_plate_m16_2x4", [item.leftColumn, item.leftRafter], `left eaves frame ${indexY + 1}`);
-    addConnection(store, "beam_to_column_end_plate_m16_2x4", [item.rightColumn, item.rightRafter], `right eaves frame ${indexY + 1}`);
-    addConnection(store, "apex_gusset_m16_2x2", [item.leftRafter, item.rightRafter], `apex frame ${indexY + 1}`);
+    addConnection(store, "base-plate", [item.foundationLeft, item.leftColumn], `base plate left frame ${indexY + 1}`);
+    addConnection(store, "base-plate", [item.foundationRight, item.rightColumn], `base plate right frame ${indexY + 1}`);
+    addConnection(store, "moment-end-plate", [item.leftColumn, item.leftRafter], `left eaves frame ${indexY + 1}`);
+    addConnection(store, "moment-end-plate", [item.rightColumn, item.rightRafter], `right eaves frame ${indexY + 1}`);
+    addConnection(store, "apex-gusset", [item.leftRafter, item.rightRafter], `apex frame ${indexY + 1}`);
   }
 
   for (const purlin of purlins) {

@@ -1,0 +1,221 @@
+{
+  "$schema": "../../app/schemas/project.schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_fin_plate_preview_seed",
+    "name": "Fin Plate Preview Seed",
+    "description": "Semantic preview seed for dry-run fin plate generation. Stores members only; the connection preview is generated at runtime.",
+    "createdWith": "manual-seed-0.6.0"
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axisX": [
+        1,
+        0,
+        0
+      ],
+      "axisY": [
+        0,
+        1,
+        0
+      ],
+      "axisZ": [
+        0,
+        0,
+        1
+      ]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles/profile-libraries/starter-profiles/config.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials/material-libraries/starter-materials/config.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/frames/frame-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_preview",
+    "nodes": {
+      "site_preview": {
+        "id": "site_preview",
+        "type": "site",
+        "name": "Preview",
+        "children": [
+          "zone_preview"
+        ]
+      },
+      "zone_preview": {
+        "id": "zone_preview",
+        "type": "zone",
+        "name": "Connection preview",
+        "children": []
+      }
+    }
+  },
+  "objectIndex": {
+    "preview_column": {
+      "collection": "members",
+      "type": "preview-column"
+    },
+    "preview_beam": {
+      "collection": "members",
+      "type": "preview-beam"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": [
+      "collectionDefault",
+      "typeDefault",
+      "object"
+    ],
+    "collections": {
+      "members": {
+        "*": {
+          "material": "S355",
+          "rotation": 0,
+          "cardinalPoint": "middle-center",
+          "featureIds": [],
+          "fabrication": {
+            "numberingStatus": "preview"
+          },
+          "display": {
+            "visible": true
+          }
+        }
+      }
+    }
+  },
+  "model": {
+    "gridSystems": {},
+    "levels": {},
+    "workPoints": {},
+    "referencePlanes": {},
+    "groups": {},
+    "interfaces": {},
+    "connectionZones": {},
+    "assemblies": {},
+    "members": {
+      "preview_column": {
+        "id": "preview_column",
+        "type": "preview-column",
+        "profile": "DEMO_I_300X150X8X12",
+        "material": "S355",
+        "start": [
+          0,
+          0,
+          0
+        ],
+        "end": [
+          0,
+          0,
+          2600
+        ],
+        "layoutAxis": {
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            0,
+            0,
+            2600
+          ]
+        },
+        "featureIds": [],
+        "display": {
+          "color": "#365f78"
+        }
+      },
+      "preview_beam": {
+        "id": "preview_beam",
+        "type": "preview-beam",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          170,
+          0,
+          1500
+        ],
+        "end": [
+          2200,
+          0,
+          1500
+        ],
+        "layoutAxis": {
+          "start": [
+            0,
+            0,
+            1500
+          ],
+          "end": [
+            2200,
+            0,
+            1500
+          ],
+          "notes": "The layout axis reaches the column centerline so preview generation can infer the connection intersection while the physical beam starts at the column face."
+        },
+        "featureIds": [],
+        "display": {
+          "color": "#3f657d"
+        }
+      }
+    },
+    "plates": {},
+    "sketches": {},
+    "holePatterns": {},
+    "objectPatterns": {},
+    "features": {},
+    "trimJoints": {},
+    "fastenerGroups": {},
+    "welds": {},
+    "smartComponentInstances": {},
+    "relations": {}
+  }
+}

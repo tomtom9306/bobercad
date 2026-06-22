@@ -71,6 +71,9 @@
       "connection-test-frame-1": {
         "path": "../../../data/projects/sample_connection_test_frame.json"
       },
+      "portal-frame-1": {
+        "path": "../../../data/projects/sample_portal_frame.json"
+      },
       "beam-to-beam-fin-plate-1": {
         "path": "../../../data/projects/sample_beam_to_beam_fin_plate.json"
       },
@@ -217,6 +220,7 @@
         }
       },
       "scope": {
+        "components": true,
         "members": true,
         "plates": true,
         "fasteners": true,

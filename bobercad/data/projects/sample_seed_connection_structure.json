@@ -2544,7 +2544,7 @@
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "beam_to_column_end_plate_m16_2x4",
+          "id": "moment-end-plate",
           "version": "0.1.0"
         },
         "inputs": {
@@ -2640,7 +2640,7 @@
           "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "beam_to_column_end_plate_m16_2x4",
+            "id": "moment-end-plate",
             "version": "0.1.0"
           }
         },

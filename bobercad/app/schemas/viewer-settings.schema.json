@@ -286,6 +286,9 @@
             "scope": {
               "type": "object",
               "properties": {
+                "components": {
+                  "type": "boolean"
+                },
                 "members": {
                   "type": "boolean"
                 },

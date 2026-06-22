@@ -1,0 +1,6 @@
+{
+  "host": "127.0.0.1",
+  "port": 5173,
+  "replaceExisting": true,
+  "defaultPath": "/bobercad/app/ui/viewer/index.html?demo=portal-frame-1&qaView=axonometric"
+}

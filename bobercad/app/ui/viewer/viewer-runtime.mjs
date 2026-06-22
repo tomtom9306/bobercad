@@ -31,6 +31,8 @@ import { mountProjectDataPanel } from "./project-data-panel.mjs";
 import { mountProjectFilesPanel } from "./project-files-panel.mjs";
 import { mountProjectPropertiesPanel } from "./project-properties-panel.mjs";
 import { mountSmartComponentBrowser } from "./smart-component-browser.mjs";
+import { createSmartComponentPreviewService } from "./smart-component-preview-service.mjs";
+import { SMART_COMPONENT_CONNECTION_BROWSER_PANEL_SPEC } from "../commands/smart-component-browser-metadata.mjs";
 import { mountNavCube } from "./nav-cube.mjs";
 import { mountViewerSettingsStrip } from "./viewer-settings-strip.mjs";
 import { createIcon } from "../icons/icon-registry.mjs";
@@ -59,6 +61,7 @@ const projectPropertiesPanelRoot = document.getElementById("project-properties-p
 const projectFilesPanelRoot = document.getElementById("project-files-panel");
 const projectDataPanelRoot = document.getElementById("project-data-panel");
 const modelBrowserRoot = document.getElementById("model-browser");
+const connectionComponentLibraryPanel = document.getElementById("connection-component-library");
 const smartComponentLibraryPanel = document.getElementById("smart-component-library");
 const libraryDock = document.querySelector(".bc-left-dock");
 const inspectorDock = document.querySelector(".bc-right-dock");
@@ -208,6 +211,14 @@ async function main() {
       materials,
       cloneOnLoad: !shouldUseProgressiveDetails(project)
     });
+    const smartComponentPreviewService = createSmartComponentPreviewService({
+      api,
+      profiles: profiles.profiles,
+      fasteners,
+      materials,
+      smartComponentCatalog,
+      viewerSettings: runtimeSettings
+    });
     const selection = createSelectionController({ viewer, settings: runtimeSettings, project: () => api.project() });
     const snapManager = createSnapManager({
       viewer,
@@ -230,6 +241,7 @@ async function main() {
     let viewerSettingsUi = null;
     let navCubeUi = null;
     let modelBrowserUi = null;
+    let connectionComponentBrowserUi = null;
     let smartComponentBrowserUi = null;
     let projectPropertiesPanelUi = null;
     let projectFilesPanelUi = null;
@@ -315,6 +327,7 @@ async function main() {
       getProjectFilesPanelUi: () => projectFilesPanelUi,
       getProjectDataPanelUi: () => projectDataPanelUi,
       getSmartComponentBrowserUi: () => smartComponentBrowserUi,
+      getConnectionComponentBrowserUi: () => connectionComponentBrowserUi,
       projectDataSources,
       clearAuxiliaryEditors,
       clearMemberEditSilently,
@@ -414,6 +427,7 @@ async function main() {
     }
     function refreshSelectionSurfaces() {
       modelBrowserUi?.setSelectionState?.(viewerApp.selectionState());
+      connectionComponentBrowserUi?.refresh?.();
       workspaceBindings.refreshCommandState();
       refreshStatusBar();
     }
@@ -608,17 +622,27 @@ async function main() {
       }
       return path;
     };
+    const blockFilteredSelection = () => {
+      clearMemberEditSilently();
+      editorApi?.clearSelection?.();
+      selection.clear();
+      updateModelingStatus("Object type is filtered by snap/selection scope.");
+      return true;
+    };
+    const toggleSmartComponentPartFromFace = (face) => {
+      const result = api.toggleSmartComponentRoleFromFace(face) || api.toggleSmartComponentZoneObjectFromFace?.(face);
+      if (!result) return null;
+      dimensionEdit?.clearDimension({ render: false });
+      editorApi?.selectSmartComponent(result.component.smartComponentId, { inspectorPanel: "component" });
+      handleProjectChange(result.project);
+      return result;
+    };
     const selectHierarchicalFace = (face) => {
       const objectId = face?.objectId || null;
-      const entry = objectId ? api.project().objectIndex?.[objectId] : null;
-      if (objectId && entry?.collection && selection.objectAllowed?.(api.project(), objectId, entry.collection, { ignoreSelectedObjectsOnly: true }) === false) {
-        clearMemberEditSilently();
-        editorApi?.clearSelection?.();
-        selection.clear();
-        updateModelingStatus("Object type is filtered by snap/selection scope.");
-        return true;
-      }
-      const smartComponentPath = smartComponentPathForObject(objectId);
+      const project = api.project();
+      const entry = objectId ? project.objectIndex?.[objectId] : null;
+      const componentsEnabled = selection.componentSelectionEnabled?.() !== false;
+      const smartComponentPath = componentsEnabled ? smartComponentPathForObject(objectId) : [];
       const rootSmartComponent = smartComponentPath[0] || null;
       const selected = editorApi?.selectedState?.() || {};
       const selectedRootId = selected.smartComponentId
@@ -627,32 +651,40 @@ async function main() {
           ? api.smartComponentRootForObject(selected.objectId)?.id
           : null;
 
-      if (!rootSmartComponent) {
+      if (rootSmartComponent) {
+        if (selection.objectAllowed?.(project, rootSmartComponent.id, "smartComponentInstances", { ignoreSelectedObjectsOnly: true }) === false) {
+          return blockFilteredSelection();
+        }
+
+        if (selectedRootId !== rootSmartComponent.id) {
+          editorApi?.selectSmartComponent(rootSmartComponent.id, { inspectorPanel: "component" });
+          return true;
+        }
+
+        const selectedPathIndex = selected.smartComponentId
+          ? smartComponentPath.findIndex((component) => component.id === selected.smartComponentId)
+          : -1;
+        if (selectedPathIndex >= 0 && selectedPathIndex < smartComponentPath.length - 1) {
+          editorApi?.selectSmartComponent(smartComponentPath[selectedPathIndex + 1].id, { inspectorPanel: "component" });
+          return true;
+        }
+
+        if (toggleSmartComponentPartFromFace(face)) return true;
+        editorApi?.selectSmartComponent(rootSmartComponent.id, { inspectorPanel: "component" });
+        return true;
+      }
+
+      if (objectId && entry?.collection && selection.objectAllowed?.(project, objectId, entry.collection, { ignoreSelectedObjectsOnly: true }) === false) {
+        return blockFilteredSelection();
+      }
+
+      if (entry?.collection) {
         if (face?.collection && face.collection !== "members" && objectId) {
           clearMemberEditSilently();
           editorApi?.selectObject(objectId, face);
           return true;
         }
         return false;
-      }
-
-      if (selectedRootId !== rootSmartComponent.id) {
-        editorApi?.selectSmartComponent(rootSmartComponent.id);
-        return true;
-      }
-
-      const selectedPathIndex = selected.smartComponentId
-        ? smartComponentPath.findIndex((component) => component.id === selected.smartComponentId)
-        : -1;
-      if (selectedPathIndex >= 0 && selectedPathIndex < smartComponentPath.length - 1) {
-        editorApi?.selectSmartComponent(smartComponentPath[selectedPathIndex + 1].id);
-        return true;
-      }
-
-      if (entry?.collection) {
-        clearMemberEditSilently();
-        editorApi?.selectObject(objectId, face);
-        return true;
       }
 
       return false;
@@ -676,37 +708,75 @@ async function main() {
       memberEdit.handleSceneClick(face);
     });
     const showSmartComponentEditor = (smartComponentId, options = {}) => {
+      const smartComponent = api.smartComponent(smartComponentId);
+      const inspectorPanel = options.inspectorPanel || (smartComponent?.kind === "connection" ? "component" : null);
+      let definition = null;
+      try {
+        definition = api.definition(smartComponentId);
+      } catch {
+        definition = null;
+      }
       focusedMemberId = null;
       clearMemberEditSilently();
       clearAuxiliaryEditors();
       selection.setActiveSmartComponent?.(smartComponentId);
       selection.select(smartComponentHighlightObjectIds(api.project(), api.smartComponentObjectIds(smartComponentId)));
       const focus = dimensionEdit.selectSmartComponent(smartComponentId, options);
-      const definition = api.definition(smartComponentId);
-      smartComponentUi.mountSmartComponentUi({
-        panel: customPanel,
-        definition,
-        smartComponentId,
-        api,
-        focusPath: focus.path,
-        focusMode: focus.mode,
-        focusInput: !options.focusLabel,
-        onPanelFocus: () => {
-          dimensionEdit.stopLabelEdit();
-        },
-        onProjectChange: handleProjectChange,
-        onSmartComponentDeleted: () => {
-          clearSmartComponentEditor();
-          renderProject(api.project(), { preserveCamera: true });
-          clearMemberEditSilently();
-          clearAuxiliaryEditors();
-          selection.clear();
-        }
-      });
+      if (definition) {
+        smartComponentUi.mountSmartComponentUi({
+          panel: customPanel,
+          definition,
+          smartComponentId,
+          api,
+          focusPath: focus.path,
+          focusMode: focus.mode,
+          focusInput: !options.focusLabel,
+          onPanelFocus: () => {
+            dimensionEdit.stopLabelEdit();
+          },
+          onProjectChange: handleProjectChange,
+          onSmartComponentDeleted: () => {
+            clearSmartComponentEditor();
+            renderProject(api.project(), { preserveCamera: true });
+            clearMemberEditSilently();
+            clearAuxiliaryEditors();
+            selection.clear();
+          }
+        });
+      } else {
+        customPanel.hidden = true;
+        editorApi?.refresh?.();
+      }
       renderProject(api.project(), { preserveCamera: true, activeSmartComponentId: dimensionEdit.smartComponentId() });
       dimensionEdit.render();
-      if (options.inspectorPanel === "component") workspaceBindings.showInspectorContext("component", { focus: false, status: true });
+      if (definition && (options.inspectorPanel === "component" || inspectorPanel === "component")) workspaceBindings.showInspectorContext("component", { focus: false, status: true });
       else workspaceBindings.showInspectorProperties();
+    };
+    const showSmartComponentPresetEditor = (presetId) => {
+      const preset = smartComponentCatalog.smartComponents?.[presetId];
+      const definition = preset ? smartComponentCatalog.definitions?.[preset.type] : null;
+      if (!preset || !definition) {
+        updateModelingStatus(`Smart Component preset not found: ${presetId}`);
+        return false;
+      }
+      focusedMemberId = null;
+      dimensionEdit?.clearAll();
+      clearMemberEditSilently();
+      clearAuxiliaryEditors();
+      selection.setActiveSmartComponent?.(null);
+      selection.clear();
+      smartComponentUi.mountPresetSmartComponentUi({
+        panel: customPanel,
+        definition,
+        preset,
+        api,
+        onPanelFocus: () => {
+          dimensionEdit.stopLabelEdit();
+        }
+      });
+      workspaceBindings.showInspectorContext("component", { focus: false, status: true });
+      updateModelingStatus(`${preset.name || preset.id} settings shown.`);
+      return true;
     };
     dimensionEdit = createDimensionEditController({
       viewer,
@@ -720,11 +790,7 @@ async function main() {
     });
     viewer.setDoubleClickHandler((face) => {
       try {
-        const result = api.toggleSmartComponentRoleFromFace(face);
-        if (!result) return;
-        dimensionEdit.clearDimension({ render: false });
-        editorApi?.selectSmartComponent(result.component.smartComponentId);
-        handleProjectChange(result.project);
+        toggleSmartComponentPartFromFace(face);
       } catch (error) {
         console.error(error);
       }
@@ -844,12 +910,27 @@ async function main() {
     qaBridge.mountQaApi({ api, profiles, snapManager });
     qaBridge.applyQaView(api.project()).catch((error) => console.error(error));
     if (libraryPanel) libraryPanel.hidden = false;
+    connectionComponentBrowserUi = trackDisposable(mountSmartComponentBrowser({
+      root: connectionComponentLibraryPanel || libraryPanel,
+      app: viewerApp,
+      api,
+      smartComponentCatalog,
+      selection,
+      kindFilter: "connection",
+      panelSpec: SMART_COMPONENT_CONNECTION_BROWSER_PANEL_SPEC,
+      previewService: smartComponentPreviewService,
+      onPresetSelected: (item) => showSmartComponentPresetEditor(item.id),
+      onProjectChange: handleProjectChange,
+      onSmartComponentCreated: (smartComponentId) => showSmartComponentEditor(smartComponentId, { inspectorPanel: "component" }),
+      onStatusChange: updateModelingStatus
+    }));
     smartComponentBrowserUi = trackDisposable(mountSmartComponentBrowser({
       root: smartComponentLibraryPanel || libraryPanel,
       app: viewerApp,
       api,
       smartComponentCatalog,
       selection,
+      excludeKindFilter: "connection",
       onProjectChange: handleProjectChange,
       onSmartComponentCreated: (smartComponentId) => showSmartComponentEditor(smartComponentId, { inspectorPanel: "component" }),
       onStatusChange: updateModelingStatus
@@ -878,6 +959,7 @@ async function main() {
       selection,
       memberEdit,
       smartComponentHighlightObjectIds: (smartComponentId) => smartComponentHighlightObjectIds(api.project(), api.smartComponentObjectIds(smartComponentId)),
+      previewService: smartComponentPreviewService,
       onProjectChange: handleProjectChange,
       onLocalMemberProjectChange: handleLocalObjectProjectChange,
       onSmartComponentSelected: (smartComponentId, options) => {
@@ -935,7 +1017,7 @@ async function main() {
       root: modelBrowserRoot,
       app: viewerApp,
       onSelectObject: (objectId) => viewerApp.selectObject(objectId),
-      onSelectSmartComponent: (smartComponentId) => viewerApp.selectSmartComponent(smartComponentId),
+      onSelectSmartComponent: (smartComponentId) => viewerApp.selectSmartComponent(smartComponentId, { inspectorPanel: "component" }),
       onFocusObject: (objectId) => viewerApp.focusSelection([objectId]),
       onFocusSmartComponent: (smartComponentId) => {
         const objectIds = smartComponentHighlightObjectIds(api.project(), api.smartComponentObjectIds(smartComponentId));

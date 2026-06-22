@@ -7,6 +7,8 @@ const COMPONENT_KEYS = new Set(["role", "label", "kind", "default", "objectRoles
 const COMPONENT_DEFAULTS = new Set(["ghost"]);
 const AUTO_INTERFACE_KEYS = new Set(["type", "faceRef", "memberEnd", "stationReference"]);
 const AUTO_INTERFACE_TYPES = new Set(["member-end-face", "member-web", "planar-face"]);
+const PREVIEW_KEYS = new Set(["contexts", "focusMode"]);
+const PREVIEW_FOCUS_MODES = new Set(["generated-with-inputs", "generated-only", "whole-context"]);
 
 function fail(scope, message) {
   throw new Error(`${scope}: ${message}`);
@@ -240,6 +242,31 @@ function validateComponentSpecs(definition) {
   }
 }
 
+function validatePreviewSpec(definition, preview, label) {
+  if (preview === undefined) return;
+  requiredObject(preview, definition.type, label);
+  validateKnownKeys(definition, preview, PREVIEW_KEYS, label);
+  const contexts = requiredArray(preview.contexts, `${label}.contexts`);
+  if (!contexts.length) fail(definition.type, `${label}.contexts must not be empty`);
+  const seen = new Set();
+  for (const [index, contextId] of contexts.entries()) {
+    if (!nonEmptyString(contextId)) fail(definition.type, `${label}.contexts[${index}] must be a non-empty string`);
+    if (seen.has(contextId)) fail(definition.type, `${label}.contexts duplicates ${contextId}`);
+    seen.add(contextId);
+  }
+  if (preview.focusMode !== undefined && !PREVIEW_FOCUS_MODES.has(preview.focusMode)) {
+    fail(definition.type, `${label}.focusMode is unsupported: ${preview.focusMode}`);
+  }
+}
+
+function validatePresetSpecs(definition) {
+  const presets = requiredObject(definition.presets, definition.type, "presets");
+  for (const [presetKey, preset] of Object.entries(presets)) {
+    requiredObject(preset, definition.type, `presets.${presetKey}`);
+    validatePreviewSpec(definition, preset.preview, `presets.${presetKey}.preview`);
+  }
+}
+
 export function defineSmartComponent(definition) {
   definition = requiredObject(definition, "smart component definition", "definition");
   if (!nonEmptyString(definition.type)) fail("smart component definition", "missing type");
@@ -259,6 +286,8 @@ export function defineSmartComponent(definition) {
   for (const spec of optionalArray(definition.dimensions, `${definition.type}.dimensions`)) validateDimensionSpec(definition, spec);
   validateInterfaceSpecs(definition);
   validateComponentSpecs(definition);
+  validatePresetSpecs(definition);
+  validatePreviewSpec(definition, definition.preview, "preview");
   optionalStringArray(definition.requiredPlateRoles, `${definition.type}.requiredPlateRoles`);
   return Object.freeze({ ...definition });
 }

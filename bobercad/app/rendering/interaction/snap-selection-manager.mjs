@@ -1,6 +1,7 @@
 import { uniqueTruthy } from "../../engine/core/model.mjs";
 
 export const DEFAULT_SNAP_SCOPE = Object.freeze({
+  components: true,
   members: true,
   plates: true,
   fasteners: true,
@@ -17,6 +18,7 @@ export const DEFAULT_SNAP_SCOPE = Object.freeze({
 });
 
 const COLLECTION_SCOPE = Object.freeze({
+  smartComponentInstances: "components",
   members: "members",
   plates: "plates",
   fastenerGroups: "fasteners",
@@ -154,6 +156,10 @@ export function createSnapSelectionManager({ settings = {}, viewer = null } = {}
     return options;
   }
 
+  function componentSelectionEnabled() {
+    return scope.components !== false;
+  }
+
   return {
     selectedIds: () => [...selectedIds],
     setSelected,
@@ -163,6 +169,7 @@ export function createSnapSelectionManager({ settings = {}, viewer = null } = {}
     setActiveSmartComponent,
     objectAllowed,
     candidateAllowed,
+    componentSelectionEnabled,
     pickOptions
   };
 }

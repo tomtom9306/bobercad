@@ -19,6 +19,7 @@ Start here, then open the specific docs needed for the task.
 - Smart Component library register: `bobercad/data/libraries/smart-components/smart-component-register.json`
 - Frame library register: `bobercad/data/libraries/frames/frame-register.json`
 - Viewer settings: `bobercad/app/ui/viewer/viewer-settings.json`
+- Local dev server settings: `scripts/dev_server.config.json`
 - Schemas: `bobercad/app/schemas/`
 
 ## Required Reading
@@ -64,3 +65,10 @@ Run schema validation for a specific JSON file:
 ```powershell
 node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_seed_connection_structure.json
 ```
+
+## Local Dev Server
+
+- Use `npm run dev` or `node .\scripts\serve_viewer.js`; do not start ad hoc local servers on random ports.
+- The fixed local server defaults to `http://127.0.0.1:5173/`.
+- `scripts/dev_server.config.json` is authoritative for host, port, default viewer path, and replacement policy.
+- When `replaceExisting` is `true`, the server stops any current listener on that port before starting so all agents reuse the same URL.

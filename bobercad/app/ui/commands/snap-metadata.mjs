@@ -34,6 +34,7 @@ export const SNAP_SCOPE_MODES = Object.freeze([
 ]);
 
 export const SNAP_TARGET_SPECS = Object.freeze([
+  { key: "components", label: "Smart Components", description: "Toggle Smart Component selection targets." },
   { key: "members", label: "Members", description: "Toggle member snap targets." },
   { key: "plates", label: "Plates", description: "Toggle plate snap targets." },
   { key: "features", label: "Features", description: "Toggle feature snap targets." },

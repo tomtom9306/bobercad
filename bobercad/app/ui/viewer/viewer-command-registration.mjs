@@ -55,6 +55,7 @@ export function createViewerCommandRegistration({
   getProjectFilesPanelUi = () => null,
   getProjectDataPanelUi = () => null,
   getSmartComponentBrowserUi = () => null,
+  getConnectionComponentBrowserUi = () => null,
   projectDataSources = () => [],
   clearAuxiliaryEditors = () => {},
   clearMemberEditSilently = () => {},
@@ -509,11 +510,25 @@ export function createViewerCommandRegistration({
       return true;
     }
     if (action.type === "showSmartComponentPreset") {
-      const shown = getSmartComponentBrowserUi()?.showPreset?.(action.presetId);
-      updateModelingStatus(shown === false ? `Smart Component preset not found: ${action.presetId}` : `${item.title} shown in Components.`);
+      const browser = action.tab === "connections" ? getConnectionComponentBrowserUi() : getSmartComponentBrowserUi();
+      const shown = browser?.showPreset?.(action.presetId);
+      updateModelingStatus(shown === false ? `Smart Component preset not found: ${action.presetId}` : `${item.title} shown in ${action.tab === "connections" ? "Connections" : "Components"}.`);
       return shown !== false;
     }
     return false;
+  }
+
+  function showConnectionComponentsCommand() {
+    workspaceBindings?.showDataDockTab?.("connections");
+    updateModelingStatus("Connection components shown in Connections.");
+    return true;
+  }
+
+  function showModelCollectionCommand(collectionId, label) {
+    workspaceBindings?.showDataDockTab?.("model");
+    const shown = getModelBrowserUi()?.showCollection?.(collectionId);
+    updateModelingStatus(shown === false ? `${label} collection not found.` : `${label} shown in Model Browser.`);
+    return shown !== false;
   }
 
   function modelingCommandActions() {
@@ -525,6 +540,11 @@ export function createViewerCommandRegistration({
       onWorkPlane: () => viewerApp.runCommand("model.workPlane.set"),
       onPlateBend: () => viewerApp.runCommand("model.plateBend.add"),
       onTrim: () => viewerApp.runCommand("model.trim.create"),
+      onConnectionComponentOpen: () => viewerApp.runCommand("model.connectionComponent.open"),
+      onWeldOpen: () => viewerApp.runCommand("model.weld.open"),
+      onBoltGroupOpen: () => viewerApp.runCommand("model.boltGroup.open"),
+      onBoltOpen: () => viewerApp.runCommand("model.bolt.open"),
+      onAutoConnectionOpen: () => viewerApp.runCommand("model.autoConnection.open"),
       onGridCreate: () => viewerApp.runCommand("model.grid.create")
     };
   }
@@ -580,6 +600,11 @@ export function createViewerCommandRegistration({
       "model.workPlane.set": () => getCommandController()?.startWorkPlane(),
       "model.plateBend.add": () => getCommandController()?.startPlateBend(),
       "model.trim.create": () => startTrimCreate(),
+      "model.connectionComponent.open": () => showConnectionComponentsCommand(),
+      "model.weld.open": () => showModelCollectionCommand("welds", "Welds"),
+      "model.boltGroup.open": () => showModelCollectionCommand("fastenerGroups", "Bolt groups"),
+      "model.bolt.open": () => showModelCollectionCommand("holePatterns", "Bolts"),
+      "model.autoConnection.open": () => showModelCollectionCommand("connectionZones", "Auto connections"),
       "model.grid.create": () => startGridCreate(),
       "view.reset": () => {
         if (viewer.resetView?.()) {

@@ -97,6 +97,8 @@ export function createSelectionController({ viewer, settings = {}, project = nul
 
     candidateAllowed: scopeManager.candidateAllowed,
 
+    componentSelectionEnabled: scopeManager.componentSelectionEnabled,
+
     pickMode() {
       return pickMode ? { count: pickMode.count, picked: [...pickMode.picked] } : null;
     }

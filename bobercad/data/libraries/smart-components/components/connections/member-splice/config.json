@@ -4,6 +4,12 @@
   "kind": "connection",
   "title": "Member Splice",
   "version": 1,
+  "preview": {
+    "contexts": [
+      "stair-member-splice"
+    ],
+    "focusMode": "generated-with-inputs"
+  },
   "interfaces": [
     {
       "role": "main",

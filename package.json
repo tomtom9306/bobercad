@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "node ./scripts/serve_viewer.js",
+    "dev:viewer": "node ./scripts/serve_viewer.js",
+    "check": "node ./scripts/check_repo.js"
+  }
+}

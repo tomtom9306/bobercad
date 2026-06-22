@@ -58,8 +58,21 @@ function registerSmartComponentDefinition(definition) {
     registryObject(preset, `${definition.type}.preset`);
     const presetId = registryString(preset.id, `${definition.type}.preset.id`);
     if (presets.has(presetId)) throw new Error(`smart component registry: duplicate preset ${presetId}`);
-    presets.set(presetId, { ...preset, type: definition.type, kind: definition.kind });
+    presets.set(presetId, {
+      ...preset,
+      type: definition.type,
+      kind: definition.kind,
+      preview: mergedPreview(definition.preview, preset.preview)
+    });
   }
+}
+
+function mergedPreview(definitionPreview, presetPreview) {
+  if (!definitionPreview && !presetPreview) return undefined;
+  return {
+    ...(definitionPreview || {}),
+    ...(presetPreview || {})
+  };
 }
 
 export function smartComponentCatalog() {

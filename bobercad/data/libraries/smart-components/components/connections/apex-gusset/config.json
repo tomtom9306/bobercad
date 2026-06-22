@@ -2,6 +2,12 @@
   "type": "apex-gusset",
   "title": "Apex Gusset",
   "version": 1,
+  "preview": {
+    "contexts": [
+      "warehouse-frame-connections"
+    ],
+    "focusMode": "generated-with-inputs"
+  },
   "recipe": [
     {
       "operation": "dual-member-gusset",
@@ -23,10 +29,10 @@
     }
   ],
   "presets": {
-    "apex_gusset_m16_2x2": {
-      "id": "apex_gusset_m16_2x2",
+    "apex-gusset": {
+      "id": "apex-gusset",
       "version": "0.1.0",
-      "name": "Apex gusset, M16 2+2",
+      "name": "Apex gusset",
       "parameters": {
         "plate": {
           "thickness": 10,

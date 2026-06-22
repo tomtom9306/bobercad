@@ -100,7 +100,7 @@ function checkLeftDockShellContracts(context) {
   } = readUiContractTextFixtures(context);
   const objectPropertyMetadataText = `${inspectorPropertyMetadataText}\n${inspectorEditableObjectPropertyMetadataText}`;
   const plateSketchInspectorText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/panels/contributions/plate-sketch-inspector.mjs"), "utf8");
-  for (const field of ["title", "icon", "searchPlaceholder", "searchLabel", "emptyMessage", "itemCountLabel", "collectionLabel", "readyLabel", "statusMetaFallback", "cancelPickLabel"]) {
+  for (const field of ["title", "icon", "searchPlaceholder", "searchLabel", "emptyMessage", "itemCountLabel", "collectionLabel", "readyLabel", "statusMetaFallback"]) {
     if (!smartComponentBrowserMetadata.SMART_COMPONENT_BROWSER_PANEL_SPEC?.[field]) {
       fail(errors, `smart-component-browser-metadata panel spec must declare ${field}`);
     }
@@ -134,15 +134,20 @@ function checkLeftDockShellContracts(context) {
     if (status.icon && !iconNames.has(status.icon)) fail(errors, `smart-component-browser-metadata status ${status.id} references unknown icon: ${status.icon}`);
   }
   if (
-    !smartComponentBrowserText.includes("selection.beginMemberPick")
-    || smartComponentBrowserMetadata.smartComponentPresetActionSpec?.("connection")?.mode !== "member-pick"
-    || smartComponentBrowserMetadata.smartComponentPresetActionIcon?.({ kind: "connection" }) !== "link"
+    smartComponentBrowserText.includes("selection.beginMemberPick")
+    || smartComponentBrowserText.includes("bc-smart-component-browser-preset-tile-action")
+    || smartComponentBrowserText.includes("bc-smart-component-browser-preset-tile-value")
+    || smartComponentBrowserMetadata.smartComponentPresetActionSpec?.("connection")?.mode !== "select"
+    || smartComponentBrowserMetadata.smartComponentPresetActionIcon?.({ kind: "connection" }) !== "inspector"
     || smartComponentBrowserMetadata.smartComponentPresetActionSpec?.("frame")?.mode !== "create"
     || smartComponentBrowserMetadata.smartComponentPresetActionIcon?.({ kind: "frame" }) !== "smart-component"
     || smartComponentBrowserMetadata.smartComponentStatusIcon?.("error") !== "cancel"
-    || smartComponentBrowserMetadata.smartComponentStatusIcon?.("pick") !== "link"
+    || !smartComponentBrowserText.includes("onPresetSelected?.(item)")
+    || !viewerRuntimeTextForInspector.includes("mountPresetSmartComponentUi")
+    || !viewerRuntimeTextForInspector.includes("onPresetSelected: (item) => showSmartComponentPresetEditor(item.id)")
+    || !viewerRuntimeTextForInspector.includes('editorApi?.selectSmartComponent(rootSmartComponent.id, { inspectorPanel: "component" })')
   ) {
-    fail(errors, "Smart Component browser must keep connection member picking and non-connection create behavior as metadata-driven preset actions");
+    fail(errors, "Smart Component browser must treat connection presets as settings selections, not member-pick actions, and route them to the right Component inspector tab");
   }
   const leftDockResults = leftDockResultMetadata.leftDockResultSpecs?.({
     project: readJson("bobercad/data/projects/sample_portal_frame.json"),
@@ -275,7 +280,9 @@ function checkLeftDockShellContracts(context) {
     || !viewerRuntimeIntegrationText.includes("getProjectDataPanelUi()?.showRow")
     || !viewerRuntimeIntegrationText.includes("getModelBrowserUi()?.showObject")
     || !viewerRuntimeIntegrationText.includes("getModelBrowserUi()?.showCollection")
-    || !viewerRuntimeIntegrationText.includes("getSmartComponentBrowserUi()?.showPreset")
+    || !viewerRuntimeIntegrationText.includes("getSmartComponentBrowserUi()")
+    || !viewerRuntimeIntegrationText.includes("getConnectionComponentBrowserUi()")
+    || !viewerRuntimeIntegrationText.includes("showPreset?.(action.presetId)")
   ) {
     fail(errors, "Viewer runtime must feed left-dock result descriptors into the command palette and route actions through left panel APIs");
   }

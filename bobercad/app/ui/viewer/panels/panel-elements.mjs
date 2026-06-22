@@ -249,6 +249,31 @@ export function messageControl(field = {}) {
   return item;
 }
 
+export function previewImageControl(field = {}) {
+  const root = document.createElement("div");
+  root.className = "bc-preview-image-field";
+  root.dataset.previewState = field.state || "pending";
+  if (field.label) root.setAttribute("aria-label", field.label);
+  const frame = document.createElement("div");
+  frame.className = "bc-preview-image-frame";
+  if (field.dataUrl) {
+    const image = document.createElement("img");
+    image.alt = "";
+    image.decoding = "async";
+    image.loading = "lazy";
+    image.src = field.dataUrl;
+    frame.append(image);
+  } else if (field.icon) {
+    frame.append(createIcon(field.icon));
+  }
+  const copy = document.createElement("div");
+  copy.className = "bc-preview-image-copy";
+  if (field.title || field.label) copy.append(text("div", "bc-preview-image-title", field.title || field.label));
+  if (field.value || field.reason) copy.append(text("div", "bc-preview-image-meta", field.value || field.reason));
+  root.append(frame, copy);
+  return root;
+}
+
 export function summaryCardControl(field = {}, {
   defaultStatus = "",
   titleFallback = "",

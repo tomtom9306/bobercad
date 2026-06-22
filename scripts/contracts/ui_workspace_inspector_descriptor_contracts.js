@@ -86,7 +86,7 @@ function checkInspectorDescriptorContracts(context) {
       fail(errors, `model-collection-metadata collection ${spec.id} has invalid browserVisibility: ${spec.browserVisibility}`);
     }
   }
-  for (const advancedCollectionId of ["interfaces", "connectionZones", "assemblies", "groups", "holePatterns", "objectPatterns", "relations"]) {
+  for (const advancedCollectionId of ["interfaces", "assemblies", "groups", "objectPatterns", "relations"]) {
     if (modelCollectionMetadata.modelCollectionBrowserVisibility?.(advancedCollectionId) !== "advanced") {
       fail(errors, `model-collection-metadata collection ${advancedCollectionId} must be advanced for the left Model Browser`);
     }

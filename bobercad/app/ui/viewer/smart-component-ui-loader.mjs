@@ -6,6 +6,7 @@ function requiredFunction(value, label) {
 export async function loadSmartComponentUi() {
   const parameterUi = await import("./smart-component-parameter-ui.mjs");
   return Object.freeze({
-    mountSmartComponentUi: requiredFunction(parameterUi.mountParameterSmartComponentUi, "mountParameterSmartComponentUi")
+    mountSmartComponentUi: requiredFunction(parameterUi.mountParameterSmartComponentUi, "mountParameterSmartComponentUi"),
+    mountPresetSmartComponentUi: requiredFunction(parameterUi.mountPresetSmartComponentUi, "mountPresetSmartComponentUi")
   });
 }

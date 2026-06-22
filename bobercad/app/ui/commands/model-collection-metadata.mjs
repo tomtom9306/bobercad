@@ -5,6 +5,11 @@ export const MODEL_COLLECTION_GROUP_SPECS = Object.freeze([
     description: "Primary editable model objects."
   },
   {
+    id: "connections",
+    label: "Connections",
+    description: "Connection components, welds, bolt groups, bolts, and automatic connection zones."
+  },
+  {
     id: "fabrication",
     label: "Fabrication",
     description: "Fabrication objects with scene-backed geometry."
@@ -40,23 +45,24 @@ export const MODEL_COLLECTION_SPECS = Object.freeze([
   collection("members", "Members", "Member", "beam", "model", { defaultOpen: true }),
   collection("plates", "Plates", "Plate", "plate", "model", { defaultOpen: true }),
   collection("sketches", "Sketches", "Sketch", "sketch", "model"),
-  collection("features", "Features", "Feature", "feature", "fabrication"),
-  collection("trimJoints", "Trim Joints", "Trim Joint", "trim", "fabrication"),
-  collection("fastenerGroups", "Fasteners", "Fastener Group", "fastener", "fabrication"),
-  collection("welds", "Welds", "Weld", "weld", "fabrication"),
-  collection("smartComponentInstances", "Smart Components", "Smart Component", "smart-component", "components", {
+  collection("smartComponentInstances", "Connection Components", "Connection Component", "smart-component", "connections", {
     defaultOpen: true,
+    showWhenEmpty: true,
     selectionKind: "smartComponent"
   }),
+  collection("welds", "Welds", "Weld", "weld", "connections", { showWhenEmpty: true }),
+  collection("fastenerGroups", "Bolt Groups", "Bolt Group", "fastener", "connections", { showWhenEmpty: true }),
+  collection("holePatterns", "Bolts", "Bolt", "hole-pattern", "connections", { focusable: false, showWhenEmpty: true }),
+  collection("connectionZones", "Auto Connections", "Auto Connection", "connection-zone", "connections", { focusable: false, showWhenEmpty: true }),
+  collection("features", "Features", "Feature", "feature", "fabrication"),
+  collection("trimJoints", "Trim Joints", "Trim Joint", "trim", "fabrication"),
   collection("gridSystems", "Grid Systems", "Grid System", "grid", "references", { defaultOpen: true, focusable: false }),
   collection("levels", "Levels", "Level", "reference-plane", "references", { defaultOpen: true, focusable: false }),
   collection("workPoints", "Work Points", "Work Point", "work-point", "references", { focusable: false }),
   collection("referencePlanes", "Reference Planes", "Reference Plane", "reference-plane", "references", { focusable: false }),
   collection("interfaces", "Interfaces", "Interface", "interface", "connectionData", { browserVisibility: "advanced", focusable: false }),
-  collection("connectionZones", "Connection Zones", "Connection Zone", "connection-zone", "connectionData", { browserVisibility: "advanced", focusable: false }),
   collection("assemblies", "Assemblies", "Assembly", "assembly", "organization", { browserVisibility: "advanced", focusable: false }),
   collection("groups", "Groups", "Group", "group", "organization", { browserVisibility: "advanced", focusable: false }),
-  collection("holePatterns", "Hole Patterns", "Hole Pattern", "hole-pattern", "authoringData", { browserVisibility: "advanced", focusable: false }),
   collection("objectPatterns", "Object Patterns", "Object Pattern", "object-pattern", "authoringData", { browserVisibility: "advanced", focusable: false }),
   collection("relations", "Relations", "Relation", "relation", "authoringData", { browserVisibility: "advanced", focusable: false })
 ]);
@@ -161,6 +167,7 @@ function collection(id, label, singularLabel, icon, group, options = {}) {
     icon,
     group,
     defaultOpen: options.defaultOpen === true,
+    showWhenEmpty: options.showWhenEmpty === true,
     selectable: options.selectable !== false,
     focusable: options.focusable !== false,
     browserVisibility: options.browserVisibility || "primary",
