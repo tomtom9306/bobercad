@@ -45,7 +45,7 @@ Start here, then open the specific docs needed for the task.
 - Agent folders must stay on their assigned branch. For example, agent1 works in `C:\boberos\agent1` on `codex/agent1`.
 - When an assigned agent believes the work is technically complete, it updates `INTEGRATION_REQUEST.txt` in its own folder with `STATUS: USER_REVIEW`, a summary, checks, and preview URL. This is not an integration request.
 - An assigned agent may set `STATUS: READY` only after the user explicitly confirms in chat that the change is correct and approved for integration. Without that approval, never mark work ready for the integrator.
-- The integrator processes only `STATUS: READY`, and `READY` means user-approved, not merely agent-complete.
+- The integrator processes only `STATUS: READY`, and `READY` means user-approved, not merely agent-complete. When an agent is `READY`, the integrator should run final checks and integrate it without asking for the same approval again.
 - After integration, the integrator resets the agent worktree back to the latest accepted `main` state so the next task starts clean.
 - Do not make code, data, docs, or schema edits directly on `main`. Before editing, create or switch to a task branch, normally `codex/<short-task-name>`, unless the user explicitly instructs otherwise.
 - Parallel Codex agents must not share the same working tree. Each concurrent agent needs its own clone or `git worktree` checkout, because switching branches in one shared folder switches that folder for every chat using it.
