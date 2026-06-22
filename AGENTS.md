@@ -38,6 +38,12 @@ Start here, then open the specific docs needed for the task.
 
 ## Hard Rules
 
+- Do not make code, data, docs, or schema edits directly on `main`. Before editing, create or switch to a task branch, normally `codex/<short-task-name>`, unless the user explicitly instructs otherwise.
+- Parallel Codex agents must not share the same working tree. Each concurrent agent needs its own clone or `git worktree` checkout, because switching branches in one shared folder switches that folder for every chat using it.
+- If Codex must stay attached to this single project folder, create per-agent worktrees under `.codex-worktrees/` and run all task commands from the assigned subfolder.
+- Only the single agent explicitly assigned as the integrator may merge into `main`. If the user says `jestes integratorem` or otherwise assigns the integrator role, follow the Integrator Workflow in `docs/workflows/codex-workflow.md` immediately.
+- Non-integrator agents never merge, rebase, fast-forward, or push changes into `main`. They finish by opening or updating a PR against `main`, running required checks, and marking the PR with `ready-for-integration`.
+- Use PR labels as the integration queue: `ready-for-integration`, `integrating`, `integration-blocked`, and optionally `integrated`. The `integrating` label is the lock, and only the integrator may hold it for one PR at a time.
 - Do not store meshes, vertices, triangles, B-reps, scene graph data, or generated geometry in project JSON.
 - Do not add OpenCascade or a general CAD kernel to the core model.
 - Keep `objectIndex` stored and authoritative for now.

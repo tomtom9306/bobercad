@@ -9,6 +9,91 @@ Use this workflow for changes in this repo.
 - Read the relevant architecture, workflow, quality, or decision doc.
 - Read the matching schema before changing any JSON model structure.
 
+## Branching
+
+- Treat `main` as a clean integration base, not a working branch.
+- Before making any code, data, docs, or schema edit, create or switch to a task branch, normally `codex/<short-task-name>`.
+- Only edit directly on `main` when the user explicitly instructs that exact behavior.
+- If already on `main` and the task requires edits, branch first.
+- `node .\scripts\check_repo.js` runs a branch guard and fails when local edits are present on `main`. Use `BOBERCAD_ALLOW_MAIN_EDITS=1` only for an explicit user-approved direct-main edit.
+
+## Parallel Agent Worktrees
+
+Git branch state belongs to a working tree folder, not to a Codex chat window. Multiple Codex chats pointed at the same folder will all see the same branch, so one chat changing branches changes the branch for every other chat using that folder.
+
+- Use one separate checkout per concurrent agent.
+- Prefer `git worktree` over full extra clones so all checkouts share the same local Git object store.
+- Do not switch branches inside a folder that another active agent is using.
+- If Codex can open different folders, use a stable external folder name that matches the task or role, such as `C:\boberos-worktrees\viewer-selection` or `C:\boberos-worktrees\integrator`.
+- If Codex must stay attached to the single `C:\boberos` project, create worktrees under `C:\boberos\.codex-worktrees\`. This folder is ignored by Git.
+- The integrator should also use its own checkout and should not share a working tree with authoring agents.
+
+Preferred external worktree:
+
+```powershell
+git fetch origin
+git worktree add C:\boberos-worktrees\<agent-task> -b codex/<agent-task> origin/main
+```
+
+Single Codex project fallback:
+
+```powershell
+git fetch origin
+git worktree add .\.codex-worktrees\<agent-task> -b codex/<agent-task> origin/main
+```
+
+For the single integrator checkout inside the same Codex project:
+
+```powershell
+git fetch origin
+git worktree add .\.codex-worktrees\integrator -b codex/integrator origin/main
+```
+
+When using `.codex-worktrees/`, tell each Codex chat its assigned subfolder and keep all commands scoped there. For example, an agent assigned to `.codex-worktrees\viewer-selection` must run reads, edits, checks, commits, pushes, and PR work from `C:\boberos\.codex-worktrees\viewer-selection`, even though the Codex project root is still `C:\boberos`.
+
+The Codex UI may still show the branch for the outer `C:\boberos` folder. Treat that display as informational only when the chat is assigned to a `.codex-worktrees/` subfolder; the actual task branch is the branch inside the assigned worktree.
+
+## Integration Queue
+
+- Integration state lives on GitHub PR labels, not in branch names.
+- Use these labels exactly:
+  - `ready-for-integration`: the authoring agent says the PR is complete and required checks passed.
+  - `integrating`: the single integrator has locked this PR and is actively processing it.
+  - `integration-blocked`: integration failed because of conflicts, failing checks, unclear scope, or missing work.
+  - `integrated`: optional archive label after a successful merge.
+- A non-integrator agent may add `ready-for-integration` only after running the required checks and summarizing them in the PR.
+- A non-integrator agent must not add `integrating`, merge to `main`, push to `main`, or resolve integration conflicts directly on `main`.
+
+## Integrator Workflow
+
+When the user says `jestes integratorem` or otherwise assigns the integrator role, stop normal feature work and act as the single integration worker.
+
+Integrator rules:
+
+- Process exactly one PR at a time.
+- Treat `integrating` as a lock. Do not start a second PR while any PR is locked by you.
+- Never do manual code, data, docs, or schema edits on `main`.
+- Test integration on a temporary branch such as `codex/integration-pr-123`, not directly on `main`.
+- If no PR is ready and the user asked you to monitor, wait 60 seconds and check again. Otherwise report that the integration queue is empty.
+
+Integrator loop:
+
+1. Find the oldest open PR targeting `main` with `ready-for-integration` and without `integrating` or `integration-blocked`.
+2. Lock it by adding `integrating`, removing `ready-for-integration`, and commenting that integration started.
+3. Fetch the latest refs and create a temporary integration branch from current `origin/main`.
+4. Merge or rebase the PR branch into the temporary integration branch.
+5. If conflicts occur, abort the merge or rebase, remove `integrating`, add `integration-blocked`, and comment with the conflict summary and next action for the authoring agent.
+6. Run the required checks, at minimum:
+
+```powershell
+node .\scripts\check_repo.js
+```
+
+7. If checks fail, remove `integrating`, add `integration-blocked`, and comment with the failing command and relevant output.
+8. If checks pass, merge the PR to `main` using the repository's normal PR merge path.
+9. After the merge succeeds, remove `integrating`, optionally add `integrated`, and comment with the merge result and checks run.
+10. Refresh local `main` from `origin/main` with a fast-forward update before taking the next PR.
+
 ## During Editing
 
 - Keep changes small and scoped.

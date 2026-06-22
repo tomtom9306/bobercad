@@ -8,3 +8,4 @@ stress-output/
 qa-output/
 artifacts/
 bobercad-ai-review.txt
+.codex-worktrees/
