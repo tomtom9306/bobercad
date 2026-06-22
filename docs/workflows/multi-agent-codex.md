@@ -16,7 +16,7 @@ Use this workflow whenever an agent changes code, docs, schemas, scripts, or app
 - Do not set `STATUS: READY` until the user explicitly confirms in chat that the change is correct and approved for integration.
 - `STATUS: READY` is the integrator queue and must mean user-approved, not merely agent-complete.
 - Merge or promote the change only after the user confirms in chat that the result is OK.
-- After merge, the integrator resets the used agent worktree to the latest accepted `main` state. Do not archive or delete the fixed agent folder unless the user explicitly asks.
+- After merge, the integrator resets the used agent worktree to the latest accepted `main` state and archives the completed agent chat/thread. Do not archive or delete the fixed agent folder unless the user explicitly asks.
 
 ## Agent Coordination
 

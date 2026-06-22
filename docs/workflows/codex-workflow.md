@@ -80,7 +80,7 @@ For this local workspace, the integration queue is file-based unless the user as
 - The integrator treats only `STATUS: READY` as integration-queue input. `READY` means user-approved, not merely agent-complete, so the integrator runs final checks and integrates it without asking for the same approval again.
 - The integrator reviews the agent worktree diff against `C:\boberos\main`.
 - If final checks fail or the scope is unsafe, the integrator marks the request `NEEDS_WORK` instead of integrating.
-- After approved integration, the integrator resets the agent branch and worktree to the latest accepted `main` state and restores `INTEGRATION_REQUEST.txt` to `STATUS: IDLE`.
+- After approved integration, the integrator resets the agent branch and worktree to the latest accepted `main` state, restores `INTEGRATION_REQUEST.txt` to `STATUS: IDLE`, and archives the completed agent chat/thread.
 
 Integrator rules:
 
