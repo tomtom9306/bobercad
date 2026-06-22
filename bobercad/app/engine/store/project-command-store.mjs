@@ -239,6 +239,66 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
   const generatedSmartComponentIdsForMember = (projectState, memberId) => affectedSmartComponentsForMember(projectState, memberId)
       .filter((smartComponent) => smartComponent.status === "generated")
       .map((smartComponent) => smartComponent.id);
+  const smartComponentConnectionHelperObjectIds = (projectState, smartComponent) => {
+    const zones = projectCollection(projectState, "connectionZones");
+    const zoneIds = new Set();
+    const inputZoneId = smartComponentConnectionZoneId(smartComponent);
+    if (inputZoneId) zoneIds.add(inputZoneId);
+    for (const zone of Object.values(zones)) {
+      if (requiredStringList(zone.smartComponentInstanceIds || [], `${zone.id}.smartComponentInstanceIds`).includes(smartComponent.id)) {
+        zoneIds.add(zone.id);
+      }
+    }
+    const ids = [];
+    for (const zoneId of zoneIds) {
+      const zone = zones[zoneId];
+      if (!zone) fail(`${smartComponent.id}: connection zone not found: ${zoneId}`);
+      const componentIds = requiredStringList(zone.smartComponentInstanceIds || [], `${zone.id}.smartComponentInstanceIds`);
+      if (componentIds.some((componentId) => componentId !== smartComponent.id)) continue;
+      ids.push(zone.id, ...requiredStringList(zone.interfaceIds || [], `${zone.id}.interfaceIds`));
+    }
+    return unique(ids);
+  };
+  const smartComponentRemovalObjectIds = (projectState, smartComponentId) => {
+    const smartComponent = smartComponentById(projectState, smartComponentId);
+    return unique([
+      ...smartComponentObjectIds(projectState, smartComponent),
+      ...smartComponentOwnedObjectIds(smartComponent),
+      ...smartComponentGeneratedHelperIds(projectState, smartComponent),
+      ...smartComponentConnectionHelperObjectIds(projectState, smartComponent),
+      smartComponentId
+    ]);
+  };
+  const memberRemovalObjectIds = (projectState, memberId) => {
+    if (!projectCollection(projectState, "members")[memberId]) fail(`member not found: ${memberId}`);
+    const relationIds = memberAxisRelations(projectState, memberId).map((relation) => relation.id);
+    const affectedSmartComponents = affectedSmartComponentsForMember(projectState, memberId);
+    const smartComponentIds = affectedSmartComponents.map((smartComponent) => smartComponent.id);
+    const generatedIds = affectedSmartComponents.flatMap((smartComponent) => smartComponentOwnedObjectIds(smartComponent));
+    const helperIds = affectedSmartComponents.flatMap((smartComponent) => smartComponentGeneratedHelperIds(projectState, smartComponent));
+    return unique([memberId, ...relationIds, ...generatedIds, ...helperIds, ...smartComponentIds]);
+  };
+  const deletionObjectIds = (projectState, objectIds) => {
+    const ids = new Set(unique(requiredStringList(objectIds, "object ids")));
+    const queue = [...ids];
+    for (let index = 0; index < queue.length; index += 1) {
+      const objectId = queue[index];
+      const collection = objectCollection(projectState, objectId);
+      if (!collection) fail(`object not found: ${objectId}`);
+      const expandedIds = collection === "members"
+        ? memberRemovalObjectIds(projectState, objectId)
+        : collection === "smartComponentInstances"
+          ? smartComponentRemovalObjectIds(projectState, objectId)
+          : [];
+      for (const expandedId of expandedIds) {
+        if (!ids.has(expandedId)) {
+          ids.add(expandedId);
+          queue.push(expandedId);
+        }
+      }
+    }
+    return [...ids];
+  };
   const regenerateMemberSmartComponents = (projectState, memberId) => {
     const smartComponentIds = generatedSmartComponentIdsForMember(projectState, memberId);
     if (!smartComponentIds.length) return projectState;
@@ -703,6 +763,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       smartComponentDefinition,
       smartComponentObjectIds,
       smartComponentOwnedObjectIds,
+      smartComponentRemovalObjectIds,
       smartComponentRootApi: smartComponentRoot,
       supportedSmartComponentsApi: supportedSmartComponents,
       supportedSmartComponentPresetsApi: supportedSmartComponentPresets,
@@ -755,14 +816,14 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     }),
 
     deleteMember(memberId) {
-      if (!projectCollection(currentProject, "members")[memberId]) fail(`member not found: ${memberId}`);
-      const relationIds = memberAxisRelations(currentProject, memberId).map((relation) => relation.id);
-      const affectedSmartComponents = affectedSmartComponentsForMember(currentProject, memberId);
-      const smartComponentIds = affectedSmartComponents.map((smartComponent) => smartComponent.id);
-      const generatedIds = affectedSmartComponents.flatMap((smartComponent) => smartComponentOwnedObjectIds(smartComponent));
-      const helperIds = affectedSmartComponents.flatMap((smartComponent) => smartComponentGeneratedHelperIds(currentProject, smartComponent));
-      const removedObjectIds = unique([memberId, ...relationIds, ...generatedIds, ...helperIds, ...smartComponentIds]);
+      const removedObjectIds = memberRemovalObjectIds(currentProject, memberId);
       return commitProject("member.delete", removeObjects(currentProject, removedObjectIds), { removedObjectIds });
+    },
+
+    deleteObjects(objectIds = []) {
+      const removedObjectIds = deletionObjectIds(currentProject, objectIds);
+      if (!removedObjectIds.length) return currentProject;
+      return commitProject("object.delete", removeObjects(currentProject, removedObjectIds), { removedObjectIds });
     },
 
     updateMember(memberId, patch, options = {}) {

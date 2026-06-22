@@ -96,17 +96,22 @@ function agentNumberFor(rootName, branch) {
 }
 
 function branchPathPrefix(branch) {
-  if (!branch) return "";
-  return `/${branch.split("/").map(encodeURIComponent).join("/")}`;
+  return branch ? `/${branch.split("/").map((part) => encodeURIComponent(part)).join("/")}` : "";
+}
+
+function legacyEncodedBranchPathPrefix(branch) {
+  return branch ? `/${encodeURIComponent(branch)}` : "";
+}
+
+function branchPathPrefixes(branch) {
+  return [...new Set([branchPathPrefix(branch), legacyEncodedBranchPathPrefix(branch)].filter(Boolean))];
 }
 
 function addBranchPathPrefix(defaultPath, branch) {
   if (!branch) return defaultPath;
-  const url = new URL(defaultPath.startsWith("/") ? `http://local${defaultPath}` : `http://local/${defaultPath}`);
   const prefix = branchPathPrefix(branch);
-  if (!url.pathname.startsWith(`${prefix}/`) && url.pathname !== prefix) {
-    url.pathname = `${prefix}${url.pathname}`;
-  }
+  const url = new URL(defaultPath.startsWith("/") ? `http://local${defaultPath}` : `http://local/${defaultPath}`);
+  if (url.pathname !== prefix && !url.pathname.startsWith(`${prefix}/`)) url.pathname = `${prefix}${url.pathname}`;
   return `${url.pathname}${url.search}`;
 }
 
@@ -119,11 +124,11 @@ function normalizeConfig(config) {
     throw new Error(`Invalid dev server port: ${config.port}`);
   }
   const host = String(config.host || DEFAULT_CONFIG.host);
-  const branchPrefix = branchPathPrefix(branch);
   const defaultPath = addBranchPathPrefix(String(config.defaultPath || DEFAULT_CONFIG.defaultPath), branch);
   return {
     branch,
-    branchPrefix,
+    branchPathPrefix: branchPathPrefix(branch),
+    branchPathPrefixes: branchPathPrefixes(branch),
     host,
     port,
     replaceExisting: config.replaceExisting !== false,
@@ -163,15 +168,20 @@ function stopExistingListeners(port) {
   }
 }
 
-function filePathForRequest(urlPath, config) {
-  const requestPath = config.branchPrefix && (urlPath === config.branchPrefix || urlPath.startsWith(`${config.branchPrefix}/`))
-    ? urlPath.slice(config.branchPrefix.length) || "/"
-    : urlPath;
-  const relativePath = decodeURIComponent(requestPath).replace(/^\/+/, "");
+function filePathForRequest(urlPath) {
+  const relativePath = decodeURIComponent(urlPath).replace(/^\/+/, "");
   const targetPath = path.resolve(ROOT, relativePath);
   const relativeToRoot = path.relative(ROOT, targetPath);
   if (relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot)) return null;
   return targetPath;
+}
+
+function stripBranchPathPrefix(urlPath, config) {
+  for (const prefix of config.branchPathPrefixes || [config.branchPathPrefix].filter(Boolean)) {
+    if (urlPath === prefix) return "/";
+    if (urlPath.startsWith(`${prefix}/`)) return urlPath.slice(prefix.length) || "/";
+  }
+  return urlPath;
 }
 
 function sendResponse(response, statusCode, body, headers = {}) {
@@ -223,7 +233,16 @@ function createServer(config) {
     }
 
     const parsedUrl = new URL(request.url, "http://localhost");
-    if (parsedUrl.pathname === "/" || parsedUrl.pathname === config.branchPrefix) {
+    const routePath = stripBranchPathPrefix(parsedUrl.pathname, config);
+    if (parsedUrl.pathname === "/") {
+      response.writeHead(302, {
+        "Cache-Control": "no-store",
+        "Location": config.defaultPath
+      });
+      response.end();
+      return;
+    }
+    if (routePath === "/") {
       response.writeHead(302, {
         "Cache-Control": "no-store",
         "Location": config.defaultPath
@@ -232,7 +251,7 @@ function createServer(config) {
       return;
     }
 
-    const filePath = filePathForRequest(parsedUrl.pathname, config);
+    const filePath = filePathForRequest(routePath);
     if (!filePath) {
       sendResponse(response, 403, "Forbidden", { "Content-Type": "text/plain; charset=utf-8" });
       return;

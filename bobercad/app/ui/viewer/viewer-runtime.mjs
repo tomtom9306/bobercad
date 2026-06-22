@@ -122,6 +122,21 @@ function shouldLoadViewerQaBridge(searchParams) {
   return ["qaCapture", "qaView", "qaDebug", "qaSnapSmoke", "qaSelectObject"].some((key) => searchParams.has(key));
 }
 
+function isDeleteSelectionEvent(event) {
+  if (!event || event.ctrlKey || event.metaKey || event.altKey) return false;
+  const key = String(event.key || "").toLowerCase();
+  const code = String(event.code || "").toLowerCase();
+  return key === "delete"
+    || key === "del"
+    || key === "backspace"
+    || code === "delete"
+    || code === "backspace"
+    || event.keyCode === 46
+    || event.keyCode === 8
+    || event.which === 46
+    || event.which === 8;
+}
+
 function emptyQaBridge() {
   return {
     mountQaApi() {},
@@ -430,6 +445,46 @@ async function main() {
       connectionComponentBrowserUi?.refresh?.();
       workspaceBindings.refreshCommandState();
       refreshStatusBar();
+    }
+    function deleteSelectedObjects() {
+      const selectionState = viewerApp.selectionState();
+      const project = api.project();
+      const selectedSmartComponentId = selectionState.selectedSmartComponentId;
+      const selectedObjectIds = [...new Set(arrayValues(selectionState.selectedObjectIds)
+        .filter((objectId) => project.objectIndex?.[objectId]))];
+
+      try {
+        if (selectedSmartComponentId && project.objectIndex?.[selectedSmartComponentId]) {
+          clearSmartComponentEditor();
+          clearMemberEditSilently();
+          clearAuxiliaryEditors();
+          editorApi?.clearSelection?.();
+          selection.clear();
+          const nextProject = api.deleteSmartComponent(selectedSmartComponentId);
+          handleProjectChange(nextProject);
+          updateModelingStatus(`Deleted ${selectedSmartComponentId}.`);
+          refreshSelectionSurfaces();
+          return true;
+        }
+
+        if (!selectedObjectIds.length) return false;
+        dimensionEdit?.clearDimension({ render: false });
+        clearMemberEditSilently();
+        clearAuxiliaryEditors();
+        editorApi?.clearSelection?.();
+        selection.clear();
+        const nextProject = api.deleteObjects(selectedObjectIds);
+        handleProjectChange(nextProject);
+        updateModelingStatus(selectedObjectIds.length === 1
+          ? `Deleted ${selectedObjectIds[0]}.`
+          : `Deleted ${selectedObjectIds.length} objects.`);
+        refreshSelectionSurfaces();
+        return true;
+      } catch (error) {
+        console.error(error);
+        updateModelingStatus(error?.message || "Delete failed.");
+        return true;
+      }
     }
     function mountViewerSettingsUi() {
       viewerSettingsUi = mountViewerSettingsStrip({
@@ -851,7 +906,19 @@ async function main() {
       onPickProgress: (memberIds) => trimJointEditorApi?.openCreateMode?.({ pickedMemberIds: memberIds }),
       onStatusChange: updateModelingStatus
     });
-    addDomListener(window, "keydown", (event) => {
+    const handleViewerKeyDelete = (event) => {
+      if (!isDeleteSelectionEvent(event) || isTextInput(event.target)) return false;
+      if (plateSketchEdit?.removeSelectedRelation?.()) {
+        event.preventDefault();
+        return true;
+      }
+      if (!commandController?.activeCommand?.() && !trimCreate?.active?.() && deleteSelectedObjects()) {
+        event.preventDefault();
+        return true;
+      }
+      return false;
+    };
+    const handleViewerKeydown = (event) => {
       if (event.target instanceof Element && memberTransformPanel.contains(event.target)) return;
       if (event.defaultPrevented) return;
       if (!isTextInput(event.target) && matchesShortcut(event, runtimeSettings.authoring?.snap?.cycleKey || "Tab")) {
@@ -867,10 +934,7 @@ async function main() {
           return;
         }
       }
-      if (!isTextInput(event.target) && (event.key === "Delete" || event.key === "Backspace") && plateSketchEdit?.removeSelectedRelation?.()) {
-        event.preventDefault();
-        return;
-      }
+      if (handleViewerKeyDelete(event)) return;
       if (!isTextInput(event.target) && matchesShortcut(event, shortcutSetting(runtimeSettings.shortcuts?.commands, "createTrim", "T"))) {
         if (!commandController?.activeCommand?.() && !trimCreate?.active?.()) {
           viewerApp.runCommand("model.trim.create");
@@ -904,6 +968,12 @@ async function main() {
         event.preventDefault();
         return;
       }
+    };
+    addDomListener(window, "keydown", handleViewerKeydown, { capture: true });
+    addDomListener(document, "keydown", handleViewerKeydown, { capture: true });
+    addDomListener(document, "keyup", (event) => {
+      if (event.defaultPrevented) return;
+      handleViewerKeyDelete(event);
     }, { capture: true });
 
     renderProject(api.project());

@@ -75,7 +75,7 @@ When the user says `jestes integratorem` or otherwise assigns the integrator rol
 For this local workspace, the integration queue is file-based unless the user asks for GitHub PRs:
 
 - Agents signal technical completion by setting `STATUS: USER_REVIEW` in `C:\boberos\agentN\INTEGRATION_REQUEST.txt`, then showing the user the result and checks. `USER_REVIEW` is not an integration request.
-- Agent `USER_REVIEW` notes must include the dedicated preview URL from that agent worktree. The URL must use the agent port (`5181`-`5190`) and put the branch immediately after the IP and port, for example `/codex/agent2/bobercad/...`; otherwise the user may be reviewing `main` instead of the agent's work.
+- Agent `USER_REVIEW` notes must include the dedicated preview URL from that agent worktree. The URL must use the agent port (`5181`-`5190`) and include the branch path prefix immediately after the host, such as `/codex/agentN/...`; otherwise the user may be reviewing `main` instead of the agent's work.
 - Agents may set `STATUS: READY` only after the user explicitly confirms in chat that the change is correct and approved for integration.
 - The integrator treats only `STATUS: READY` as integration-queue input. `READY` means user-approved, not merely agent-complete.
 - The integrator reviews the agent worktree diff against `C:\boberos\main`.

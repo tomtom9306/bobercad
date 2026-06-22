@@ -639,6 +639,15 @@
       "returns": "store method result"
     },
     {
+      "id": "store.deleteObjects",
+      "module": "../store/project-command-store.mjs",
+      "description": "Delete indexed project objects and remove their model references.",
+      "parameters": {
+        "objectIds": "array of indexed object ids"
+      },
+      "returns": "project JSON"
+    },
+    {
       "id": "store.deleteRelation",
       "module": "../store/project-command-store.mjs",
       "description": "Public project store API for delete relation.",

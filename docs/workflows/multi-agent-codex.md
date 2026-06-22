@@ -10,7 +10,7 @@ Use this workflow whenever an agent changes code, docs, schemas, scripts, or app
 - Make all edits, checks, and browser verification inside that copy.
 - Run the app from the copy with `npm run dev` or `node .\scripts\serve_viewer.js`.
 - The server assigns stable ports by worktree: `main` uses `5173`, `agent1` uses `5181`, `agent2` uses `5182`, through `agent10` on `5190`.
-- The preview URL given to the user must put the branch immediately after the IP and port, as printed by the server, for example `http://127.0.0.1:5182/codex/agent2/bobercad/...`. A review URL on port `5173` or without the `/codex/agentN/` path prefix is invalid for agent work.
+- The preview URL given to the user must include the branch path prefix printed by the server immediately after the host, for example `/codex/agent2/bobercad/app/ui/viewer/index.html?...`. A review URL on port `5173` or without the agent branch path prefix is invalid for agent work.
 - Keep `main` unchanged while the user is reviewing the copy.
 - When implementation and checks are complete, set `INTEGRATION_REQUEST.txt` to `STATUS: USER_REVIEW` and summarize the result for the user.
 - Do not set `STATUS: READY` until the user explicitly confirms in chat that the change is correct and approved for integration.

@@ -53,6 +53,7 @@ import { loadSmartComponentDefinitions } from "./bobercad/app/engine/modules/sma
 const errors = [];
 const readJson = (relative) => JSON.parse(fs.readFileSync(relative, "utf8"));
 const project = readJson("./bobercad/data/projects/sample_seed_connection_structure.json");
+const portalProject = readJson("./bobercad/data/projects/sample_portal_frame.json");
 const profiles = readJson("./bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json").profiles;
 const fasteners = readJson("./bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json").fasteners;
 const materials = readJson("./bobercad/data/libraries/materials/material-libraries/starter-materials/config.json").materials;
@@ -81,6 +82,69 @@ function run(label, callback) {
 run("store.createLevel", () => store.createLevel({ id: "contract_level", name: "Contract Level", elevation: 1234 }));
 run("store.createGridSystem", () => store.createGridSystem({ id: "contract_grid" }));
 run("store.deleteMember", () => store.deleteMember("beam_1"));
+run("store.deleteObjects", () => {
+  const deleteStore = createProjectStore({ project, profiles, fasteners, materials, smartComponentCatalog });
+  const nextProject = deleteStore.deleteObjects(["end_plate_1"]);
+  if (nextProject.objectIndex.end_plate_1 || nextProject.model.plates.end_plate_1) {
+    throw new Error("deleted plate is still indexed");
+  }
+  const result = deleteStore.lastCommandResult();
+  if (!result.removedObjectIds.includes("end_plate_1")) {
+    throw new Error("deleteObjects did not report removed plate id");
+  }
+});
+run("store.deleteObjects connected member cleanup", () => {
+  const deleteStore = createProjectStore({ project: portalProject, profiles, fasteners, materials, smartComponentCatalog });
+  const nextProject = deleteStore.deleteObjects(["side_beam_a"]);
+  const result = deleteStore.lastCommandResult();
+  const expectedRemoved = [
+    "side_beam_a",
+    "conn_side_a_start",
+    "conn_side_a_end",
+    "conn_cross_a",
+    "end_plate_side_a_start",
+    "end_plate_side_a_end",
+    "end_plate_cross_a",
+    "holes_side_a_start",
+    "holes_side_a_end",
+    "holes_cross_a",
+    "fasteners_side_a_start",
+    "fasteners_side_a_end",
+    "fasteners_cross_a",
+    "cz_side_a_start",
+    "cz_side_a_end",
+    "cz_cross_a"
+  ];
+  for (const objectId of expectedRemoved) {
+    if (nextProject.objectIndex[objectId]) throw new Error(objectId + " is still indexed after deleting side_beam_a");
+    if (!result.removedObjectIds.includes(objectId)) throw new Error(objectId + " was not reported as removed");
+  }
+  const staleConnectionParts = Object.keys(nextProject.objectIndex).filter((objectId) => (
+    /^(end_plate|holes|fasteners|conn|cz)_side_a/.test(objectId)
+    || objectId === "end_plate_cross_a"
+    || objectId === "holes_cross_a"
+    || objectId === "fasteners_cross_a"
+    || objectId === "conn_cross_a"
+    || objectId === "cz_cross_a"
+  ));
+  if (staleConnectionParts.length) throw new Error("stale side_beam_a connection objects remain: " + staleConnectionParts.join(", "));
+});
+run("store.deleteSmartComponent manual connection cleanup", () => {
+  const deleteStore = createProjectStore({ project: portalProject, profiles, fasteners, materials, smartComponentCatalog });
+  const nextProject = deleteStore.deleteSmartComponent("conn_side_a_start");
+  const result = deleteStore.lastCommandResult();
+  const expectedRemoved = [
+    "conn_side_a_start",
+    "end_plate_side_a_start",
+    "holes_side_a_start",
+    "fasteners_side_a_start",
+    "cz_side_a_start"
+  ];
+  for (const objectId of expectedRemoved) {
+    if (nextProject.objectIndex[objectId]) throw new Error(objectId + " is still indexed after deleting conn_side_a_start");
+    if (!result.removedObjectIds.includes(objectId)) throw new Error(objectId + " was not reported as removed");
+  }
+});
 run("addMemberSnapRelations", () => {
   const next = structuredClone(project);
   addMemberSnapRelations(next, "beam_1", {

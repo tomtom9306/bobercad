@@ -48,6 +48,7 @@ export function createSmartComponentStoreMethods({
   smartComponentDefinition,
   smartComponentObjectIds,
   smartComponentOwnedObjectIds,
+  smartComponentRemovalObjectIds,
   smartComponentRootApi,
   supportedSmartComponentsApi,
   supportedSmartComponentPresetsApi,
@@ -364,13 +365,21 @@ export function createSmartComponentStoreMethods({
     },
 
     deleteSmartComponent(smartComponentId) {
-      const smartComponent = smartComponentById(state.currentProject, smartComponentId);
-      const ownedIds = smartComponentOwnedObjectIds(smartComponent);
-      const helperIds = smartComponentGeneratedHelperIds(state.currentProject, smartComponent);
+      const removedObjectIds = typeof smartComponentRemovalObjectIds === "function"
+        ? smartComponentRemovalObjectIds(state.currentProject, smartComponentId)
+        : (() => {
+          const smartComponent = smartComponentById(state.currentProject, smartComponentId);
+          return unique([
+            ...smartComponentObjectIds(state.currentProject, smartComponent),
+            ...smartComponentOwnedObjectIds(smartComponent),
+            ...smartComponentGeneratedHelperIds(state.currentProject, smartComponent),
+            smartComponentId
+          ]);
+        })();
       return commitProject(
         "smartComponent.delete",
-        removeObjects(state.currentProject, [...ownedIds, ...helperIds, smartComponentId]),
-        { removedObjectIds: [...ownedIds, ...helperIds, smartComponentId] }
+        removeObjects(state.currentProject, removedObjectIds),
+        { removedObjectIds }
       );
     },
 
