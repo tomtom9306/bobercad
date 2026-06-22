@@ -95,11 +95,17 @@ function agentNumberFor(rootName, branch) {
   return null;
 }
 
-function addBranchQuery(defaultPath, branch) {
+function branchPathPrefix(branch) {
+  if (!branch) return "";
+  return `/${branch.split("/").map(encodeURIComponent).join("/")}`;
+}
+
+function addBranchPathPrefix(defaultPath, branch) {
   if (!branch) return defaultPath;
   const url = new URL(defaultPath.startsWith("/") ? `http://local${defaultPath}` : `http://local/${defaultPath}`);
-  if (!url.searchParams.has("branch")) {
-    url.searchParams.set("branch", branch);
+  const prefix = branchPathPrefix(branch);
+  if (!url.pathname.startsWith(`${prefix}/`) && url.pathname !== prefix) {
+    url.pathname = `${prefix}${url.pathname}`;
   }
   return `${url.pathname}${url.search}`;
 }
@@ -113,9 +119,11 @@ function normalizeConfig(config) {
     throw new Error(`Invalid dev server port: ${config.port}`);
   }
   const host = String(config.host || DEFAULT_CONFIG.host);
-  const defaultPath = addBranchQuery(String(config.defaultPath || DEFAULT_CONFIG.defaultPath), branch);
+  const branchPrefix = branchPathPrefix(branch);
+  const defaultPath = addBranchPathPrefix(String(config.defaultPath || DEFAULT_CONFIG.defaultPath), branch);
   return {
     branch,
+    branchPrefix,
     host,
     port,
     replaceExisting: config.replaceExisting !== false,
@@ -155,8 +163,11 @@ function stopExistingListeners(port) {
   }
 }
 
-function filePathForRequest(urlPath) {
-  const relativePath = decodeURIComponent(urlPath).replace(/^\/+/, "");
+function filePathForRequest(urlPath, config) {
+  const requestPath = config.branchPrefix && (urlPath === config.branchPrefix || urlPath.startsWith(`${config.branchPrefix}/`))
+    ? urlPath.slice(config.branchPrefix.length) || "/"
+    : urlPath;
+  const relativePath = decodeURIComponent(requestPath).replace(/^\/+/, "");
   const targetPath = path.resolve(ROOT, relativePath);
   const relativeToRoot = path.relative(ROOT, targetPath);
   if (relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot)) return null;
@@ -212,7 +223,7 @@ function createServer(config) {
     }
 
     const parsedUrl = new URL(request.url, "http://localhost");
-    if (parsedUrl.pathname === "/") {
+    if (parsedUrl.pathname === "/" || parsedUrl.pathname === config.branchPrefix) {
       response.writeHead(302, {
         "Cache-Control": "no-store",
         "Location": config.defaultPath
@@ -221,7 +232,7 @@ function createServer(config) {
       return;
     }
 
-    const filePath = filePathForRequest(parsedUrl.pathname);
+    const filePath = filePathForRequest(parsedUrl.pathname, config);
     if (!filePath) {
       sendResponse(response, 403, "Forbidden", { "Content-Type": "text/plain; charset=utf-8" });
       return;
