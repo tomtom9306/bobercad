@@ -27,6 +27,7 @@ Start here, then open the specific docs needed for the task.
 - Data model work: `docs/architecture/data-model.md`
 - Viewer/editor work: `docs/exec-plans/active/0001-viewer-mvp.md`
 - Agent workflow: `docs/workflows/codex-workflow.md`
+- Multi-agent Codex workflow: `docs/workflows/multi-agent-codex.md`
 - Validation rules: `docs/quality/validation.md`
 - Architecture decisions: `docs/decisions/0001-json-source-of-truth.md`
 - Project schema: `bobercad/app/schemas/project.schema.json`
@@ -51,6 +52,14 @@ Start here, then open the specific docs needed for the task.
 - Use stored `interfaces` and `connectionZones` to describe connection locations; do not infer connection faces from vague object proximity.
 - BIM metadata lives inside the object as `bim`, not in a separate wrapper.
 - If model structure changes, update the matching schema in the same change.
+
+## Mandatory Worktree Approval Workflow
+
+- Before making code changes, create or switch to a task-specific working copy/worktree. Do not edit the main working tree for feature or fix work unless the user explicitly asks for that.
+- Run and verify the app from that copy. The local URL shown to the user must identify the copy being tested, preferably with a `/w/<copy-name>/...` path or an equivalent configured worktree server route.
+- Do not merge, copy, or otherwise promote changes back to `main` until the user confirms in chat that the result is OK.
+- After an approved merge, move the used working copy into a `superseded/` archive, or keep an equivalent archived snapshot, so regressions can be compared against the reviewed code.
+- If a working copy or named local preview URL cannot be created, stop and report the blocker before editing application files.
 
 ## Standard Checks
 

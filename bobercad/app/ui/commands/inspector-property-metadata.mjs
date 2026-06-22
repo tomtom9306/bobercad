@@ -567,7 +567,7 @@ export function inspectorSmartComponentPropertySections({
   smartComponent = null,
   definition = null,
   diagnosticsSummary = null,
-  preview = null,
+  memberFields = [],
   quickParameterFields = [],
   liveRoleOptions = [],
   objectIndex = {},
@@ -588,7 +588,7 @@ export function inspectorSmartComponentPropertySections({
       detachedObjectCount: detachedObjectIds.size,
       overrideObjectCount: overrideObjectIds.size
     }),
-    smartComponentPreviewSection({ smartComponent, preview }),
+    smartComponentMembersSection(memberFields),
     smartComponentDiagnosticsSection({ diagnosticsSummary: summary }),
     smartComponentQuickParameterSection(quickParameterFields),
     smartComponentRoleSection({ smartComponent, definition, liveRoleOptions }),
@@ -605,28 +605,26 @@ export function inspectorSmartComponentPropertySections({
   ].filter(Boolean);
 }
 
-function smartComponentPreviewSection({ smartComponent = null, preview = null } = {}) {
-  if (!smartComponent) return null;
-  const state = preview?.state || "pending";
-  const title = smartComponent.bim?.name || smartComponent.sourceComponent?.id || smartComponent.id || "Preview";
+function smartComponentMembersSection(memberFields = []) {
+  const fields = arrayValues(memberFields)
+    .filter((field) => field?.value)
+    .map((field) => ({
+      type: "optionGrid",
+      label: field.label || "Member",
+      value: field.value,
+      options: arrayValues(field.options),
+      commit: field.commit,
+      className: "bc-smart-component-member-field",
+      buttonClassName: "bc-smart-component-member-option",
+      help: field.help || ""
+    }));
+  if (!fields.length) return null;
   return {
-    id: "inspector.properties.smartComponent.preview",
-    label: "Preview",
-    placement: "main",
-    priority: -10,
+    id: "inspector.properties.smartComponent.members",
+    label: "Members",
+    priority: -20,
     open: true,
-    fields: [
-      {
-        type: "previewImage",
-        label: "Generated preview",
-        title,
-        value: state === "pending" ? "Generating preview" : preview?.reason || state,
-        reason: preview?.reason || "",
-        state,
-        dataUrl: preview?.dataUrl || "",
-        icon: "smart-component"
-      }
-    ]
+    fields
   };
 }
 

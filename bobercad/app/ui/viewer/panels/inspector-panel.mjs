@@ -102,7 +102,6 @@ export function mountEditorUi({
   selection,
   memberEdit,
   smartComponentHighlightObjectIds,
-  previewService = null,
   onProjectChange,
   onLocalMemberProjectChange,
   onSmartComponentSelected,
@@ -117,8 +116,6 @@ export function mountEditorUi({
   let sceneSelected = true;
   let gridEditorEmpty = false;
   const memberCustomProfileDrafts = new Map();
-  const smartComponentPreviewResults = new Map();
-  const smartComponentPreviewRequests = new Set();
   const panelMessage = createPanelMessageState(() => render());
   const setMessage = panelMessage.set;
   const showError = (error) => setMessage(error.message, "error");
@@ -431,6 +428,7 @@ export function mountEditorUi({
       detachObject: (smartComponentId, objectId) => detachSmartComponentObject(smartComponentId, objectId),
       reattachObject: (smartComponentId, objectId) => reattachSmartComponentObject(smartComponentId, objectId),
       resolveDiagnostics: (smartComponentId) => resolveSmartComponentDiagnostics(smartComponentId),
+      setMember: (smartComponentId, role, memberId) => updateSmartComponentMember(smartComponentId, role, memberId),
       openParameters: (smartComponentId) => onSmartComponentSelected?.(smartComponentId, { inspectorPanel: "component" }),
       deleteSmartComponent: (smartComponentId) => deleteSmartComponent(smartComponentId)
     },
@@ -851,6 +849,14 @@ export function mountEditorUi({
     updateSmartComponentById(selectedSmartComponentId, update, message);
   };
 
+  const updateSmartComponentMember = (smartComponentId, role, memberId) => {
+    updateSmartComponentById(
+      smartComponentId,
+      (componentId) => api.setSmartComponentConnectionMember(componentId, role, memberId),
+      "Smart Component members updated."
+    );
+  };
+
   const updateSmartComponentObjectLifecycle = (smartComponentId, objectId, update, message, options = {}) => {
     try {
       const nextProject = update(smartComponentId, objectId);
@@ -925,6 +931,52 @@ export function mountEditorUi({
 
   const smartComponentObjectIndex = () => api.project().objectIndex || {};
 
+  const smartComponentProfileLabel = (profileId = "") => {
+    if (!profileId) return "";
+    const catalog = api.profiles?.() || profiles || {};
+    const profile = catalog[profileId];
+    return profile?.designation && profile.designation !== profileId
+      ? `${profile.designation} / ${profileId}`
+      : profileId;
+  };
+
+  const smartComponentMemberOptions = () => Object.keys(api.project()?.model?.members || {})
+    .map((memberId) => {
+      let member = null;
+      try {
+        member = api.member(memberId);
+      } catch {
+        member = null;
+      }
+      const profileLabel = smartComponentProfileLabel(member?.profile);
+      return {
+        id: memberId,
+        label: profileLabel ? `${memberId} - ${profileLabel}` : memberId
+      };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  const smartComponentMemberFields = (smartComponent = {}) => {
+    const zones = api.project()?.model?.connectionZones || {};
+    const zoneId = smartComponent.inputs?.connectionZoneId || "";
+    const zone = zoneId ? zones[zoneId] : null;
+    const options = smartComponentMemberOptions();
+    const field = (label, memberId, role) => memberId ? {
+      label,
+      value: memberId,
+      options,
+      commit: {
+        action: "smartComponent.member.set",
+        smartComponentId: smartComponent.id,
+        role
+      }
+    } : null;
+    return [
+      field("Main member", zone?.mainObjectId || smartComponent.inputs?.main?.memberId, "main"),
+      field("Secondary member", arrayValues(zone?.secondaryObjectIds)[0] || smartComponent.inputs?.secondary?.memberId, "secondary")
+    ].filter(Boolean);
+  };
+
   const objectGeneratedByCapabilities = () => ({
     resetObjectOverrides: typeof api.resetSmartComponentObjectOverrides === "function",
     detachObject: typeof api.detachSmartComponentObject === "function",
@@ -936,9 +988,6 @@ export function mountEditorUi({
     if (!smartComponent) return generatedPropertiesPanel({ emptyMessage: "Selected Smart Component is no longer in the project." });
     const definition = smartComponentDefinitionOrNull(selectedSmartComponentId);
     const diagnosticsSummary = inspectorSmartComponentDiagnosticsSummary(smartComponent);
-    const preview = definition
-      ? smartComponentPreviewState(selectedSmartComponentId, smartComponent)
-      : { state: "unavailable", reason: "Smart Component definition is not registered." };
     return generatedPropertiesPanel({
       context: inspectorSmartComponentContext({
         smartComponentId: selectedSmartComponentId,
@@ -950,7 +999,7 @@ export function mountEditorUi({
         smartComponent,
         definition,
         diagnosticsSummary,
-        preview,
+        memberFields: smartComponentMemberFields(smartComponent),
         quickParameterFields: definition ? smartComponentQuickParameterFields({
           api,
           smartComponent,
@@ -964,42 +1013,6 @@ export function mountEditorUi({
       }), generatedSmartComponentBindings())
     });
   };
-
-  const smartComponentPreviewState = (smartComponentId, smartComponent) => {
-    const key = smartComponentPreviewKey(smartComponentId, smartComponent);
-    if (smartComponentPreviewResults.has(key)) return smartComponentPreviewResults.get(key);
-    if (!previewService?.resolveSmartComponentInstancePreview) {
-      return { state: "unavailable", reason: "Preview service is unavailable." };
-    }
-    if (!smartComponentPreviewRequests.has(key)) {
-      smartComponentPreviewRequests.add(key);
-      previewService.resolveSmartComponentInstancePreview({ smartComponentId })
-        .then((result) => {
-          smartComponentPreviewResults.set(key, result || { state: "unavailable", reason: "Preview is unavailable." });
-          smartComponentPreviewRequests.delete(key);
-          if (selectedSmartComponentId === smartComponentId) render();
-        })
-        .catch((error) => {
-          smartComponentPreviewResults.set(key, { state: "unavailable", reason: error?.message || "Preview is unavailable." });
-          smartComponentPreviewRequests.delete(key);
-          if (selectedSmartComponentId === smartComponentId) render();
-        });
-    }
-    return { state: "pending", reason: "Generating preview." };
-  };
-
-  const smartComponentPreviewKey = (smartComponentId, smartComponent = {}) => JSON.stringify([
-    smartComponentId,
-    smartComponent?.sourceComponent?.id,
-    smartComponent?.health,
-    smartComponent?.ownedObjectIds,
-    smartComponent?.objectRoles,
-    smartComponent?.detachedObjectIds,
-    smartComponent?.suppressedRoles,
-    smartComponent?.suppressedPatternPositions,
-    smartComponent?.referenceParameters,
-    smartComponent?.diagnostics
-  ]);
 
   const objectPropertiesPanel = () => {
     const project = api.project();

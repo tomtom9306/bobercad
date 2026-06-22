@@ -728,6 +728,24 @@ textarea.bc-input {
   white-space: nowrap;
 }
 
+.bc-smart-component-member-field .bc-option-grid {
+  grid-template-columns: 1fr;
+}
+
+.bc-smart-component-member-option {
+  min-height: 34px;
+  justify-items: start;
+  padding: var(--bc-space-2) var(--bc-space-3);
+  text-align: left;
+}
+
+.bc-smart-component-member-option .bc-option-grid-label {
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .bc-number-choice-input {
   flex: 1 1 64px;
   width: 100%;

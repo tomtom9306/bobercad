@@ -1175,6 +1175,17 @@
       "returns": "project JSON"
     },
     {
+      "id": "store.setSmartComponentConnectionMember",
+      "module": "../store/project-command-store.mjs",
+      "description": "Change or swap the main or secondary member referenced by a connection Smart Component and regenerate it.",
+      "parameters": {
+        "smartComponentId": "string",
+        "role": "main | secondary",
+        "memberId": "string"
+      },
+      "returns": "project JSON"
+    },
+    {
       "id": "store.setSmartComponentRoleActive",
       "module": "../store/project-command-store.mjs",
       "description": "Public project store API for set smart component role active.",

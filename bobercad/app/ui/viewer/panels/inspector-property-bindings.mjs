@@ -134,6 +134,9 @@ export function createInspectorPropertyBindings({
       },
       "smartComponent.roleActive.set": (active, commit = {}) => {
         smartComponents.setRoleActive?.(commit.smartComponentId || selectedSmartComponentId(), commit.role, active);
+      },
+      "smartComponent.member.set": (memberId, commit = {}) => {
+        smartComponents.setMember?.(commit.smartComponentId || selectedSmartComponentId(), commit.role, memberId);
       }
     },
     actions: {

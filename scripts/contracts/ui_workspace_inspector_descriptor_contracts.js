@@ -555,6 +555,20 @@ function checkInspectorDescriptorContracts(context) {
       ]
     },
     diagnosticsSummary: { diagnostics: [{ severity: "warning", message: "Missing optional stiffener." }], errorCount: 0, warningCount: 1, health: "warning" },
+    memberFields: [
+      {
+        label: "Main member",
+        value: "member_a",
+        options: [{ id: "member_a", label: "member_a - IPE 300" }, { id: "member_b", label: "member_b - IPE 200" }],
+        commit: { action: "smartComponent.member.set", smartComponentId: "component-a", role: "main" }
+      },
+      {
+        label: "Secondary member",
+        value: "member_b",
+        options: [{ id: "member_a", label: "member_a - IPE 300" }, { id: "member_b", label: "member_b - IPE 200" }],
+        commit: { action: "smartComponent.member.set", smartComponentId: "component-a", role: "secondary" }
+      }
+    ],
     quickParameterFields: [{ type: "number", label: "Thickness", value: 12, commit: { action: "smartComponent.parameter.set", smartComponentId: "component-a", parameterPath: "plate.thickness" } }],
     liveRoleOptions: [{ role: "plate", active: true }],
     objectIndex: {
@@ -574,6 +588,10 @@ function checkInspectorDescriptorContracts(context) {
   const smartComponentPropertyFields = smartComponentPropertySections?.flatMap((section) => section.fields || []) || [];
   const smartComponentPropertyActions = smartComponentPropertyFields.flatMap((field) => [field, ...(field.actions || [])]);
   const smartComponentDiagnosticsSection = smartComponentPropertySections?.find((section) => section.id === "inspector.properties.smartComponent.diagnostics");
+  const smartComponentMembersSection = smartComponentPropertySections?.find((section) => section.id === "inspector.properties.smartComponent.members");
+  const smartComponentMemberFields = smartComponentMembersSection?.fields || [];
+  const mainMemberField = smartComponentMemberFields.find((field) => field.label === "Main member");
+  const secondaryMemberField = smartComponentMemberFields.find((field) => field.label === "Secondary member");
   const smartComponentLifecycleFields = smartComponentPropertySections
     ?.find((section) => section.id === "inspector.properties.smartComponent.lifecycle")
     ?.fields || [];
@@ -582,6 +600,24 @@ function checkInspectorDescriptorContracts(context) {
   if (
     !Array.isArray(smartComponentPropertySections)
     || !smartComponentPropertySections.some((section) => section.id === "inspector.properties.smartComponent.primaryParameters")
+    || smartComponentPropertySections.some((section) => section.id === "inspector.properties.smartComponent.preview")
+    || smartComponentMembersSection?.label !== "Members"
+    || smartComponentMembersSection?.open !== true
+    || smartComponentMembersSection?.priority !== -20
+    || mainMemberField?.type !== "optionGrid"
+    || mainMemberField?.value !== "member_a"
+    || mainMemberField?.commit?.action !== "smartComponent.member.set"
+    || mainMemberField?.commit?.role !== "main"
+    || mainMemberField?.options?.length !== 2
+    || mainMemberField?.className !== "bc-smart-component-member-field"
+    || mainMemberField?.buttonClassName !== "bc-smart-component-member-option"
+    || secondaryMemberField?.type !== "optionGrid"
+    || secondaryMemberField?.value !== "member_b"
+    || secondaryMemberField?.commit?.action !== "smartComponent.member.set"
+    || secondaryMemberField?.commit?.role !== "secondary"
+    || secondaryMemberField?.options?.length !== 2
+    || secondaryMemberField?.className !== "bc-smart-component-member-field"
+    || secondaryMemberField?.buttonClassName !== "bc-smart-component-member-option"
     || smartComponentDiagnosticsSection?.label !== "Diagnostics"
     || smartComponentDiagnosticsSection?.open !== true
     || !smartComponentDiagnosticsSection?.fields?.some((field) => field.type === "message" && field.state === "warning" && field.value === "Missing optional stiffener.")
@@ -608,7 +644,8 @@ function checkInspectorDescriptorContracts(context) {
   const boundSmartComponentSections = generatedPropertyBindings.bindGeneratedPropertySections?.(smartComponentPropertySections, {
     commits: {
       "smartComponent.parameter.set": () => "parameter",
-      "smartComponent.roleActive.set": () => "role"
+      "smartComponent.roleActive.set": () => "role",
+      "smartComponent.member.set": () => "member"
     },
     actions: {
       "smartComponent.objectOverrides.reset": () => "reset",
@@ -626,6 +663,7 @@ function checkInspectorDescriptorContracts(context) {
   if (
     typeof boundSmartComponentFields.find((field) => field.commit?.action === "smartComponent.parameter.set")?.onChange !== "function"
     || typeof boundSmartComponentFields.find((field) => field.commit?.action === "smartComponent.roleActive.set")?.onChange !== "function"
+    || typeof boundSmartComponentFields.find((field) => field.commit?.action === "smartComponent.member.set")?.onChange !== "function"
     || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.objectOverrides.reset")?.onClick !== "function"
     || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.object.detach")?.onClick !== "function"
     || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.object.reattach")?.onClick !== "function"

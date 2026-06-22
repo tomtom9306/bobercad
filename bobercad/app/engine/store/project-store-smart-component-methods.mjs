@@ -413,5 +413,64 @@ export function createSmartComponentStoreMethods({
         parameters
       })), { changedObjectIds: [smartComponentId], regeneratedObjectIds: [smartComponentId] });
     },
+
+    setSmartComponentConnectionMember(smartComponentId, role, memberId) {
+      if (role !== "main" && role !== "secondary") fail(`unsupported smart component member role: ${role}`);
+      memberById(state.currentProject, memberId);
+      const instance = smartComponentById(state.currentProject, smartComponentId);
+      if (instance.kind !== "connection") fail(`${smartComponentId}: only connection Smart Components expose editable members`);
+      const inputs = requiredObject(instance.inputs, `${smartComponentId}.inputs`);
+      const currentMainId = inputs.main?.memberId;
+      const currentSecondaryId = inputs.secondary?.memberId;
+      let mainMemberId = currentMainId;
+      let secondaryMemberId = currentSecondaryId;
+      if (role === "main") {
+        mainMemberId = memberId;
+        if (memberId === currentSecondaryId) secondaryMemberId = currentMainId;
+      } else {
+        secondaryMemberId = memberId;
+        if (memberId === currentMainId) mainMemberId = currentSecondaryId;
+      }
+      if (!mainMemberId || !secondaryMemberId) fail(`${smartComponentId}: connection member inputs are incomplete`);
+      if (mainMemberId === secondaryMemberId) fail(`${smartComponentId}: main and secondary members must be different`);
+
+      const next = clone(state.currentProject);
+      const nextInstance = projectCollection(next, "smartComponentInstances")[smartComponentId];
+      nextInstance.inputs = {
+        ...clone(inputs),
+        main: { ...clone(inputs.main || {}), memberId: mainMemberId },
+        secondary: { ...clone(inputs.secondary || {}), memberId: secondaryMemberId }
+      };
+
+      const zoneId = inputs.connectionZoneId;
+      if (zoneId && projectCollection(next, "connectionZones")[zoneId]) {
+        const zone = projectCollection(next, "connectionZones")[zoneId];
+        zone.mainObjectId = mainMemberId;
+        zone.secondaryObjectIds = [secondaryMemberId];
+      }
+
+      const assemblyId = inputs.assemblyId;
+      if (assemblyId && projectCollection(next, "assemblies")[assemblyId]) {
+        const assembly = projectCollection(next, "assemblies")[assemblyId];
+        assembly.memberIds = unique([mainMemberId, secondaryMemberId]);
+        const mainAssemblyId = projectCollection(next, "members")[mainMemberId]?.assemblyId;
+        const secondaryAssemblyId = projectCollection(next, "members")[secondaryMemberId]?.assemblyId;
+        assembly.childAssemblyIds = unique([mainAssemblyId, secondaryAssemblyId].filter(Boolean));
+      }
+
+      return commitProject("smartComponent.connectionMember.set", reconcileGeneratedSmartComponents(updateSmartComponentRuntime({
+        project: next,
+        profiles: profilesFor(next),
+        definition: definitionFor(next, smartComponentId),
+        catalog: smartComponentCatalog,
+        fasteners,
+        materials,
+        instanceId: smartComponentId,
+        parameters: nextInstance.referenceParameters || {}
+      })), {
+        changedObjectIds: [smartComponentId, mainMemberId, secondaryMemberId].filter(Boolean),
+        regeneratedObjectIds: [smartComponentId]
+      });
+    },
   };
 }
