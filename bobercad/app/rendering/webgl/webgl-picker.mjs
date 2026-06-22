@@ -240,11 +240,12 @@ export function createWebglPicker({
       const precise = pickScene(x, y, {
         forceCpu: true,
         includeTransparent: false,
-        objectIds: [coarse.face.objectId]
+        objectIds: [coarse.face.objectId],
+        preciseInstances: true
       });
       return precise || coarse;
     }
-    return pickScene(x, y, { forceCpu: true, includeTransparent: false });
+    return pickScene(x, y, { forceCpu: true, includeTransparent: false, preciseInstances: true });
   }
 
   function fastClickPick(x, y) {
@@ -258,7 +259,8 @@ export function createWebglPicker({
       const precise = pickScene(x, y, {
         forceCpu: true,
         includeTransparent: false,
-        objectIds: [coarseFace.objectId]
+        objectIds: [coarseFace.objectId],
+        preciseInstances: true
       });
       return precise || { depth: 0, point: null, face: coarseFace };
     }

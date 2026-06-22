@@ -90,9 +90,10 @@ export function mountSmartComponentBrowser({
   function render(options = {}) {
     const selectionState = app?.selectionState?.() || {};
     const selectedObjectIds = Array.isArray(selectionState.selectedObjectIds) ? selectionState.selectedObjectIds : [];
+    const previewObjectIds = previewSelectionObjectIds(state.project, selectedObjectIds);
     const items = sortPreviewItems(decoratePreviewItems(
       smartComponentItems(api, smartComponentCatalog, { allowedKinds, blockedKinds }),
-      selectedObjectIds
+      previewObjectIds
     ), spec);
     const filtered = filterItems(items, state.query);
     const groups = groupItems(filtered).map(renderGroup).filter(Boolean);
@@ -383,6 +384,12 @@ function previewRank(preview = {}) {
 
 function previewCacheKey(presetId, selectedObjectIds = []) {
   return `${presetId}|${selectedObjectIds.filter(Boolean).sort().join(",")}`;
+}
+
+function previewSelectionObjectIds(project, selectedObjectIds = []) {
+  return selectedObjectIds
+    .filter((objectId) => project?.objectIndex?.[objectId]?.collection === "members")
+    .slice(0, 2);
 }
 
 function smartComponentPresetArtworkUrl(item = {}, spec = {}) {

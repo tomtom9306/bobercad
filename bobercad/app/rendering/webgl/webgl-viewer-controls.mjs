@@ -314,7 +314,8 @@ export function attachWebglViewerControls({
         const preciseClick = currentDrag.hit ? null : pickScene(currentDrag.screen.x, currentDrag.screen.y, {
           forceCpu: true,
           includeTransparent: false,
-          objectIds: [currentDrag.face.objectId]
+          objectIds: [currentDrag.face.objectId],
+          preciseInstances: true
         });
         const hitPoint = currentDrag.hit || preciseClick?.point || null;
         state.clickHandler({ ...(preciseClick?.face || currentDrag.face), ...(hitPoint ? { hitPoint } : {}) });
