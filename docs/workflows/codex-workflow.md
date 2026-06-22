@@ -12,9 +12,10 @@ Use this workflow for changes in this repo.
 ## Branching
 
 - Treat `main` as a clean integration base, not a working branch.
-- Before making any code, data, docs, or schema edit, create or switch to a task branch, normally `codex/<short-task-name>`.
+- Before making any code, data, docs, or schema edit, use your assigned task branch.
+- In this local `C:\boberos` setup, the task branches already exist as fixed worktrees: `C:\boberos\agent1` through `C:\boberos\agent10` on `codex/agent1` through `codex/agent10`. If you are assigned to one of these folders, do not create another worktree or clone.
 - Only edit directly on `main` when the user explicitly instructs that exact behavior.
-- If already on `main` and the task requires edits, branch first.
+- If already on `main` and the task requires feature edits, move to the assigned agent folder instead of editing `main`.
 - `node .\scripts\check_repo.js` runs a branch guard and fails when local edits are present on `main`. Use `BOBERCAD_ALLOW_MAIN_EDITS=1` only for an explicit user-approved direct-main edit.
 
 ## Parallel Agent Worktrees
@@ -24,6 +25,7 @@ Git branch state belongs to a working tree folder, not to a Codex chat window. M
 - Use one separate checkout per concurrent agent.
 - Prefer `git worktree` over full extra clones so all checkouts share the same local Git object store.
 - Do not switch branches inside a folder that another active agent is using.
+- In the standard local setup, those checkouts are already provisioned at `C:\boberos\agent1` ... `C:\boberos\agent10`. Assigned agents must use that existing folder and must not run `git worktree add`.
 - If Codex can open different folders, use a stable external folder name that matches the task or role, such as `C:\boberos-worktrees\viewer-selection` or `C:\boberos-worktrees\integrator`.
 - If Codex must stay attached to the single `C:\boberos` project, create worktrees under `C:\boberos\.codex-worktrees\`. This folder is ignored by Git.
 - The integrator should also use its own checkout and should not share a working tree with authoring agents.
@@ -67,6 +69,13 @@ The Codex UI may still show the branch for the outer `C:\boberos` folder. Treat 
 ## Integrator Workflow
 
 When the user says `jestes integratorem` or otherwise assigns the integrator role, stop normal feature work and act as the single integration worker.
+
+For this local workspace, the integration queue is file-based unless the user asks for GitHub PRs:
+
+- Agents signal readiness by setting `STATUS: READY` in `C:\boberos\agentN\INTEGRATION_REQUEST.txt`.
+- The integrator reviews the agent worktree diff against `C:\boberos\main`.
+- The integrator waits for explicit user approval before committing or merging into `main`.
+- After approved integration, the integrator resets the agent branch and worktree to the latest accepted `main` state and restores `INTEGRATION_REQUEST.txt` to `STATUS: IDLE`.
 
 Integrator rules:
 
