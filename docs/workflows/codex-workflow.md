@@ -75,12 +75,14 @@ When the user says `jestes integratorem` or otherwise assigns the integrator rol
 For this local workspace, the integration queue is file-based unless the user asks for GitHub PRs:
 
 - Agents signal technical completion by setting `STATUS: USER_REVIEW` in `C:\boberos\agentN\INTEGRATION_REQUEST.txt`, then showing the user the result and checks. `USER_REVIEW` is not an integration request.
+- Agents must set `STATUS: WIP` before actively editing. `WIP` is the reset-protection lock for active work.
 - Agent `USER_REVIEW` notes must include the dedicated preview URL from that agent worktree. The URL must use the agent port (`5181`-`5190`) and include the branch path prefix immediately after the host, such as `/codex/agentN/...`; otherwise the user may be reviewing `main` instead of the agent's work.
 - Agents may set `STATUS: READY` only after the user explicitly confirms in chat that the change is correct and approved for integration.
 - The integrator treats only `STATUS: READY` as integration-queue input. `READY` means user-approved, not merely agent-complete, so the integrator runs final checks and integrates it without asking for the same approval again.
 - The integrator reviews the agent worktree diff against `C:\boberos\main`.
 - If final checks fail or the scope is unsafe, the integrator marks the request `NEEDS_WORK` instead of integrating.
-- After approved integration, the integrator resets the agent branch and worktree to the latest accepted `main` state, restores `INTEGRATION_REQUEST.txt` to `STATUS: IDLE`, and archives the completed agent chat/thread.
+- After approved integration, the integrator resets the accepted agent branch and worktree to the latest accepted `main` state, restores `INTEGRATION_REQUEST.txt` to `STATUS: IDLE`, archives the completed agent chat/thread, then refreshes every other non-active agent worktree to `main`.
+- Non-active means `STATUS: IDLE` or missing/blank status. Do not reset other agent worktrees marked `WIP`, `USER_REVIEW`, `READY`, or `NEEDS_WORK`.
 
 Integrator rules:
 

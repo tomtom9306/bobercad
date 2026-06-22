@@ -7,6 +7,7 @@ Use this workflow whenever an agent changes code, docs, schemas, scripts, or app
 - Use the assigned task working copy/worktree before editing.
 - In the local `C:\boberos` workspace, agent folders are already provisioned: `C:\boberos\agent1` through `C:\boberos\agent10`.
 - If you are assigned to one of those folders, do not create another worktree, checkout, or clone. For example, agent1 always works in `C:\boberos\agent1` on branch `codex/agent1`.
+- Before actively editing, set `INTEGRATION_REQUEST.txt` to `STATUS: WIP`. This protects your worktree from reset when another agent is integrated.
 - Make all edits, checks, and browser verification inside that copy.
 - Run the app from the copy with `npm run dev` or `node .\scripts\serve_viewer.js`.
 - The server assigns stable ports by worktree: `main` uses `5173`, `agent1` uses `5181`, `agent2` uses `5182`, through `agent10` on `5190`.
@@ -16,7 +17,7 @@ Use this workflow whenever an agent changes code, docs, schemas, scripts, or app
 - Do not set `STATUS: READY` until the user explicitly confirms in chat that the change is correct and approved for integration.
 - `STATUS: READY` is the integrator queue and must mean user-approved, not merely agent-complete.
 - Merge or promote the change only after the user confirms in chat that the result is OK.
-- After merge, the integrator resets the used agent worktree to the latest accepted `main` state and archives the completed agent chat/thread. Do not archive or delete the fixed agent folder unless the user explicitly asks.
+- After merge, the integrator resets the accepted agent worktree and every non-active agent worktree to the latest accepted `main` state, then archives the completed accepted-agent chat/thread. Worktrees marked `WIP`, `USER_REVIEW`, `READY`, or `NEEDS_WORK` are active and must not be reset except for the accepted agent just integrated.
 
 ## Agent Coordination
 

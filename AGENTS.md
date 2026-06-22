@@ -43,10 +43,12 @@ Start here, then open the specific docs needed for the task.
   - `C:\boberos\agent1` through `C:\boberos\agent10` are the authoring worktrees on `codex/agent1` through `codex/agent10`.
 - If you are assigned to one of those agent folders, that folder is your working copy. Do not create another clone, checkout, or `git worktree`.
 - Agent folders must stay on their assigned branch. For example, agent1 works in `C:\boberos\agent1` on `codex/agent1`.
+- Before actively editing, set your `INTEGRATION_REQUEST.txt` to `STATUS: WIP`. This is the lock that tells the integrator not to reset your worktree while you are working.
+- If your worktree has local edits but your status is not `WIP`, `USER_REVIEW`, `READY`, or `NEEDS_WORK`, the integrator may treat it as stale and reset it to `main` after another integration.
 - When an assigned agent believes the work is technically complete, it updates `INTEGRATION_REQUEST.txt` in its own folder with `STATUS: USER_REVIEW`, a summary, checks, and preview URL. This is not an integration request.
 - An assigned agent may set `STATUS: READY` only after the user explicitly confirms in chat that the change is correct and approved for integration. Without that approval, never mark work ready for the integrator.
 - The integrator processes only `STATUS: READY`, and `READY` means user-approved, not merely agent-complete. When an agent is `READY`, the integrator should run final checks and integrate it without asking for the same approval again.
-- After integration, the integrator resets the agent worktree back to the latest accepted `main` state so the next task starts clean, then archives the completed agent chat/thread.
+- After integration, the integrator resets all non-active agent worktrees back to the latest accepted `main` state so the next task starts clean. Worktrees with `STATUS: WIP`, `USER_REVIEW`, `READY`, or `NEEDS_WORK` are active and must not be reset unless they were the accepted agent being integrated.
 - Do not make code, data, docs, or schema edits directly on `main`. Before editing, create or switch to a task branch, normally `codex/<short-task-name>`, unless the user explicitly instructs otherwise.
 - Parallel Codex agents must not share the same working tree. Each concurrent agent needs its own clone or `git worktree` checkout, because switching branches in one shared folder switches that folder for every chat using it.
 - If this fixed `C:\boberos\agentN` layout is unavailable in another environment, create per-agent worktrees under `.codex-worktrees/` and run all task commands from the assigned subfolder.
@@ -76,7 +78,7 @@ Start here, then open the specific docs needed for the task.
 - When the agent finishes its own implementation and checks, mark `INTEGRATION_REQUEST.txt` as `STATUS: USER_REVIEW`, not `READY`. Wait for the user to confirm that the result is correct.
 - Set `STATUS: READY` only after the user explicitly approves the change for integration.
 - Do not merge, copy, or otherwise promote changes back to `main` until the user confirms in chat that the result is OK.
-- After an approved merge, the integrator resets the used agent worktree to the latest accepted `main` state and archives the completed agent chat/thread. Do not archive or delete the fixed `C:\boberos\agentN` folder unless the user explicitly asks.
+- After an approved merge, the integrator resets the accepted agent worktree and every non-active agent worktree to the latest accepted `main` state, then archives the completed accepted-agent chat/thread. Do not reset agent worktrees whose request status is `WIP`, `USER_REVIEW`, `READY`, or `NEEDS_WORK`, except for the accepted agent just integrated.
 - If a working copy or named local preview URL cannot be created, stop and report the blocker before editing application files.
 
 ## Standard Checks
