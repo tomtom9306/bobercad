@@ -43,14 +43,17 @@ Start here, then open the specific docs needed for the task.
   - `C:\boberos\agent1` through `C:\boberos\agent10` are the authoring worktrees on `codex/agent1` through `codex/agent10`.
 - If you are assigned to one of those agent folders, that folder is your working copy. Do not create another clone, checkout, or `git worktree`.
 - Agent folders must stay on their assigned branch. For example, agent1 works in `C:\boberos\agent1` on `codex/agent1`.
-- When an assigned agent finishes, it updates `INTEGRATION_REQUEST.txt` in its own folder and sets `STATUS: READY`. The integrator reviews and integrates only after user approval.
+- When an assigned agent believes the work is technically complete, it updates `INTEGRATION_REQUEST.txt` in its own folder with `STATUS: USER_REVIEW`, a summary, checks, and preview URL. This is not an integration request.
+- An assigned agent may set `STATUS: READY` only after the user explicitly confirms in chat that the change is correct and approved for integration. Without that approval, never mark work ready for the integrator.
+- The integrator processes only `STATUS: READY`, and `READY` means user-approved, not merely agent-complete.
 - After integration, the integrator resets the agent worktree back to the latest accepted `main` state so the next task starts clean.
 - Do not make code, data, docs, or schema edits directly on `main`. Before editing, create or switch to a task branch, normally `codex/<short-task-name>`, unless the user explicitly instructs otherwise.
 - Parallel Codex agents must not share the same working tree. Each concurrent agent needs its own clone or `git worktree` checkout, because switching branches in one shared folder switches that folder for every chat using it.
 - If this fixed `C:\boberos\agentN` layout is unavailable in another environment, create per-agent worktrees under `.codex-worktrees/` and run all task commands from the assigned subfolder.
 - Only the single agent explicitly assigned as the integrator may merge into `main`. If the user says `jestes integratorem` or otherwise assigns the integrator role, follow the Integrator Workflow in `docs/workflows/codex-workflow.md` immediately.
-- Non-integrator agents never merge, rebase, fast-forward, or push changes into `main`. They finish by opening or updating a PR against `main`, running required checks, and marking the PR with `ready-for-integration`.
-- Use PR labels as the integration queue: `ready-for-integration`, `integrating`, `integration-blocked`, and optionally `integrated`. The `integrating` label is the lock, and only the integrator may hold it for one PR at a time.
+- Non-integrator agents never merge, rebase, fast-forward, or push changes into `main`.
+- In this local file-based workflow, non-integrator agents finish by setting `STATUS: USER_REVIEW` and waiting for the user. They do not open PRs or mark anything ready for integration unless the user explicitly asks for a GitHub PR workflow.
+- If the user explicitly asks for GitHub PRs, PR labels may be used as the integration queue, but `ready-for-integration` still requires explicit user approval first.
 - Do not store meshes, vertices, triangles, B-reps, scene graph data, or generated geometry in project JSON.
 - Do not add OpenCascade or a general CAD kernel to the core model.
 - Keep `objectIndex` stored and authoritative for now.
@@ -70,6 +73,8 @@ Start here, then open the specific docs needed for the task.
 
 - Before making code changes, use the assigned task working copy/worktree. In this local workspace, `C:\boberos\agentN` is already that working copy; do not create another one from inside an agent folder.
 - Run and verify the app from that copy. The local URL shown to the user must identify the copy being tested, preferably with a `/w/<copy-name>/...` path or an equivalent configured worktree server route.
+- When the agent finishes its own implementation and checks, mark `INTEGRATION_REQUEST.txt` as `STATUS: USER_REVIEW`, not `READY`. Wait for the user to confirm that the result is correct.
+- Set `STATUS: READY` only after the user explicitly approves the change for integration.
 - Do not merge, copy, or otherwise promote changes back to `main` until the user confirms in chat that the result is OK.
 - After an approved merge, the integrator resets the used agent worktree to the latest accepted `main` state. Do not archive or delete the fixed `C:\boberos\agentN` folder unless the user explicitly asks.
 - If a working copy or named local preview URL cannot be created, stop and report the blocker before editing application files.

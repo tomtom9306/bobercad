@@ -10,6 +10,9 @@ Use this workflow whenever an agent changes code, docs, schemas, scripts, or app
 - Make all edits, checks, and browser verification inside that copy.
 - Run the app from the copy. The preview URL given to the user must identify the copy being tested, preferably through a `/w/<copy-name>/...` route or an equivalent configured worktree server URL.
 - Keep `main` unchanged while the user is reviewing the copy.
+- When implementation and checks are complete, set `INTEGRATION_REQUEST.txt` to `STATUS: USER_REVIEW` and summarize the result for the user.
+- Do not set `STATUS: READY` until the user explicitly confirms in chat that the change is correct and approved for integration.
+- `STATUS: READY` is the integrator queue and must mean user-approved, not merely agent-complete.
 - Merge or promote the change only after the user confirms in chat that the result is OK.
 - After merge, the integrator resets the used agent worktree to the latest accepted `main` state. Do not archive or delete the fixed agent folder unless the user explicitly asks.
 

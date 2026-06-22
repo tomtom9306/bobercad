@@ -57,13 +57,15 @@ The Codex UI may still show the branch for the outer `C:\boberos` folder. Treat 
 
 ## Integration Queue
 
-- Integration state lives on GitHub PR labels, not in branch names.
-- Use these labels exactly:
+- In this local workspace, integration state lives in `C:\boberos\agentN\INTEGRATION_REQUEST.txt`.
+- GitHub PR labels are used only when the user explicitly asks for a GitHub PR workflow.
+- In both workflows, "ready for integration" requires explicit user approval first.
+- For GitHub PR mode, use these labels exactly:
   - `ready-for-integration`: the authoring agent says the PR is complete and required checks passed.
   - `integrating`: the single integrator has locked this PR and is actively processing it.
   - `integration-blocked`: integration failed because of conflicts, failing checks, unclear scope, or missing work.
   - `integrated`: optional archive label after a successful merge.
-- A non-integrator agent may add `ready-for-integration` only after running the required checks and summarizing them in the PR.
+- A non-integrator agent may add `ready-for-integration` only after running the required checks, summarizing them in the PR, and receiving explicit user approval.
 - A non-integrator agent must not add `integrating`, merge to `main`, push to `main`, or resolve integration conflicts directly on `main`.
 
 ## Integrator Workflow
@@ -72,7 +74,9 @@ When the user says `jestes integratorem` or otherwise assigns the integrator rol
 
 For this local workspace, the integration queue is file-based unless the user asks for GitHub PRs:
 
-- Agents signal readiness by setting `STATUS: READY` in `C:\boberos\agentN\INTEGRATION_REQUEST.txt`.
+- Agents signal technical completion by setting `STATUS: USER_REVIEW` in `C:\boberos\agentN\INTEGRATION_REQUEST.txt`, then showing the user the result and checks. `USER_REVIEW` is not an integration request.
+- Agents may set `STATUS: READY` only after the user explicitly confirms in chat that the change is correct and approved for integration.
+- The integrator treats only `STATUS: READY` as integration-queue input. `READY` means user-approved, not merely agent-complete.
 - The integrator reviews the agent worktree diff against `C:\boberos\main`.
 - The integrator waits for explicit user approval before committing or merging into `main`.
 - After approved integration, the integrator resets the agent branch and worktree to the latest accepted `main` state and restores `INTEGRATION_REQUEST.txt` to `STATUS: IDLE`.
@@ -87,7 +91,7 @@ Integrator rules:
 
 Integrator loop:
 
-1. Find the oldest open PR targeting `main` with `ready-for-integration` and without `integrating` or `integration-blocked`.
+1. In local file mode, find `agent*/INTEGRATION_REQUEST.txt` with `STATUS: READY`; in GitHub PR mode, find the oldest open PR targeting `main` with `ready-for-integration` and without `integrating` or `integration-blocked`.
 2. Lock it by adding `integrating`, removing `ready-for-integration`, and commenting that integration started.
 3. Fetch the latest refs and create a temporary integration branch from current `origin/main`.
 4. Merge or rebase the PR branch into the temporary integration branch.
