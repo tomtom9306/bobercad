@@ -2162,6 +2162,14 @@
         "memberAId": {
           "$ref": "#/$defs/id"
         },
+        "memberAIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
         "memberAEnd": {
           "enum": [
             "start",
@@ -2170,6 +2178,14 @@
         },
         "memberBId": {
           "$ref": "#/$defs/id"
+        },
+        "memberBIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "minItems": 1,
+          "uniqueItems": true
         },
         "memberBEnd": {
           "enum": [
@@ -2204,6 +2220,9 @@
           ]
         },
         "enabled": {
+          "type": "boolean"
+        },
+        "allowExtension": {
           "type": "boolean"
         }
       },
@@ -2259,15 +2278,56 @@
                     "referencePlaneIds"
                   ]
                 }
-              },
-              {
-                "not": {
-                  "required": [
-                    "removedRegionKeys"
-                  ]
-                }
               }
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "end-butt-1",
+                  "end-butt-2",
+                  "end-butt-both",
+                  "end-miter"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "allowExtension"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "end-butt-1",
+                  "end-butt-2",
+                  "end-butt-both",
+                  "end-miter"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "removedRegionKeys"
+              ]
+            }
           }
         },
         {
@@ -2357,6 +2417,42 @@
                 "not": {
                   "required": [
                     "memberBEnd"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "end-butt-1",
+                  "end-butt-2",
+                  "end-butt-both",
+                  "end-miter",
+                  "plane-trim"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "memberAIds"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "memberBIds"
                   ]
                 }
               }

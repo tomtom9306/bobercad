@@ -561,8 +561,10 @@ function checkAppArchitectureContracts(errors) {
 
   const sceneBuilderRelative = "bobercad/app/rendering/scene/scene-geometry-builder.mjs";
   const sceneFeatureCuttersRelative = "bobercad/app/rendering/scene/scene-feature-cutters.mjs";
+  const sceneMemberGeometryAdaptersRelative = "bobercad/app/rendering/scene/scene-member-geometry-adapters.mjs";
   const sceneObjectGeometryAdaptersRelative = "bobercad/app/rendering/scene/scene-object-geometry-adapters.mjs";
   const sceneDatumReferenceAssemblyRelative = "bobercad/app/rendering/scene/scene-datum-reference-assembly.mjs";
+  const trimRegionGeometryRelative = "bobercad/app/engine/geometry/trim-region-geometry.mjs";
   const fastenerEvaluatorRelative = "bobercad/app/engine/geometry/evaluators/fastener-evaluator.mjs";
   const trimEvaluatorRelative = "bobercad/app/engine/geometry/evaluators/trim-evaluator.mjs";
   const weldEvaluatorRelative = "bobercad/app/engine/geometry/evaluators/weld-evaluator.mjs";
@@ -645,6 +647,19 @@ function checkAppArchitectureContracts(errors) {
     const featureCuttersText = fs.readFileSync(path.join(ROOT, sceneFeatureCuttersRelative), "utf8");
     if (!featureCuttersText.includes("evaluateTrimJointMemberFeatures")) {
       fail(errors, `${sceneFeatureCuttersRelative}: scene feature adapter must use evaluateTrimJointMemberFeatures output`);
+    }
+  }
+  if (!exists(trimRegionGeometryRelative)) {
+    fail(errors, `missing required trim region geometry helper: ${trimRegionGeometryRelative}`);
+  } else if (exists(sceneMemberGeometryAdaptersRelative)) {
+    const memberAdapterText = fs.readFileSync(path.join(ROOT, sceneMemberGeometryAdaptersRelative), "utf8");
+    const regionGeometryText = fs.readFileSync(path.join(ROOT, trimRegionGeometryRelative), "utf8");
+    if (!memberAdapterText.includes("objectTrimComponentRegions") || !regionGeometryText.includes("function connectedPolygonComponents")) {
+      fail(errors, "object trim component region splitting must live in the headless trim-region geometry helper and be imported by the renderer");
+    }
+    for (const token of ["function connectedPolygonComponents", "function objectTrimComponentRegions", "function removeObjectTrimRegions"]) {
+      const index = memberAdapterText.indexOf(token);
+      if (index >= 0) fail(errors, `${sceneMemberGeometryAdaptersRelative}:${lineNumberAt(memberAdapterText, index)}: ${token} belongs in ${trimRegionGeometryRelative}`);
     }
   }
   if (exists(sceneDatumReferenceAssemblyRelative)) {

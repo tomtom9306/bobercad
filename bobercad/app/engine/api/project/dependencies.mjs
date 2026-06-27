@@ -1,6 +1,6 @@
 import { flattenIds, uniqueTruthy as unique } from "../../core/model.mjs";
 import { objectCollection } from "./objects.mjs";
-import { trimJointOperations, trimJointParticipants, trimOperationReferencePlaneIds, trimOperationUsesMemberB } from "./trim-operations.mjs";
+import { trimJointOperations, trimJointParticipants, trimOperationMemberIds, trimOperationReferencePlaneIds, trimOperationUsesMemberB } from "./trim-operations.mjs";
 
 const RENDER_COLLECTIONS = new Set(["members", "plates", "features", "trimJoints", "fastenerGroups", "welds"]);
 const PROJECT_DEPENDENCY_INDEX = new WeakMap();
@@ -155,8 +155,8 @@ function projectDependencyIndex(project) {
     const memberIds = [];
     for (const participant of trimJointParticipants(trimJoint)) memberIds.push(participant.memberId);
     for (const operation of trimJointOperations(trimJoint)) {
-      memberIds.push(operation.memberAId);
-      if (trimOperationUsesMemberB(operation.type)) memberIds.push(operation.memberBId);
+      memberIds.push(...trimOperationMemberIds(operation, "memberA"));
+      if (trimOperationUsesMemberB(operation.type)) memberIds.push(...trimOperationMemberIds(operation, "memberB"));
       for (const referencePlaneId of trimOperationReferencePlaneIds(operation)) {
         pushIndexedValue(index.trimJointsByReferencePlaneId, referencePlaneId, trimJoint);
       }
@@ -282,8 +282,8 @@ function trimJointObjectIds(project, trimJoint, options = {}) {
     ...trimJointParticipants(trimJoint).map((participant) => participant.memberId)
   ];
   for (const operation of trimJointOperations(trimJoint)) {
-    ids.push(operation.memberAId);
-    if (trimOperationUsesMemberB(operation.type)) ids.push(operation.memberBId);
+    ids.push(...trimOperationMemberIds(operation, "memberA"));
+    if (trimOperationUsesMemberB(operation.type)) ids.push(...trimOperationMemberIds(operation, "memberB"));
     ids.push(...trimOperationReferencePlaneIds(operation));
   }
   return filterProjectIds(project, ids, options);

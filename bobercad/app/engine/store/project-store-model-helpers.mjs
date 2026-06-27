@@ -16,9 +16,9 @@ import {
   v
 } from "../core/math.mjs";
 import { cleanId, removeProjectObjects } from "../api/project/objects.mjs";
-import { TRIM_OPERATION_TYPES, trimJointOperations, trimJointParticipants, trimOperationReferencePlaneIds, trimOperationUsesMemberEnd } from "../api/project/trim-operations.mjs";
+import { TRIM_OPERATION_TYPES, trimJointOperations, trimJointParticipants, trimOperationMemberIds, trimOperationReferencePlaneIds, trimOperationUsesMemberEnd } from "../api/project/trim-operations.mjs";
 import { memberCenter, memberPointAtEnd } from "../api/project/members.mjs";
-import { trimRegionSelectorMap } from "../api/model/trim-region-keys.mjs";
+import { reconcileObjectTrimRemovedRegionKeys, trimRegionSelectorMap } from "../api/model/trim-region-keys.mjs";
 
 const REF_ARRAY_KEYS = new Set([
   "objectIds",
@@ -536,6 +536,14 @@ export function validateTrimRegionKeys(trimJointId, operation) {
   }
 }
 
+export function validateObjectTrimRegionKeys(trimJointId, operation) {
+  try {
+    reconcileObjectTrimRemovedRegionKeys(operation);
+  } catch (error) {
+    fail(`${trimJointId}: ${error.message}`);
+  }
+}
+
 export function trimParticipantEnd(trimJoint, memberId, label) {
   const participant = trimJointParticipants(trimJoint).find((item) => item.memberId === memberId);
   if (!participant) fail(`${label} must reference a trim joint participant`);
@@ -562,9 +570,20 @@ export function normalizedTrimJointOperation(trimJoint, operation) {
   const type = operation.type;
   if (!TRIM_OPERATION_TYPES.has(type)) fail(`unsupported trim operation type ${type}`);
   const next = { ...operation, type };
+  if (type === "profile-cope") {
+    next.memberAIds = trimOperationMemberIds(next, "memberA");
+    next.memberBIds = trimOperationMemberIds(next, "memberB");
+    next.memberAId = next.memberAIds[0];
+    next.memberBId = next.memberBIds[0];
+    next.removedRegionKeys = reconcileObjectTrimRemovedRegionKeys(next);
+  } else {
+    rejectDefinedOperationFields(next, ["memberAIds", "memberBIds"], next.id || "trim operation");
+    delete next.memberAIds;
+    delete next.memberBIds;
+  }
   if (trimOperationUsesMemberEnd(type, "memberA")) next.memberAEnd = normalizedOperationMemberEnd(trimJoint, next, "memberA");
   else {
-    rejectDefinedOperationFields(next, ["memberAEnd"], next.id || "trim operation");
+    if (type !== "plane-trim") rejectDefinedOperationFields(next, ["memberAEnd"], next.id || "trim operation");
     delete next.memberAEnd;
   }
   if (trimOperationUsesMemberEnd(type, "memberB")) next.memberBEnd = normalizedOperationMemberEnd(trimJoint, next, "memberB");
@@ -581,14 +600,22 @@ export function normalizedTrimJointOperation(trimJoint, operation) {
     next.removedRegionKeys = unique(requiredStringList(next.removedRegionKeys, `${next.id || "trim operation"}.removedRegionKeys`));
     delete next.referencePlaneId;
   } else {
-    rejectDefinedOperationFields(next, ["referencePlaneId", "referencePlaneIds", "removedRegionKeys"], next.id || "trim operation");
+    rejectDefinedOperationFields(next, ["referencePlaneId", "referencePlaneIds", ...(type === "profile-cope" ? [] : ["removedRegionKeys"])], next.id || "trim operation");
     delete next.referencePlaneId;
     delete next.referencePlaneIds;
-    delete next.removedRegionKeys;
+    if (type !== "profile-cope") delete next.removedRegionKeys;
   }
   if (type !== "end-miter") {
     rejectDefinedOperationFields(next, ["miterMode"], next.id || "trim operation");
     delete next.miterMode;
+  }
+  if (type === "profile-cope" || type === "plane-trim") {
+    if (next.allowExtension !== undefined && typeof next.allowExtension !== "boolean") {
+      fail(`${next.id || "trim operation"}.allowExtension must be boolean`);
+    }
+  } else {
+    rejectDefinedOperationFields(next, ["allowExtension"], next.id || "trim operation");
+    delete next.allowExtension;
   }
   return next;
 }
@@ -637,6 +664,10 @@ export function validateTrimJointOperation(project, trimJointId, trimJoint, oper
   const participantIds = new Set(trimJointParticipants(trimJoint).map((participant) => participant.memberId));
   if (!operation.memberAId) fail(`${trimJointId}: operation requires member A`);
   if (!participantIds.has(operation.memberAId)) fail(`${trimJointId}: operation member A must be a participant`);
+  if (operation.allowExtension !== undefined) {
+    if (operation.type !== "profile-cope" && operation.type !== "plane-trim") fail(`${trimJointId}: allowExtension is only valid for object trim operations`);
+    if (typeof operation.allowExtension !== "boolean") fail(`${trimJointId}: allowExtension must be boolean`);
+  }
   if (operation.type === "plane-trim") {
     const referencePlaneIds = trimOperationReferencePlaneIds(operation);
     if (!referencePlaneIds.length) {
@@ -650,6 +681,20 @@ export function validateTrimJointOperation(project, trimJointId, trimJoint, oper
   if (!operation.memberBId) fail(`${trimJointId}: operation requires member B`);
   if (!participantIds.has(operation.memberBId)) fail(`${trimJointId}: operation member B must be a participant`);
   if (operation.memberAId === operation.memberBId) fail(`${trimJointId}: operation members must be different`);
+  if (operation.type === "profile-cope") {
+    const memberAIds = trimOperationMemberIds(operation, "memberA");
+    const memberBIds = trimOperationMemberIds(operation, "memberB");
+    if (!memberAIds.length) fail(`${trimJointId}: profile-cope operation requires objects to trim`);
+    if (!memberBIds.length) fail(`${trimJointId}: profile-cope operation requires cutting objects`);
+    for (const memberId of memberAIds) {
+      if (!participantIds.has(memberId)) fail(`${trimJointId}: profile-cope object to trim must be a participant: ${memberId}`);
+    }
+    for (const memberId of memberBIds) {
+      if (!participantIds.has(memberId)) fail(`${trimJointId}: profile-cope cutting object must be a participant: ${memberId}`);
+      if (memberAIds.includes(memberId)) fail(`${trimJointId}: profile-cope objects to trim and cutting objects must be different: ${memberId}`);
+    }
+    validateObjectTrimRegionKeys(trimJointId, operation);
+  }
   if (operation.miterMode !== undefined && !MITER_MODES.has(operation.miterMode)) {
     fail(`${trimJointId}: unsupported miterMode ${operation.miterMode}`);
   }

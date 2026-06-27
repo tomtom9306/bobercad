@@ -220,27 +220,20 @@ function checkInspectorObjectContracts(context) {
     object: trimJointFixture
   });
   const objectTrimFields = objectTrimSections?.flatMap((section) => section.fields || []) || [];
-  const trimCutSelector = objectTrimFields.find((field) => field.type === "tabList" && field.label === "Cuts");
-  const trimTypeField = objectTrimFields.find((field) => field.type === "optionGrid" && field.label === "Type");
+  const trimOpenEditorAction = objectTrimFields.find((field) => field.type === "action" && field.action === "object.trim.openEditor");
   if (
     JSON.stringify(objectTrimSections?.map((section) => section.id)) !== JSON.stringify([
       "inspector.properties.object.trimJoint.overview",
-      "inspector.properties.object.trimJoint.cuts",
-      "inspector.properties.object.trimJoint.participants",
-      "inspector.properties.object.trimJoint.operation"
+      "inspector.properties.object.trimJoint.participants"
     ])
     || generatedPropertyBindings.generatedPropertyDescriptorsContainFunctions?.(objectTrimSections)
-    || trimCutSelector?.commit?.action !== "object.trimJoint.operation.select"
-    || JSON.stringify(trimCutSelector?.options?.map((option) => option.id)) !== JSON.stringify(["cut-a", "plane-a"])
-    || trimTypeField?.commit?.action !== "object.trimJoint.operation.type.set"
-    || trimTypeField?.commit?.operationId !== "cut-a"
-    || !trimTypeField?.options?.some((option) => option.id === "end-miter" && option.icon === "trim-miter")
-    || trimTypeField?.options?.some((option) => option.id === "plane-trim")
-    || !objectTrimFields.some((field) => field.type === "objectRef" && field.label === "Member A" && field.value === "beam-a")
-    || !objectTrimFields.some((field) => field.type === "segmented" && field.label === "Member A end" && field.commit?.patchKey === "memberAEnd")
-    || !objectTrimFields.some((field) => field.type === "segmented" && field.label === "Miter" && field.commit?.patchKey === "miterMode")
+    || trimOpenEditorAction?.payload?.objectId !== "trim-a"
+    || trimOpenEditorAction?.payload?.detail?.operationId !== "cut-a"
+    || objectTrimFields.some((field) => field.type === "tabList" && field.label === "Cuts")
+    || objectTrimFields.some((field) => field.type === "optionGrid" && field.label === "Type")
+    || objectTrimFields.some((field) => field.commit?.action?.startsWith?.("object.trimJoint.operation."))
   ) {
-    fail(errors, `inspector-property-metadata trim joint generated Properties must expose cut selection, type grid, member refs, and common trim controls: ${JSON.stringify(objectTrimSections)}`);
+    fail(errors, `inspector-property-metadata trim joint generated Properties must expose only summary plus Open Trim Editor, not the old cut form: ${JSON.stringify(objectTrimSections)}`);
   }
   const objectPlaneTrimSections = inspectorPropertyMetadata.inspectorObjectPropertySections?.({
     collection: "trimJoints",
@@ -251,18 +244,12 @@ function checkInspectorObjectContracts(context) {
   const objectPlaneTrimFields = objectPlaneTrimSections?.flatMap((section) => section.fields || []) || [];
   if (
     generatedPropertyBindings.generatedPropertyDescriptorsContainFunctions?.(objectPlaneTrimSections)
-    || !objectPlaneTrimFields.some((field) => field.type === "actionList" && field.label === "Type" && field.actions?.some((action) => action.action === "object.trim.openEditor" && action.payload?.detail?.operationId === "plane-a"))
-    || !objectPlaneTrimFields.some((field) => field.type === "actionList" && field.label === "Planes" && field.actions?.some((action) => action.payload?.detail?.operationId === "plane-a"))
-    || !objectPlaneTrimFields.some((field) => field.type === "actionList" && field.label === "Regions" && field.actions?.some((action) => action.payload?.detail?.regionKey === "plane-1:-"))
+    || !objectPlaneTrimFields.some((field) => field.type === "action" && field.action === "object.trim.openEditor" && field.payload?.detail?.operationId === "plane-a")
+    || objectPlaneTrimFields.some((field) => ["Type", "Planes", "Regions", "Miter", "Gap", "Allow extension"].includes(field.label) && field.type !== undefined && field.type !== "action")
   ) {
-    fail(errors, `inspector-property-metadata plane trim generated Properties must expose advanced-editor actions for type, planes, and regions: ${JSON.stringify(objectPlaneTrimSections)}`);
+    fail(errors, `inspector-property-metadata plane trim generated Properties must route to the single Trim Editor instead of exposing a second form: ${JSON.stringify(objectPlaneTrimSections)}`);
   }
   const boundObjectTrimSections = generatedPropertyBindings.bindGeneratedPropertySections?.(objectTrimSections, {
-    commits: {
-      "object.trimJoint.operation.select": () => "select",
-      "object.trimJoint.operation.type.set": () => "type",
-      "object.trimJoint.operation.update": () => "update"
-    },
     actions: {
       "object.trim.openEditor": () => "editor",
       "objectRef.select": () => "selectObject",
@@ -271,12 +258,10 @@ function checkInspectorObjectContracts(context) {
   }) || [];
   const boundObjectTrimFields = boundObjectTrimSections.flatMap((section) => section.fields || []);
   if (
-    typeof boundObjectTrimFields.find((field) => field.type === "tabList")?.onChange !== "function"
-    || typeof boundObjectTrimFields.find((field) => field.type === "optionGrid")?.onChange !== "function"
-    || typeof boundObjectTrimFields.find((field) => field.label === "Member A")?.actions?.[0]?.onClick !== "function"
-    || typeof boundObjectTrimFields.find((field) => field.label === "Miter")?.onChange !== "function"
+    typeof boundObjectTrimFields.find((field) => field.action === "object.trim.openEditor")?.onClick !== "function"
+    || boundObjectTrimFields.some((field) => field.type === "tabList" || field.type === "optionGrid" || field.commit?.action?.startsWith?.("object.trimJoint.operation."))
   ) {
-    fail(errors, `Generated Properties binding adapter must attach trim joint property handlers from metadata intents: ${JSON.stringify(boundObjectTrimSections)}`);
+    fail(errors, `Generated Properties binding adapter must route trim joints to the single Trim Editor only: ${JSON.stringify(boundObjectTrimSections)}`);
   }
   const featureEditorSections = inspectorPropertyMetadata.inspectorFeatureEditorSections?.({
     id: "feature-a",
@@ -654,8 +639,6 @@ function checkInspectorObjectContracts(context) {
       removePlateBend: (bendId) => bindingEvents.push(["removeBend", bendId]),
       inferPlateSketchRelations: (objectId) => bindingEvents.push(["inferRelations", objectId]),
       createPlateFromSketch: (objectId) => bindingEvents.push(["createPlate", objectId]),
-      selectTrimOperation: (operationId) => bindingEvents.push(["trimSelect", operationId]),
-      setTrimOperationType: (operationId, type) => bindingEvents.push(["trimType", operationId, type]),
       setPlateSketchRelationValue: (value, commit) => bindingEvents.push(["relationValue", value, commit]),
       selectPlateSketchRelation: (payload) => bindingEvents.push(["relationSelect", payload]),
       setPlateSketchRelationMode: (payload) => bindingEvents.push(["relationMode", payload]),
@@ -703,8 +686,6 @@ function checkInspectorObjectContracts(context) {
   inspectorBindings.generatedObjectBindings().commits["object.plate.bend.update"]("rect", { bend: { id: "bend-a", relief: { type: "round", width: 5 } }, patchPath: ["relief", "type"] });
   inspectorBindings.generatedObjectBindings().actions["object.plate.bend.remove"]({ payload: { bendId: "bend-remove" } });
   inspectorBindings.generatedObjectBindings().actions["object.plate.relations.infer"]({ payload: { objectId: "plate-a" } });
-  inspectorBindings.generatedObjectBindings().commits["object.trimJoint.operation.select"]("trim-op-a");
-  inspectorBindings.generatedObjectBindings().commits["object.trimJoint.operation.type.set"]("end-miter", { operationId: "trim-op-a" });
   inspectorBindings.generatedObjectBindings().commits["object.plate.sketchRelation.value.set"](42, { objectId: "plate-a", relationId: "relation-a" });
   inspectorBindings.generatedObjectBindings().actions["object.plate.sketchRelation.select"]({ payload: { objectId: "plate-a", relationId: "relation-a" } });
   inspectorBindings.generatedObjectBindings().actions["object.plate.sketchRelation.mode.set"]({ payload: { objectId: "plate-a", relationId: "relation-a", mode: "driven" } });
@@ -776,8 +757,6 @@ function checkInspectorObjectContracts(context) {
     || !bindingEvents.some((event) => event[0] === "bend" && event[1].relief?.type === "rect" && event[1].relief?.width === 5)
     || !bindingEvents.some((event) => event[0] === "removeBend" && event[1] === "bend-remove")
     || !bindingEvents.some((event) => event[0] === "inferRelations" && event[1] === "plate-a")
-    || !bindingEvents.some((event) => event[0] === "trimSelect" && event[1] === "trim-op-a")
-    || !bindingEvents.some((event) => event[0] === "trimType" && event[1] === "trim-op-a" && event[2] === "end-miter")
     || !bindingEvents.some((event) => event[0] === "relationValue" && event[1] === 42 && event[2].relationId === "relation-a")
     || !bindingEvents.some((event) => event[0] === "relationSelect" && event[1].relationId === "relation-a")
     || !bindingEvents.some((event) => event[0] === "relationMode" && event[1].mode === "driven")

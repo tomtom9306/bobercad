@@ -3,7 +3,7 @@ export const TRIM_OPERATION_TYPES = [
   { id: "end-butt-2", label: "Butt B to A", gap: true, icon: "trim-butt-b-to-a" },
   { id: "end-butt-both", label: "Butt both", gap: true, icon: "trim-butt-both" },
   { id: "end-miter", label: "Miter", gap: true, icon: "trim-miter" },
-  { id: "profile-cope", label: "Profile cope", gap: false, icon: "trim-profile-cope" },
+  { id: "profile-cope", label: "Object trim", gap: true, icon: "trim-profile-cope" },
   { id: "plane-trim", label: "Plane trim", gap: true, icon: "trim-plane" }
 ];
 

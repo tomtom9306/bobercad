@@ -1,11 +1,12 @@
 import { averageVec3, clamp, closestAxisSegmentPoints, finiteNumber, finiteNumberOr, projectedAxis as projectAxisToPlane, v } from "../../core/math.mjs";
 import { arrayValues, objectById, truthyValues, uniqueValues } from "../../core/model.mjs";
-import { activeTrimJointOperations, activeTrimJointParticipants, trimOperationReferencePlaneIds } from "../../api/project/trim-operations.mjs";
+import { activeTrimJointOperations, activeTrimJointParticipants, trimOperationFeatureId, trimOperationMemberIds, trimOperationMemberPairs, trimOperationPairFeatureId, trimOperationReferencePlaneIds } from "../../api/project/trim-operations.mjs";
 import { memberAxisData, memberPointAtEnd } from "../../api/project/members.mjs";
 import { libraryProfileById } from "../../api/project/profiles.mjs";
 import { CSG_EPSILON, ccwPoints, geometryError, projectCoincidentTolerance, requiredVector } from "../csg.mjs";
 import { memberFrame, memberFrameAt, memberLength, sectionBounds } from "../member-geometry.mjs";
 import { requiredReferencePlane } from "../reference-plane.mjs";
+import { sectionMaxSpan } from "../trim-region-geometry.mjs";
 
 function sectionPoint(origin, frame, point, xOffset = 0) {
   return v.add(origin, v.add(v.mul(frame.x, xOffset), v.add(v.mul(frame.y, point[0]), v.mul(frame.z, point[1]))));
@@ -19,12 +20,6 @@ function memberEndKeepDirection(member, frame, memberEnd) {
   if (memberEnd === "start") return frame.x;
   if (memberEnd === "end") return v.mul(frame.x, -1);
   geometryError(`${member.id}: trim operation must set memberEnd to start or end`);
-}
-
-function sectionMaxSpan(profile) {
-  if (!profile) return 1;
-  const bounds = sectionBounds(profile);
-  return Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
 }
 
 function trimPlaneMarkerAxis(frame, normal) {
@@ -298,16 +293,129 @@ function trimJointReferencePlanes(project, trimJoint, operation, gap = 0) {
     .map((referencePlaneId) => trimJointReferencePlane(project, trimJoint, operation, referencePlaneId, gap));
 }
 
+function ownerAxisPlaneStation(owner, frame, plane, featureId) {
+  const normal = v.norm(requiredVector(plane, "normal", featureId));
+  const denominator = v.dot(normal, frame.x);
+  if (Math.abs(denominator) <= 0.02) return null;
+  return v.dot(v.sub(requiredVector(plane, "origin", featureId), owner.start), normal) / denominator;
+}
+
+function planeTrimOwnerExtension(project, owner, planes) {
+  const frame = memberFrame(owner);
+  const length = memberLength(owner);
+  const overlap = objectTrimExtensionOverlap(project);
+  const ownerExtension = {};
+  for (const plane of planes) {
+    const station = ownerAxisPlaneStation(owner, frame, plane, plane.id || owner.id);
+    if (station === null) continue;
+    if (station < -CSG_EPSILON) {
+      ownerExtension.start = Math.min(ownerExtension.start ?? 0, station - overlap);
+    }
+    if (station > length + CSG_EPSILON) {
+      ownerExtension.end = Math.max(ownerExtension.end ?? length, station + overlap);
+    }
+  }
+  return Object.keys(ownerExtension).length ? ownerExtension : null;
+}
+
 function trimJointPlaneTrimFeature(project, trimJoint, id, owner, gap, operation) {
+  const runtimePlanes = trimJointReferencePlanes(project, trimJoint, operation, gap);
+  const ownerExtension = operation.allowExtension === true
+    ? planeTrimOwnerExtension(project, owner, runtimePlanes)
+    : null;
   return {
     id,
     type: "member-trim-region",
     ownerId: owner.id,
     trimJointId: trimJoint.id,
-    runtimePlanes: trimJointReferencePlanes(project, trimJoint, operation, gap),
+    ownerExtension: ownerExtension || {},
+    runtimePlanes,
     removedRegionKeys: [...arrayValues(operation.removedRegionKeys)],
     display: trimJoint.display || {},
     fabrication: trimJoint.fabrication
+  };
+}
+
+function profileCopeSourceOffsets(xMinus = 0, xPlus = 0, profileGap = 0) {
+  const gap = Math.max(0, finiteNumberOr(profileGap, 0));
+  return {
+    xMinus: Math.max(0, xMinus),
+    xPlus: Math.max(0, xPlus),
+    yMinus: gap,
+    yPlus: gap,
+    zMinus: gap,
+    zPlus: gap
+  };
+}
+
+function objectTrimExtensionOverlap(project) {
+  const toleranceScaledOverlap = projectCoincidentTolerance(project) * 0.05;
+  return Math.max(Math.min(toleranceScaledOverlap, 0.1), CSG_EPSILON * 100);
+}
+
+function stationRangeIntersection(range, origin, direction) {
+  if (Math.abs(direction) <= CSG_EPSILON) {
+    return origin >= range.min - CSG_EPSILON && origin <= range.max + CSG_EPSILON
+      ? { min: -Infinity, max: Infinity }
+      : null;
+  }
+  const a = (range.min - origin) / direction;
+  const b = (range.max - origin) / direction;
+  return { min: Math.min(a, b), max: Math.max(a, b) };
+}
+
+function intersectStationRanges(left, right) {
+  if (!left || !right) return null;
+  const range = {
+    min: Math.max(left.min, right.min),
+    max: Math.min(left.max, right.max)
+  };
+  return range.min <= range.max + CSG_EPSILON ? range : null;
+}
+
+function memberSolidHitStationRangeOnAxis(member, profile, axisStart, axisDirection) {
+  const frame = memberFrame(member);
+  const length = memberLength(member);
+  const bounds = sectionBounds(profile);
+  const originDelta = v.sub(axisStart, member.start);
+  let stationRange = { min: -Infinity, max: Infinity };
+  stationRange = intersectStationRanges(stationRange, stationRangeIntersection(
+    { min: 0, max: length },
+    v.dot(originDelta, frame.x),
+    v.dot(axisDirection, frame.x)
+  ));
+  stationRange = intersectStationRanges(stationRange, stationRangeIntersection(
+    { min: bounds.minY, max: bounds.maxY },
+    v.dot(originDelta, frame.y),
+    v.dot(axisDirection, frame.y)
+  ));
+  stationRange = intersectStationRanges(stationRange, stationRangeIntersection(
+    { min: bounds.minZ, max: bounds.maxZ },
+    v.dot(originDelta, frame.z),
+    v.dot(axisDirection, frame.z)
+  ));
+  return stationRange;
+}
+
+function profileCopeExtension(project, profiles, trimJoint, owner, cutter, gap = 0) {
+  const ownerFrame = memberFrame(owner);
+  const ownerLength = memberLength(owner);
+  const cutterProfile = libraryProfileById(profiles, cutter.profile);
+  if (!cutterProfile) geometryError(`${trimJoint.id}: trim operation cutter profile not found: ${cutter.profile}`);
+
+  const overlap = objectTrimExtensionOverlap(project);
+  const cutterRange = memberSolidHitStationRangeOnAxis(cutter, cutterProfile, owner.start, ownerFrame.x);
+  if (!cutterRange) return null;
+  const terminationGap = Math.max(0, finiteNumberOr(gap, 0));
+  const startTermination = cutterRange.max + terminationGap;
+  const endTermination = cutterRange.min - terminationGap;
+  const ownerExtension = {};
+  if (startTermination < -CSG_EPSILON) ownerExtension.start = startTermination - overlap;
+  if (endTermination > ownerLength + CSG_EPSILON) ownerExtension.end = endTermination + overlap;
+
+  return {
+    ownerExtension: Object.keys(ownerExtension).length ? ownerExtension : null,
+    sourceOffsets: profileCopeSourceOffsets(terminationGap, terminationGap, terminationGap)
   };
 }
 
@@ -320,38 +428,51 @@ export function evaluateTrimJointPlaneTrimFeature(project, profiles, trimJoint, 
 }
 
 export function evaluateTrimJointOperationFeatures(project, profiles, trimJoint, operation, index = 0) {
-  if (!operation.memberAId) geometryError(`${trimJoint.id}: trim operation missing memberAId`);
-  const memberA = objectById(project, operation.memberAId);
-  const id = `${trimJoint.id}:${operation.id || `operation_${index + 1}`}`;
+  const id = trimOperationFeatureId(trimJoint, operation, index);
   const gap = finiteNumberOr(operation.gap, 0);
   const type = operation.type || "end-butt-1";
+  if (!operation.memberAId) geometryError(`${trimJoint.id}: trim operation missing memberAId`);
+  const memberA = objectById(project, operation.memberAId);
 
   if (type === "plane-trim") {
     return [trimJointPlaneTrimFeature(project, trimJoint, id, memberA, gap, operation)];
+  }
+
+  if (type === "profile-cope") {
+    const ownerIds = trimOperationMemberIds(operation, "memberA");
+    const cutterIds = trimOperationMemberIds(operation, "memberB");
+    if (!ownerIds.length) geometryError(`${trimJoint.id}: profile-cope operation missing memberAIds`);
+    if (!cutterIds.length) geometryError(`${trimJoint.id}: profile-cope operation missing memberBIds`);
+    const pairs = trimOperationMemberPairs(operation);
+    if (!pairs.length) geometryError(`${trimJoint.id}: profile-cope operation has no valid owner/cutter pairs`);
+    return pairs.map((pair) => {
+      const owner = objectById(project, pair.ownerId);
+      const cutter = objectById(project, pair.cutterId);
+      const extension = operation.allowExtension === true ? profileCopeExtension(project, profiles, trimJoint, owner, cutter, gap) : null;
+      return {
+        id: trimOperationPairFeatureId(trimJoint, operation, pair, index),
+        type: "boolean-part",
+        booleanType: "BOOLEAN_CUT",
+        cutKind: "part-cut",
+        ownerId: owner.id,
+        trimJointId: trimJoint.id,
+        ownerExtension: extension?.ownerExtension || undefined,
+        offsets: extension?.sourceOffsets || profileCopeSourceOffsets(gap, gap, gap),
+        removedRegionKeys: [...arrayValues(operation.removedRegionKeys)],
+        source: {
+          kind: "member-profile",
+          memberId: cutter.id
+        },
+        display: trimJoint.display || {},
+        fabrication: trimJoint.fabrication
+      };
+    });
   }
 
   if (!operation.memberBId) geometryError(`${trimJoint.id}: trim operation missing memberBId`);
   const memberAEnd = trimJointOperationEnd(project, trimJoint, memberA, operation.memberAEnd);
   const memberB = objectById(project, operation.memberBId);
   const memberBEnd = trimJointOperationEnd(project, trimJoint, memberB, operation.memberBEnd);
-
-  if (type === "profile-cope") {
-    if (gap > CSG_EPSILON) geometryError(`${trimJoint.id}: profile cope clearance offsets are not implemented`);
-    return [{
-      id,
-      type: "boolean-part",
-      booleanType: "BOOLEAN_CUT",
-      cutKind: "part-cut",
-      ownerId: memberA.id,
-      trimJointId: trimJoint.id,
-      source: {
-        kind: "member-profile",
-        memberId: memberB.id
-      },
-      display: trimJoint.display || {},
-      fabrication: trimJoint.fabrication
-    }];
-  }
 
   if (type === "end-butt-1") {
     return truthyValues([
@@ -425,6 +546,13 @@ export function evaluateTrimJointOperationMarkerPlanes(project, profiles, trimJo
       trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, operation.memberAId, operation.memberAEnd),
       trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, operation.memberBId, operation.memberBEnd)
     ];
+  }
+  if (type === "profile-cope") {
+    const memberIds = uniqueValues([
+      ...trimOperationMemberIds(operation, "memberA"),
+      ...trimOperationMemberIds(operation, "memberB")
+    ]);
+    return memberIds.map((memberId) => trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, memberId, operation.memberAEnd));
   }
   return [trimJointOperationMemberMarkerPlane(project, profiles, trimJoint, operation, operation.memberAId, operation.memberAEnd)];
 }

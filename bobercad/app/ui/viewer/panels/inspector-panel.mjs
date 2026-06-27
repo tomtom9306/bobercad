@@ -3,11 +3,8 @@ import { arrayValues, jsonClone as clone, truthyValues } from "../../../engine/c
 import { axisRelationLabel } from "../../../engine/api/project/axis-relations.mjs";
 import { memberAxisData, memberCenter } from "../../../engine/api/project/members.mjs";
 import { plateBends, plateOutline as sketchPlateOutline, plateSketchDefinitionStatus, sketchConstructionEdges, sketchDefinitionStatus, sketchEdges } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
-import { trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd } from "../../../engine/api/project/trim-operations.mjs";
-import { reconcilePlaneTrimRemovedRegionKeys } from "../../../engine/api/model/trim-region-keys.mjs";
 import { setPath } from "../../../engine/modules/smart-components/smart-component-parameters-and-definition.mjs";
 import { MODELING_TOOLBAR_COMMANDS } from "../../commands/command-registry.mjs";
-import { trimOperationLabel, trimOperationSupportsGap } from "../../commands/trim-operation-metadata.mjs";
 import {
   inspectorActiveToolContext,
   inspectorActiveToolSections,
@@ -202,7 +199,9 @@ export function mountEditorUi({
     clearMemberEditSilently();
     selection.select([objectId]);
     if (options.notify !== false) onObjectSelected?.(objectId, detail || {});
-    setMessage(`Selected ${objectId}.`, "ok");
+    setMessage(`Selected ${objectId}.`, "ok", {
+      render: !(entry.collection === "trimJoints" && options.notify !== false)
+    });
   };
 
   const openGridEditor = () => {
@@ -437,15 +436,12 @@ export function mountEditorUi({
       updatePlatePatch: (patch) => updatePlate((plateId) => api.updatePlate(plateId, patch)),
       upsertPlateBend: (bend) => updatePlate((plateId) => api.upsertPlateBend(plateId, bend)),
       removePlateBend: (bendId) => updatePlate((plateId) => api.removePlateBend(plateId, bendId)),
-      updateTrimOperation: (operationId, patch) => updateTrimOperation(operationId, patch),
       setFeatureOperationEnabled: (enabled) => updateFeature((featureId) => api.setFeatureOperationEnabled(featureId, enabled)),
       updateFeaturePatch: (patch) => updateFeaturePatch(patch),
       updateFeatureBody: (patch) => updateFeatureBody(patch),
       updateWeld: (patch) => updateWeld(patch),
       inferPlateSketchRelations: (plateId) => inferPlateSketchRelations(plateId),
       createPlateFromSketch: (sketchId) => createPlateFromSketch(sketchId),
-      selectTrimOperation: (operationId) => selectObject(selectedObjectId, { operationId }),
-      setTrimOperationType: (operationId, type) => setTrimOperationType(operationId, type),
       setPlateSketchRelationValue: (value, commit) => setPlateSketchRelationValue(value, commit),
       selectPlateSketchRelation: (payload) => selectPlateSketchRelation(payload),
       setPlateSketchRelationMode: (payload) => setPlateSketchRelationMode(payload),
@@ -572,54 +568,6 @@ export function mountEditorUi({
   const updateFeaturePatch = (patch) => updateFeature((featureId) => api.updateFeature(featureId, patch));
 
   const updateFeatureBody = (patch) => updateFeature((featureId) => api.setFeatureBody(featureId, patch));
-
-  const updateTrimOperation = (operationId, patch) => {
-    updateSelectedObject((trimJointId) => api.updateTrimJointOperation(trimJointId, operationId, patch), "Trim operation updated.");
-  };
-
-  const setTrimOperationType = (operationId, type) => {
-    if (!selectedObjectId || !operationId) return;
-    const trimJoint = api.project().model.trimJoints?.[selectedObjectId];
-    if (!trimJoint) {
-      setMessage(`Trim joint not found: ${selectedObjectId}`, "error");
-      return;
-    }
-    const operation = trimOperationById(trimJoint, operationId);
-    if (!operation) {
-      setMessage(`Trim operation not found: ${operationId}`, "error");
-      return;
-    }
-    const patch = trimOperationSupportsGap(type) ? { type } : { type, gap: 0 };
-    if (type === "plane-trim") {
-      const referencePlaneIds = trimOperationReferencePlaneIds(operation);
-      if (!referencePlaneIds.length) {
-        setMessage("Plane trim requires planes picked from the Trim editor.", "error");
-        return;
-      }
-      patch.memberBId = undefined;
-      patch.memberBEnd = undefined;
-      patch.miterMode = undefined;
-      patch.referencePlaneIds = referencePlaneIds;
-      patch.removedRegionKeys = reconcilePlaneTrimRemovedRegionKeys(operation, referencePlaneIds);
-    } else {
-      patch.referencePlaneIds = undefined;
-      patch.removedRegionKeys = undefined;
-      if (trimOperationUsesMemberB(type)) {
-        const memberBId = operation.memberBId || arrayValues(trimJoint.participants).find((participant) => participant.memberId !== operation.memberAId)?.memberId;
-        if (!memberBId) {
-          setMessage(`${trimOperationLabel(type)} requires a second member.`, "error");
-          return;
-        }
-        patch.memberBId = memberBId;
-      } else {
-        patch.memberBId = undefined;
-      }
-      patch.miterMode = type === "end-miter" ? operation.miterMode || "equal-angle" : undefined;
-    }
-    if (!trimOperationUsesMemberEnd(type, "memberA")) patch.memberAEnd = undefined;
-    if (!trimOperationUsesMemberEnd(type, "memberB")) patch.memberBEnd = undefined;
-    updateSelectedObject((trimJointId) => api.updateTrimJointOperation(trimJointId, operationId, patch), `${trimOperationLabel(type)} selected.`);
-  };
 
   const removeMemberRelation = (relationId) => {
     updateMember(() => api.deleteRelation(relationId));
@@ -1116,6 +1064,7 @@ export function mountEditorUi({
     if (selectedMemberId && !api.project().model.members?.[selectedMemberId]) setSelectedState({ scene: true });
     if (selectedSmartComponentId && !api.project().model.smartComponentInstances?.[selectedSmartComponentId]) setSelectedState({ scene: true });
     if (selectedObjectId && !api.project().objectIndex?.[selectedObjectId]) setSelectedState({ scene: true });
+    if (selectedObjectId && api.project().objectIndex?.[selectedObjectId]?.collection === "trimJoints") return;
 
     const message = panelMessage.hasMessage() ? panelMessage.element() : null;
 

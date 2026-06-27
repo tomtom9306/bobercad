@@ -1,0 +1,3073 @@
+{
+  "$schema": "../../app/schemas/project.schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_trim_edge_cases_1",
+    "name": "Trim Edge Cases",
+    "description": "Regression project covering trim operation edge cases: butt trims, mitres, object/profile trims, plane trims, extension, weld gaps, remote cutters, multi-plane segments, and multi-operation trim joints.",
+    "createdWith": "manual-seed-0.5.0",
+    "bim": {
+      "name": "Trim Edge Cases",
+      "propertySets": {
+        "Identity": {
+          "projectNumber": "PRJ-TRIM-EDGE-001",
+          "status": "sample"
+        }
+      }
+    }
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axisX": [
+        1,
+        0,
+        0
+      ],
+      "axisY": [
+        0,
+        1,
+        0
+      ],
+      "axisZ": [
+        0,
+        0,
+        1
+      ]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles/profile-libraries/starter-profiles/config.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials/material-libraries/starter-materials/config.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/frames/frame-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_trim_edge_cases",
+    "nodes": {
+      "site_trim_edge_cases": {
+        "id": "site_trim_edge_cases",
+        "type": "site",
+        "name": "Trim Edge Case Site",
+        "children": [
+          "zone_trim_edge_cases"
+        ]
+      },
+      "zone_trim_edge_cases": {
+        "id": "zone_trim_edge_cases",
+        "type": "zone",
+        "name": "Trim Edge Case Matrix",
+        "children": []
+      }
+    }
+  },
+  "phases": {
+    "phase_1": {
+      "id": "phase_1",
+      "name": "Trim regression phase"
+    }
+  },
+  "lots": {
+    "lot_1": {
+      "id": "lot_1",
+      "name": "Trim regression lot"
+    }
+  },
+  "objectIndex": {
+    "trim_case01_butt1_stub": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case01_butt1_support": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case01_end_butt_1": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case02_butt2_support": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case02_butt2_stub": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case02_end_butt_2": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case03_butt_both_a": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case03_butt_both_b": {
+      "collection": "members",
+      "type": "trim-edge-secondary"
+    },
+    "trim_case03_end_butt_both": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case04_miter_equal_left": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case04_miter_equal_right": {
+      "collection": "members",
+      "type": "trim-edge-secondary"
+    },
+    "trim_case04_miter_equal": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case05_miter_balanced_left": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case05_miter_balanced_right": {
+      "collection": "members",
+      "type": "trim-edge-secondary"
+    },
+    "trim_case05_miter_profile_balanced": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case06_object_no_extend_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case06_object_no_extend_cutter": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case06_object_trim_no_extension": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case07_object_extend_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case07_object_extend_cutter": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case07_object_trim_extension": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case08_object_extend_gap_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case08_object_extend_gap_cutter": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case08_object_trim_extension_gap": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case09_object_remote_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case09_object_remote_cutter": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case09_object_trim_remote_no_extension": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case10_object_skew_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case10_object_skew_cutter": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case10_object_trim_skew_extension": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case11_object_overlap_gap_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case11_object_overlap_gap_cutter": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case11_object_trim_overlap_gap": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case19_object_split_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case19_object_split_cutter": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case19_object_trim_split_segments": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "trim_case12_plane_single_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case12_single_cut_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case12_plane_single_inside": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_case13_plane_segment_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case13_left_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case13_right_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case13_plane_middle_segment": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_case14_plane_extend_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case14_extension_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case14_plane_extend_single": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_case15_plane_farthest_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case15_near_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case15_far_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case15_plane_extend_farthest": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_case16_plane_gap_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case16_gap_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case16_plane_extend_gap": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_case17_plane_parallel_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case17_parallel_guard_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case17_plane_parallel_no_extension": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "trim_case18_multi_owner": {
+      "collection": "members",
+      "type": "trim-edge-owner"
+    },
+    "trim_case18_multi_cutter": {
+      "collection": "members",
+      "type": "trim-edge-cutter"
+    },
+    "trim_case18_multi_end_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "trim_case18_multi_operation_joint": {
+      "collection": "trimJoints",
+      "type": "corner-trim"
+    },
+    "group_trim_edge_cases": {
+      "collection": "groups",
+      "type": "object-group"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": [
+      "collectionDefault",
+      "typeDefault",
+      "object"
+    ],
+    "collections": {
+      "members": {
+        "*": {
+          "material": "S355",
+          "rotation": 0,
+          "cardinalPoint": "middle-center",
+          "featureIds": [],
+          "display": {
+            "visible": true
+          },
+          "fabrication": {
+            "numberingStatus": "test-fixture"
+          },
+          "tracking": {
+            "projectTreeNodeId": "zone_trim_edge_cases",
+            "phase": "phase_1",
+            "lot": "lot_1",
+            "status": "test-fixture"
+          }
+        }
+      },
+      "trimJoints": {
+        "*": {
+          "display": {
+            "color": "#ff3366",
+            "edgeColor": "#be123c",
+            "opacity": 0.18,
+            "visible": true
+          }
+        }
+      }
+    }
+  },
+  "model": {
+    "workPoints": {},
+    "referencePlanes": {
+      "trim_case12_single_cut_plane": {
+        "id": "trim_case12_single_cut_plane",
+        "type": "reference-plane",
+        "name": "Case 12 single inside plane",
+        "origin": [
+          250,
+          9020,
+          0
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case12-single-plane"
+        }
+      },
+      "trim_case13_left_plane": {
+        "id": "trim_case13_left_plane",
+        "type": "reference-plane",
+        "name": "Case 13 left segment plane",
+        "origin": [
+          -220,
+          9840,
+          0
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case13-left-plane"
+        }
+      },
+      "trim_case13_right_plane": {
+        "id": "trim_case13_right_plane",
+        "type": "reference-plane",
+        "name": "Case 13 right segment plane",
+        "origin": [
+          460,
+          9840,
+          0
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case13-right-plane"
+        }
+      },
+      "trim_case14_extension_plane": {
+        "id": "trim_case14_extension_plane",
+        "type": "reference-plane",
+        "name": "Case 14 extension target plane",
+        "origin": [
+          420,
+          10660,
+          0
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case14-extension-plane"
+        }
+      },
+      "trim_case15_near_plane": {
+        "id": "trim_case15_near_plane",
+        "type": "reference-plane",
+        "name": "Case 15 near extension plane",
+        "origin": [
+          350,
+          11480,
+          0
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case15-near-plane"
+        }
+      },
+      "trim_case15_far_plane": {
+        "id": "trim_case15_far_plane",
+        "type": "reference-plane",
+        "name": "Case 15 far extension plane",
+        "origin": [
+          520,
+          11480,
+          0
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case15-far-plane"
+        }
+      },
+      "trim_case16_gap_plane": {
+        "id": "trim_case16_gap_plane",
+        "type": "reference-plane",
+        "name": "Case 16 weld gap plane",
+        "origin": [
+          420,
+          12300,
+          0
+        ],
+        "normal": [
+          -1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          -1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case16-gap-plane"
+        }
+      },
+      "trim_case17_parallel_guard_plane": {
+        "id": "trim_case17_parallel_guard_plane",
+        "type": "reference-plane",
+        "name": "Case 17 near-parallel guard plane",
+        "origin": [
+          420,
+          13120,
+          0
+        ],
+        "normal": [
+          0.01,
+          0.99995,
+          0
+        ],
+        "axisX": [
+          -0.99995,
+          0.01,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case17-parallel-plane"
+        }
+      },
+      "trim_case18_multi_end_plane": {
+        "id": "trim_case18_multi_end_plane",
+        "type": "reference-plane",
+        "name": "Case 18 second operation plane",
+        "origin": [
+          650,
+          13940,
+          0
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "extents": {
+          "xMin": -340,
+          "xMax": 340,
+          "yMin": -260,
+          "yMax": 260
+        },
+        "display": {
+          "color": "#2563eb",
+          "edgeColor": "#1d4ed8",
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "case18-multi-plane"
+        }
+      }
+    },
+    "groups": {
+      "group_trim_edge_cases": {
+        "id": "group_trim_edge_cases",
+        "type": "object-group",
+        "name": "Trim edge case matrix",
+        "objectIds": [
+          "trim_case01_butt1_stub",
+          "trim_case01_butt1_support",
+          "trim_case02_butt2_support",
+          "trim_case02_butt2_stub",
+          "trim_case03_butt_both_a",
+          "trim_case03_butt_both_b",
+          "trim_case04_miter_equal_left",
+          "trim_case04_miter_equal_right",
+          "trim_case05_miter_balanced_left",
+          "trim_case05_miter_balanced_right",
+          "trim_case06_object_no_extend_owner",
+          "trim_case06_object_no_extend_cutter",
+          "trim_case07_object_extend_owner",
+          "trim_case07_object_extend_cutter",
+          "trim_case08_object_extend_gap_owner",
+          "trim_case08_object_extend_gap_cutter",
+          "trim_case09_object_remote_owner",
+          "trim_case09_object_remote_cutter",
+          "trim_case10_object_skew_owner",
+          "trim_case10_object_skew_cutter",
+          "trim_case11_object_overlap_gap_owner",
+          "trim_case11_object_overlap_gap_cutter",
+          "trim_case19_object_split_owner",
+          "trim_case19_object_split_cutter",
+          "trim_case12_plane_single_owner",
+          "trim_case13_plane_segment_owner",
+          "trim_case14_plane_extend_owner",
+          "trim_case15_plane_farthest_owner",
+          "trim_case16_plane_gap_owner",
+          "trim_case17_plane_parallel_owner",
+          "trim_case18_multi_owner",
+          "trim_case18_multi_cutter",
+          "trim_case12_single_cut_plane",
+          "trim_case13_left_plane",
+          "trim_case13_right_plane",
+          "trim_case14_extension_plane",
+          "trim_case15_near_plane",
+          "trim_case15_far_plane",
+          "trim_case16_gap_plane",
+          "trim_case17_parallel_guard_plane",
+          "trim_case18_multi_end_plane",
+          "trim_case01_end_butt_1",
+          "trim_case02_end_butt_2",
+          "trim_case03_end_butt_both",
+          "trim_case04_miter_equal",
+          "trim_case05_miter_profile_balanced",
+          "trim_case06_object_trim_no_extension",
+          "trim_case07_object_trim_extension",
+          "trim_case08_object_trim_extension_gap",
+          "trim_case09_object_trim_remote_no_extension",
+          "trim_case10_object_trim_skew_extension",
+          "trim_case11_object_trim_overlap_gap",
+          "trim_case19_object_trim_split_segments",
+          "trim_case12_plane_single_inside",
+          "trim_case13_plane_middle_segment",
+          "trim_case14_plane_extend_single",
+          "trim_case15_plane_extend_farthest",
+          "trim_case16_plane_extend_gap",
+          "trim_case17_plane_parallel_no_extension",
+          "trim_case18_multi_operation_joint"
+        ],
+        "memberIds": [
+          "trim_case01_butt1_stub",
+          "trim_case01_butt1_support",
+          "trim_case02_butt2_support",
+          "trim_case02_butt2_stub",
+          "trim_case03_butt_both_a",
+          "trim_case03_butt_both_b",
+          "trim_case04_miter_equal_left",
+          "trim_case04_miter_equal_right",
+          "trim_case05_miter_balanced_left",
+          "trim_case05_miter_balanced_right",
+          "trim_case06_object_no_extend_owner",
+          "trim_case06_object_no_extend_cutter",
+          "trim_case07_object_extend_owner",
+          "trim_case07_object_extend_cutter",
+          "trim_case08_object_extend_gap_owner",
+          "trim_case08_object_extend_gap_cutter",
+          "trim_case09_object_remote_owner",
+          "trim_case09_object_remote_cutter",
+          "trim_case10_object_skew_owner",
+          "trim_case10_object_skew_cutter",
+          "trim_case11_object_overlap_gap_owner",
+          "trim_case11_object_overlap_gap_cutter",
+          "trim_case19_object_split_owner",
+          "trim_case19_object_split_cutter",
+          "trim_case12_plane_single_owner",
+          "trim_case13_plane_segment_owner",
+          "trim_case14_plane_extend_owner",
+          "trim_case15_plane_farthest_owner",
+          "trim_case16_plane_gap_owner",
+          "trim_case17_plane_parallel_owner",
+          "trim_case18_multi_owner",
+          "trim_case18_multi_cutter"
+        ]
+      }
+    },
+    "interfaces": {},
+    "connectionZones": {},
+    "assemblies": {},
+    "members": {
+      "trim_case01_butt1_stub": {
+        "id": "trim_case01_butt1_stub",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          0,
+          0
+        ],
+        "end": [
+          260,
+          0,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            0,
+            0
+          ],
+          "end": [
+            260,
+            0,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE01_BUTT1_STUB",
+          "operation": "case01-end-butt-1-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case01_butt1_support": {
+        "id": "trim_case01_butt1_support",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          220,
+          -250,
+          0
+        ],
+        "end": [
+          220,
+          250,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            220,
+            -250,
+            0
+          ],
+          "end": [
+            220,
+            250,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE01_BUTT1_SUPPORT",
+          "operation": "case01-end-butt-1-support",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case02_butt2_support": {
+        "id": "trim_case02_butt2_support",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          220,
+          570,
+          0
+        ],
+        "end": [
+          220,
+          1070,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            220,
+            570,
+            0
+          ],
+          "end": [
+            220,
+            1070,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE02_BUTT2_SUPPORT",
+          "operation": "case02-end-butt-2-support",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case02_butt2_stub": {
+        "id": "trim_case02_butt2_stub",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          820,
+          0
+        ],
+        "end": [
+          260,
+          820,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            820,
+            0
+          ],
+          "end": [
+            260,
+            820,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE02_BUTT2_STUB",
+          "operation": "case02-end-butt-2-stub",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case03_butt_both_a": {
+        "id": "trim_case03_butt_both_a",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          1640,
+          0
+        ],
+        "end": [
+          220,
+          1640,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            1640,
+            0
+          ],
+          "end": [
+            220,
+            1640,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE03_BUTT_BOTH_A",
+          "operation": "case03-end-butt-both-a",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case03_butt_both_b": {
+        "id": "trim_case03_butt_both_b",
+        "type": "trim-edge-secondary",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          220,
+          1640,
+          0
+        ],
+        "end": [
+          220,
+          2260,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            220,
+            1640,
+            0
+          ],
+          "end": [
+            220,
+            2260,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#426f86",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE03_BUTT_BOTH_B",
+          "operation": "case03-end-butt-both-b",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case04_miter_equal_left": {
+        "id": "trim_case04_miter_equal_left",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          2460,
+          0
+        ],
+        "end": [
+          0,
+          2460,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            2460,
+            0
+          ],
+          "end": [
+            0,
+            2460,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE04_MITER_EQUAL_LEFT",
+          "operation": "case04-miter-equal-left",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case04_miter_equal_right": {
+        "id": "trim_case04_miter_equal_right",
+        "type": "trim-edge-secondary",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          0,
+          2460,
+          0
+        ],
+        "end": [
+          680,
+          2840,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            0,
+            2460,
+            0
+          ],
+          "end": [
+            680,
+            2840,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#426f86",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE04_MITER_EQUAL_RIGHT",
+          "operation": "case04-miter-equal-right",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case05_miter_balanced_left": {
+        "id": "trim_case05_miter_balanced_left",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          3280,
+          0
+        ],
+        "end": [
+          0,
+          3280,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            3280,
+            0
+          ],
+          "end": [
+            0,
+            3280,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE05_MITER_BALANCED_LEFT",
+          "operation": "case05-miter-balanced-left",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case05_miter_balanced_right": {
+        "id": "trim_case05_miter_balanced_right",
+        "type": "trim-edge-secondary",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          0,
+          3280,
+          0
+        ],
+        "end": [
+          520,
+          3840,
+          120
+        ],
+        "rotation": 18,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            0,
+            3280,
+            0
+          ],
+          "end": [
+            520,
+            3840,
+            120
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#426f86",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE05_MITER_BALANCED_RIGHT",
+          "operation": "case05-miter-balanced-right",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case06_object_no_extend_owner": {
+        "id": "trim_case06_object_no_extend_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          4100,
+          0
+        ],
+        "end": [
+          900,
+          4100,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            4100,
+            0
+          ],
+          "end": [
+            900,
+            4100,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE06_OBJECT_NO_EXTEND_OWNER",
+          "operation": "case06-profile-cope-no-extension-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case06_object_no_extend_cutter": {
+        "id": "trim_case06_object_no_extend_cutter",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          240,
+          3800,
+          0
+        ],
+        "end": [
+          240,
+          4400,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            240,
+            3800,
+            0
+          ],
+          "end": [
+            240,
+            4400,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE06_OBJECT_NO_EXTEND_CUTTER",
+          "operation": "case06-profile-cope-no-extension-cutter",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case07_object_extend_owner": {
+        "id": "trim_case07_object_extend_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          4920,
+          0
+        ],
+        "end": [
+          180,
+          4920,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            4920,
+            0
+          ],
+          "end": [
+            180,
+            4920,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE07_OBJECT_EXTEND_OWNER",
+          "operation": "case07-profile-cope-extend-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case07_object_extend_cutter": {
+        "id": "trim_case07_object_extend_cutter",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          420,
+          4620,
+          0
+        ],
+        "end": [
+          420,
+          5220,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            420,
+            4620,
+            0
+          ],
+          "end": [
+            420,
+            5220,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE07_OBJECT_EXTEND_CUTTER",
+          "operation": "case07-profile-cope-extend-cutter",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case08_object_extend_gap_owner": {
+        "id": "trim_case08_object_extend_gap_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          5740,
+          0
+        ],
+        "end": [
+          180,
+          5740,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            5740,
+            0
+          ],
+          "end": [
+            180,
+            5740,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE08_OBJECT_EXTEND_GAP_OWNER",
+          "operation": "case08-profile-cope-extend-gap-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case08_object_extend_gap_cutter": {
+        "id": "trim_case08_object_extend_gap_cutter",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          420,
+          5440,
+          0
+        ],
+        "end": [
+          420,
+          6040,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            420,
+            5440,
+            0
+          ],
+          "end": [
+            420,
+            6040,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE08_OBJECT_EXTEND_GAP_CUTTER",
+          "operation": "case08-profile-cope-extend-gap-cutter",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case09_object_remote_owner": {
+        "id": "trim_case09_object_remote_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          6560,
+          0
+        ],
+        "end": [
+          180,
+          6560,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            6560,
+            0
+          ],
+          "end": [
+            180,
+            6560,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE09_OBJECT_REMOTE_OWNER",
+          "operation": "case09-profile-cope-remote-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case09_object_remote_cutter": {
+        "id": "trim_case09_object_remote_cutter",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          420,
+          6940,
+          0
+        ],
+        "end": [
+          420,
+          7280,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            420,
+            6940,
+            0
+          ],
+          "end": [
+            420,
+            7280,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7c8794",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE09_OBJECT_REMOTE_CUTTER",
+          "operation": "case09-profile-cope-remote-cutter",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case10_object_skew_owner": {
+        "id": "trim_case10_object_skew_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          7380,
+          0
+        ],
+        "end": [
+          180,
+          7380,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            7380,
+            0
+          ],
+          "end": [
+            180,
+            7380,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE10_OBJECT_SKEW_OWNER",
+          "operation": "case10-profile-cope-skew-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case10_object_skew_cutter": {
+        "id": "trim_case10_object_skew_cutter",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          420,
+          7070,
+          -120
+        ],
+        "end": [
+          420,
+          7690,
+          160
+        ],
+        "rotation": 12,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            420,
+            7070,
+            -120
+          ],
+          "end": [
+            420,
+            7690,
+            160
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE10_OBJECT_SKEW_CUTTER",
+          "operation": "case10-profile-cope-skew-cutter",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case11_object_overlap_gap_owner": {
+        "id": "trim_case11_object_overlap_gap_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          8200,
+          0
+        ],
+        "end": [
+          540,
+          8200,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            8200,
+            0
+          ],
+          "end": [
+            540,
+            8200,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE11_OBJECT_OVERLAP_GAP_OWNER",
+          "operation": "case11-profile-cope-overlap-gap-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case11_object_overlap_gap_cutter": {
+        "id": "trim_case11_object_overlap_gap_cutter",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          420,
+          7900,
+          0
+        ],
+        "end": [
+          420,
+          8500,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            420,
+            7900,
+            0
+          ],
+          "end": [
+            420,
+            8500,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE11_OBJECT_OVERLAP_GAP_CUTTER",
+          "operation": "case11-profile-cope-overlap-gap-cutter",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case19_object_split_owner": {
+        "id": "trim_case19_object_split_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          8840,
+          420
+        ],
+        "end": [
+          900,
+          8840,
+          420
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            8840,
+            420
+          ],
+          "end": [
+            900,
+            8840,
+            420
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE19_OBJECT_SPLIT_OWNER",
+          "operation": "case19-profile-cope-split-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case19_object_split_cutter": {
+        "id": "trim_case19_object_split_cutter",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          90,
+          8540,
+          420
+        ],
+        "end": [
+          90,
+          9140,
+          420
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            90,
+            8540,
+            420
+          ],
+          "end": [
+            90,
+            9140,
+            420
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE19_OBJECT_SPLIT_CUTTER",
+          "operation": "case19-profile-cope-split-cutter",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case12_plane_single_owner": {
+        "id": "trim_case12_plane_single_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          9020,
+          0
+        ],
+        "end": [
+          900,
+          9020,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            9020,
+            0
+          ],
+          "end": [
+            900,
+            9020,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE12_PLANE_SINGLE_OWNER",
+          "operation": "case12-plane-single-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case13_plane_segment_owner": {
+        "id": "trim_case13_plane_segment_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          9840,
+          0
+        ],
+        "end": [
+          900,
+          9840,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            9840,
+            0
+          ],
+          "end": [
+            900,
+            9840,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE13_PLANE_SEGMENT_OWNER",
+          "operation": "case13-plane-segment-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case14_plane_extend_owner": {
+        "id": "trim_case14_plane_extend_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          10660,
+          0
+        ],
+        "end": [
+          180,
+          10660,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            10660,
+            0
+          ],
+          "end": [
+            180,
+            10660,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE14_PLANE_EXTEND_OWNER",
+          "operation": "case14-plane-extend-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case15_plane_farthest_owner": {
+        "id": "trim_case15_plane_farthest_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          11480,
+          0
+        ],
+        "end": [
+          180,
+          11480,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            11480,
+            0
+          ],
+          "end": [
+            180,
+            11480,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE15_PLANE_FARTHEST_OWNER",
+          "operation": "case15-plane-farthest-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case16_plane_gap_owner": {
+        "id": "trim_case16_plane_gap_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          12300,
+          0
+        ],
+        "end": [
+          180,
+          12300,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            12300,
+            0
+          ],
+          "end": [
+            180,
+            12300,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE16_PLANE_GAP_OWNER",
+          "operation": "case16-plane-gap-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case17_plane_parallel_owner": {
+        "id": "trim_case17_plane_parallel_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          13120,
+          0
+        ],
+        "end": [
+          900,
+          13120,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            13120,
+            0
+          ],
+          "end": [
+            900,
+            13120,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE17_PLANE_PARALLEL_OWNER",
+          "operation": "case17-plane-parallel-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case18_multi_owner": {
+        "id": "trim_case18_multi_owner",
+        "type": "trim-edge-owner",
+        "profile": "DEMO_I_200X100X8X12",
+        "material": "S355",
+        "start": [
+          -720,
+          13940,
+          0
+        ],
+        "end": [
+          900,
+          13940,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            -720,
+            13940,
+            0
+          ],
+          "end": [
+            900,
+            13940,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#315f72",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE18_MULTI_OWNER",
+          "operation": "case18-multi-owner",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      },
+      "trim_case18_multi_cutter": {
+        "id": "trim_case18_multi_cutter",
+        "type": "trim-edge-cutter",
+        "profile": "DEMO_RHS_100X50X5",
+        "material": "S355",
+        "start": [
+          180,
+          13640,
+          0
+        ],
+        "end": [
+          180,
+          14240,
+          0
+        ],
+        "rotation": 0,
+        "cardinalPoint": "middle-center",
+        "layoutAxis": {
+          "start": [
+            180,
+            13640,
+            0
+          ],
+          "end": [
+            180,
+            14240,
+            0
+          ]
+        },
+        "display": {
+          "visible": true,
+          "color": "#7a4e35",
+          "edgeColor": "#0ea5e9"
+        },
+        "fabrication": {
+          "partMark": "TRIM_CASE18_MULTI_CUTTER",
+          "operation": "case18-multi-cutter",
+          "numberingStatus": "test-fixture"
+        },
+        "tracking": {
+          "projectTreeNodeId": "zone_trim_edge_cases",
+          "phase": "phase_1",
+          "lot": "lot_1",
+          "status": "test-fixture"
+        }
+      }
+    },
+    "plates": {},
+    "sketches": {},
+    "holePatterns": {},
+    "objectPatterns": {},
+    "features": {},
+    "trimJoints": {
+      "trim_case01_end_butt_1": {
+        "id": "trim_case01_end_butt_1",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case01_butt1_stub",
+            "memberEnd": "end",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case01_butt1_support",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case01_end_butt_1_op",
+            "type": "end-butt-1",
+            "memberAId": "trim_case01_butt1_stub",
+            "memberBId": "trim_case01_butt1_support",
+            "gap": 0,
+            "enabled": true,
+            "memberAEnd": "end"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "end-butt-1 trims member A only",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case02_end_butt_2": {
+        "id": "trim_case02_end_butt_2",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case02_butt2_support",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case02_butt2_stub",
+            "memberEnd": "end",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case02_end_butt_2_op",
+            "type": "end-butt-2",
+            "memberAId": "trim_case02_butt2_support",
+            "memberBId": "trim_case02_butt2_stub",
+            "gap": 0,
+            "enabled": true,
+            "memberBEnd": "end"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "end-butt-2 trims member B only",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case03_end_butt_both": {
+        "id": "trim_case03_end_butt_both",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case03_butt_both_a",
+            "memberEnd": "end",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case03_butt_both_b",
+            "memberEnd": "start",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case03_end_butt_both_op",
+            "type": "end-butt-both",
+            "memberAId": "trim_case03_butt_both_a",
+            "memberBId": "trim_case03_butt_both_b",
+            "gap": 8,
+            "enabled": true,
+            "memberAEnd": "end",
+            "memberBEnd": "start"
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "end-butt-both trims both profiles with gap",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case04_miter_equal": {
+        "id": "trim_case04_miter_equal",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case04_miter_equal_left",
+            "memberEnd": "end",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case04_miter_equal_right",
+            "memberEnd": "start",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case04_miter_equal_op",
+            "type": "end-miter",
+            "memberAId": "trim_case04_miter_equal_left",
+            "memberAEnd": "end",
+            "memberBId": "trim_case04_miter_equal_right",
+            "memberBEnd": "start",
+            "miterMode": "equal-angle",
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "equal-angle mitre between matching profiles",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case05_miter_profile_balanced": {
+        "id": "trim_case05_miter_profile_balanced",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case05_miter_balanced_left",
+            "memberEnd": "end",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case05_miter_balanced_right",
+            "memberEnd": "start",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case05_miter_profile_balanced_op",
+            "type": "end-miter",
+            "memberAId": "trim_case05_miter_balanced_left",
+            "memberAEnd": "end",
+            "memberBId": "trim_case05_miter_balanced_right",
+            "memberBEnd": "start",
+            "miterMode": "profile-balanced",
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "profile-balanced mitre between different profiles",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case06_object_trim_no_extension": {
+        "id": "trim_case06_object_trim_no_extension",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case06_object_no_extend_owner",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case06_object_no_extend_cutter",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case06_profile_cope_op",
+            "type": "profile-cope",
+            "memberAId": "trim_case06_object_no_extend_owner",
+            "memberBId": "trim_case06_object_no_extend_cutter",
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "profile cope without extension",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case07_object_trim_extension": {
+        "id": "trim_case07_object_trim_extension",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case07_object_extend_owner",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case07_object_extend_cutter",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case07_profile_cope_extend_op",
+            "type": "profile-cope",
+            "memberAId": "trim_case07_object_extend_owner",
+            "memberBId": "trim_case07_object_extend_cutter",
+            "gap": 0,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "profile cope extends owner to cutting object",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case08_object_trim_extension_gap": {
+        "id": "trim_case08_object_trim_extension_gap",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case08_object_extend_gap_owner",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case08_object_extend_gap_cutter",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case08_profile_cope_extend_gap_op",
+            "type": "profile-cope",
+            "memberAId": "trim_case08_object_extend_gap_owner",
+            "memberBId": "trim_case08_object_extend_gap_cutter",
+            "gap": 25,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "profile cope extends to object with weld gap",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case09_object_trim_remote_no_extension": {
+        "id": "trim_case09_object_trim_remote_no_extension",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case09_object_remote_owner",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case09_object_remote_cutter",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case09_profile_cope_remote_op",
+            "type": "profile-cope",
+            "memberAId": "trim_case09_object_remote_owner",
+            "memberBId": "trim_case09_object_remote_cutter",
+            "gap": 0,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "profile cope remote cutter must not extend owner",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case10_object_trim_skew_extension": {
+        "id": "trim_case10_object_trim_skew_extension",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case10_object_skew_owner",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case10_object_skew_cutter",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case10_profile_cope_skew_extend_op",
+            "type": "profile-cope",
+            "memberAId": "trim_case10_object_skew_owner",
+            "memberBId": "trim_case10_object_skew_cutter",
+            "gap": 0,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "profile cope extends to skewed cutting object",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case11_object_trim_overlap_gap": {
+        "id": "trim_case11_object_trim_overlap_gap",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case11_object_overlap_gap_owner",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case11_object_overlap_gap_cutter",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case11_profile_cope_overlap_gap_op",
+            "type": "profile-cope",
+            "memberAId": "trim_case11_object_overlap_gap_owner",
+            "memberBId": "trim_case11_object_overlap_gap_cutter",
+            "gap": 25,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "profile cope overlap plus weld gap regression case",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case19_object_trim_split_segments": {
+        "id": "trim_case19_object_trim_split_segments",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case19_object_split_owner",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case19_object_split_cutter",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case19_profile_cope_split_op",
+            "type": "profile-cope",
+            "memberAId": "trim_case19_object_split_owner",
+            "memberBId": "trim_case19_object_split_cutter",
+            "gap": 0,
+            "removedRegionKeys": [],
+            "enabled": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "profile cope splitting owner into selectable object trim regions",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case12_plane_single_inside": {
+        "id": "trim_case12_plane_single_inside",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case12_plane_single_owner",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case12_plane_single_op",
+            "type": "plane-trim",
+            "memberAId": "trim_case12_plane_single_owner",
+            "referencePlaneIds": [
+              "trim_case12_single_cut_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_case12_single_cut_plane:+"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "plane trim single plane inside member length",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case13_plane_middle_segment": {
+        "id": "trim_case13_plane_middle_segment",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case13_plane_segment_owner",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case13_plane_middle_segment_op",
+            "type": "plane-trim",
+            "memberAId": "trim_case13_plane_segment_owner",
+            "referencePlaneIds": [
+              "trim_case13_left_plane",
+              "trim_case13_right_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_case13_left_plane:-|trim_case13_right_plane:-",
+              "trim_case13_left_plane:-|trim_case13_right_plane:+",
+              "trim_case13_left_plane:+|trim_case13_right_plane:+"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "plane trim with multiple selectable regions, keep middle segment",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case14_plane_extend_single": {
+        "id": "trim_case14_plane_extend_single",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case14_plane_extend_owner",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case14_plane_extend_single_op",
+            "type": "plane-trim",
+            "memberAId": "trim_case14_plane_extend_owner",
+            "referencePlaneIds": [
+              "trim_case14_extension_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_case14_extension_plane:+"
+            ],
+            "gap": 0,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "plane trim extends to a single outside plane",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case15_plane_extend_farthest": {
+        "id": "trim_case15_plane_extend_farthest",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case15_plane_farthest_owner",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case15_plane_extend_farthest_op",
+            "type": "plane-trim",
+            "memberAId": "trim_case15_plane_farthest_owner",
+            "referencePlaneIds": [
+              "trim_case15_near_plane",
+              "trim_case15_far_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_case15_near_plane:-|trim_case15_far_plane:+",
+              "trim_case15_near_plane:+|trim_case15_far_plane:+"
+            ],
+            "gap": 0,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "plane trim extends to farthest outside plane",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case16_plane_extend_gap": {
+        "id": "trim_case16_plane_extend_gap",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case16_plane_gap_owner",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case16_plane_extend_gap_op",
+            "type": "plane-trim",
+            "memberAId": "trim_case16_plane_gap_owner",
+            "referencePlaneIds": [
+              "trim_case16_gap_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_case16_gap_plane:-"
+            ],
+            "gap": 30,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "plane trim extends to offset plane using weld gap",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case17_plane_parallel_no_extension": {
+        "id": "trim_case17_plane_parallel_no_extension",
+        "type": "member-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case17_plane_parallel_owner",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case17_plane_parallel_no_extension_op",
+            "type": "plane-trim",
+            "memberAId": "trim_case17_plane_parallel_owner",
+            "referencePlaneIds": [
+              "trim_case17_parallel_guard_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_case17_parallel_guard_plane:+"
+            ],
+            "gap": 0,
+            "enabled": true,
+            "allowExtension": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "near-parallel plane is a guard case for extension inference",
+          "numberingStatus": "test-fixture"
+        }
+      },
+      "trim_case18_multi_operation_joint": {
+        "id": "trim_case18_multi_operation_joint",
+        "type": "corner-trim",
+        "gap": 0,
+        "participants": [
+          {
+            "memberId": "trim_case18_multi_owner",
+            "enabled": true
+          },
+          {
+            "memberId": "trim_case18_multi_cutter",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "trim_case18_profile_cope_op",
+            "type": "profile-cope",
+            "memberAId": "trim_case18_multi_owner",
+            "memberBId": "trim_case18_multi_cutter",
+            "gap": 0,
+            "enabled": true
+          },
+          {
+            "id": "trim_case18_plane_op",
+            "type": "plane-trim",
+            "memberAId": "trim_case18_multi_owner",
+            "referencePlaneIds": [
+              "trim_case18_multi_end_plane"
+            ],
+            "removedRegionKeys": [
+              "trim_case18_multi_end_plane:+"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "display": {
+          "color": "#ff3366",
+          "edgeColor": "#be123c",
+          "opacity": 0.18,
+          "visible": true
+        },
+        "fabrication": {
+          "operation": "one trim joint containing object trim and plane trim operations",
+          "numberingStatus": "test-fixture"
+        }
+      }
+    },
+    "fastenerGroups": {},
+    "welds": {},
+    "smartComponentInstances": {},
+    "relations": {},
+    "gridSystems": {},
+    "levels": {}
+  }
+}

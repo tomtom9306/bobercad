@@ -124,6 +124,7 @@ export function createWebglPicker({
     let best = null;
 
     for (const instance of memberInstancesForPick(objectIds)) {
+      if (instance.lodDetailObjectId && currentScene.emptyLodDetailObjectIds?.has?.(instance.lodDetailObjectId)) continue;
       if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
       const a = camera.projectPoint(instance.start, currentScene, canvas);
       const b = camera.projectPoint(v.add(instance.start, v.mul(instance.axisX, instance.length)), currentScene, canvas);
@@ -158,6 +159,7 @@ export function createWebglPicker({
     let best = null;
 
     for (const instance of memberInstancesForPick(objectIds)) {
+      if (instance.lodDetailObjectId && currentScene.emptyLodDetailObjectIds?.has?.(instance.lodDetailObjectId)) continue;
       if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
       const positions = currentScene.memberInstanceGeometries?.[instance.profileId]?.positions;
       if (!Array.isArray(positions) || positions.length < 9) continue;

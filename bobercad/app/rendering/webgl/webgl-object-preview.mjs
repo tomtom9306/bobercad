@@ -258,6 +258,12 @@ export function createWebglObjectPreviewController({
     for (const [objectId, detail] of Object.entries(patchScene.lodDetails || {})) {
       if (ids.has(objectId)) scene.lodDetails[objectId] = detail;
     }
+    scene.emptyLodDetailObjectIds = scene.emptyLodDetailObjectIds || new Set();
+    for (const objectId of ids) scene.emptyLodDetailObjectIds.delete(objectId);
+    const patchEmptyLodDetailObjectIds = patchScene.emptyLodDetailObjectIds || new Set();
+    for (const objectId of patchEmptyLodDetailObjectIds) {
+      if (ids.has(objectId)) scene.emptyLodDetailObjectIds.add(objectId);
+    }
     scene.project = patchScene.project || scene.project;
     scene.activeSmartComponentId = patchScene.activeSmartComponentId ?? scene.activeSmartComponentId;
     scene.activeTrimJointId = patchScene.activeTrimJointId ?? scene.activeTrimJointId;

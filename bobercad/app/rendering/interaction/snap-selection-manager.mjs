@@ -93,9 +93,9 @@ export function createSnapSelectionManager({ settings = {}, viewer = null } = {}
   let scope = normalizeScope(settings.authoring?.snap?.scope);
   let activeSmartComponentId = null;
 
-  function setSelected(objectIds = []) {
+  function setSelected(objectIds = [], options = {}) {
     selectedIds = uniqueTruthy(objectIds);
-    viewer?.setHighlightedObjects?.(selectedIds);
+    viewer?.setHighlightedObjects?.(selectedIds, options);
     return selectedIds;
   }
 

@@ -7,6 +7,7 @@ const ROOT = path.resolve(__dirname, "..");
 async function main() {
   const { buildScene } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "scene", "scene-geometry-builder.mjs")).href);
   const { createProjectStore } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "store", "project-command-store.mjs")).href);
+  const { evaluateTrimJointOperationFeatures } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "geometry", "evaluators", "trim-evaluator.mjs")).href);
   const { createCamera } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "rendering", "webgl", "camera.mjs")).href);
   const { navCubeRotationForCameraAngles } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "ui", "viewer", "nav-cube.mjs")).href);
   const { ccwPoints } = await import(pathToFileURL(path.join(ROOT, "bobercad", "app", "engine", "geometry", "csg.mjs")).href);
@@ -53,6 +54,40 @@ async function main() {
   }
   if (!trimScene.lines.some((line) => line.collection === "trimJoints" && line.objectId === trimResult.trimJointId)) {
     console.error("FAILED: created member-to-member trim should render trim markers");
+    return 1;
+  }
+  const edgeProjectPath = path.join(ROOT, "bobercad", "data", "projects", "sample_trim_edge_cases.json");
+  const edgeProject = readJson(edgeProjectPath);
+  const edgeProfiles = readJson(path.resolve(path.dirname(edgeProjectPath), edgeProject.libraries.profiles.path));
+  const edgeStore = createProjectStore({ project: edgeProject });
+  const objectTrimResult = edgeStore.createTrimJoint({
+    id: "runtime_nm_object_trim",
+    memberIds: [
+      "trim_case06_object_no_extend_owner",
+      "trim_case07_object_extend_owner",
+      "trim_case06_object_no_extend_cutter",
+      "trim_case07_object_extend_cutter"
+    ],
+    operationType: "profile-cope",
+    operationPatch: {
+      id: "runtime_nm_object_trim_op",
+      memberAId: "trim_case06_object_no_extend_owner",
+      memberBId: "trim_case06_object_no_extend_cutter",
+      memberAIds: ["trim_case06_object_no_extend_owner", "trim_case07_object_extend_owner"],
+      memberBIds: ["trim_case06_object_no_extend_cutter", "trim_case07_object_extend_cutter"],
+      allowExtension: true,
+      gap: 10
+    }
+  });
+  const objectTrim = objectTrimResult.project.model.trimJoints.runtime_nm_object_trim;
+  const objectTrimFeatures = evaluateTrimJointOperationFeatures(objectTrimResult.project, edgeProfiles, objectTrim, objectTrim.operations[0]);
+  if (
+    objectTrim.operations.length !== 1
+    || objectTrimFeatures.length !== 4
+    || objectTrimFeatures.some((feature) => feature.id.includes(":pair_"))
+    || !objectTrimFeatures.every((feature) => feature.id.includes(":owner_") && feature.id.includes(":cutter_"))
+  ) {
+    console.error(`FAILED: N:M object trim should stay one operation and create stable owner/cutter feature ids, got ${objectTrimFeatures.map((feature) => feature.id).join(", ")}`);
     return 1;
   }
 

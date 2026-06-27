@@ -782,7 +782,7 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       addIndexedObject(next, "members", member);
       addMemberSnapRelations(next, member.id, options);
       appendMemberToDefaultGroup(next, member.id);
-      const updated = commitProject("member.create", reconcileGeneratedSmartComponents(next), { changedObjectIds: [member.id] });
+      const updated = commitProject("member.create", next, { changedObjectIds: [member.id] });
       return { project: updated, memberId: member.id, member: updated.model.members[member.id] };
     },
 

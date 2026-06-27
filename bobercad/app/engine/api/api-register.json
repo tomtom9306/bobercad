@@ -350,6 +350,16 @@
       "returns": "trim joint object"
     },
     {
+      "id": "ctx.trim.cornerTrim",
+      "module": "./model/semantic-builders.mjs",
+      "description": "Create a corner trim joint with one member-to-member operation, including object trim via profile-cope.",
+      "parameters": {
+        "role": "role key",
+        "data": "memberIds, operationType, optional member ends for butt/miter, profile-cope memberAIds/memberBIds, removedRegionKeys, allowExtension, gap and metadata"
+      },
+      "returns": "trim joint object"
+    },
+    {
       "id": "ctx.feature.booleanPart",
       "module": "./model/semantic-builders.mjs",
       "description": "Create a Tekla-style boolean part feature for cuts such as beam notches.",
@@ -485,7 +495,7 @@
       "description": "Add one cut operation to a semantic corner trim joint.",
       "parameters": {
         "trimJointId": "string",
-        "patch": "operation fields including required type, plus memberAId, memberAEnd, memberBId, memberBEnd, referencePlaneIds, removedRegionKeys, and gap"
+        "patch": "operation fields including required type, memberAId/memberBId, profile-cope memberAIds/memberBIds, member ends, referencePlaneIds, removedRegionKeys, allowExtension and gap"
       },
       "returns": "project JSON"
     },
@@ -614,9 +624,9 @@
     {
       "id": "store.createTrimJoint",
       "module": "../store/project-command-store.mjs",
-      "description": "Create a semantic trim joint with one initial trim operation.",
+      "description": "Create a semantic trim joint with an initial trim operation.",
       "parameters": {
-        "options": "memberIds, operationType, optional operationPatch, id and patch"
+        "options": "memberIds, operationType, optional operationPatch with memberAId/memberBId, profile-cope memberAIds/memberBIds, removedRegionKeys, id and patch"
       },
       "returns": "project, trimJointId and trimJoint"
     },

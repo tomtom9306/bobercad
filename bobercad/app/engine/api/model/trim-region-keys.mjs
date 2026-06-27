@@ -10,6 +10,8 @@ function referencePlaneIdList(referencePlaneIds) {
   return referencePlaneIds;
 }
 
+const OBJECT_TRIM_REGION_PREFIX = "object-trim";
+
 export function planeTrimRegionKeys(referencePlaneIds) {
   const planeIds = referencePlaneIdList(referencePlaneIds);
   const keys = [];
@@ -24,6 +26,44 @@ export function planeTrimRegionKeys(referencePlaneIds) {
   };
   walk(0, []);
   return keys;
+}
+
+export function objectTrimRegionKey(featureId, partIndex) {
+  if (typeof featureId !== "string" || !featureId.trim()) throw new Error("trim region keys: object trim feature id must be a non-empty string");
+  if (!Number.isInteger(partIndex) || partIndex < 1) throw new Error("trim region keys: object trim part index must be a positive integer");
+  return `${OBJECT_TRIM_REGION_PREFIX}:${encodeURIComponent(featureId)}:part_${partIndex}`;
+}
+
+export function objectTrimRegionKeyParts(regionKeyValue) {
+  if (typeof regionKeyValue !== "string" || !regionKeyValue.trim()) throw new Error("trim region keys: object trim region key must be a non-empty string");
+  const parts = regionKeyValue.split(":");
+  if (parts.length !== 3 || parts[0] !== OBJECT_TRIM_REGION_PREFIX) throw new Error(`trim region keys: invalid object trim region key ${regionKeyValue}`);
+  const featureId = decodeURIComponent(parts[1]);
+  const partMatch = /^part_(\d+)$/.exec(parts[2]);
+  if (!featureId || !partMatch) throw new Error(`trim region keys: invalid object trim region key ${regionKeyValue}`);
+  return { featureId, partIndex: Number(partMatch[1]) };
+}
+
+export function isObjectTrimRegionKey(regionKeyValue) {
+  try {
+    objectTrimRegionKeyParts(regionKeyValue);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function reconcileObjectTrimRemovedRegionKeys(operation, featureIds = null) {
+  if (operation !== undefined && (!operation || typeof operation !== "object" || Array.isArray(operation))) throw new Error("trim region keys: operation must be an object");
+  const featureIdSet = Array.isArray(featureIds) ? new Set(featureIds) : null;
+  const removedRegionKeys = operation?.removedRegionKeys === undefined ? [] : operation.removedRegionKeys;
+  if (!Array.isArray(removedRegionKeys)) throw new Error("trim region keys: removedRegionKeys must be an array");
+  const removed = new Set();
+  for (const regionKeyValue of removedRegionKeys) {
+    const { featureId } = objectTrimRegionKeyParts(regionKeyValue);
+    if (!featureIdSet || featureIdSet.has(featureId)) removed.add(regionKeyValue);
+  }
+  return [...removed];
 }
 
 export function regionKey(items) {

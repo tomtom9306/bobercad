@@ -3,10 +3,10 @@ import { uniqueTruthy } from "../../engine/core/model.mjs";
 import { CSG_EPSILON, geometryError, projectCoincidentTolerance, requiredArray, requiredVector } from "../../engine/geometry/csg.mjs";
 import { evaluateTrimJointOperationMarkerPlanes } from "../../engine/geometry/evaluators/trim-evaluator.mjs";
 import { allGridLineSegments } from "../../engine/api/project/datums.mjs";
-import { activeTrimJointOperations } from "../../engine/api/project/trim-operations.mjs";
+import { activeTrimJointOperations, trimOperationMemberIds } from "../../engine/api/project/trim-operations.mjs";
 import { shouldRenderObject } from "./scene-object-visibility.mjs";
 import { detailMeta, objectDisplayColor, shouldRenderCuttingObjects, shouldRenderReferencePlanes } from "./scene-annotation-metadata.mjs";
-import { addPlaneTrimRegionHandles } from "./scene-member-geometry-adapters.mjs";
+import { addObjectTrimRegionHandles, addPlaneTrimRegionHandles } from "./scene-member-geometry-adapters.mjs";
 import { addLine, addLoopLines, addTextLabel } from "./scene-line-face-assembly.mjs";
 
 function addAxisHead(scene, axis, sideA, sideB, length, headSize, color) {
@@ -194,7 +194,8 @@ function cutCalloutKeys(project, plane, callout = {}) {
 
 function addCutCalloutOnce(scene, project, plane, display = {}, meta = {}, callout = {}) {
   const keys = cutCalloutKeys(project, plane, callout);
-  if (keys.some((key) => scene.cutCalloutKeys.has(key))) return false;
+  const blockingKeys = callout.key ? [callout.key] : keys;
+  if (blockingKeys.some((key) => scene.cutCalloutKeys.has(key))) return false;
   for (const key of keys) scene.cutCalloutKeys.add(key);
   addCutCallout(scene, plane, display, meta, callout);
   return true;
@@ -241,11 +242,12 @@ export function addTrimJoint(scene, project, profiles, trimJoint) {
           operationId: operation.id || null,
           iconType: operation.type || "end-butt-1",
           colors: {
-            memberA: objectDisplayColor(project, operation.memberAId, "#365f74"),
-            memberB: objectDisplayColor(project, operation.memberBId, "#d99200")
+            memberA: objectDisplayColor(project, trimOperationMemberIds(operation, "memberA")[0], "#365f74"),
+            memberB: objectDisplayColor(project, trimOperationMemberIds(operation, "memberB")[0], "#d99200")
           }
         });
         addPlaneTrimRegionHandles(scene, project, profiles, trimJoint, operation, operationMeta);
+        addObjectTrimRegionHandles(scene, project, profiles, trimJoint, operation, operationMeta);
       }
     }
     return;

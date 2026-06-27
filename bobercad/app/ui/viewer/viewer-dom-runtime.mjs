@@ -131,7 +131,7 @@ export function createViewerDomRuntime({ canvas, reset }) {
     authoringLabelLayer.appendChild(node);
   }
 
-  function renderSceneCallouts({ scene, shouldDrawSceneItem, projectPoint, onClick }) {
+  function renderSceneCallouts({ scene, shouldDrawSceneItem, projectPoint, onClick, interactive = true }) {
     calloutLayer.replaceChildren();
     if (!scene?.callouts?.length) return;
     for (const callout of scene.callouts) {
@@ -144,6 +144,7 @@ export function createViewerDomRuntime({ canvas, reset }) {
       if (callout.operationId) node.dataset.operationId = callout.operationId;
       node.style.left = `${projected.x}px`;
       node.style.top = `${projected.y}px`;
+      if (!interactive) node.style.pointerEvents = "none";
       node.title = callout.label || trimOperationLabel(callout.iconType);
       node.innerHTML = trimOperationIconMarkup(callout.iconType, callout.colors, { class: "trim-callout-icon" });
       node.addEventListener("pointerdown", (event) => {

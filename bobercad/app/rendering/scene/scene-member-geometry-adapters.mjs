@@ -1,11 +1,12 @@
 import { clamp, finiteNumber, v } from "../../engine/core/math.mjs";
 import { arrayValues, objectById } from "../../engine/core/model.mjs";
-import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgExtrudedRingPolygons, csgIntersect, csgSubtract, csgUnion, cutBodyPolygons, geometryError, prismPolygons, projectCoincidentTolerance, requiredNumber, requiredVector } from "../../engine/geometry/csg.mjs";
+import { CSG_EPSILON, ccwPoints, csgCleanPoints, csgExtrudedRingPolygons, csgIntersect, csgSubtract, csgUnion, cutBodyPolygons, geometryError, projectCoincidentTolerance, requiredNumber, requiredVector } from "../../engine/geometry/csg.mjs";
 import { cutBodiesForFeature } from "../../engine/geometry/cut-features.mjs";
-import { evaluateTrimJointPlaneTrimFeature } from "../../engine/geometry/evaluators/trim-evaluator.mjs";
+import { evaluateTrimJointOperationFeatures, evaluateTrimJointPlaneTrimFeature } from "../../engine/geometry/evaluators/trim-evaluator.mjs";
 import { memberFrame, memberLength, sectionBounds } from "../../engine/geometry/member-geometry.mjs";
+import { applyPlaneTrimRegionCuts, objectTrimComponentRegions, planeTrimDiscardPolygons, planeTrimRegionPolygons, removeObjectTrimRegions, sectionMaxSpan, trimMemberStation } from "../../engine/geometry/trim-region-geometry.mjs";
 import { normalizePath, samplePath } from "../../engine/api/geometry/paths.mjs";
-import { planeTrimRegionKeys, trimRegionSelectorMap } from "../../engine/api/model/trim-region-keys.mjs";
+import { planeTrimRegionKeys } from "../../engine/api/model/trim-region-keys.mjs";
 import { DEFAULT_GHOST_OPACITY } from "./scene-object-visibility.mjs";
 import { detailMeta, featureCutterShared, memberContourSurfaceRefs, objectDisplayColor, trimPlaneSurfaceRefs } from "./scene-annotation-metadata.mjs";
 import { holeOrSlotCut, memberFeatures } from "./scene-feature-cutters.mjs";
@@ -32,30 +33,27 @@ function endCutOffset(cut, point, side) {
   return side === "start" ? offset : -offset;
 }
 
-function memberStation(member, frame, point) {
-  return v.dot(v.sub(point, member.start), frame.x);
-}
-
-function sectionMaxSpan(profile) {
-  if (!profile) return 1;
-  const bounds = sectionBounds(profile);
-  return Math.max(bounds.maxY - bounds.minY, bounds.maxZ - bounds.minZ, 1);
-}
-
 function memberTrimPlaneExtension(project, member, frame, profile, length, scene = null) {
   const sectionSpan = sectionMaxSpan(profile);
   const extension = sectionSpan * 2 + projectCoincidentTolerance(project) * 10;
   const range = { start: 0, end: length };
 
   for (const feature of memberFeatures(project, member, scene)) {
+    const hasExplicitOwnerExtension = feature.ownerExtension !== undefined;
+    if (hasExplicitOwnerExtension) {
+      const start = Number(feature.ownerExtension.start);
+      const end = Number(feature.ownerExtension.end);
+      if (Number.isFinite(start)) range.start = Math.min(range.start, start);
+      if (Number.isFinite(end)) range.end = Math.max(range.end, end);
+    }
     const planes = feature.type === "member-trim-plane"
       ? [feature.runtimePlane]
-      : feature.type === "member-trim-region"
+      : feature.type === "member-trim-region" && !hasExplicitOwnerExtension
         ? arrayValues(feature.runtimePlanes)
         : [];
     for (const plane of planes) {
       const normal = v.norm(requiredVector(plane, "normal", feature.id));
-      const station = memberStation(member, frame, requiredVector(plane, "origin", feature.id));
+      const station = trimMemberStation(member, frame, requiredVector(plane, "origin", feature.id));
       const along = v.dot(normal, frame.x);
       if (along > 0.02) range.start = Math.min(range.start, station - extension);
       if (along < -0.02) range.end = Math.max(range.end, station + extension);
@@ -102,77 +100,6 @@ function memberBasePolygons(project, member, frame, profile, color, startStation
   return polygons;
 }
 
-function planeTrimDiscardPolygons(member, frame, profile, plane, shared = {}) {
-  if (!plane) geometryError("plane trim missing plane");
-  const length = memberLength(member);
-  const sectionSpan = sectionMaxSpan(profile);
-  const span = Math.max(length, sectionSpan) * 4 + 1000;
-  const depth = span * 2;
-  const keepNormal = v.norm(requiredVector(plane, "normal", "plane trim"));
-  const discardAxis = v.mul(keepNormal, -1);
-  let axisY = v.norm(requiredVector(plane, "axisX", "plane trim"));
-  axisY = v.norm(v.sub(axisY, v.mul(discardAxis, v.dot(axisY, discardAxis))));
-  if (v.len(axisY) <= CSG_EPSILON) geometryError("plane trim axisX cannot be parallel to normal");
-  const axisZ = v.norm(v.cross(discardAxis, axisY));
-  const center = v.add(requiredVector(plane, "origin", "plane trim"), v.mul(discardAxis, depth / 2));
-
-  return prismPolygons(center, discardAxis, axisY, axisZ, depth, [
-    [-span, -span],
-    [span, -span],
-    [span, span],
-    [-span, span]
-  ], shared);
-}
-
-function flippedPlane(plane) {
-  return {
-    ...plane,
-    normal: v.mul(v.norm(requiredVector(plane, "normal", "plane trim region")), -1)
-  };
-}
-
-function trimRegionBoxPolygons(scene, project, member, frame, profile, shared = {}) {
-  const length = memberLength(member);
-  const sectionSpan = sectionMaxSpan(profile);
-  const padding = Math.max(sectionSpan * 5, projectCoincidentTolerance(project) * 100, 100);
-  return cutBodyPolygons({
-    type: "box",
-    center: sectionPoint(member.start, frame, [0, 0], length / 2),
-    axisX: frame.x,
-    axisY: frame.y,
-    axisZ: frame.z,
-    size: [length + padding * 2, sectionSpan + padding * 2, sectionSpan + padding * 2]
-  }, shared, scene.tessellation);
-}
-
-function trimRegionPolygons(scene, project, member, frame, profile, planes, regionKey, shared = {}, feature = null) {
-  if (typeof regionKey !== "string" || !regionKey) geometryError("plane trim region key must be a non-empty string");
-  const parts = regionKey.split("|");
-  const signs = trimRegionSelectorMap(regionKey);
-  if (signs.size !== parts.length) geometryError(`invalid or duplicate plane trim region key: ${regionKey}`);
-  if (signs.size !== planes.length) geometryError(`${regionKey}: trim region key does not match selected planes`);
-  let polygons = trimRegionBoxPolygons(scene, project, member, frame, profile, shared);
-  for (const plane of planes) {
-    const side = signs.get(plane.id);
-    if (!side) geometryError(`${regionKey}: missing side for reference plane ${plane.id}`);
-    const cutterPlane = side === "+" ? plane : flippedPlane(plane);
-    polygons = csgSubtract(polygons, planeTrimDiscardPolygons(member, frame, profile, cutterPlane, feature ? {
-      ...shared,
-      surfaceRefs: trimPlaneSurfaceRefs(feature, plane, side)
-    } : shared));
-  }
-  return polygons;
-}
-
-function applyPlaneTrimRegionCuts(scene, project, member, frame, profile, polygons, feature, shared = {}) {
-  const planes = arrayValues(feature.runtimePlanes);
-  if (!planes.length) geometryError(`${feature.id}: plane trim missing runtime planes`);
-  for (const regionKey of arrayValues(feature.removedRegionKeys)) {
-    polygons = csgSubtract(polygons, trimRegionPolygons(scene, project, member, frame, profile, planes, regionKey, shared, feature));
-  }
-  return polygons;
-}
-
 function offsetPolygonPoints(polygon, distance) {
   const normal = v.norm(polygon.plane.normal);
   return csgCleanPoints(polygon.vertices).map((point) => v.add(point, v.mul(normal, distance)));
@@ -206,7 +133,7 @@ export function addPlaneTrimRegionHandles(scene, project, profiles, trimJoint, o
     const removed = removedRegionKeys.has(regionKeyValue);
     const polygons = csgIntersect(
       basePolygons,
-      trimRegionPolygons(scene, project, member, frame, profile, planes, regionKeyValue, { color })
+      planeTrimRegionPolygons(project, member, frame, profile, planes, regionKeyValue, scene.tessellation, { color })
     );
     if (!polygons.length) continue;
 
@@ -225,6 +152,57 @@ export function addPlaneTrimRegionHandles(scene, project, profiles, trimJoint, o
       if (points.length >= 3) scene.faces.push({ points, color, hideEdges: true, ...meta });
     }
     addMeshCreaseEdges(scene, polygons, edgeColor, { ...meta, opacity: removed ? 0.55 : 0.22 });
+  }
+}
+
+export function addObjectTrimRegionHandles(scene, project, profiles, trimJoint, operation, operationMeta) {
+  if (trimJoint.id !== scene.activeTrimJointId) return;
+  if (scene.activeTrimOperationId && operation.id !== scene.activeTrimOperationId) return;
+  if (operation.type !== "profile-cope") return;
+
+  const features = evaluateTrimJointOperationFeatures(project, profiles, trimJoint, operation)
+    .filter((feature) => feature?.type === "boolean-part" && feature.source?.kind === "member-profile");
+  if (!features.length) return;
+
+  for (const feature of features) {
+    const member = objectById(project, feature.ownerId);
+    const profile = profiles[member.profile];
+    if (!profile) geometryError(`${trimJoint.id}: missing profile for ${member.id}`);
+    const frame = memberFrame(member);
+    const length = memberLength(member);
+    const color = objectDisplayColor(project, member.id, member.display?.color || "#78909c");
+    const edgeColor = trimJoint.display?.edgeColor || "#0ea5e9";
+    const trimRange = memberTrimPlaneExtension(project, member, frame, profile, length, scene);
+    const shared = { color };
+    let polygons = memberBasePolygons(project, member, frame, profile, color, trimRange.start, trimRange.end, length, scene);
+    const bodies = cutBodiesForFeature(project, profiles, feature);
+    const bodyPolygons = bodies.flatMap((body, bodyIndex) => cutBodyPolygons(body, featureCutterShared(shared, feature, body, bodyIndex), scene.tessellation));
+    polygons = csgSubtract(polygons, bodyPolygons);
+    const regions = objectTrimComponentRegions(project, member, frame, polygons, feature);
+    if (regions.length <= 1) continue;
+
+    const removedRegionKeys = new Set(arrayValues(feature.removedRegionKeys));
+    const overlayOffset = Math.min(0.75, projectCoincidentTolerance(project) * 0.25);
+    for (const region of regions) {
+      const removed = region.aliases.some((key) => removedRegionKeys.has(key));
+      const regionColor = removed ? "#94a3b8" : color;
+      const faceOpacity = removed ? 0.015 : 0.035;
+      const edgeOpacity = removed ? 0.2 : 0.22;
+      const meta = {
+        ...operationMeta,
+        componentKind: "trim-region",
+        regionKey: region.key,
+        memberId: member.id,
+        ownerMemberId: member.id,
+        regionRemoved: removed,
+        opacity: faceOpacity
+      };
+      for (const polygon of region.polygons) {
+        const points = offsetPolygonPoints(polygon, overlayOffset);
+        if (points.length >= 3) scene.faces.push({ points, color: regionColor, hideEdges: true, ...meta });
+      }
+      addMeshCreaseEdges(scene, region.polygons, edgeColor, { ...meta, opacity: edgeOpacity });
+    }
   }
 }
 
@@ -257,6 +235,9 @@ function memberCsgPolygons(project, profiles, member, profile, color, scene = nu
       if (!bodies.length) geometryError(`${feature.id}: boolean-part missing derivable body`);
       const bodyPolygons = bodies.flatMap((body, bodyIndex) => cutBodyPolygons(body, featureCutterShared(shared, feature, body, bodyIndex), scene.tessellation));
       polygons = feature.booleanType === "BOOLEAN_ADD" ? csgUnion(polygons, bodyPolygons) : csgSubtract(polygons, bodyPolygons);
+      if (feature.booleanType !== "BOOLEAN_ADD" && feature.source?.kind === "member-profile") {
+        polygons = removeObjectTrimRegions(project, member, frame, polygons, feature);
+      }
       continue;
     }
 
@@ -270,7 +251,7 @@ function memberCsgPolygons(project, profiles, member, profile, color, scene = nu
     }
 
     if (feature.type === "member-trim-region") {
-      polygons = applyPlaneTrimRegionCuts(scene, project, member, frame, profile, polygons, feature, shared);
+      polygons = applyPlaneTrimRegionCuts(project, member, frame, profile, polygons, feature, scene.tessellation, shared, trimPlaneSurfaceRefs);
       continue;
     }
 
@@ -287,6 +268,7 @@ export function addMember(scene, project, member, profile, options = {}) {
   const opacity = member.display?.transparent ? member.display?.opacity ?? DEFAULT_GHOST_OPACITY : member.display?.opacity;
   const meta = { collection: "members", objectId: member.id, ...(options.lodDetail ? detailMeta(member.id) : {}) };
   const polygons = memberCsgPolygons(project, scene.profiles, member, profile, color, scene);
+  if (options.lodDetail && !polygons.length) scene.emptyLodDetailObjectIds?.add(member.id);
 
   addCsgFaces(scene, polygons, color, { opacity, ...meta });
   addMeshCreaseEdges(scene, polygons, edgeColor, meta);

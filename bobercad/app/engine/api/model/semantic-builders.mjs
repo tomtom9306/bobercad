@@ -88,6 +88,10 @@ function optionalStringArray(value, label, ctx) {
   return value === undefined ? [] : requiredStringArray(value, label, ctx);
 }
 
+function uniqueStrings(values) {
+  return [...new Set(values.filter((value) => typeof value === "string" && value.trim()))];
+}
+
 function requiredNonNegativeNumber(value, label, ctx) {
   if (!Number.isFinite(value) || value < 0) ctx.fail(`${label} must be a non-negative number`);
   return value;
@@ -255,12 +259,37 @@ export function createSemanticBuilders(ctx) {
         }
         if (data.miterMode && operationType !== "end-miter") ctx.fail(`${role}: miterMode is only valid for end-miter`);
         if (data.miterMode && !["equal-angle", "profile-balanced"].includes(data.miterMode)) ctx.fail(`${role}: unsupported miterMode ${data.miterMode}`);
+        if (data.allowExtension !== undefined && typeof data.allowExtension !== "boolean") ctx.fail(`${role}: allowExtension must be boolean`);
         const id = ctx.id(role);
         const operationId = optionalString(data.operationId, `${id}_${operationType.replace(/-/g, "_")}`, `${role}: corner trim operationId`, ctx);
         const memberAEnd = optionalMemberEnd(data.memberAEnd, `${role}: corner trim memberAEnd`, ctx);
         const memberBEnd = optionalMemberEnd(data.memberBEnd, `${role}: corner trim memberBEnd`, ctx);
         if (trimOperationUsesMemberEnd(operationType, "memberA") && !memberAEnd) ctx.fail(`${role}: corner trim memberAEnd is required for ${operationType}`);
         if (trimOperationUsesMemberEnd(operationType, "memberB") && !memberBEnd) ctx.fail(`${role}: corner trim memberBEnd is required for ${operationType}`);
+        const profileCope = operationType === "profile-cope";
+        if (!profileCope) rejectDefinedFields(data, ["memberAIds", "memberBIds", "removedRegionKeys", "allowExtension"], `${role}: corner trim`, ctx);
+        else rejectDefinedFields(data, ["memberAEnd", "memberBEnd", "miterMode"], `${role}: object trim`, ctx);
+        const memberAIds = profileCope
+          ? (data.memberAIds === undefined ? [memberAId] : requiredNonEmptyStringArray(data.memberAIds, `${role}: object trim memberAIds`, ctx))
+          : [memberAId];
+        const memberBIds = profileCope
+          ? (data.memberBIds === undefined ? [memberBId] : requiredNonEmptyStringArray(data.memberBIds, `${role}: object trim memberBIds`, ctx))
+          : [memberBId];
+        if (profileCope && memberAIds.some((id) => memberBIds.includes(id))) ctx.fail(`${role}: object trim memberAIds and memberBIds must not overlap`);
+        const operationFields = profileCope ? {
+          memberAId: memberAIds[0],
+          memberBId: memberBIds[0],
+          memberAIds,
+          memberBIds,
+          removedRegionKeys: optionalStringArray(data.removedRegionKeys, `${role}: object trim removedRegionKeys`, ctx),
+          ...(data.allowExtension !== undefined ? { allowExtension: data.allowExtension } : {})
+        } : {
+          memberAId,
+          memberBId,
+          ...(memberAEnd ? { memberAEnd } : {}),
+          ...(memberBEnd ? { memberBEnd } : {}),
+          ...(data.miterMode ? { miterMode: data.miterMode } : {})
+        };
         const participantEnd = (memberId) => (
           memberId === memberAId && memberAEnd ? memberAEnd
             : memberId === memberBId && memberBEnd ? memberBEnd
@@ -268,7 +297,7 @@ export function createSemanticBuilders(ctx) {
         );
         return createTrimJoint(role, id, data, {
           type: "corner-trim",
-          participants: data.memberIds.map((memberId) => {
+          participants: uniqueStrings([...data.memberIds, ...memberAIds, ...memberBIds]).map((memberId) => {
             const memberEnd = participantEnd(memberId);
             return {
               memberId,
@@ -279,11 +308,7 @@ export function createSemanticBuilders(ctx) {
           operations: [{
             id: operationId,
             type: operationType,
-            memberAId,
-            memberBId,
-            ...(memberAEnd ? { memberAEnd } : {}),
-            ...(memberBEnd ? { memberBEnd } : {}),
-            ...(data.miterMode ? { miterMode: data.miterMode } : {}),
+            ...operationFields,
             gap: trimGap(data, ctx),
             enabled: data.operationEnabled !== false
           }]

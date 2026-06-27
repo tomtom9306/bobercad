@@ -1,6 +1,6 @@
 import { isPlainObject as plainObject, jsonClone as clone, mergeObjectPatch as mergePatch, uniqueTruthy as unique } from "../core/model.mjs";
 import { addIndexedObject, nextObjectId } from "../api/project/objects.mjs";
-import { TRIM_OPERATION_TYPES, trimJointOperations, trimJointParticipants, trimOperationUsesMemberEnd } from "../api/project/trim-operations.mjs";
+import { TRIM_OPERATION_TYPES, trimJointOperations, trimJointParticipants, trimOperationMemberIds, trimOperationUsesMemberEnd } from "../api/project/trim-operations.mjs";
 import {
   defaultTrimJointOperation,
   defaultTrimJointParticipant,
@@ -24,25 +24,27 @@ export function createTrimStoreMethods({ state, commitProject, replaceTrimJoint 
       const memberIds = unique(requiredStringList(options.memberIds, "trim joint memberIds"));
       for (const memberId of memberIds) memberById(project(), memberId);
       if (options.operationPatch !== undefined && !plainObject(options.operationPatch)) fail("trim joint operationPatch must be an object");
+      if (options.operationPatches !== undefined) fail("trim joint operationPatches is no longer supported; use one operationPatch with memberAIds/memberBIds");
       const operationPatch = options.operationPatch === undefined ? {} : clone(options.operationPatch);
       const operationType = trimOperationTypeFromOptions(options, operationPatch);
       if (operationType !== "plane-trim" && memberIds.length < 2) fail("member-to-member trim requires two members");
       if (operationType === "plane-trim" && memberIds.length < 1) fail("plane trim requires one member");
       if (options.patch !== undefined && !plainObject(options.patch)) fail("trim joint patch must be an object");
+      const trimJointType = operationType === "plane-trim" ? "member-trim" : "corner-trim";
 
       const next = clone(project());
       if (options.id !== undefined && (typeof options.id !== "string" || !options.id.trim())) fail("trim joint id must be a non-empty string");
       const id = nextObjectId(next, options.id === undefined ? `trim_${memberIds.join("_") || "joint"}` : options.id);
       const trimJoint = {
         id,
-        type: operationType === "plane-trim" ? "member-trim" : "corner-trim",
+        type: trimJointType,
         gap: 0,
         participants: [],
         operations: [],
         ...(options.patch === undefined ? {} : clone(options.patch))
       };
       trimJoint.id = id;
-      trimJoint.type = operationType === "plane-trim" ? "member-trim" : "corner-trim";
+      trimJoint.type = trimJointType;
       for (const memberId of memberIds) {
         trimJoint.participants.push(defaultTrimJointParticipant(next, trimJoint, memberId));
       }
@@ -55,7 +57,7 @@ export function createTrimStoreMethods({ state, commitProject, replaceTrimJoint 
         ...operationPatch
       });
       validateTrimJointOperation(next, id, trimJoint, operation);
-      trimJoint.operations = [operation];
+      trimJoint.operations.push(operation);
       addIndexedObject(next, "trimJoints", trimJoint);
       const updated = commitProject("trimJoint.create", next, { changedObjectIds: [id] });
       return { project: updated, trimJointId: id, trimJoint: updated.model.trimJoints[id] };
@@ -105,7 +107,8 @@ export function createTrimStoreMethods({ state, commitProject, replaceTrimJoint 
         if (participants.length === trimJointParticipants(trimJoint).length) fail(`${trimJointId}: participant not found: ${memberId}`);
         if (!participants.length) fail(`${trimJointId}: trim requires at least one participant`);
         const operations = trimJointOperations(trimJoint).filter((operation) => (
-          operation.memberAId !== memberId && operation.memberBId !== memberId
+          !trimOperationMemberIds(operation, "memberA").includes(memberId)
+          && !trimOperationMemberIds(operation, "memberB").includes(memberId)
         ));
         return { ...trimJoint, participants, operations };
       });
@@ -146,6 +149,10 @@ export function createTrimStoreMethods({ state, commitProject, replaceTrimJoint 
           if (operation.id !== operationId) return operation;
           found = true;
           const patch = role === "memberA" ? { memberAId: memberId } : { memberBId: memberId };
+          if (operation.type === "profile-cope") {
+            patch[`${role}Ids`] = [memberId];
+            patch.removedRegionKeys = [];
+          }
           if (!TRIM_OPERATION_TYPES.has(operation.type)) fail(`${trimJointId}: unsupported trim operation type ${operation.type}`);
           if (trimOperationUsesMemberEnd(operation.type, role)) {
             const referencePoint = trimJointReferencePoint(project(), nextTrimJoint);

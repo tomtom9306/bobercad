@@ -2,6 +2,7 @@ import { objectById } from "../core/model.mjs";
 import { finiteNonNegativeNumber, finiteNumber, v } from "../core/math.mjs";
 import { libraryProfileById } from "../api/project/profiles.mjs";
 import { memberFrame, memberFrameAt, memberLength, resolveInterfaceWithConnectionReference, sectionBounds, sectionWebBounds } from "./member-geometry.mjs";
+import { ccwPoints } from "./csg.mjs";
 
 const EPSILON = 1e-9;
 const NON_CUT_FEATURE_TYPES = new Set(["hole-pattern", "saw-cut", "miter-cut", "cope", "slot-hole"]);
@@ -53,6 +54,86 @@ function solidProfileOutlines(profile, featureId) {
     .map((contour) => requiredArray(contour.points, `${profile.id}.${contour.id || contour.role}.points`));
   if (!outlines.length) fail(`${featureId}: source profile must contain at least one solid contour`);
   return outlines;
+}
+
+function cross2(left, right) {
+  return left[0] * right[1] - left[1] * right[0];
+}
+
+function sub2(left, right) {
+  return [left[0] - right[0], left[1] - right[1]];
+}
+
+function add2(left, right) {
+  return [left[0] + right[0], left[1] + right[1]];
+}
+
+function mul2(point, scalar) {
+  return [point[0] * scalar, point[1] * scalar];
+}
+
+function norm2(point) {
+  const length = Math.hypot(point[0], point[1]);
+  return length > EPSILON ? [point[0] / length, point[1] / length] : null;
+}
+
+function lineIntersection2d(point, direction, nextPoint, nextDirection) {
+  const denominator = cross2(direction, nextDirection);
+  if (Math.abs(denominator) <= EPSILON) return null;
+  const t = cross2(sub2(nextPoint, point), nextDirection) / denominator;
+  return add2(point, mul2(direction, t));
+}
+
+function profileOffsetDistance(outward, offsets) {
+  const lateralOffsets = [offsets.yMinus, offsets.yPlus, offsets.zMinus, offsets.zPlus];
+  const min = Math.min(...lateralOffsets);
+  const max = Math.max(...lateralOffsets);
+  if (max <= EPSILON) return 0;
+  if (max - min <= EPSILON) return max;
+  return Math.max(0, outward[0]) * offsets.yPlus
+    + Math.max(0, -outward[0]) * offsets.yMinus
+    + Math.max(0, outward[1]) * offsets.zPlus
+    + Math.max(0, -outward[1]) * offsets.zMinus;
+}
+
+function offsetProfileOutline(outline, offsets) {
+  const points = ccwPoints(outline);
+  const maxOffset = Math.max(offsets.yMinus, offsets.yPlus, offsets.zMinus, offsets.zPlus);
+  if (maxOffset <= EPSILON) return points;
+
+  const edges = [];
+  for (let index = 0; index < points.length; index += 1) {
+    const start = points[index];
+    const end = points[(index + 1) % points.length];
+    const direction = norm2(sub2(end, start));
+    if (!direction) continue;
+    const outward = [direction[1], -direction[0]];
+    const distance = profileOffsetDistance(outward, offsets);
+    edges.push({
+      start: add2(start, mul2(outward, distance)),
+      direction,
+      distance
+    });
+  }
+  if (edges.length < 3) fail("profile offset requires at least three usable edges");
+
+  const result = [];
+  const maxMiter = Math.max(maxOffset * 8, 1);
+  for (let index = 0; index < edges.length; index += 1) {
+    const previous = edges[(index + edges.length - 1) % edges.length];
+    const current = edges[index];
+    const vertex = points[index];
+    const fallback = add2(vertex, mul2(add2(
+      mul2([previous.direction[1], -previous.direction[0]], previous.distance),
+      mul2([current.direction[1], -current.direction[0]], current.distance)
+    ), 0.5));
+    const intersection = lineIntersection2d(previous.start, previous.direction, current.start, current.direction);
+    const point = intersection && Math.hypot(intersection[0] - fallback[0], intersection[1] - fallback[1]) <= maxMiter
+      ? intersection
+      : fallback;
+    result.push(point);
+  }
+  return ccwPoints(result);
 }
 
 function cutStation(project, profiles, intent, sourceMember, sourceFrame) {
@@ -128,9 +209,6 @@ function memberProfileCutGeometry(project, profiles, feature) {
   const length = memberLength(sourceMember);
   const sourceFrame = memberFrameAt(sourceMember, 0);
   const offsets = cutOffsets(intent, true);
-  if ([offsets.yMinus, offsets.yPlus, offsets.zMinus, offsets.zPlus].some((offset) => offset > EPSILON)) {
-    fail(`${feature.id}: member-profile cut supports source-axis extension only; profile offsetting is not implemented`);
-  }
   const depth = length + offsets.xMinus + offsets.xPlus;
   if (depth <= EPSILON) fail(`${feature.id}: member-profile cut depth must be positive`);
   const center = v.add(sourceFrame.origin, v.mul(sourceFrame.x, (length + offsets.xPlus - offsets.xMinus) / 2));
@@ -141,7 +219,7 @@ function memberProfileCutGeometry(project, profiles, feature) {
     axisY: sourceFrame.y,
     axisZ: sourceFrame.z,
     depth,
-    outline
+    outline: offsetProfileOutline(outline, offsets)
   }));
   return { bodies, offsets };
 }

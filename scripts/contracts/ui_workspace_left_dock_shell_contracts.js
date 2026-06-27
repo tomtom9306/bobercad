@@ -488,23 +488,24 @@ function checkLeftDockShellContracts(context) {
     || !objectPropertyMetadataText.includes("object.plate.bend.update")
     || !objectPropertyMetadataText.includes("object.plate.bend.remove")
     || !objectPropertyMetadataText.includes("object.plate.relations.infer")
-    || !objectPropertyMetadataText.includes("object.trimJoint.operation.update")
-    || !objectPropertyMetadataText.includes("object.trimJoint.operation.select")
-    || !objectPropertyMetadataText.includes("object.trimJoint.operation.type.set")
-    || !objectPropertyMetadataText.includes("TRIM_OPERATION_TYPES")
-    || !objectPropertyMetadataText.includes("trimOperationMemberEndField")
-    || !objectPropertyMetadataText.includes("trimOperationPlaneActions")
-    || !objectPropertyMetadataText.includes("trimOperationRegionActions")
+    || !objectPropertyMetadataText.includes("object.trim.openEditor")
+    || objectPropertyMetadataText.includes("object.trimJoint.operation.update")
+    || objectPropertyMetadataText.includes("object.trimJoint.operation.select")
+    || objectPropertyMetadataText.includes("object.trimJoint.operation.type.set")
+    || objectPropertyMetadataText.includes("TRIM_OPERATION_TYPES")
+    || objectPropertyMetadataText.includes("trimOperationMemberEndField")
+    || objectPropertyMetadataText.includes("trimOperationPlaneActions")
+    || objectPropertyMetadataText.includes("trimOperationRegionActions")
     || !objectPropertyMetadataText.includes("object.feature.body.update")
     || !objectPropertyMetadataText.includes("object.weld.update")
     || !objectPropertyMetadataText.includes("object.sketch.createPlate")
     || !inspectorPropertyBindingsText.includes("object.plate.relations.infer")
     || !inspectorPropertyBindingsText.includes("object.plate.bend.remove")
     || !inspectorPropertyBindingsText.includes("object.sketch.createPlate")
-    || !inspectorPropertyBindingsText.includes("objects.setTrimOperationType")
-    || !inspectorPanelText.includes("setTrimOperationType(operationId, type)")
-    || !inspectorPanelText.includes("trimOperationUsesMemberEnd(type")
-    || !inspectorPanelText.includes("reconcilePlaneTrimRemovedRegionKeys")
+    || inspectorPropertyBindingsText.includes("objects.setTrimOperationType")
+    || inspectorPanelText.includes("setTrimOperationType(operationId, type)")
+    || inspectorPanelText.includes("trimOperationUsesMemberEnd(type")
+    || inspectorPanelText.includes("patch.allowExtension = undefined")
     || !inspectorPanelText.includes("removePlateBend: (bendId) => updatePlate")
     || !inspectorPanelText.includes("inferPlateSketchRelations: (plateId) => inferPlateSketchRelations(plateId)")
     || !inspectorPanelText.includes("createPlateFromSketch: (sketchId) => createPlateFromSketch(sketchId)")
@@ -602,46 +603,69 @@ function checkLeftDockShellContracts(context) {
     || !trimJointEditorPanelText.includes("trimEditorBindings")
     || !trimJointEditorPanelText.includes("trimOperationCommit")
     || !trimJointEditorPanelText.includes("trimOperationTypeCommit")
+    || !trimJointEditorPanelText.includes("trimOperationTypeCleanupPatch")
+    || !trimJointEditorPanelText.includes("operationMemberEndFallback")
     || !trimJointEditorPanelText.includes("trimMemberEndCommit")
-    || !trimJointEditorPanelText.includes("trimEditorAction")
     || !trimJointEditorPanelText.includes('"trim.operation.update"')
     || !trimJointEditorPanelText.includes('"trim.operation.type.set"')
     || !trimJointEditorPanelText.includes('"trim.operation.memberEnd.set"')
-    || !trimJointEditorPanelText.includes('"trim.plane.pick"')
-    || !trimJointEditorPanelText.includes('"trim.plane.remove"')
-    || !trimJointEditorPanelText.includes('"trim.region.toggle"')
-    || !trimJointEditorPanelText.includes('type: "checkbox"')
-    || !trimJointEditorPanelText.includes('label: "Enabled"')
-    || !trimJointEditorPanelText.includes('trimOperationCommit(operation, "enabled")')
+    || !trimJointEditorPanelText.includes("trimMenuTypeOptions")
+    || !trimJointEditorPanelText.includes("trimFormSection")
+    || !trimJointEditorPanelText.includes("trimTargetRow")
+    || !trimJointEditorPanelText.includes("planePicker")
+    || !trimJointEditorPanelText.includes("segmentPicker")
     || !trimJointEditorPanelText.includes('type: "optionGrid"')
-    || !trimJointEditorPanelText.includes('label: "Result"')
+    || !trimJointEditorPanelText.includes('label: "Type"')
+    || !trimJointEditorPanelText.includes('className: "trim-menu-type-grid"')
+    || !trimJointEditorPanelText.includes('buttonClassName: "trim-menu-type-card"')
+    || !trimJointEditorPanelText.includes('trimMenuTypeOptions(operation)')
+    || !trimJointEditorPanelText.includes('label: "Object trim"')
+    || trimJointEditorPanelText.includes('label: "End trim"')
+    || !trimJointEditorPanelText.includes('trimFormSection(objectTrimMode ? "Objects" : "Bodies to be trimmed"')
+    || !trimJointEditorPanelText.includes('trimFormSection("Trimming object"')
+    || !trimJointEditorPanelText.includes('trimFormSection("Plane"')
+    || !trimJointEditorPanelText.includes('trimFormSection("Direction"')
+    || !trimJointEditorPanelText.includes('trimFormSection("Extend"')
+    || !trimJointEditorPanelText.includes('trimFormSection("Weld gap"')
+    || !trimJointEditorPanelText.includes('trimFormSection("Segments to keep"')
+    || !trimJointEditorPanelText.includes('showSegments: type === "profile-cope"')
+    || !trimJointEditorPanelText.includes("END_TRIM_TARGET_OPTIONS")
+    || trimJointEditorPanelText.includes("BUTT_DIRECTION_OPTIONS")
     || !trimJointEditorPanelText.includes('trimOperationTypeCommit(operation)')
+    || !trimJointEditorPanelText.includes("patch.memberAEnd = undefined")
+    || !trimJointEditorPanelText.includes("patch.memberBEnd = undefined")
+    || !trimJointEditorPanelText.includes("patch.referencePlaneIds = undefined")
+    || !trimJointEditorPanelText.includes("patch.removedRegionKeys = undefined")
+    || !trimJointEditorPanelText.includes("patch.miterMode = undefined")
+    || !trimJointEditorPanelText.includes("patch.allowExtension = undefined")
+    || !trimJointEditorPanelText.includes('if (trimOperationUsesMemberEnd(type, "memberA")) patch.memberAEnd = operationMemberEndFallback(operation, "memberA")')
+    || !trimJointEditorPanelText.includes('if (trimOperationUsesMemberEnd(type, "memberB")) patch.memberBEnd = operationMemberEndFallback(operation, "memberB")')
     || !trimJointEditorPanelText.includes("trim-operation-metadata.mjs")
-    || !trimJointEditorPanelText.includes("trimOperationIcon(option.id)")
+    || !trimJointEditorPanelText.includes('trimOperationIcon("plane-trim")')
+    || !trimJointEditorPanelText.includes('trimOperationIcon("end-miter")')
+    || !trimJointEditorPanelText.includes('trimOperationIcon("end-butt-both")')
     || trimJointEditorPanelText.includes("trimOperationIconMarkup")
     || trimJointEditorPanelText.includes("../../../rendering/trim-operation-icons.mjs")
     || !trimJointEditorPanelText.includes('type: "number"')
-    || !trimJointEditorPanelText.includes('label: "Gap"')
+    || !trimJointEditorPanelText.includes('label: "Gap (mm)"')
     || !trimJointEditorPanelText.includes('trimOperationCommit(operation, "gap")')
+    || !trimJointEditorPanelText.includes('label: "Allow extension"')
+    || !trimJointEditorPanelText.includes('trimOperationCommit(operation, "allowExtension")')
     || !trimJointEditorPanelText.includes('type: "segmented"')
-    || !trimJointEditorPanelText.includes('label: "Miter"')
+    || !trimJointEditorPanelText.includes('label: "Mitre mode"')
+    || trimJointEditorPanelText.includes('label: "Butt direction"')
+    || !trimJointEditorPanelText.includes('label: "Object"')
+    || !trimJointEditorPanelText.includes('"Objects to trim"')
+    || !trimJointEditorPanelText.includes('"Cutting objects"')
     || !trimJointEditorPanelText.includes('trimOperationCommit(operation, "miterMode")')
     || !trimJointEditorPanelText.includes('value === "profile-balanced" ? "Balanced profile" : "Equal angle"')
     || !trimJointEditorPanelText.includes('label: "End"')
     || !trimJointEditorPanelText.includes('className: "trim-member-end-segment"')
     || !trimJointEditorPanelText.includes('commit: trimMemberEndCommit(operation, member)')
-    || !trimJointEditorPanelText.includes("planeTrimPlanesField")
-    || !trimJointEditorPanelText.includes("planeTrimRegionsField")
-    || !trimJointEditorPanelText.includes('type: "actionList"')
-    || !trimJointEditorPanelText.includes('label: "Planes"')
-    || !trimJointEditorPanelText.includes('label: "Regions"')
     || !trimJointEditorPanelText.includes('icon: "selection"')
-    || !trimJointEditorPanelText.includes('icon: "cancel"')
-    || !trimJointEditorPanelText.includes('{ label: "Trim", value: model.id }')
-    || !trimJointEditorPanelText.includes('{ label: "Cuts", value: String(model.totalOperations) }')
-    || !trimJointEditorPanelText.includes('{ label: "Members", value: String(model.participants.length) }')
+    || !trimJointEditorPanelText.includes('icon: "reference-plane"')
   ) {
-    fail(errors, "Trim Editor must render overview, result, plane/region, enabled, gap, miter, and member-end rows through generated field descriptors bound at the panel edge");
+    fail(errors, "Trim Editor must render type cards, body pickers, trimming object, miter direction, weld gap, segments, and member-end rows through generated field descriptors bound at the panel edge, without a redundant Butt direction segment");
   }
   for (const localFieldBuilder of ["checkboxControl", "numericControl", "readout(", "miterModePicker", "onMiterModeChange", "trimTypePicker", "trimTypeIcon", "trimOptionGroup", "endToggle", "onEndChange", 'field("Result"', 'field("Planes"', 'field("Regions"', 'button("Pick Plane"', "trim-region-button", "trim-plane-list", "trim-plane-chip", "trim-member-end-toggle", "trim-end-option", "onTypeChange", "onPlanePick", "onPlaneRemove", "onRegionToggle"]) {
     if (trimJointEditorPanelText.includes(localFieldBuilder)) {
@@ -651,8 +675,8 @@ function checkLeftDockShellContracts(context) {
   if (viewerEditorPanelsText.includes(".trim-type-grid") || viewerEditorPanelsText.includes(".trim-type-button") || viewerEditorPanelsText.includes(".trim-type-label") || viewerEditorPanelsText.includes(".trim-plane-list") || viewerEditorPanelsText.includes(".trim-region-list") || viewerEditorPanelsText.includes(".trim-plane-chip") || viewerEditorPanelsText.includes(".trim-plane-name") || viewerEditorPanelsText.includes(".trim-region-button") || viewerEditorPanelsText.includes(".trim-member-end-toggle") || viewerEditorPanelsText.includes(".trim-end-option")) {
     fail(errors, "Trim result, plane/region action, and member-end segmented styling must live in shared generated design-system recipes, not Trim-specific CSS");
   }
-  if (!viewerEditorPanelsText.includes(".trim-member-picker .bc-segmented-field")) {
-    fail(errors, "Trim Editor member picker may only keep a small layout adapter for generated member-end segmented fields");
+  if (!viewerEditorPanelsText.includes(".trim-target-end .bc-segmented-field")) {
+    fail(errors, "Trim Editor body picker may only keep a small layout adapter for generated member-end segmented fields");
   }
   if (
     !trimJointEditorPanelText.includes('section.className = "bc-trim-section"')
@@ -687,9 +711,11 @@ function checkLeftDockShellContracts(context) {
   if (
     /"#[0-9a-fA-F]{3,8}"/.test(trimJointEditorPanelText)
     || !trimJointEditorPanelText.includes('TRIM_MEMBER_SWATCH_FALLBACK = "var(--bc-color-guide)"')
-    || !trimJointEditorPanelText.includes("memberColor(api, member.id, TRIM_MEMBER_SWATCH_FALLBACK)")
+    || !trimJointEditorPanelText.includes('memberA: "var(--bc-color-accent)"')
+    || !trimJointEditorPanelText.includes('memberB: "var(--bc-color-warning)"')
+    || !trimJointEditorPanelText.includes('row.style.setProperty("--trim-target-color", trimMemberRoleColor(member.role))')
   ) {
-    fail(errors, "Trim Editor member swatches must use design-token fallback colors instead of hardcoded UI hex values");
+    fail(errors, "Trim Editor member role swatches must use design-token colors instead of hardcoded UI hex values");
   }
   if (!viewerEditorPanelsText.includes(".trim-cut-header") || !viewerEditorPanelsText.includes("grid-template-columns: minmax(0, 1fr) auto auto;") || viewerEditorPanelsText.includes("grid-template-columns: minmax(0, 1fr) 30px auto auto;")) {
     fail(errors, "Trim Editor cut header grid must not reserve the old enabled-checkbox column after Enabled moved to generated fields");
@@ -756,6 +782,19 @@ function checkLeftDockShellContracts(context) {
   }
   if (!viewerRuntimeIntegrationText.includes("getEditorApi()?.refresh?.()") || !viewerRuntimeIntegrationText.includes("getEditorApi()?.clearSelection?.({ silent: true })")) {
     fail(errors, "Viewer command registration must refresh the Inspector and clear stale selection when active modeling command state changes");
+  }
+  const trimSceneMemberHandlerIndex = viewerRuntimeIntegrationText.indexOf("trimJointEditorConsumesMemberFace(face)");
+  const memberSceneClickHandlerIndex = viewerRuntimeIntegrationText.indexOf("memberEdit.handleSceneClick(face)");
+  if (
+    !trimJointEditorPanelText.includes("selectMemberFromSceneFace")
+    || !viewerRuntimeIntegrationText.includes("trimJointEditorPanelActive")
+    || !viewerRuntimeIntegrationText.includes('trimJointEditorPanel.querySelector(".trim-cut-card, .trim-menu-type-card")')
+    || !viewerRuntimeIntegrationText.includes('titleText === "Create Trim"')
+    || trimSceneMemberHandlerIndex < 0
+    || memberSceneClickHandlerIndex < 0
+    || trimSceneMemberHandlerIndex > memberSceneClickHandlerIndex
+  ) {
+    fail(errors, "Viewer runtime must let the active Trim Editor consume member clicks before falling through to Member Transform selection");
   }
   if (
     !viewerRuntimeIntegrationText.includes("function showInspectorProperties")

@@ -71,7 +71,7 @@ export function createViewerAppController({
       const trimActive = Boolean(trimCreate?.active?.());
       return {
         status: trimActive
-          ? "Trim: pick two members"
+          ? "Trim: choose type and pick objects"
           : typeof command?.status === "function"
             ? command.status()
             : commandActive ? "Use the canvas to complete the active tool." : "Idle",

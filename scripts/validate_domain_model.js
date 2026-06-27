@@ -114,6 +114,20 @@ function requireUniqueIds(errors, relative, ids, context) {
   }
 }
 
+function objectTrimRegionKeyParts(regionKeyValue) {
+  if (typeof regionKeyValue !== "string" || !regionKeyValue.trim()) return null;
+  const parts = regionKeyValue.split(":");
+  if (parts.length !== 3 || parts[0] !== "object-trim") return null;
+  const partMatch = /^part_(\d+)$/.exec(parts[2]);
+  if (!partMatch) return null;
+  try {
+    const featureId = decodeURIComponent(parts[1]);
+    return featureId ? { featureId, partIndex: Number(partMatch[1]) } : null;
+  } catch {
+    return null;
+  }
+}
+
 function valuesAsIds(value) {
   if (typeof value === "string") return [value];
   if (Array.isArray(value)) return value.filter((item) => typeof item === "string");
@@ -379,6 +393,7 @@ function validateSmartComponents(errors, relative, project) {
 function validateTrimJoints(errors, relative, project) {
   for (const [trimJointId, trimJoint] of Object.entries(collection(project, "trimJoints"))) {
     const participants = Array.isArray(trimJoint.participants) ? trimJoint.participants : [];
+    const participantIds = new Set(participants.map((participant) => participant?.memberId).filter(Boolean));
     for (const [index, participant] of participants.entries()) {
       if (participant.memberId) {
         requireCollectionObject(errors, relative, project, "members", participant.memberId, `trimJoints.${trimJointId}.participants.${index}.memberId`);
@@ -395,6 +410,21 @@ function validateTrimJoints(errors, relative, project) {
       }
       for (const key of ["memberAId", "memberBId", "memberId"]) {
         if (operation?.[key]) requireCollectionObject(errors, relative, project, "members", operation[key], `trimJoints.${trimJointId}.operations.${operation.id || index}.${key}`);
+      }
+      for (const key of ["memberAIds", "memberBIds"]) {
+        requireUniqueIds(errors, relative, operation?.[key], `trimJoints.${trimJointId}.operations.${operation?.id || index}.${key}`);
+        for (const id of operation?.[key] || []) {
+          requireCollectionObject(errors, relative, project, "members", id, `trimJoints.${trimJointId}.operations.${operation.id || index}.${key}`);
+          if (!participantIds.has(id)) fail(errors, `${relative}: trimJoints.${trimJointId}.operations.${operation.id || index}.${key} member ${id} is not a trim participant`);
+        }
+      }
+      if (operation?.type === "profile-cope") {
+        const memberAIds = Array.isArray(operation.memberAIds) ? operation.memberAIds : operation.memberAId ? [operation.memberAId] : [];
+        const memberBIds = Array.isArray(operation.memberBIds) ? operation.memberBIds : operation.memberBId ? [operation.memberBId] : [];
+        for (const id of memberAIds) if (memberBIds.includes(id)) fail(errors, `${relative}: trimJoints.${trimJointId}.operations.${operation.id || index} object trim cannot use ${id} as both object to trim and cutting object`);
+        for (const regionKey of operation.removedRegionKeys || []) {
+          if (!objectTrimRegionKeyParts(regionKey)) fail(errors, `${relative}: trimJoints.${trimJointId}.operations.${operation.id || index}.removedRegionKeys has invalid object trim key ${regionKey}`);
+        }
       }
       requireUniqueIds(errors, relative, operation?.referencePlaneIds, `trimJoints.${trimJointId}.operations.${operation?.id || index}.referencePlaneIds`);
       for (const id of operation?.referencePlaneIds || []) {

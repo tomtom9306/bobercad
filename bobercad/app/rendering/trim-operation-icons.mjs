@@ -5,7 +5,7 @@ export const TRIM_OPERATION_TYPES = [
   { id: "end-butt-2", label: "Butt B to A", gap: true },
   { id: "end-butt-both", label: "Butt both", gap: true },
   { id: "end-miter", label: "Miter", gap: true },
-  { id: "profile-cope", label: "Profile cope", gap: false },
+  { id: "profile-cope", label: "Object trim", gap: true },
   { id: "plane-trim", label: "Plane trim", gap: true }
 ];
 

@@ -9,6 +9,28 @@ import { createWebglPickColorState } from "./webgl-pick-color-state.mjs";
 import { createWebglRenderOrchestrator } from "./webgl-render-orchestrator.mjs";
 import { attachWebglViewerControls } from "./webgl-viewer-controls.mjs";
 import { isActiveSmartComponentObject } from "../scene/scene-object-visibility.mjs";
+import { safeHexColor } from "./colors.mjs";
+
+function highlightedObjectColorMap(objectIds = [], options = {}, resolveColor = (color) => safeHexColor(color, null)) {
+  const selectedIds = new Set(objectIds);
+  const colorsByObjectId = options.highlightColorsByObjectId || {};
+  const colors = new Map();
+  for (const [objectId, color] of Object.entries(colorsByObjectId)) {
+    if (!selectedIds.has(objectId)) continue;
+    const safeColor = resolveColor(color);
+    if (safeColor) colors.set(objectId, safeColor);
+  }
+  return colors;
+}
+
+function sameColorMap(left, right) {
+  if (left.size !== right.size) return false;
+  for (const [objectId, color] of right) {
+    if (left.get(objectId) !== color) return false;
+  }
+  return true;
+}
+
 export function createWebglViewer(canvas, reset, settings, options = {}) {
   const domRuntime = options.domRuntime;
   const createDimensionOverlayUi = options.dimensionOverlayFactory;
@@ -18,6 +40,15 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
   const WORLD_ORIGIN = Object.freeze([0, 0, 0]);
   const qaCapture = !!options.qaCapture;
   const gl = canvas.getContext("webgl", { antialias: true, preserveDrawingBuffer: qaCapture });
+  const resolveHighlightColor = (color) => {
+    const safeColor = safeHexColor(color, null);
+    if (safeColor) return safeColor;
+    const match = typeof color === "string" ? color.trim().match(/^var\((--[^),\s]+)(?:,[^)]+)?\)$/) : null;
+    if (!match) return null;
+    const view = canvas.ownerDocument?.defaultView || window;
+    const tokenValue = view.getComputedStyle(canvas.ownerDocument?.documentElement).getPropertyValue(match[1]).trim();
+    return safeHexColor(tokenValue, null);
+  };
   const currentPointerMaxAgeMs = Math.max(0, finiteNumberOr(settings.authoring?.currentPointerMaxAgeMs, 15000));
   let scene = null;
   const camera = createCamera(settings);
@@ -136,6 +167,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     requestDraw
   });
   let highlightedObjectIds = new Set();
+  let highlightedObjectColors = new Map();
   const detailPixelThreshold = finiteNumber(settings.render.lod?.detailPixelThreshold)
     ? settings.render.lod.detailPixelThreshold
     : 24;
@@ -171,6 +203,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     getScene: () => scene,
     getDisplayMode: () => displayMode,
     getHighlightedObjectIds: () => highlightedObjectIds,
+    getHighlightedObjectColor: (objectId) => highlightedObjectColors.get(objectId) || null,
     getAuthoringOverlay: () => authoringOverlay,
     getAuthoringHoveredHandle: () => authoringHoveredHandle,
     getDimensionOverlay: () => dimensionOverlay,
@@ -193,6 +226,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
   });
   function lodDetailVisible(objectId) {
     if (!objectId) return true;
+    if (scene?.emptyLodDetailObjectIds?.has?.(objectId)) return true;
     const detail = scene?.lodDetails?.[objectId];
     if (!detail) return false;
     if (isActiveSmartComponentObject(scene, objectId) || highlightedObjectIds.has(objectId)) return true;
@@ -663,6 +697,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
       scene,
       shouldDrawSceneItem,
       projectPoint,
+      interactive: !pickHandler,
       onClick: (hit) => clickHandler?.(hit)
     });
   }
@@ -781,6 +816,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     setPickHandler(handler, options = {}) {
       pickHandler = handler;
       pickHandlerOptions = handler ? { ...options } : {};
+      if (scene) renderSceneCallouts();
     },
     setClickHandler(handler) {
       clickHandler = handler;
@@ -891,10 +927,14 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     setDimensionPlacementHandler(handler) {
       dimensionPlacementHandler = handler;
     },
-    setHighlightedObjects(objectIds = []) {
-      if (sameIdSet(highlightedObjectIds, objectIds)) return;
+    setHighlightedObjects(objectIds = [], options = {}) {
+      const nextObjectColors = highlightedObjectColorMap(objectIds, options, resolveHighlightColor);
+      const colorsChanged = !sameColorMap(highlightedObjectColors, nextObjectColors);
+      if (sameIdSet(highlightedObjectIds, objectIds) && !colorsChanged) return;
       const memberOnlyHighlight = isMemberOnlyHighlightChange(scene, highlightedObjectIds, objectIds);
       highlightedObjectIds = new Set(objectIds);
+      highlightedObjectColors = nextObjectColors;
+      if (colorsChanged) invalidateMemberInstanceCache();
       if (!memberOnlyHighlight) {
         invalidateMemberInstanceCache();
         invalidateStaticSceneCache();

@@ -83,6 +83,9 @@
       "trimming-lab-1": {
         "path": "../../../data/projects/sample_trimming_lab.json"
       },
+      "trim-edge-cases-1": {
+        "path": "../../../data/projects/sample_trim_edge_cases.json"
+      },
       "warehouse-12x24": {
         "path": "../../../data/projects/sample_warehouse_12x24.json"
       },

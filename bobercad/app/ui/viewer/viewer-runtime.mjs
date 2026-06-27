@@ -1,5 +1,5 @@
 import { createProjectStore } from "../../engine/store/project-command-store.mjs";
-import { arrayValues } from "../../engine/core/model.mjs";
+import { arrayValues, uniqueTruthy } from "../../engine/core/model.mjs";
 import { loadSmartComponentDefinitions } from "../../engine/modules/smart-components/smart-component-registry.mjs";
 import { loadSmartComponentUi } from "./smart-component-ui-loader.mjs";
 import { buildScene } from "../../rendering/scene/scene-geometry-builder.mjs";
@@ -120,6 +120,14 @@ function cloneRuntimeSettings(value) {
 
 function shouldLoadViewerQaBridge(searchParams) {
   return ["qaCapture", "qaView", "qaDebug", "qaSnapSmoke", "qaSelectObject"].some((key) => searchParams.has(key));
+}
+
+function consumeQaSelectObjectUrlParam() {
+  if (!window.history?.replaceState) return;
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("qaSelectObject")) return;
+  url.searchParams.delete("qaSelectObject");
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
 function isDeleteSelectionEvent(event) {
@@ -569,12 +577,30 @@ async function main() {
     const { renderProject, renderProjectNow, rerender, hotSwapMemberDetails, applyProjectResult, patchProjectObjects } = renderScheduler;
     const handleProjectChange = (nextProject, result = api.lastCommandResult?.()) => applyProjectResult(nextProject, result);
     const handleLocalObjectProjectChange = (nextProject, objectId, objectIds = []) => {
+      const localObjectIds = uniqueTruthy([objectId, ...arrayValues(objectIds)]);
       const result = api.lastCommandResult?.();
       if (result?.changedObjectIds?.length || result?.removedObjectIds?.length || result?.regeneratedObjectIds?.length) {
-        applyProjectResult(nextProject, result);
+        applyProjectResult(nextProject, {
+          ...result,
+          changedObjectIds: uniqueTruthy([...arrayValues(result.changedObjectIds), ...localObjectIds])
+        });
         return true;
       }
-      return patchProjectObjects(nextProject, [objectId, ...arrayValues(objectIds)]) || hotSwapMemberDetails(nextProject, objectId, objectIds);
+      return patchProjectObjects(nextProject, localObjectIds) || hotSwapMemberDetails(nextProject, objectId, objectIds);
+    };
+    const handleTrimDraftPreviewChange = (preview, objectIds = []) => {
+      const patchIds = uniqueTruthy([
+        ...arrayValues(objectIds),
+        ...arrayValues(preview?.objectIds)
+      ]);
+      const previewProject = preview?.project || api.project();
+      if (!patchIds.length) {
+        renderProjectNow(previewProject);
+        return true;
+      }
+      if (patchProjectObjects(previewProject, patchIds)) return true;
+      rerender(previewProject);
+      return true;
     };
     renderScheduler.bindDetailScaleRefresh();
     const qaBridge = await createRuntimeQaBridge({
@@ -706,6 +732,12 @@ async function main() {
           ? api.smartComponentRootForObject(selected.objectId)?.id
           : null;
 
+      if (entry?.collection === "trimJoints" && objectId) {
+        clearMemberEditSilently();
+        editorApi?.selectObject(objectId, { ...face, inspectorPanel: "properties" });
+        return true;
+      }
+
       if (rootSmartComponent) {
         if (selection.objectAllowed?.(project, rootSmartComponent.id, "smartComponentInstances", { ignoreSelectedObjectsOnly: true }) === false) {
           return blockFilteredSelection();
@@ -744,9 +776,28 @@ async function main() {
 
       return false;
     };
+    const trimJointEditorPanelActive = () => {
+      if (!trimJointEditorPanel || trimJointEditorPanel.hidden) return false;
+      const titleText = trimJointEditorPanel.querySelector(".bc-inspector-title")?.textContent?.trim();
+      return Boolean(trimJointEditorPanel.querySelector(".trim-cut-card, .trim-menu-type-card") || titleText === "Create Trim");
+    };
+    const trimJointEditorConsumesMemberFace = (face) => {
+      if (trimJointEditorApi?.selectMemberFromSceneFace(face)) return true;
+      return face?.collection === "members" && trimJointEditorPanelActive();
+    };
     viewer.setClickHandler((face) => {
+      if (trimJointEditorApi?.consumePendingSceneClick?.()) {
+        clearMemberEditSilently();
+        featureEditorApi?.clear();
+        referencePlaneEdit?.clear({ overlay: true });
+        plateSketchEdit?.clear({ overlay: true });
+        return;
+      }
       if (!face) {
         dimensionEdit?.clearDimension();
+        if (selection.pickMode?.() || trimCreate?.active?.() || trimJointEditorApi?.keepsSceneFocus?.() || trimJointEditorPanelActive()) {
+          return;
+        }
         if (!commandController?.activeCommand?.() && !trimCreate?.active?.()) {
           editorApi?.selectScene?.();
           updateModelingStatus("View selected.");
@@ -757,6 +808,13 @@ async function main() {
         clearMemberEditSilently();
         featureEditorApi?.clear();
         referencePlaneEdit?.clear({ overlay: true });
+        return;
+      }
+      if (trimJointEditorConsumesMemberFace(face)) {
+        clearMemberEditSilently();
+        featureEditorApi?.clear();
+        referencePlaneEdit?.clear({ overlay: true });
+        plateSketchEdit?.clear({ overlay: true });
         return;
       }
       if (selectHierarchicalFace(face)) return;
@@ -952,6 +1010,7 @@ async function main() {
       const cancelTransform = matchesShortcut(event, cancelTransformBinding);
       if (!cancelCommand && !cancelTransform) return;
       if (cancelCommand && trimCreate?.cancel()) {
+        trimJointEditorApi?.clear();
         commandRegistration.setActiveModelingCommand(null);
         event.preventDefault();
         return;
@@ -1016,9 +1075,33 @@ async function main() {
       api,
       profiles: profiles.profiles,
       selection,
+      onProjectChange: handleProjectChange,
       onLocalObjectProjectChange: handleLocalObjectProjectChange,
+      onDraftPreviewChange: handleTrimDraftPreviewChange,
       onFocusChange: () => renderProjectNow(api.project()),
-      onEmptyRender: () => editorApi?.refresh?.()
+      onEmptyRender: () => {
+        const selectedObjectId = editorApi?.selectedState?.().objectId || "";
+        const selectedEntry = selectedObjectId ? api.project().objectIndex?.[selectedObjectId] : null;
+        if (selectedEntry?.collection === "trimJoints") {
+          editorApi?.clearSelection?.();
+          return;
+        }
+        editorApi?.refresh?.();
+      },
+      onCreateModeEnd: (detail = {}) => {
+        const createdTrimJointId = detail.created && detail.trimJointId ? detail.trimJointId : null;
+        trimCreate?.finish?.(createdTrimJointId ? `Trim created: ${createdTrimJointId}` : "No modeling command");
+        if (!createdTrimJointId) return;
+        focusedMemberId = null;
+        dimensionEdit?.clearDimension({ render: false });
+        clearMemberEditSilently();
+        if (typeof editorApi?.selectObject === "function") {
+          editorApi.selectObject(createdTrimJointId, { inspectorPanel: "properties" });
+        } else {
+          trimJointEditorApi?.selectTrimJoint(createdTrimJointId);
+          workspaceBindings.showInspectorProperties({ notify: false });
+        }
+      }
     }));
     editorApi = trackDisposable(mountEditorUi({
       panel: objectEditor,
@@ -1086,7 +1169,14 @@ async function main() {
     modelBrowserUi = trackDisposable(mountModelBrowser({
       root: modelBrowserRoot,
       app: viewerApp,
-      onSelectObject: (objectId) => viewerApp.selectObject(objectId),
+      onSelectObject: (objectId) => {
+        if (trimJointEditorApi?.selectObjectForActivePick?.(objectId)) {
+          workspaceBindings.showInspectorProperties({ notify: false });
+          refreshSelectionSurfaces();
+          return true;
+        }
+        return viewerApp.selectObject(objectId);
+      },
       onSelectSmartComponent: (smartComponentId) => viewerApp.selectSmartComponent(smartComponentId, { inspectorPanel: "component" }),
       onFocusObject: (objectId) => viewerApp.focusSelection([objectId]),
       onFocusSmartComponent: (smartComponentId) => {
@@ -1135,6 +1225,7 @@ async function main() {
         };
         fitQaSelectedObject();
         window.requestAnimationFrame(() => window.requestAnimationFrame(fitQaSelectedObject));
+        consumeQaSelectObjectUrlParam();
       } catch (error) {
         document.documentElement.dataset.qaSelectedObject = JSON.stringify({ error: error.message });
         console.warn(error);

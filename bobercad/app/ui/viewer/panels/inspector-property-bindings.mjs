@@ -164,15 +164,6 @@ export function createInspectorPropertyBindings({
     "object.plate.update": (value, commit) => objects.updatePlatePatch?.(objectPropertyPatch(value, commit)),
     "object.plate.bend.update": (value, commit = {}) => objects.upsertPlateBend?.(mergeObjectPatch(commit.bend || {}, objectPropertyPatch(value, commit))),
     "object.plate.sketchRelation.value.set": (value, commit = {}) => objects.setPlateSketchRelationValue?.(value, commit),
-    "object.trimJoint.operation.update": (value, commit = {}) => {
-      if (!commit.operationId) return;
-      objects.updateTrimOperation?.(commit.operationId, objectPropertyPatch(value, commit));
-    },
-    "object.trimJoint.operation.select": (operationId) => objects.selectTrimOperation?.(operationId),
-    "object.trimJoint.operation.type.set": (type, commit = {}) => {
-      if (!commit.operationId) return;
-      objects.setTrimOperationType?.(commit.operationId, type);
-    },
     "object.feature.operationEnabled.set": (enabled) => objects.setFeatureOperationEnabled?.(enabled),
     "object.feature.update": (value, commit) => objects.updateFeaturePatch?.(objectPropertyPatch(value, commit)),
     "object.feature.body.update": (value, commit) => objects.updateFeatureBody?.(objectPropertyPatch(value, commit)),

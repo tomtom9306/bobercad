@@ -1,41 +1,26 @@
 export function createTrimCreateController({
-  api,
   selection,
-  onProjectChange,
-  onTrimCreated,
   onCommandEnd,
   onPickProgress,
   onStatusChange
 }) {
   let active = false;
 
-  function start() {
+  function start(options = {}) {
     active = true;
-    onPickProgress?.([]);
-    selection.beginMemberPick({
-      count: 2,
-      onPick: (memberIds) => {
-        onPickProgress?.(memberIds);
-        onStatusChange?.(memberIds.length === 1 ? "Trim: pick second member" : "Trim: creating");
-      },
-      onComplete: (memberIds) => {
-        try {
-          active = false;
-          const result = api.createTrimJoint({
-            memberIds,
-            operationType: "end-butt-both"
-          });
-          onProjectChange?.(result.project);
-          onTrimCreated?.(result.trimJointId);
-          onStatusChange?.(`Trim created: ${result.trimJointId}`);
-        } catch (error) {
-          onCommandEnd?.();
-          onStatusChange?.(error.message);
-        }
-      },
-      onError: (message) => onStatusChange?.(message || "Pick a member.")
-    });
-    onStatusChange?.("Trim: pick first member");
+    const pickedMemberIds = Array.isArray(options.pickedMemberIds) ? options.pickedMemberIds : [];
+    onPickProgress?.(pickedMemberIds);
+    onStatusChange?.("Trim: choose type and pick objects");
+    return true;
+  }
+
+  function finish(message = "No modeling command") {
+    if (!active) return false;
+    selection.cancelPick({ clear: false });
+    active = false;
+    onCommandEnd?.();
+    onStatusChange?.(message);
+    return true;
   }
 
   function cancel() {
@@ -50,6 +35,7 @@ export function createTrimCreateController({
   return {
     active: () => active,
     cancel,
+    finish,
     start
   };
 }

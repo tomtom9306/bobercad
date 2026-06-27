@@ -1,5 +1,4 @@
 import { modelCollectionIcon } from "./model-collection-metadata.mjs";
-import { TRIM_OPERATION_TYPES, trimOperationIcon, trimOperationLabel, trimOperationSupportsGap } from "./trim-operation-metadata.mjs";
 
 const VECTOR_AXIS_LABELS = ["X", "Y", "Z"];
 const BOOLEAN_TYPE_OPTIONS = [
@@ -26,10 +25,6 @@ const OBJECT_REF_ACTION_SPECS = Object.freeze({
   select: Object.freeze({ action: "objectRef.select", label: "Select", icon: "selection" }),
   fit: Object.freeze({ action: "objectRef.fit", label: "Fit", icon: "zoom-fit" })
 });
-const MITER_MODE_OPTIONS = Object.freeze([
-  { id: "equal-angle", label: "Equal angle" },
-  { id: "profile-balanced", label: "Balanced profile" }
-]);
 
 export function inspectorEditableObjectPropertySections({
   collection = "",
@@ -315,25 +310,9 @@ function trimJointPropertiesSections(trimJoint, { objectId = "", objectDetail = 
         { label: "Operations", value: String(operations.length) },
         trimJoint.fabrication?.operation ? { label: "Fabrication", value: trimJoint.fabrication.operation } : null,
         selectedOperation ? { label: "Active cut", value: selectedOperation.id } : null,
-        { type: "action", label: "Edit Trim", icon: "trim", primary: true, action: "object.trim.openEditor", payload: { objectId } }
+        { type: "action", label: "Open Trim Editor", icon: "trim", primary: true, action: "object.trim.openEditor", payload: { objectId, detail: objectDetail } }
       ].filter(Boolean)
     },
-    operations.length ? {
-      id: "inspector.properties.object.trimJoint.cuts",
-      label: "Cuts",
-      fields: [
-        {
-          type: "tabList",
-          label: "Cuts",
-          value: selectedOperation?.id || operations[0]?.id || "",
-          options: operations.map((operation, index) => ({
-            id: operation.id,
-            label: `${index + 1}. ${trimOperationLabel(operation.type)}`
-          })),
-          commit: { action: "object.trimJoint.operation.select" }
-        }
-      ]
-    } : null,
     participants.length ? {
       id: "inspector.properties.object.trimJoint.participants",
       label: "Participants",
@@ -355,168 +334,8 @@ function trimJointPropertiesSections(trimJoint, { objectId = "", objectDetail = 
           })
         }))
       }]
-    } : null,
-    selectedOperation ? {
-      id: "inspector.properties.object.trimJoint.operation",
-      label: `Cut: ${trimOperationLabel(selectedOperation.type)}`,
-      fields: trimOperationFields(selectedOperation, { objectId })
     } : null
   ].filter(Boolean);
-}
-
-function trimOperationFields(operation, { objectId = "" } = {}) {
-  const referencePlaneIds = arrayValues(operation.referencePlaneIds);
-  const removedRegionKeys = arrayValues(operation.removedRegionKeys);
-  return [
-    { label: "ID", value: operation.id },
-    trimOperationTypeField(operation),
-    { type: "checkbox", label: "Enabled", value: operation.enabled !== false, commit: objectPropertyCommit("object.trimJoint.operation.update", "enabled", { operationId: operation.id }) },
-    trimOperationSupportsGap(operation.type)
-      ? { type: "number", label: "Gap", value: finiteNumberOr(operation.gap, 0), commit: objectPropertyCommit("object.trimJoint.operation.update", "gap", { operationId: operation.id }) }
-      : null,
-    trimOperationMemberField("Member A", operation.memberAId),
-    trimOperationMemberEndField("Member A end", "memberAEnd", operation),
-    trimOperationMemberField("Member B", operation.memberBId),
-    trimOperationMemberEndField("Member B end", "memberBEnd", operation),
-    operation.type === "end-miter" ? {
-      type: "segmented",
-      label: "Miter",
-      value: operation.miterMode || "equal-angle",
-      options: MITER_MODE_OPTIONS,
-      commit: objectPropertyCommit("object.trimJoint.operation.update", "miterMode", { operationId: operation.id })
-    } : null,
-    trimOperationPlaneActions(operation, referencePlaneIds, objectId),
-    trimOperationRegionActions(operation, referencePlaneIds, removedRegionKeys, objectId)
-  ].filter(Boolean);
-}
-
-function trimOperationTypeField(operation) {
-  if (operation.type === "plane-trim") {
-    return {
-      type: "actionList",
-      label: "Type",
-      emptyMessage: trimOperationLabel(operation.type),
-      actions: [{
-        label: trimOperationLabel(operation.type),
-        icon: trimOperationIcon(operation.type),
-        title: "Edit plane trim in Properties",
-        action: "object.trim.openEditor",
-        payload: { detail: { operationId: operation.id } }
-      }]
-    };
-  }
-  return {
-    type: "optionGrid",
-    label: "Type",
-    value: operation.type,
-    options: TRIM_OPERATION_TYPES
-      .filter((option) => option.id !== "plane-trim")
-      .map((option) => ({
-        id: option.id,
-        label: option.label,
-        icon: option.icon
-      })),
-    commit: { action: "object.trimJoint.operation.type.set", operationId: operation.id }
-  };
-}
-
-function trimOperationMemberField(label, memberId) {
-  if (!memberId) return null;
-  return {
-    type: "objectRef",
-    label,
-    value: memberId,
-    icon: modelCollectionIcon("members"),
-    actions: objectRefActions({
-      select: { objectId: memberId },
-      fit: { objectId: memberId },
-      value: memberId
-    })
-  };
-}
-
-function trimOperationMemberEndField(label, patchKey, operation) {
-  if (!operation[patchKey]) return null;
-  return {
-    type: "segmented",
-    label,
-    value: operation[patchKey],
-    options: [
-      { id: "start", label: "Start" },
-      { id: "end", label: "End" }
-    ],
-    commit: objectPropertyCommit("object.trimJoint.operation.update", patchKey, { operationId: operation.id })
-  };
-}
-
-function trimOperationPlaneActions(operation, referencePlaneIds, objectId) {
-  if (operation.type !== "plane-trim" && !referencePlaneIds.length) return null;
-  return {
-    type: "actionList",
-    label: "Planes",
-    emptyMessage: "Use Edit Trim to pick reference planes.",
-    actions: [
-      ...referencePlaneIds.map((referencePlaneId) => ({
-        label: referencePlaneId,
-        icon: modelCollectionIcon("referencePlanes"),
-        title: `Edit plane ${referencePlaneId} in Properties`,
-        action: "object.trim.openEditor",
-        payload: { objectId, detail: { operationId: operation.id } }
-      })),
-      {
-        label: referencePlaneIds.length ? "Manage planes" : "Pick planes",
-        icon: "trim",
-        title: "Edit Trim for plane selection",
-        primary: !referencePlaneIds.length,
-        action: "object.trim.openEditor",
-        payload: { objectId, detail: { operationId: operation.id } }
-      }
-    ]
-  };
-}
-
-function trimOperationRegionActions(operation, referencePlaneIds, removedRegionKeys, objectId) {
-  if (operation.type !== "plane-trim") return null;
-  const regionKeys = trimPlaneRegionKeys(referencePlaneIds);
-  return {
-    type: "actionList",
-    label: "Regions",
-    emptyMessage: "Pick planes to create removable regions.",
-    actions: regionKeys.map((regionKey) => ({
-      label: `${removedRegionKeys.includes(regionKey) ? "Removed" : "Kept"}: ${trimRegionLabel(regionKey)}`,
-      icon: removedRegionKeys.includes(regionKey) ? "cancel" : "selection",
-      pressed: removedRegionKeys.includes(regionKey),
-      title: "Edit this region in Properties",
-      action: "object.trim.openEditor",
-      payload: { objectId, detail: { operationId: operation.id, regionKey } }
-    }))
-  };
-}
-
-function trimPlaneRegionKeys(referencePlaneIds) {
-  const planeIds = arrayValues(referencePlaneIds).filter(Boolean);
-  if (!planeIds.length) return [];
-  const keys = [];
-  const walk = (index, parts) => {
-    if (index >= planeIds.length) {
-      keys.push(parts.map(({ planeId, side }) => `${planeId}:${side}`).join("|"));
-      return;
-    }
-    const planeId = planeIds[index];
-    walk(index + 1, [...parts, { planeId, side: "-" }]);
-    walk(index + 1, [...parts, { planeId, side: "+" }]);
-  };
-  walk(0, []);
-  return keys;
-}
-
-function trimRegionLabel(regionKey) {
-  return String(regionKey || "").split("|")
-    .map((part) => {
-      const index = part.lastIndexOf(":");
-      return index > 0 ? `${part.slice(0, index)} ${part.slice(index + 1)}` : part;
-    })
-    .join(" / ");
 }
 
 function featurePropertiesSections(feature, { objectId = "" } = {}) {
@@ -624,19 +443,6 @@ function objectVectorPropertyFields(label, value, commit, options = {}) {
     commit: { ...commit, vectorValue: current, axisIndex: index },
     options
   }));
-}
-
-function trimOperationTypeLabel(type) {
-  return {
-    "end-butt-1": "End butt",
-    "end-butt-2": "End butt",
-    "end-butt-both": "Double end butt",
-    "end-miter": "End miter",
-    "profile-cope": "Profile cope",
-    "plane-trim": "Plane trim",
-    "equal-angle": "Equal angle",
-    "profile-balanced": "Balanced profile"
-  }[type] || String(type || "-");
 }
 
 function plateRelationSummary(definition) {

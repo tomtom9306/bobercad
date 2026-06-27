@@ -420,15 +420,24 @@ export function createViewerCommandRegistration({
   }
 
   function startTrimCreate() {
+    const project = api.project();
+    const selectedObjectId = getEditorApi()?.selectedState?.().objectId || "";
+    const selectedEntry = selectedObjectId ? project.objectIndex?.[selectedObjectId] : null;
+    const inheritSelectedMembers = selectedEntry?.collection !== "trimJoints";
+    const pickedMemberIds = inheritSelectedMembers
+      ? Array.from(new Set((selection.selectedIds?.() || [])
+        .filter((objectId) => project.objectIndex?.[objectId]?.collection === "members")))
+        .slice(0, 2)
+      : [];
     getCommandController()?.cancel();
     setActiveModelingCommand("trim");
     getDimensionEdit()?.clearDimension?.({ render: false });
     getEditorApi()?.clearSelection?.({ silent: true });
     getMemberEdit()?.clear?.({ notify: false });
     clearAuxiliaryEditors();
-    getTrimJointEditorApi()?.openCreateMode?.();
+    const started = getTrimCreate()?.start?.({ pickedMemberIds });
+    if (!started) getTrimJointEditorApi()?.openCreateMode?.({ pickedMemberIds });
     workspaceBindings?.showInspectorProperties?.({ notify: false });
-    getTrimCreate()?.start?.();
   }
 
   function startGridCreate() {
@@ -647,6 +656,7 @@ export function createViewerCommandRegistration({
       ...snapTargetCommandHandlers,
       "command.cancel": () => {
         if (getTrimCreate()?.cancel?.()) {
+          getTrimJointEditorApi()?.clear?.();
           setActiveModelingCommand(null);
           return;
         }

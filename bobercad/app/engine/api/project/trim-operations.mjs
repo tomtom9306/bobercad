@@ -8,7 +8,6 @@ function requireTrimOperationType(type) {
 export function trimOperationUsesMemberEnd(type, role) {
   requireTrimOperationType(type);
   if (role !== "memberA" && role !== "memberB") throw new Error(`trim operations: unsupported member role ${role || "missing"}`);
-  if (type === "plane-trim") return role === "memberA";
   if (type === "end-butt-1") return role === "memberA";
   if (type === "end-butt-2") return role === "memberB";
   if (type === "end-butt-both" || type === "end-miter") return true;
@@ -28,7 +27,44 @@ function requiredArray(value, label) {
   return value;
 }
 
+function uniqueTruthyIds(values = []) {
+  const ids = [];
+  for (const value of Array.isArray(values) ? values : []) {
+    if (typeof value !== "string" || !value.trim() || ids.includes(value)) continue;
+    ids.push(value);
+  }
+  return ids;
+}
+
 export const trimOperationUsesMemberB = (type) => requireTrimOperationType(type) !== "plane-trim";
+
+export function trimOperationMemberIds(operation, role) {
+  if (role !== "memberA" && role !== "memberB") throw new Error(`trim operations: unsupported member role ${role || "missing"}`);
+  const type = requireTrimOperationType(operation?.type);
+  if (role === "memberB" && !trimOperationUsesMemberB(type)) return [];
+  const listKey = `${role}Ids`;
+  const idKey = `${role}Id`;
+  return uniqueTruthyIds([
+    ...uniqueTruthyIds(operation?.[listKey]),
+    operation?.[idKey]
+  ]);
+}
+export function trimOperationMemberPairs(operation) {
+  const ownerIds = trimOperationMemberIds(operation, "memberA");
+  const cutterIds = trimOperationMemberIds(operation, "memberB");
+  return ownerIds.flatMap((ownerId) => cutterIds.filter((cutterId) => cutterId !== ownerId).map((cutterId) => ({ ownerId, cutterId })));
+}
+export function trimOperationFeatureId(trimJoint, operation, index = 0) {
+  const trimJointId = trimJoint?.id;
+  if (typeof trimJointId !== "string" || !trimJointId.trim()) throw new Error("trim operations: trimJoint.id must be a non-empty string");
+  return `${trimJointId}:${operation?.id || `operation_${index + 1}`}`;
+}
+
+export function trimOperationPairFeatureId(trimJoint, operation, pair, index = 0) {
+  if (!pair?.ownerId || !pair?.cutterId) throw new Error("trim operations: object trim pair must set ownerId and cutterId");
+  const id = trimOperationFeatureId(trimJoint, operation, index);
+  return `${id}:owner_${encodeURIComponent(pair.ownerId)}:cutter_${encodeURIComponent(pair.cutterId)}`;
+}
 
 export function trimOperationReferencePlaneIds(operation) {
   const type = requireTrimOperationType(operation?.type);

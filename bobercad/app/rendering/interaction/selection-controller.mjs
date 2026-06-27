@@ -25,8 +25,8 @@ export function createSelectionController({ viewer, settings = {}, project = nul
   const scopeManager = createSnapSelectionManager({ viewer, settings });
   let pickMode = null;
 
-  function select(objectIds = []) {
-    return scopeManager.setSelected(unique(objectIds));
+  function select(objectIds = [], options = {}) {
+    return scopeManager.setSelected(unique(objectIds), options);
   }
 
   function cancelPick({ clear = true } = {}) {
@@ -35,22 +35,24 @@ export function createSelectionController({ viewer, settings = {}, project = nul
     if (clear) select([]);
   }
 
-  function beginObjectPick({ count = 1, objectIdFromFace, collection = null, collections = [], objectIds = null, componentKind = null, onPick, onComplete, onError }) {
+  function beginObjectPick({ count = 1, objectIdFromFace, collection = null, collections = [], objectIds = null, componentKind = null, ignoreScope = false, onPick, onComplete, onError }) {
     if (typeof objectIdFromFace !== "function") throw new Error("selection controller: objectIdFromFace is required");
     const picked = [];
     const activeProject = typeof project === "function" ? project() : project;
     const collectionFilter = collection ? [collection, ...collections] : collections;
-    const scopedObjectIds = objectIds || objectIdsForCollections(activeProject, collectionFilter) || objectIdsForScope(activeProject, scopeManager);
-    const pickOptions = scopeManager.pickOptions(activeProject, {
+    const explicitObjectIds = objectIds || objectIdsForCollections(activeProject, collectionFilter);
+    const scopedObjectIds = explicitObjectIds || (ignoreScope ? null : objectIdsForScope(activeProject, scopeManager));
+    const basePickOptions = {
       ...(scopedObjectIds ? { objectIds: scopedObjectIds } : {}),
       ...(componentKind ? { componentKind } : {})
-    });
+    };
+    const pickOptions = ignoreScope ? basePickOptions : scopeManager.pickOptions(activeProject, basePickOptions);
     pickMode = { count, picked };
     select([]);
     viewer.setPickHandler((face) => {
       const objectId = objectIdFromFace(face);
       const currentProject = typeof project === "function" ? project() : project;
-      if (!objectId || !scopeManager.objectAllowed(currentProject, objectId, face?.collection, { ignoreSelectedObjectsOnly: true })) {
+      if (!objectId || (!ignoreScope && !scopeManager.objectAllowed(currentProject, objectId, face?.collection, { ignoreSelectedObjectsOnly: true }))) {
         onError?.("Pick a valid object.");
         return;
       }

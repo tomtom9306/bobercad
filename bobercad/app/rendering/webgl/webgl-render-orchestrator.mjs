@@ -16,6 +16,7 @@ export function createWebglRenderOrchestrator({
   getScene,
   getDisplayMode,
   getHighlightedObjectIds,
+  getHighlightedObjectColor,
   getAuthoringOverlay,
   getAuthoringHoveredHandle,
   getDimensionOverlay,
@@ -320,8 +321,12 @@ export function createWebglRenderOrchestrator({
     gl.drawArrays(mode, 0, positionData.length / 3);
   }
 
+  function highlightColor(objectId, fallback = "#38bdf8") {
+    return getHighlightedObjectColor?.(objectId) || fallback;
+  }
+
   function instanceRgba(instance) {
-    const rgba = hexToRgba(instance.color, instance.opacity ?? 1);
+    const rgba = hexToRgba(highlightColor(instance.objectId, instance.color), instance.opacity ?? 1);
     return [rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3] / 255];
   }
 
@@ -363,6 +368,7 @@ export function createWebglRenderOrchestrator({
       if (objectPreview.isPreviewed(instance)) continue;
       const geometry = scene.memberInstanceGeometries?.[instance.profileId];
       if (!geometry?.positions?.length) continue;
+      if (instance.lodDetailObjectId && scene.emptyLodDetailObjectIds?.has?.(instance.lodDetailObjectId)) continue;
       if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
       const group = staticGroups.get(instance.profileId) || makeDataGroup(geometry);
       appendInstanceData(group, instance);
@@ -619,15 +625,17 @@ export function createWebglRenderOrchestrator({
     if (!visibleHighlightedObjectIds.size || !useHighlightOverlay()) return;
     const positions = [];
     const colors = [];
-    const rgba = hexToRgba("#38bdf8");
     for (const instance of arrayValues(scene.memberInstances)) {
       if (!visibleHighlightedObjectIds.has(instance.objectId)) continue;
+      if (instance.lodDetailObjectId && scene.emptyLodDetailObjectIds?.has?.(instance.lodDetailObjectId)) continue;
       if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
+      const rgba = hexToRgba(highlightColor(instance.objectId));
       appendMemberInstanceOutline(positions, colors, instance, rgba);
     }
     for (const face of arrayValues(scene.faces)) {
       if (!visibleHighlightedObjectIds.has(face.objectId) || face.hideEdges) continue;
       if (!shouldDrawSceneItem(face)) continue;
+      const rgba = hexToRgba(highlightColor(face.objectId));
       for (let index = 0; index < face.points.length; index += 1) {
         appendWorldLine(positions, colors, face.points[index], face.points[(index + 1) % face.points.length], rgba);
       }
@@ -635,6 +643,7 @@ export function createWebglRenderOrchestrator({
     for (const line of arrayValues(scene.lines)) {
       if (!visibleHighlightedObjectIds.has(line.objectId)) continue;
       if (!shouldDrawSceneItem(line)) continue;
+      const rgba = hexToRgba(highlightColor(line.objectId));
       appendWorldLine(positions, colors, line.points[0], line.points[1], rgba);
     }
     drawWorldArrays(gl.LINES, positions, colors);

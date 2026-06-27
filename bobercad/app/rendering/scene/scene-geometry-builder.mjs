@@ -62,6 +62,7 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
     vertices: [],
     memberInstances: [],
     memberInstanceGeometries: {},
+    emptyLodDetailObjectIds: new Set(),
     lodDetails: {},
     profiles: profileMap,
     settings: viewerSettings,
