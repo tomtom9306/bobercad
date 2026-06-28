@@ -110,19 +110,29 @@ const createTrimDraft = (pickedMemberIds = []) => {
   };
 };
 
+const normalizeCreateDraftRemovedRegionKeys = (draft, type, referencePlaneIds) => {
+  if (type === "profile-cope") return arrayValues(draft.removedRegionKeys).filter(isObjectTrimRegionKey);
+  if (type !== "plane-trim") return [];
+  if (!referencePlaneIds.length) return [];
+  if (!Array.isArray(draft.removedRegionKeys)) return defaultPlaneTrimRemovedRegionKeys(referencePlaneIds);
+  return reconcilePlaneTrimRemovedRegionKeys({ removedRegionKeys: draft.removedRegionKeys }, referencePlaneIds);
+};
+
 const normalizeCreateTrimDraft = (draft = {}) => {
   const type = CREATE_TRIM_DRAFT_TYPES.has(draft.type) ? draft.type : "profile-cope";
   const memberAIds = draftMemberIds(draft, "memberA");
   const rawMemberBIds = trimOperationUsesMemberB(type) ? draftMemberIds(draft, "memberB") : [];
   const normalizedMemberAIds = type === "profile-cope" ? memberAIds : memberAIds.slice(0, 1);
   const normalizedMemberBIds = type === "profile-cope" ? rawMemberBIds : rawMemberBIds.slice(0, 1);
+  const referencePlaneIds = type === "plane-trim" ? uniqueTruthy(draft.referencePlaneIds || []) : [];
   return {
     type,
     memberAId: normalizedMemberAIds[0] || null,
     memberBId: normalizedMemberBIds[0] || null,
     memberAIds: normalizedMemberAIds,
     memberBIds: normalizedMemberBIds,
-    referencePlaneIds: type === "plane-trim" ? uniqueTruthy(draft.referencePlaneIds || []) : [],
+    referencePlaneIds,
+    removedRegionKeys: normalizeCreateDraftRemovedRegionKeys(draft, type, referencePlaneIds),
     gap: trimOperationSupportsGap(type) ? finiteNumberOr(draft.gap, 0) : 0,
     allowExtension: isEndTrimType(type) && draft.allowExtension === true,
     miterMode: draft.miterMode === "profile-balanced" ? "profile-balanced" : "equal-angle",
@@ -276,6 +286,7 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
         memberBId: createDraft.memberBIds[0],
         memberAIds: uniqueTruthy(createDraft.memberAIds),
         memberBIds: uniqueTruthy(createDraft.memberBIds),
+        removedRegionKeys: normalizeCreateDraftRemovedRegionKeys(createDraft, type, []),
         allowExtension: createDraft.allowExtension === true
       };
     }
@@ -288,7 +299,7 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
     if (trimOperationUsesMemberEnd(type, "memberB")) patch.memberBEnd = createDraft.memberBEnd;
     if (type === "plane-trim") {
       patch.referencePlaneIds = uniqueTruthy(createDraft.referencePlaneIds);
-      patch.removedRegionKeys = defaultPlaneTrimRemovedRegionKeys(patch.referencePlaneIds);
+      patch.removedRegionKeys = normalizeCreateDraftRemovedRegionKeys(createDraft, type, patch.referencePlaneIds);
     }
     if (type === "end-miter") patch.miterMode = createDraft.miterMode;
     if (isEndTrimType(type)) patch.allowExtension = createDraft.allowExtension === true;
@@ -403,7 +414,7 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
       onProjectChange?.(result.project);
       selectTrimObjects(trimObjectIds());
       setMessage(`Trim created: ${result.trimJointId}.`, "ok");
-      finishCreateMode({ created: true, trimJointId: result.trimJointId });
+      finishCreateMode({ created: true, trimJointId: result.trimJointId, operationId: operation?.id || null });
       notifyFocusChange();
       return true;
     } catch (error) {
@@ -419,7 +430,7 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
     setMessage(message, options.state || "ok");
     notifyFocusChange();
     updateCreateDraftPreview();
-    return false;
+    return true;
   };
 
   const setCreateDraftType = (type) => {
@@ -724,6 +735,28 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
   const removeCreateDraftPlane = (referencePlaneId) => {
     const nextPlaneIds = createDraft.referencePlaneIds.filter((id) => id !== referencePlaneId);
     setCreateDraftPatch({ referencePlaneIds: nextPlaneIds }, `Removed plane ${referencePlaneId}.`, { tryCreate: false });
+  };
+
+  const toggleCreateDraftRegionRemoved = (regionKeyValue) => {
+    if (!createMode) return false;
+    if (createDraft.type === "plane-trim") {
+      const validRegions = planeTrimRegionKeys(uniqueTruthy(createDraft.referencePlaneIds));
+      if (!validRegions.includes(regionKeyValue)) return false;
+    } else if (createDraft.type === "profile-cope") {
+      if (!isObjectTrimRegionKey(regionKeyValue)) return false;
+    } else {
+      return false;
+    }
+    const removed = new Set(arrayValues(createDraft.removedRegionKeys));
+    if (removed.has(regionKeyValue)) removed.delete(regionKeyValue);
+    else removed.add(regionKeyValue);
+    activeRegionKey = regionKeyValue;
+    setCreateDraftPatch(
+      { removedRegionKeys: [...removed] },
+      removed.has(regionKeyValue) ? "Region removed." : "Region kept.",
+      { tryCreate: false }
+    );
+    return true;
   };
 
   const beginPickOperationPlane = (operation) => {
@@ -1115,7 +1148,10 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
       const item = button(
         `${isRemoved ? "Removed" : "Keep"} ${regionLabel(regionKeyValue)}`,
         "trim-segment-button",
-        () => toggleRegionRemoved(operation, regionKeyValue),
+        () => {
+          if (operation.regionToggle) return operation.regionToggle(regionKeyValue);
+          return toggleRegionRemoved(operation, regionKeyValue);
+        },
         { title: isRemoved ? "Click to keep this segment" : "Click to remove this segment" }
       );
       item.dataset.removed = isRemoved ? "true" : "false";
@@ -1260,7 +1296,7 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
         : type === "profile-cope"
           ? uniqueTruthy([activeRegionKey, ...arrayValues(operation.removedRegionKeys)]).filter(isObjectTrimRegionKey)
           : [],
-      showSegments: type === "profile-cope",
+      showSegments: type === "plane-trim" || type === "profile-cope",
       showGap: trimOperationSupportsGap(type),
       gap: operation.gap,
       allowExtensionOption: isEndTrimType(type),
@@ -1314,9 +1350,13 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
       memberBList: profileCopeDraft ? createDraftMemberListModel("memberB", "Cutting objects", "Add cutting object", "Add another cutting object") : null,
       referencePlane: type === "plane-trim",
       referencePlaneIds: createDraft.referencePlaneIds,
-      removedRegionKeys: [],
-      regionKeys: [],
-      showSegments: false,
+      removedRegionKeys: arrayValues(createDraft.removedRegionKeys),
+      regionKeys: type === "plane-trim" && createDraft.referencePlaneIds.length
+        ? planeTrimRegionKeys(uniqueTruthy(createDraft.referencePlaneIds))
+        : type === "profile-cope"
+          ? uniqueTruthy([activeRegionKey, ...arrayValues(createDraft.removedRegionKeys)]).filter(isObjectTrimRegionKey)
+        : [],
+      showSegments: type === "plane-trim" || type === "profile-cope",
       showGap: trimOperationSupportsGap(type),
       gap: createDraft.gap,
       allowExtensionOption: isEndTrimType(type),
@@ -1327,6 +1367,7 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
       updateCommit: (patchKey) => ({ action: "trim.create.update", patchKey }),
       onPickPlane: beginCreateDraftPlanePick,
       onRemovePlane: removeCreateDraftPlane,
+      regionToggle: toggleCreateDraftRegionRemoved,
       planePicking: activeDraftPick === "referencePlane",
       onRemove: null
     };
@@ -1494,8 +1535,11 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
         clear();
         return;
       }
+      const operations = trimJointOperations(trimJoint);
+      const defaultOperationId = operations.length === 1 ? operations[0]?.id : null;
+      const operationId = options.operationId || defaultOperationId;
       selectedTrimJointId = trimJointId;
-      activeOperationId = trimOperationById(trimJoint, options.operationId) ? options.operationId : null;
+      activeOperationId = trimOperationById(trimJoint, operationId) ? operationId : null;
       activeRegionKey = activeOperationId && typeof options.regionKey === "string" ? options.regionKey : null;
       activeMemberId = null;
       createMode = false;
@@ -1513,6 +1557,28 @@ export function mountTrimJointEditorPanel({ panel, api, selection, onProjectChan
       let trimJoint = null;
       let operation = null;
       let regionKeyValue = null;
+      if (createMode && (createDraft.type === "plane-trim" || createDraft.type === "profile-cope")) {
+        if (
+          face?.collection === "trimJoints"
+          && face.componentKind === "trim-region"
+          && face.objectId === PREVIEW_TRIM_JOINT_ID
+          && face.operationId === PREVIEW_TRIM_OPERATION_ID
+          && face.regionKey
+        ) {
+          regionKeyValue = face.regionKey;
+        } else if (
+          face?.collection === "members"
+          && createDraft.memberAIds.includes(face.objectId)
+          && createDraft.referencePlaneIds.length
+          && Array.isArray(face.hitPoint)
+        ) {
+          regionKeyValue = regionKeyForPoint(createDraftOperationPatch(), face.hitPoint);
+        }
+        if (regionKeyValue) {
+          activeMemberId = face?.collection === "members" ? face.objectId : createDraft.memberAId;
+          return toggleCreateDraftRegionRemoved(regionKeyValue);
+        }
+      }
       if (face?.collection === "trimJoints" && face.componentKind === "trim-region" && face.objectId && face.operationId && face.regionKey) {
         trimJoint = api.project().model.trimJoints?.[face.objectId] || null;
         operation = trimOperationById(trimJoint, face.operationId);

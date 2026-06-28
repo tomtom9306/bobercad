@@ -1096,9 +1096,9 @@ async function main() {
         dimensionEdit?.clearDimension({ render: false });
         clearMemberEditSilently();
         if (typeof editorApi?.selectObject === "function") {
-          editorApi.selectObject(createdTrimJointId, { inspectorPanel: "properties" });
+          editorApi.selectObject(createdTrimJointId, { inspectorPanel: "properties", operationId: detail.operationId || null });
         } else {
-          trimJointEditorApi?.selectTrimJoint(createdTrimJointId);
+          trimJointEditorApi?.selectTrimJoint(createdTrimJointId, { operationId: detail.operationId || null });
           workspaceBindings.showInspectorProperties({ notify: false });
         }
       }

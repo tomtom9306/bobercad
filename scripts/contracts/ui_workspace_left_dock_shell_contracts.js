@@ -628,7 +628,7 @@ function checkLeftDockShellContracts(context) {
     || !trimJointEditorPanelText.includes('trimFormSection("Extend"')
     || !trimJointEditorPanelText.includes('trimFormSection("Weld gap"')
     || !trimJointEditorPanelText.includes('trimFormSection("Segments to keep"')
-    || !trimJointEditorPanelText.includes('showSegments: type === "profile-cope"')
+    || !trimJointEditorPanelText.includes('showSegments: type === "plane-trim" || type === "profile-cope"')
     || !trimJointEditorPanelText.includes("END_TRIM_TARGET_OPTIONS")
     || trimJointEditorPanelText.includes("BUTT_DIRECTION_OPTIONS")
     || !trimJointEditorPanelText.includes('trimOperationTypeCommit(operation)')
