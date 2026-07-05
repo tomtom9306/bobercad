@@ -1,0 +1,16 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP circle curve reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_circle_curve.step', '2026-06-22T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('center', (250.0, 100.0, 20.0));
+#2 = DIRECTION('z', (0.0, 0.0, 1.0));
+#3 = DIRECTION('x', (0.0, 1.0, 0.0));
+#4 = AXIS2_PLACEMENT_3D('', #1, #2, #3);
+#10 = CIRCLE('', #4, 40.0);
+#20 = GEOMETRIC_CURVE_SET('', (#10));
+#30 = SHAPE_REPRESENTATION('', (#20), $);
+ENDSEC;
+END-ISO-10303-21;

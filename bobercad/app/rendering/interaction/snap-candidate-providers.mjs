@@ -960,6 +960,88 @@ function addGlobalAxisCandidates(candidates, options) {
   }
 }
 
+function referenceLineInRange(line, options) {
+  if (!v.isVec3(options.center) || !(options.radius > 0)) return true;
+  const points = arrayValues(line.points).filter(v.isVec3);
+  if (points.length < 2) return false;
+  return v.len(v.sub(options.center, closestPointOnSegment(points[0], points[1], options.center).point)) <= options.radius;
+}
+
+function addReferenceGeometryCandidates(candidates, options) {
+  if (options.scope?.referenceGeometry === false) return;
+  if (options.includeReferenceGeometry === false) return;
+  const maxLines = finiteNumber(options.maxReferenceGeometrySnapLines)
+    ? Math.max(0, Math.floor(options.maxReferenceGeometrySnapLines))
+    : 2000;
+  let accepted = 0;
+  for (const [index, line] of arrayValues(options.referenceGeometryLines).entries()) {
+    if (accepted >= maxLines) break;
+    if (line?.collection !== "referenceGeometry" || line.referenceSnapEnabled !== true) continue;
+    if (line.referenceObjectKind === "point-cloud") continue;
+    if (!referenceLineInRange(line, options)) continue;
+    const points = arrayValues(line.points).filter(v.isVec3);
+    if (points.length < 2) continue;
+    const a = points[0];
+    const b = points[1];
+    const midpoint = v.mul(v.add(a, b), 0.5);
+    const objectId = line.objectId || `${line.referenceAssetId || "reference"}:${line.referenceObjectId || index}`;
+    const subId = `line-${index}`;
+    const base = {
+      providerId: "referenceGeometry",
+      objectId,
+      referenceAssetId: line.referenceAssetId || null,
+      referenceObjectId: line.referenceObjectId || null,
+      referenceObjectKind: line.referenceObjectKind || null,
+      visibilityPolicy: null
+    };
+    pushLine(candidates, a, b, {
+      ...base,
+      type: "reference-geometry-line",
+      label: "Reference line",
+      point: midpoint,
+      priority: 30,
+      allowIntersections: false,
+      screenTolerance: options.profile?.screenTolerancePx,
+      reference: {
+        type: "reference-geometry-line",
+        referenceAssetId: line.referenceAssetId || null,
+        referenceObjectId: line.referenceObjectId || null,
+        subId
+      },
+      target: target("referenceGeometry", objectId, subId, "reference-line")
+    });
+    for (const [endpointIndex, point] of [a, b].entries()) {
+      pushPoint(candidates, point, {
+        ...base,
+        type: "reference-geometry-endpoint",
+        label: "Reference endpoint",
+        priority: 42,
+        reference: {
+          type: "reference-geometry-endpoint",
+          referenceAssetId: line.referenceAssetId || null,
+          referenceObjectId: line.referenceObjectId || null,
+          subId: `${subId}:endpoint-${endpointIndex}`
+        },
+        target: target("referenceGeometry", objectId, `${subId}:endpoint-${endpointIndex}`, "reference-endpoint")
+      });
+    }
+    pushPoint(candidates, midpoint, {
+      ...base,
+      type: "reference-geometry-midpoint",
+      label: "Reference midpoint",
+      priority: 38,
+      reference: {
+        type: "reference-geometry-midpoint",
+        referenceAssetId: line.referenceAssetId || null,
+        referenceObjectId: line.referenceObjectId || null,
+        subId: `${subId}:midpoint`
+      },
+      target: target("referenceGeometry", objectId, `${subId}:midpoint`, "reference-midpoint")
+    });
+    accepted += 1;
+  }
+}
+
 function addActiveSketchCandidates(candidates, context, options) {
   if (options.scope?.activeSketch === false) return;
   const activeSketch = context.activeSketch || {};
@@ -1346,6 +1428,12 @@ const SNAP_CANDIDATE_PROVIDERS = [
     collect: ({ candidates, options }) => addGlobalAxisCandidates(candidates, options)
   },
   {
+    id: "referenceGeometry",
+    capability: "opt-in-reference-geometry-snaps",
+    budget: "context.referenceGeometryLines",
+    collect: ({ candidates, options }) => addReferenceGeometryCandidates(candidates, options)
+  },
+  {
     id: "sketch.active",
     capability: "active-sketch-snaps",
     budget: "context.activeSketch.candidates",
@@ -1378,7 +1466,10 @@ export function collectSnapCandidates({ project, profiles = {}, context = {}, sc
     globalAxisOrigin: context.globalAxisOrigin || [0, 0, 0],
     globalAxisSpan: context.globalAxisSpan || 100000,
     referencePlaneSnapSpan: context.referencePlaneSnapSpan,
-    maxPlateCandidates: context.maxPlateCandidates
+    maxPlateCandidates: context.maxPlateCandidates,
+    referenceGeometryLines: context.referenceGeometryLines,
+    maxReferenceGeometrySnapLines: context.maxReferenceGeometrySnapLines,
+    includeReferenceGeometry: context.includeReferenceGeometry !== false
   };
   const candidates = [];
   collectRegisteredSnapProviders({ candidates, project, profiles, context, options });

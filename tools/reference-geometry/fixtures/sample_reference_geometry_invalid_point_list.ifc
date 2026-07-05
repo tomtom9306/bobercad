@@ -1,0 +1,15 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD invalid point-list IFC reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_invalid_point_list.ifc', '2026-06-29T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('IFC4'));
+ENDSEC;
+DATA;
+#1 = IFCCARTESIANPOINTLIST3D(((0.0, 0.0, 0.0), (100.0, 0.0, 0.0), (100.0, 50.0, 0.0)));
+#2 = IFCLINEINDEX((1, 2, 3));
+#3 = IFCINDEXEDPOLYCURVE(#1, (#2), .F.);
+#4 = IFCCARTESIANPOINTLIST3D(((200.0, 0.0, 0.0), (300.0, bad, 0.0), (300.0, 50.0, 0.0)));
+#5 = IFCLINEINDEX((1, 2, 3));
+#6 = IFCINDEXEDPOLYCURVE(#4, (#5), .F.);
+ENDSEC;
+END-ISO-10303-21;

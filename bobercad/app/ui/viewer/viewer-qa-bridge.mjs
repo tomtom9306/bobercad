@@ -6,9 +6,78 @@ import { smartComponentConnectionZoneId, smartComponentDetachedObjectIds, smartC
 import { memberAxesByTarget, normalizeCoordinateSpace } from "../../rendering/scene/authoring/member-axis-space.mjs";
 import { profileRadius, projectObjectCount } from "./viewer-render-scheduler.mjs";
 import { smartComponentHighlightObjectIds } from "./viewer-smart-component-highlights.mjs";
+import { referencePreviewChunkIds, referenceProjectAssetLoadError, referenceSourceRequestedFormatMetadata } from "./reference-geometry-runtime-paths.mjs";
 
 const { add, sub, mul, dot, len } = v;
 const norm = (point) => v.safeNorm(point, [0, 0, 1]);
+const QA_REFERENCE_DIAGNOSTIC_SEVERITIES = new Set(["info", "warning", "error"]);
+const QA_REFERENCE_ID_TOKEN_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
+const QA_REFERENCE_DIAGNOSTIC_TOKEN_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+const QA_REFERENCE_DIAGNOSTIC_MESSAGE_PATH_PATTERN = /(?:[A-Za-z]:[\\/]|(?:^|[\s"'`])\.\.[\\/]|https?:|file:|\\\\)/i;
+
+function qaReferenceDiagnosticToken(value, fallback = "") {
+  const token = typeof value === "string" ? value.trim() : "";
+  return QA_REFERENCE_DIAGNOSTIC_TOKEN_PATTERN.test(token) ? token : fallback;
+}
+
+function qaReferenceIdToken(value, fallback = "") {
+  const token = typeof value === "string" ? value.trim() : "";
+  return QA_REFERENCE_ID_TOKEN_PATTERN.test(token) ? token : fallback;
+}
+
+function qaLoadedReferenceChunk(loadedChunks, chunkId) {
+  if (!loadedChunks || typeof loadedChunks !== "object" || Array.isArray(loadedChunks)) return false;
+  if (!Object.hasOwn(loadedChunks, chunkId)) return false;
+  const chunk = loadedChunks[chunkId];
+  return chunk && typeof chunk === "object" && !Array.isArray(chunk) && qaReferenceIdToken(chunk.id) === chunkId;
+}
+
+function qaLoadedReferenceAssetId(entry) {
+  const assetId = qaReferenceIdToken(entry?.id);
+  const manifestAssetId = qaReferenceIdToken(entry?.data?.asset?.id);
+  const sourceFormat = referenceSourceRequestedFormatMetadata(entry?.data?.asset?.source).sourceFormat;
+  return assetId && manifestAssetId === assetId && sourceFormat ? assetId : "";
+}
+
+function qaLoadedReferenceAssetsById(entries) {
+  const loadedAssets = new Map();
+  for (const entry of arrayValues(entries)) {
+    const assetId = qaLoadedReferenceAssetId(entry);
+    if (assetId && !loadedAssets.has(assetId)) loadedAssets.set(assetId, entry);
+  }
+  return loadedAssets;
+}
+
+function qaReferenceMapEntryCount(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return 0;
+  return Object.entries(record).filter(([entryId, entry]) => {
+    return qaReferenceIdToken(entryId) === entryId
+      && entry
+      && typeof entry === "object"
+      && !Array.isArray(entry)
+      && qaReferenceIdToken(entry.id) === entryId;
+  }).length;
+}
+
+function qaReferenceDeclaredChunkIds(assetData) {
+  const seen = new Set();
+  for (const chunk of Array.isArray(assetData?.chunks) ? assetData.chunks : []) {
+    const chunkId = qaReferenceIdToken(chunk?.id);
+    if (chunkId) seen.add(chunkId);
+  }
+  return seen;
+}
+
+function qaReferenceDiagnosticSeverity(value) {
+  const token = qaReferenceDiagnosticToken(value, "error");
+  return QA_REFERENCE_DIAGNOSTIC_SEVERITIES.has(token) ? token : "error";
+}
+
+function qaReferenceDiagnosticMessage(value) {
+  const message = typeof value === "string" ? value.trim() : "";
+  if (!message || QA_REFERENCE_DIAGNOSTIC_MESSAGE_PATH_PATTERN.test(message)) return "";
+  return message.slice(0, 180);
+}
 
 function requiredVec3(value, label) {
   if (!v.isVec3(value)) throw new Error(`viewer: ${label} must be a finite [x, y, z] vector`);
@@ -281,7 +350,9 @@ export function createViewerQaBridge({
   qaCapture = searchParams.has("qaCapture"),
   qaDebug = searchParams.has("qaDebug"),
   hiddenCaptureElements = [],
-  renderProject
+  renderProject,
+  getReferenceGeometryAssets = () => [],
+  getReferenceGeometryLoadDiagnostics = () => []
 }) {
   async function applyQaView(project, options = {}) {
     const direction = qaViewDirection(qaView);
@@ -556,6 +627,122 @@ export function createViewerQaBridge({
       };
     };
 
+    const referenceGeometryRuntimeStatus = () => {
+      const projectAssets = api.project()?.referenceGeometry?.assets || {};
+      const loadedAssets = qaLoadedReferenceAssetsById(getReferenceGeometryAssets());
+      const diagnosticsByAsset = new Map();
+      for (const diagnostic of arrayValues(getReferenceGeometryLoadDiagnostics())) {
+        const assetId = qaReferenceIdToken(diagnostic?.assetId);
+        if (!assetId) continue;
+        if (!diagnosticsByAsset.has(assetId)) diagnosticsByAsset.set(assetId, []);
+        diagnosticsByAsset.get(assetId).push({
+          stage: qaReferenceDiagnosticToken(diagnostic.stage, "load"),
+          severity: qaReferenceDiagnosticSeverity(diagnostic.severity),
+          code: qaReferenceDiagnosticToken(diagnostic.code, "reference-load-error"),
+          message: qaReferenceDiagnosticMessage(diagnostic.message),
+          chunkId: qaReferenceIdToken(diagnostic.chunkId) || null,
+          objectId: qaReferenceIdToken(diagnostic.objectId) || null
+        });
+      }
+      const entries = Object.entries(projectAssets)
+        .map(([rawAssetId, projectAsset]) => {
+          const assetId = qaReferenceIdToken(rawAssetId);
+          if (!assetId) return null;
+          const projectAssetError = referenceProjectAssetLoadError(assetId, projectAsset);
+          const validProjectAsset = !projectAssetError;
+          const loaded = validProjectAsset ? loadedAssets.get(assetId) || null : null;
+          const assetData = loaded?.data || null;
+          const diagnostics = diagnosticsByAsset.get(assetId) || [];
+          const diagnosticEntries = diagnostics.slice(0, 8);
+          const diagnosticCount = diagnostics.length;
+          const diagnosticEntryOmittedCount = Math.max(0, diagnostics.length - diagnosticEntries.length);
+          const errorCount = diagnostics.filter((diagnostic) => diagnostic.severity !== "warning").length;
+          const warningCount = diagnostics.filter((diagnostic) => diagnostic.severity === "warning").length;
+          const diagnosticCodeCounts = diagnostics.reduce((counts, diagnostic) => {
+            const code = diagnostic.code || "reference-load-error";
+            counts[code] = (counts[code] || 0) + 1;
+            return counts;
+          }, {});
+          const declaredChunkCount = loaded ? qaReferenceDeclaredChunkIds(assetData).size : 0;
+          const loadedChunks = loaded?.loadedChunks || {};
+          const selectedPreviewChunkIds = loaded ? referencePreviewChunkIds(assetData, settings) : new Set();
+          const selectedPreviewChunkCount = selectedPreviewChunkIds.size;
+          const loadedPreviewChunkCount = [...selectedPreviewChunkIds].filter((chunkId) => qaLoadedReferenceChunk(loadedChunks, chunkId)).length;
+          const missingPreviewChunkCount = Math.max(0, selectedPreviewChunkCount - loadedPreviewChunkCount);
+          const omittedPreviewChunkCount = Math.max(0, declaredChunkCount - selectedPreviewChunkCount);
+          const sourceFormatMetadata = referenceSourceRequestedFormatMetadata(assetData?.asset?.source);
+          const status = !loaded
+            ? "not-loaded"
+            : missingPreviewChunkCount > 0
+              ? "preview-chunks-missing"
+              : "ready";
+          return {
+            assetId,
+            path: validProjectAsset && typeof projectAsset?.path === "string" ? projectAsset.path : null,
+            status,
+            loaded: Boolean(loaded),
+            visible: validProjectAsset && projectAsset?.visible !== false && projectAsset?.display?.visible !== false,
+            snapEnabled: validProjectAsset && projectAsset?.snapEnabled === true,
+            sourceFormat: sourceFormatMetadata.sourceFormat,
+            requestedFormat: sourceFormatMetadata.sourceRequestedFormat,
+            sourceRequestedFormat: sourceFormatMetadata.sourceRequestedFormat,
+            sourceRequestedFormatFamily: sourceFormatMetadata.sourceRequestedFormatFamily,
+            sourceRequestedFormatAliases: sourceFormatMetadata.sourceRequestedFormatAliases,
+            sourceRequestedFormatMatchesFamily: sourceFormatMetadata.sourceRequestedFormatMatchesFamily,
+            units: assetData?.asset?.units || null,
+            layerCount: loaded ? qaReferenceMapEntryCount(assetData?.layers) : 0,
+            objectCount: loaded ? qaReferenceMapEntryCount(assetData?.objects) : 0,
+            declaredChunkCount,
+            selectedPreviewChunkCount,
+            loadedPreviewChunkCount,
+            missingPreviewChunkCount,
+            omittedPreviewChunkCount,
+            previewChunkLoading: declaredChunkCount > selectedPreviewChunkCount ? "budgeted-subset" : "all",
+            diagnosticCount,
+            errorCount,
+            warningCount,
+            diagnosticCodeCounts,
+            diagnosticEntries,
+            diagnosticEntryOmittedCount
+          };
+        })
+        .filter(Boolean);
+      const readyAssetCount = entries.filter((entry) => entry.status === "ready").length;
+      const notLoadedAssetCount = entries.filter((entry) => entry.status === "not-loaded").length;
+      const previewChunkMissingAssetCount = entries.filter((entry) => entry.status === "preview-chunks-missing").length;
+      const diagnosticCount = entries.reduce((sum, entry) => sum + entry.diagnosticCount, 0);
+      const errorCount = entries.reduce((sum, entry) => sum + entry.errorCount, 0);
+      const warningCount = entries.reduce((sum, entry) => sum + entry.warningCount, 0);
+      const missingPreviewChunkCount = entries.reduce((sum, entry) => sum + entry.missingPreviewChunkCount, 0);
+      const omittedPreviewChunkCount = entries.reduce((sum, entry) => sum + entry.omittedPreviewChunkCount, 0);
+      const diagnosticCodeCounts = entries.reduce((counts, entry) => {
+        for (const [code, count] of Object.entries(entry.diagnosticCodeCounts || {})) {
+          counts[code] = (counts[code] || 0) + count;
+        }
+        return counts;
+      }, {});
+      return {
+        version: 1,
+        assetCount: entries.length,
+        loadedAssetCount: entries.length - notLoadedAssetCount,
+        readyAssetCount,
+        notLoadedAssetCount,
+        previewChunkMissingAssetCount,
+        diagnosticCount,
+        errorCount,
+        warningCount,
+        diagnosticCodeCounts,
+        missingPreviewChunkCount,
+        omittedPreviewChunkCount,
+        entries
+      };
+    };
+
+    const referenceGeometryPreviewStats = () => {
+      const stats = viewer.scene?.referenceGeometryPreviewStats;
+      return stats ? jsonClone(stats) : null;
+    };
+
     const snapDiagnosticsAtPoint = (point, options = {}) => {
       if (!snapManager?.resolve) return null;
       const rawPoint = v.isVec3(point) ? point : v.isVec3(options.rawPoint) ? options.rawPoint : null;
@@ -613,7 +800,9 @@ export function createViewerQaBridge({
       memberSmartComponentObjectIds,
       memberSmartComponentPoints,
       captureView,
-      captureSmartComponentView
+      captureSmartComponentView,
+      referenceGeometryRuntimeStatus,
+      referenceGeometryPreviewStats
     };
     Object.defineProperty(window, "__boberCadQa", {
       value: qaApi,

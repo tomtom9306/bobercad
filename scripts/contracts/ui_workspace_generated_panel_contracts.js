@@ -771,6 +771,8 @@ function checkGeneratedPanelContracts(context) {
     || !projectFilesPanelText.includes("sortDataLibraryEntries")
     || !projectFilesPanelText.includes('datasetKey: "projectFilesSearch"')
     || !projectFilesPanelText.includes("projectFilesRowDataset")
+    || !projectFilesPanelText.includes("projectFilesKeywords")
+    || !projectFilesPanelText.includes("descriptor.searchText")
     || !projectFilesPanelText.includes("resolvedHref(")
     || !projectFilesPanelText.includes("dataPanelLinkRow")
     || !projectFilesPanelText.includes("showRow(rowId")

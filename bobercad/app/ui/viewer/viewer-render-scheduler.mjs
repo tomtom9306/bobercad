@@ -151,6 +151,7 @@ export function createViewerRenderScheduler({
   getProject = () => null,
   getPreviewMembers = () => [],
   getPreviewPlates = () => [],
+  getReferenceGeometryAssets = () => [],
   getActiveSmartComponentId = () => null,
   getForceDetailObjectIds = () => [],
   getActiveTrimRenderOptions = () => ({}),
@@ -208,6 +209,7 @@ export function createViewerRenderScheduler({
         activeTrimOperationId,
         previewMembers,
         previewPlates,
+        referenceGeometryAssets: getReferenceGeometryAssets(),
         lodDetailFilter: () => false
       });
       viewer.setScene(coarseScene, viewerOptions);
@@ -223,6 +225,7 @@ export function createViewerRenderScheduler({
             activeTrimOperationId,
             previewMembers,
             previewPlates,
+            referenceGeometryAssets: getReferenceGeometryAssets(),
             lodDetailFilter: createLodDetailFilter(project, profileMap, settings, scheduledScale, detailContext())
           }), { ...viewerOptions, preserveCamera: true });
         };
@@ -245,6 +248,7 @@ export function createViewerRenderScheduler({
       activeTrimOperationId,
       previewMembers,
       previewPlates,
+      referenceGeometryAssets: getReferenceGeometryAssets(),
       lodDetailFilter
     }), {
       ...viewerOptions,

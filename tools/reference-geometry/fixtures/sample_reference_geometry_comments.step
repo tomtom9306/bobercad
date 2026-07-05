@@ -1,0 +1,13 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP block comment reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_comments.step', '2026-06-28T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+/* #900 = CARTESIAN_POINT('commented point', (900.0, 900.0, 900.0));
+   #901 = VERTEX_POINT('', #900); */
+#1 = CARTESIAN_POINT('real /* literal */ point', (10.0, /* y coordinate */ 20.0, 30.0));
+#2 = VERTEX_POINT('', #1);
+ENDSEC;
+END-ISO-10303-21;

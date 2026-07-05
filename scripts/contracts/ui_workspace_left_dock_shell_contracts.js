@@ -100,6 +100,8 @@ function checkLeftDockShellContracts(context) {
   } = readUiContractTextFixtures(context);
   const objectPropertyMetadataText = `${inspectorPropertyMetadataText}\n${inspectorEditableObjectPropertyMetadataText}`;
   const plateSketchInspectorText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/panels/contributions/plate-sketch-inspector.mjs"), "utf8");
+  const referenceImportPanelText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/reference-import-panel.mjs"), "utf8");
+  const viewerStyleText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/style.css"), "utf8");
   for (const field of ["title", "icon", "searchPlaceholder", "searchLabel", "emptyMessage", "itemCountLabel", "collectionLabel", "readyLabel", "statusMetaFallback"]) {
     if (!smartComponentBrowserMetadata.SMART_COMPONENT_BROWSER_PANEL_SPEC?.[field]) {
       fail(errors, `smart-component-browser-metadata panel spec must declare ${field}`);
@@ -186,6 +188,104 @@ function checkLeftDockShellContracts(context) {
   }
   if (!leftDockResults.some((item) => item.kind === "source-file" && item.groupLabel === "Files" && item.action?.type === "showFileRow" && item.action?.tab === "files")) {
     fail(errors, "left-dock-result-metadata must route source-file results to the Files tab with showFileRow");
+  }
+  const referenceLeftDockResults = leftDockResultMetadata.leftDockResultSpecs?.({
+    project: readJson("bobercad/data/projects/sample_boolean_beam.json"),
+    sources: [
+      { id: "project", label: "Project JSON", kind: "Project", icon: "file", path: "sample_boolean_beam.json" }
+    ]
+  }) || [];
+  if (!referenceLeftDockResults.some((item) => (
+    item.id === "leftDock.files.source.reference-sample-reference-geometry"
+    && item.kind === "source-file"
+    && item.groupLabel === "Files"
+    && item.action?.type === "showFileRow"
+    && item.action?.tab === "files"
+    && item.action?.rowId === "source-reference-sample_reference_geometry"
+    && item.description?.includes("../references/sample_reference_geometry.json")
+    && item.description?.includes("visible")
+    && item.description?.includes("snap off")
+    && item.keywords?.includes("display override")
+    && item.keywords?.includes("transform")
+  ))) {
+    fail(errors, "left-dock-result-metadata must expose project reference geometry manifests as Files search results with pointer status metadata");
+  }
+  const runtimeReferenceProject = {
+    referenceGeometry: {
+      assets: {
+        runtime_reference: {
+          path: "../references/runtime.reference.json",
+          snapEnabled: false
+        }
+      }
+    }
+  };
+  const runtimeReferenceSources = dataSurfaceMetadata.projectReferenceGeometryRuntimeFileSources?.(runtimeReferenceProject, {
+    loadedAssets: [{
+      id: "runtime_reference",
+      data: {
+        asset: {
+          id: "runtime_reference",
+          name: "Runtime Reference",
+          source: { format: "ifc", requestedFormat: "ifczip" }
+        },
+        objects: {
+          runtime_member: { id: "runtime_member" },
+          runtime_plate: { id: "runtime_plate" }
+        },
+        chunks: [{ id: "runtime_scan_chunk" }]
+      }
+    }],
+    diagnostics: [{
+      assetId: "runtime_reference",
+      severity: "warning",
+      code: "reference-object-rejected",
+      message: "Filtered one reference object"
+    }]
+  }) || [];
+  const runtimeReferenceLeftDockResults = leftDockResultMetadata.leftDockResultSpecs?.({
+    project: runtimeReferenceProject,
+    sources: runtimeReferenceSources
+  }) || [];
+  if (!runtimeReferenceLeftDockResults.some((item) => (
+    item.id === "leftDock.files.source.reference-runtime-reference"
+    && item.kind === "source-file"
+    && item.groupLabel === "Files"
+    && item.action?.type === "showFileRow"
+    && item.action?.tab === "files"
+    && item.action?.rowId === "source-reference-runtime_reference"
+    && item.description?.includes("loaded-with-warnings")
+    && item.description?.includes("source ifc")
+    && item.description?.includes("requested ifczip")
+    && item.description?.includes("family ifc")
+    && item.description?.includes("2 objects")
+    && item.description?.includes("1 chunks")
+    && item.description?.includes("diagnostics reference-object-rejected")
+    && item.keywords?.includes("loaded-with-warnings")
+    && item.keywords?.includes("requested ifczip")
+    && item.keywords?.includes("family ifc")
+    && item.keywords?.includes("ifczip")
+  ))) {
+    fail(errors, "left-dock-result-metadata must carry runtime reference load status, source requested-format alias metadata, and diagnostics into Files search results");
+  }
+  const guardedReferenceLeftDockResults = leftDockResultMetadata.leftDockResultSpecs?.({
+    project: {
+      referenceGeometry: {
+        assets: {
+          good_reference: { path: "../references/good.reference.json" },
+          outside_reference: { path: "../../app/schemas/project.schema.json" },
+          url_reference: { path: "https://example.invalid/reference.json" },
+          backslash_reference: { path: "../references\\bad.reference.json" },
+          encoded_reference: { path: "../references/%2e%2e/projects/sample_boolean_beam.json" },
+          "bad reference id": { path: "../references/bad.reference.json" },
+          constructor: { path: "../references/constructor.reference.json" }
+        }
+      }
+    }
+  }) || [];
+  const guardedReferenceFileResults = guardedReferenceLeftDockResults.filter((item) => item.kind === "source-file");
+  if (guardedReferenceFileResults.length !== 1 || guardedReferenceFileResults[0].action?.rowId !== "source-reference-good_reference") {
+    fail(errors, "left-dock-result-metadata must filter unsafe reference geometry asset ids and paths before exposing Files search results");
   }
   for (const item of leftDockResults) {
     if (!item.id || !item.kind || !item.title || !item.groupLabel || !item.icon || !item.action) {
@@ -850,10 +950,156 @@ function checkLeftDockShellContracts(context) {
     || !viewerRuntimeDataText.includes("root: projectFilesPanelRoot")
     || !viewerRuntimeDataText.includes("sourceBaseUrl: projectUrl.href")
     || !viewerRuntimeDataText.includes("sources: projectDataSources()")
+    || !viewerRuntimeDataText.includes("mountReferenceImportPanel")
+    || !viewerRuntimeDataText.includes("referenceImportPanelRoot")
+    || !viewerRuntimeDataText.includes("referenceImportPanelUi")
+    || !viewerRuntimeDataText.includes("root: referenceImportPanelRoot")
+    || !viewerRuntimeDataText.includes("projectPath: projectPath()")
     || !viewerRuntimeDataText.includes('action.type === "showFileRow"')
     || !viewerRuntimeDataText.includes("getProjectFilesPanelUi()?.showRow?.(action.rowId)")
   ) {
-    fail(errors, "Viewer runtime must mount Project Files and route source-file command results into the Files Data Dock tab");
+    fail(errors, "Viewer runtime must mount Project Files and Reference Import, and route source-file command results into the Files Data Dock tab");
+  }
+  if (!viewerStyleText.includes('@import url("./reference-import-panel.css")')) {
+    fail(errors, "Viewer style bundle must include the Reference Import panel stylesheet");
+  }
+  if (
+    !referenceImportPanelText.includes("referenceGeometryImportWorkspaceResponse")
+    || !referenceImportPanelText.includes("referenceGeometryImportSessionState")
+    || !referenceImportPanelText.includes("responseJsonText")
+    || !referenceImportPanelText.includes("lastWorkspaceResponse")
+    || !referenceImportPanelText.includes("lastWorkflowRunSummary")
+    || !referenceImportPanelText.includes("referencesDir")
+    || !referenceImportPanelText.includes("summaryOnly")
+    || !referenceImportPanelText.includes("adapterName")
+    || !referenceImportPanelText.includes("adapterTimeoutMs")
+    || !referenceImportPanelText.includes("pointCloudChunkSize")
+    || !referenceImportPanelText.includes("units")
+    || !referenceImportPanelText.includes("replaceExisting")
+    || !referenceImportPanelText.includes("visible")
+    || !referenceImportPanelText.includes("snapEnabled")
+    || !referenceImportPanelText.includes("opacity")
+    || !referenceImportPanelText.includes("color")
+    || !referenceImportPanelText.includes("edgeColor")
+    || !referenceImportPanelText.includes("pointSize")
+    || !referenceImportPanelText.includes("origin")
+    || !referenceImportPanelText.includes("axisX")
+    || !referenceImportPanelText.includes("axisY")
+    || !referenceImportPanelText.includes("axisZ")
+    || !referenceImportPanelText.includes("scale")
+    || !referenceImportPanelText.includes("replaceExistingField")
+    || !referenceImportPanelText.includes("OPTIONAL_BOOL_OPTIONS")
+    || !referenceImportPanelText.includes("References Dir")
+    || !referenceImportPanelText.includes("Adapter Timeout")
+    || !referenceImportPanelText.includes("Chunk Size")
+    || !referenceImportPanelText.includes("Preflight")
+    || !referenceImportPanelText.includes("Edge Color")
+    || !referenceImportPanelText.includes("Point Size")
+    || !referenceImportPanelText.includes("summaryOnlyField")
+    || !referenceImportPanelText.includes("parseResponseJson")
+    || !referenceImportPanelText.includes("normalizeWorkflowRunSummary")
+    || !referenceImportPanelText.includes("WORKFLOW_RUN_STATUS_TOKENS")
+    || !referenceImportPanelText.includes("WORKFLOW_RUN_STOP_REASON_TOKENS")
+    || !referenceImportPanelText.includes("WORKFLOW_RUN_BLOCKED_REASON_TOKENS")
+    || !referenceImportPanelText.includes("runStatus: workflowSummaryRunStatus(workflowRun.runStatus)")
+    || !referenceImportPanelText.includes("stopReason: workflowSummaryStopReason(workflowRun.stopReason)")
+    || !referenceImportPanelText.includes("blockedReason: workflowSummaryBlockedReason(workflowRun.blockedReason)")
+    || !referenceImportPanelText.includes("workflowSummaryStageToken")
+    || !referenceImportPanelText.includes("workflowSummaryRunStatus")
+    || !referenceImportPanelText.includes("workflowSummaryStopReason")
+    || !referenceImportPanelText.includes("workflowSummaryBlockedReason")
+    || !referenceImportPanelText.includes("workflowSummaryActionToken")
+    || !referenceImportPanelText.includes("workflowSummaryInputDescriptorIds")
+    || !referenceImportPanelText.includes("REFERENCE_GEOMETRY_IMPORT_SAFE_WORKFLOW_ORDER")
+    || !referenceImportPanelText.includes("REFERENCE_GEOMETRY_IMPORT_ACTION_TOKENS")
+    || !referenceImportPanelText.includes("REFERENCE_GEOMETRY_IMPORT_INPUT_DESCRIPTORS")
+    || !referenceImportPanelText.includes("workflowRunSummaryMeta")
+    || !referenceImportPanelText.includes("invalid-input-values")
+    || !referenceImportPanelText.includes("invalidImportOptionFields")
+    || !referenceImportPanelText.includes("requestStatusMeta")
+    || !referenceImportPanelText.includes("finalFailedWorkflowStage")
+    || !referenceImportPanelText.includes("finalRetryWorkflowStage")
+    || !referenceImportPanelText.includes("adapterPreflightSummaryMeta")
+    || !referenceImportPanelText.includes("adapterPreflightSummary")
+    || !referenceImportPanelText.includes("missingRequiredCommandCount")
+    || !referenceImportPanelText.includes("referenceSourceSummary")
+    || !referenceImportPanelText.includes("referenceSourceSummaryMeta")
+    || !referenceImportPanelText.includes("externalAdapterRequired")
+    || !referenceImportPanelText.includes("referencePlanSummary")
+    || !referenceImportPanelText.includes("referencePlanSummaryMeta")
+    || !referenceImportPanelText.includes("safeNextExecutionMode")
+    || !referenceImportPanelText.includes("referenceAdapterRequestSummary")
+    || !referenceImportPanelText.includes("referenceAdapterRequestSummaryMeta")
+    || !referenceImportPanelText.includes("adapterRequestFingerprint")
+    || !referenceImportPanelText.includes("referenceOutputSummary")
+    || !referenceImportPanelText.includes("referenceOutputSummaryMeta")
+    || !referenceImportPanelText.includes("referenceExternalSourceProvenanceMeta")
+    || !referenceImportPanelText.includes("sourceTranslatorVersion")
+    || !referenceImportPanelText.includes("referenceLineSegmentCount")
+    || !referenceImportPanelText.includes("referencePromotionSummary")
+    || !referenceImportPanelText.includes("referencePromotionSummaryMeta")
+    || !referenceImportPanelText.includes("projectJsonWritten")
+    || !referenceImportPanelText.includes("referenceAuditSummary")
+    || !referenceImportPanelText.includes("referenceAuditSummaryMeta")
+    || !referenceImportPanelText.includes("referenceNeedsAttentionCount")
+    || !referenceImportPanelText.includes("referenceFailureSummary")
+    || !referenceImportPanelText.includes("referenceFailureSummaryMeta")
+    || !referenceImportPanelText.includes("adapterErrorCode")
+    || !referenceImportPanelText.includes("summary.adapterOutputValidationKind")
+    || !referenceImportPanelText.includes("retryRoutingRow")
+    || !referenceImportPanelText.includes('label: "Retry"')
+    || !referenceImportPanelText.includes("session.retryWorkflowStage")
+    || !referenceImportPanelText.includes("session.failedWorkflowStage")
+    || !referenceImportPanelText.includes("session.lastResponseSafeNextAction")
+    || !referenceImportPanelText.includes("blockedStage")
+    || !referenceImportPanelText.includes("blockedMissingInputDescriptorIds")
+    || !referenceImportPanelText.includes("normalizePastedResponse")
+    || !referenceImportPanelText.includes("responseEnvelope")
+    || !referenceImportPanelText.includes("workflowRunFinalResponse")
+    || !referenceImportPanelText.includes("referenceGeometryImportWorkflowRun")
+    || !referenceImportPanelText.includes("finalWorkspaceResponse")
+    || !referenceImportPanelText.includes("responseEntries")
+    || !referenceImportPanelText.includes("JSON.parse")
+    || !referenceImportPanelText.includes("Apply Result")
+    || !referenceImportPanelText.includes("Clear Result")
+    || !referenceImportPanelText.includes("Copy Host Command")
+    || !referenceImportPanelText.includes("Copy Workflow")
+    || !referenceImportPanelText.includes("hostCommandForRequest")
+    || !referenceImportPanelText.includes("workflowCommandForState")
+    || !referenceImportPanelText.includes("workflowCommandAvailable")
+    || !referenceImportPanelText.includes("referenceImportWorkflowOptions")
+    || !referenceImportPanelText.includes("options.startStage = state.stageId")
+    || !referenceImportPanelText.includes('state.stageId === "adapter-preflight"')
+    || !referenceImportPanelText.includes("encodeBase64Utf8")
+    || !referenceImportPanelText.includes("--request-json-base64")
+    || !referenceImportPanelText.includes("--options-json-base64")
+    || !referenceImportPanelText.includes("TextEncoder")
+    || !referenceImportPanelText.includes("btoa")
+    || !referenceImportPanelText.includes("copyToClipboard")
+    || !referenceImportPanelText.includes("resultJson")
+    || !referenceImportPanelText.includes("stdoutJson")
+    || !referenceImportPanelText.includes("hostResult")
+    || !referenceImportPanelText.includes('render({ focusField: "responseJsonText"')
+    || referenceImportPanelText.includes("runStatus: cleanPanelString(workflowRun.runStatus)")
+    || referenceImportPanelText.includes("stopReason: cleanPanelString(workflowRun.stopReason)")
+    || referenceImportPanelText.includes("blockedReason: cleanPanelString(workflowRun.blockedReason)")
+  ) {
+    fail(errors, "Reference Import panel must accept parsed host result JSON, normalize it through app-side workspace response metadata, whitelist pasted workflow summary routing tokens, and keep response input actions live");
+  }
+  for (const forbiddenReferenceImportRuntimeToken of [
+    "tools/reference-geometry",
+    "translate_reference_geometry",
+    "import_reference_geometry_asset",
+    "child_process",
+    "spawn(",
+    "exec(",
+    "FileReader",
+    "fetch(",
+    "process."
+  ]) {
+    if (referenceImportPanelText.includes(forbiddenReferenceImportRuntimeToken)) {
+      fail(errors, `Reference Import panel must stay browser-only and host-handoff-only, without translator/importer execution token: ${forbiddenReferenceImportRuntimeToken}`);
+    }
   }
   const projectDataMountSnippet = viewerRuntimeDataText.match(/projectDataPanelUi = mountProjectDataPanel\(\{[\s\S]*?\n    \}\);/)?.[0] || "";
   if (projectDataMountSnippet.includes("sources:") || projectDataMountSnippet.includes("sourceBaseUrl:")) {

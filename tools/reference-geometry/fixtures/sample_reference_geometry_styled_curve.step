@@ -1,0 +1,18 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD styled curve STEP reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_styled_curve.step', '2026-06-28T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('curve-start', (0.0, 0.0, 0.0));
+#2 = CARTESIAN_POINT('curve-mid', (40.0, 0.0, 0.0));
+#3 = CARTESIAN_POINT('curve-end', (40.0, 20.0, 0.0));
+#10 = POLYLINE('styled-polyline', (#1, #2, #3));
+#20 = SHAPE_REPRESENTATION('', (#10), $);
+#40 = COLOUR_RGB('Green', 0.0, 1.0, 0.0);
+#41 = CURVE_STYLE('Green curve style', $, $, #40);
+#42 = PRESENTATION_STYLE_ASSIGNMENT((#41));
+#43 = STYLED_ITEM('Green curve', (#42), #10);
+ENDSEC;
+END-ISO-10303-21;

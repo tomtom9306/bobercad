@@ -1,0 +1,17 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD metre-unit STEP reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_units.step', '2026-06-22T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('p1', (0.0, 0.0, 0.0));
+#2 = CARTESIAN_POINT('p2', (1.0, 0.0, 0.0));
+#3 = CARTESIAN_POINT('p3', (1.0, 1.0, 0.0));
+#4 = CARTESIAN_POINT('p4', (0.0, 1.0, 0.0));
+#20 = POLY_LOOP('', (#1, #2, #3, #4));
+#30 = FACE_OUTER_BOUND('', #20, .T.);
+#40 = ADVANCED_FACE('', (#30), $, .T.);
+#90 = (LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT($,.METRE.));
+ENDSEC;
+END-ISO-10303-21;

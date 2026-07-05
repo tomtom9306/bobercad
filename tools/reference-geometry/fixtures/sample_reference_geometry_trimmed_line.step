@@ -1,0 +1,16 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP trimmed line reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_trimmed_line.step', '2026-06-22T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('line-origin', (10.0, 20.0, 30.0));
+#2 = DIRECTION('line-x', (1.0, 0.0, 0.0));
+#3 = VECTOR('', #2, 2.0);
+#4 = LINE('', #1, #3);
+#10 = TRIMMED_CURVE('', #4, (PARAMETER_VALUE(5.0)), (PARAMETER_VALUE(50.0)), .T., .PARAMETER.);
+#20 = GEOMETRIC_CURVE_SET('', (#10));
+#30 = SHAPE_REPRESENTATION('', (#20), $);
+ENDSEC;
+END-ISO-10303-21;

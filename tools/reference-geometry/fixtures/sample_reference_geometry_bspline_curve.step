@@ -1,0 +1,16 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP B-spline curve reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_bspline_curve.step', '2026-06-22T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('p1', (0.0, 0.0, 0.0));
+#2 = CARTESIAN_POINT('p2', (60.0, 180.0, 0.0));
+#3 = CARTESIAN_POINT('p3', (160.0, -140.0, 0.0));
+#4 = CARTESIAN_POINT('p4', (240.0, 40.0, 0.0));
+#10 = B_SPLINE_CURVE_WITH_KNOTS('', 3, (#1, #2, #3, #4), .UNSPECIFIED., .F., .F., (4, 4), (0.0, 1.0), .UNSPECIFIED.);
+#20 = GEOMETRIC_CURVE_SET('', (#10));
+#30 = SHAPE_REPRESENTATION('', (#20), $);
+ENDSEC;
+END-ISO-10303-21;

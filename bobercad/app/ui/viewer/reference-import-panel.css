@@ -1,0 +1,110 @@
+.bc-reference-import-panel {
+  min-width: 0;
+}
+
+.bc-reference-import-form {
+  display: grid;
+  gap: var(--bc-space-2);
+}
+
+.bc-reference-import-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bc-reference-import-label,
+.bc-reference-import-command-label {
+  color: var(--bc-color-text-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.bc-reference-import-input,
+.bc-reference-import-select,
+.bc-reference-import-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--bc-color-border);
+  border-radius: 6px;
+  background: var(--bc-color-surface);
+  color: var(--bc-color-text);
+  font: inherit;
+  font-size: 12px;
+  padding: 0 var(--bc-space-2);
+}
+
+.bc-reference-import-input,
+.bc-reference-import-select {
+  height: 28px;
+}
+
+.bc-reference-import-textarea {
+  min-height: 96px;
+  max-height: 180px;
+  line-height: 1.4;
+  padding: var(--bc-space-2);
+  resize: vertical;
+}
+
+.bc-reference-import-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bc-space-2);
+  min-height: 28px;
+  color: var(--bc-color-text);
+  font-size: 12px;
+}
+
+.bc-reference-import-checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.bc-reference-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bc-space-2);
+  min-width: 0;
+}
+
+.bc-reference-import-actions .bc-button {
+  min-width: 0;
+  min-height: 28px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.bc-reference-import-command {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin-top: var(--bc-space-2);
+}
+
+.bc-reference-import-response {
+  display: grid;
+  gap: var(--bc-space-2);
+}
+
+.bc-reference-import-response-status {
+  min-width: 0;
+}
+
+.bc-reference-import-command pre {
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 170px;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid var(--bc-color-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bc-color-surface) 86%, var(--bc-color-border));
+  color: var(--bc-color-text);
+  font-family: var(--bc-font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  padding: var(--bc-space-2);
+  white-space: pre;
+}

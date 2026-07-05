@@ -1,0 +1,34 @@
+999
+File-level DXF comment before SECTION
+0
+SECTION
+2
+ENTITIES
+999
+Entity-table comment before the real line
+0
+LINE
+8
+COMMENT_LINE
+999
+Layer already parsed; this comment must not become entity data
+10
+0
+20
+0
+30
+0
+999
+Comment between start and end coordinate groups
+11
+25
+21
+0
+31
+0
+0
+ENDSEC
+999
+Trailing comment before EOF
+0
+EOF

@@ -34,6 +34,9 @@
     "libraries": {
       "$ref": "#/$defs/libraries"
     },
+    "referenceGeometry": {
+      "$ref": "#/$defs/projectReferenceGeometry"
+    },
     "projectTree": {
       "$ref": "#/$defs/projectTree"
     },
@@ -74,6 +77,18 @@
     "id": {
       "type": "string",
       "minLength": 1
+    },
+    "referenceGeometryAssetId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "not": {
+        "enum": [
+          "__proto__",
+          "prototype",
+          "constructor"
+        ]
+      }
     },
     "vec2": {
       "type": "array",
@@ -548,6 +563,72 @@
         }
       },
       "additionalProperties": true
+    },
+    "projectReferenceGeometry": {
+      "type": "object",
+      "required": [
+        "assets"
+      ],
+      "properties": {
+        "assets": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/referenceGeometryAssetId"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/projectReferenceGeometryAsset"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "projectReferenceGeometryAsset": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\.\\./references/(?!.*[\\\\/?#\\u0000-\\u001f\\u007f%])[A-Za-z0-9][A-Za-z0-9_.-]*\\.json$"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "snapEnabled": {
+          "type": "boolean"
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "transform": {
+          "$ref": "#/$defs/referenceGeometryTransform"
+        }
+      },
+      "additionalProperties": false
+    },
+    "referenceGeometryTransform": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisX": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisY": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axisZ": {
+          "$ref": "#/$defs/vec3"
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
     },
     "projectTree": {
       "type": "object",

@@ -1,0 +1,16 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP curve-set reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_curve_set.step', '2026-06-22T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('p1', (0.0, 0.0, 0.0));
+#2 = CARTESIAN_POINT('p2', (120.0, 0.0, 0.0));
+#3 = CARTESIAN_POINT('p3', (240.0, 80.0, 20.0));
+#4 = CARTESIAN_POINT('p4', (300.0, 120.0, 40.0));
+#10 = POLYLINE('', (#1, #2, #3, #4));
+#20 = GEOMETRIC_CURVE_SET('', (#10));
+#30 = SHAPE_REPRESENTATION('', (#20), $);
+ENDSEC;
+END-ISO-10303-21;

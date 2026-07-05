@@ -1,0 +1,373 @@
+{
+  "$schema": "../../app/schemas/reference-geometry.schema.json",
+  "schema": "bobercad-reference-geometry",
+  "schemaVersion": "0.1.0",
+  "asset": {
+    "id": "sample_reference_geometry",
+    "name": "Sample Reference Geometry",
+    "source": {
+      "format": "json",
+      "fileName": "sample_reference_geometry.json",
+      "translator": "manual-seed",
+      "translatorVersion": "0.1.0"
+    },
+    "units": "mm",
+    "coordinateSystem": {
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axisX": [
+        1,
+        0,
+        0
+      ],
+      "axisY": [
+        0,
+        1,
+        0
+      ],
+      "axisZ": [
+        0,
+        0,
+        1
+      ]
+    },
+    "bounds": {
+      "min": [
+        -1100,
+        -520,
+        -90
+      ],
+      "max": [
+        1100,
+        520,
+        420
+      ]
+    }
+  },
+  "layers": {
+    "survey_lines": {
+      "id": "survey_lines",
+      "name": "Survey Lines",
+      "display": {
+        "color": "#2563eb",
+        "opacity": 0.72
+      }
+    },
+    "equipment_mesh": {
+      "id": "equipment_mesh",
+      "name": "Equipment Mesh",
+      "display": {
+        "color": "#64748b",
+        "edgeColor": "#334155",
+        "opacity": 0.28
+      }
+    },
+    "scan_points": {
+      "id": "scan_points",
+      "name": "Scan Points",
+      "display": {
+        "color": "#0f766e",
+        "opacity": 0.68,
+        "pointSize": 28
+      }
+    }
+  },
+  "objects": {
+    "reference_grid_lines": {
+      "id": "reference_grid_lines",
+      "kind": "line-set",
+      "name": "Reference grid and outline",
+      "layer": "survey_lines",
+      "vertices": [
+        [
+          -1100,
+          -520,
+          -90
+        ],
+        [
+          1100,
+          -520,
+          -90
+        ],
+        [
+          1100,
+          520,
+          -90
+        ],
+        [
+          -1100,
+          520,
+          -90
+        ],
+        [
+          -1100,
+          0,
+          -90
+        ],
+        [
+          1100,
+          0,
+          -90
+        ],
+        [
+          0,
+          -520,
+          -90
+        ],
+        [
+          0,
+          520,
+          -90
+        ]
+      ],
+      "lineSegments": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "metadata": {
+        "sourceEntity": "DXF-LWPOLYLINE"
+      }
+    },
+    "reference_equipment_box": {
+      "id": "reference_equipment_box",
+      "kind": "mesh",
+      "name": "Reference equipment bounding mesh",
+      "layer": "equipment_mesh",
+      "vertices": [
+        [
+          -220,
+          -180,
+          0
+        ],
+        [
+          220,
+          -180,
+          0
+        ],
+        [
+          220,
+          180,
+          0
+        ],
+        [
+          -220,
+          180,
+          0
+        ],
+        [
+          -220,
+          -180,
+          420
+        ],
+        [
+          220,
+          -180,
+          420
+        ],
+        [
+          220,
+          180,
+          420
+        ],
+        [
+          -220,
+          180,
+          420
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          7,
+          6,
+          5
+        ],
+        [
+          0,
+          4,
+          5,
+          1
+        ],
+        [
+          1,
+          5,
+          6,
+          2
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ],
+        [
+          3,
+          7,
+          4,
+          0
+        ]
+      ],
+      "metadata": {
+        "sourceEntity": "STEP-FACETED-BREP"
+      }
+    },
+    "reference_scan_points": {
+      "id": "reference_scan_points",
+      "kind": "point-cloud",
+      "name": "Reference scan points",
+      "layer": "scan_points",
+      "points": [
+        [
+          -640,
+          -280,
+          10
+        ],
+        [
+          -420,
+          -210,
+          35
+        ],
+        [
+          -180,
+          -260,
+          80
+        ],
+        [
+          120,
+          -310,
+          42
+        ],
+        [
+          420,
+          -240,
+          65
+        ],
+        [
+          690,
+          -180,
+          25
+        ],
+        [
+          -560,
+          210,
+          38
+        ],
+        [
+          -260,
+          280,
+          72
+        ],
+        [
+          80,
+          250,
+          96
+        ],
+        [
+          350,
+          220,
+          58
+        ],
+        [
+          630,
+          270,
+          44
+        ]
+      ],
+      "pointAttributes": {
+        "intensities": [
+          0.18,
+          0.24,
+          0.31,
+          0.27,
+          0.42,
+          0.38,
+          0.22,
+          0.35,
+          0.47,
+          0.4,
+          0.33
+        ]
+      },
+      "metadata": {
+        "sourceEntity": "E57-POINT-SAMPLE"
+      }
+    },
+    "reference_scan_points_chunked": {
+      "id": "reference_scan_points_chunked",
+      "kind": "point-cloud",
+      "name": "Reference scan points from chunk",
+      "layer": "scan_points",
+      "chunkIds": [
+        "sample_reference_scan_chunk_1"
+      ],
+      "bounds": {
+        "min": [
+          -760,
+          -360,
+          18
+        ],
+        "max": [
+          760,
+          360,
+          150
+        ]
+      },
+      "metadata": {
+        "sourceEntity": "E57-POINT-CHUNK-MANIFEST"
+      }
+    }
+  },
+  "chunks": [
+    {
+      "id": "sample_reference_scan_chunk_1",
+      "kind": "point-cloud",
+      "objectId": "reference_scan_points_chunked",
+      "path": "chunks/sample_reference_scan_points.chunk.json",
+      "pointCount": 12,
+      "bounds": {
+        "min": [
+          -760,
+          -360,
+          18
+        ],
+        "max": [
+          760,
+          360,
+          150
+        ]
+      }
+    }
+  ],
+  "diagnostics": []
+}

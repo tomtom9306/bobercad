@@ -145,6 +145,10 @@ export function shouldRenderGrids(scene) {
   return renderVisibilityEnabled(scene, "grids");
 }
 
+export function shouldRenderReferenceGeometry(scene) {
+  return renderVisibilityEnabled(scene, "referenceGeometry");
+}
+
 export function shouldRenderFasteners(scene) {
   return renderVisibilityEnabled(scene, "fasteners");
 }

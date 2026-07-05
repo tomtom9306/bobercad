@@ -19,6 +19,49 @@ function parseModelCollections(text) {
   return [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1]);
 }
 
+function assertReferenceImportTargetCoverage(errors, coverage, context) {
+  const expectedTokens = ["dxf", "dwg", "step", "ifc", "e57pointcloud"];
+  if (
+    !coverage
+    || typeof coverage !== "object"
+    || Array.isArray(coverage)
+    || JSON.stringify(coverage.targetFormatTokens) !== JSON.stringify(expectedTokens)
+    || coverage.allTargetFormatsSupported !== true
+    || JSON.stringify(coverage.missingTargetFormatTokens) !== JSON.stringify([])
+    || JSON.stringify(coverage.builtInTargetFormatTokens) !== JSON.stringify(["dxf", "step", "ifc"])
+    || JSON.stringify(coverage.externalAdapterRequiredTargetFormatTokens) !== JSON.stringify(["dwg", "e57pointcloud"])
+    || JSON.stringify(coverage.adapterRequestCapableTargetFormatTokens) !== JSON.stringify(expectedTokens)
+    || JSON.stringify(coverage.cliOnlyTargetFormatTokens) !== JSON.stringify(["e57pointcloud"])
+  ) {
+    fail(errors, `${context} must expose UI-safe target reference format coverage for dxf/dwg/step/ifc/e57pointcloud: ${JSON.stringify(coverage)}`);
+    return;
+  }
+  const expectedEntries = {
+    dxf: { canonicalFormat: "dxf", importerTranslationMode: "built-in", builtInAvailable: true, externalAdapterRequired: false, cliOnlyToken: false, canonicalAccept: ".dxf" },
+    dwg: { canonicalFormat: "dwg", importerTranslationMode: "external-adapter", builtInAvailable: false, externalAdapterRequired: true, cliOnlyToken: false, canonicalAccept: ".dwg" },
+    step: { canonicalFormat: "step", importerTranslationMode: "built-in", builtInAvailable: true, externalAdapterRequired: false, cliOnlyToken: false, canonicalAccept: ".step,.stp,.p21,.stpnc" },
+    ifc: { canonicalFormat: "ifc", importerTranslationMode: "built-in", builtInAvailable: true, externalAdapterRequired: false, cliOnlyToken: false, canonicalAccept: ".ifc,.ifcxml,.ifczip" },
+    e57pointcloud: { canonicalFormat: "e57", importerTranslationMode: "external-adapter", builtInAvailable: false, externalAdapterRequired: true, cliOnlyToken: true, canonicalAccept: ".e57" }
+  };
+  for (const [token, expected] of Object.entries(expectedEntries)) {
+    const entry = coverage.targetFormatEntries?.[token];
+    if (
+      !entry
+      || entry.formatToken !== token
+      || entry.supported !== true
+      || entry.canonicalFormat !== expected.canonicalFormat
+      || entry.importerTranslationMode !== expected.importerTranslationMode
+      || entry.builtInAvailable !== expected.builtInAvailable
+      || entry.externalAdapterRequired !== expected.externalAdapterRequired
+      || entry.adapterRequestCapable !== true
+      || entry.cliOnlyToken !== expected.cliOnlyToken
+      || entry.canonicalAccept !== expected.canonicalAccept
+    ) {
+      fail(errors, `${context} target ${token} must expose UI-safe import routing and accept metadata: ${JSON.stringify(entry)}`);
+    }
+  }
+}
+
 function readJson(relative) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
 }
@@ -60,6 +103,8 @@ async function checkUiWorkspace(errors) {
   const iconRegistryPath = path.join(ROOT, "bobercad/app/ui/icons/icon-registry.mjs");
   const workspace = readJson(workspaceRelative);
   const workspaceSchema = readJson("bobercad/app/schemas/ui-workspace.schema.json");
+  const viewerCommandRegistrationText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/viewer-command-registration.mjs"), "utf8");
+  const dataSurfaceMetadataText = fs.readFileSync(dataSurfaceMetadataPath, "utf8");
   let registry;
   let commandGroupMetadata;
   let bottomStripMetadata;
@@ -434,6 +479,350 @@ async function checkUiWorkspace(errors) {
   ) {
     fail(errors, `data-surface-metadata must expose a frozen source provenance descriptor: ${JSON.stringify(dataSourceDescriptor)}`);
   }
+  const referenceImportFilePicker = dataSurfaceMetadata.referenceGeometryImportFilePickerDescriptor?.();
+  const referenceImportInputs = dataSurfaceMetadata.referenceGeometryImportInputDescriptors?.();
+  const referenceImportCliBlueprints = dataSurfaceMetadata.referenceGeometryImportCliBlueprints?.();
+  const referenceImportResults = dataSurfaceMetadata.referenceGeometryImportResultDescriptors?.();
+  const referenceImportAdapterPreflight = dataSurfaceMetadata.referenceGeometryImportAdapterPreflightDescriptors?.();
+  const referenceImportCommandPlan = dataSurfaceMetadata.referenceGeometryImportCommandPlanDescriptor?.();
+  const referenceImportWorkspaceRequest = dataSurfaceMetadata.referenceGeometryImportWorkspaceRequestDescriptor?.();
+  const referenceImportWorkspaceResponse = dataSurfaceMetadata.referenceGeometryImportWorkspaceResponseDescriptor?.();
+  const referenceImportSession = dataSurfaceMetadata.referenceGeometryImportSessionDescriptor?.();
+  const referenceImportWorkflow = dataSurfaceMetadata.referenceGeometryImportWorkflowDescriptor?.();
+  const referenceImportActionPreview = dataSurfaceMetadata.referenceGeometryImportActionPreview?.();
+  const referenceImportCommand = commandById.get("model.referenceGeometry.import");
+  assertReferenceImportTargetCoverage(errors, referenceImportFilePicker?.targetFormatCoverage, "reference import file picker descriptor");
+  if (JSON.stringify(referenceImportCommand?.referenceImport?.targetFormatCoverage) !== JSON.stringify(referenceImportFilePicker?.targetFormatCoverage)) {
+    fail(errors, `UI reference import command must reuse the file picker target-format coverage descriptor: ${JSON.stringify(referenceImportCommand?.referenceImport?.targetFormatCoverage)}`);
+  }
+  if (
+    !dataSurfaceMetadataText.includes("referenceGeometryImportWorkspaceResponseStatusToken")
+    || !dataSurfaceMetadataText.includes("REFERENCE_GEOMETRY_IMPORT_WORKSPACE_RESPONSE_STATUSES")
+    || !dataSurfaceMetadataText.includes("responseStatus = referenceGeometryImportWorkspaceResponseStatusToken(input.responseStatus)")
+  ) {
+    fail(errors, "data-surface-metadata must filter pasted reference import response envelope statuses through known workspace response tokens");
+  }
+  if (
+    !dataSurfaceMetadataText.includes("requestKind: REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST_KIND")
+    || !dataSurfaceMetadataText.includes("commandId: REFERENCE_GEOMETRY_IMPORT_WORKSPACE_COMMAND_ID")
+    || !dataSurfaceMetadataText.includes("requestDescriptorId: REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST_DESCRIPTOR_ID")
+    || !dataSurfaceMetadataText.includes("resultDescriptorId: REFERENCE_GEOMETRY_IMPORT_RESULT_DESCRIPTOR_ID")
+    || !dataSurfaceMetadataText.includes("const safeRequestId = referenceGeometryImportRequestId")
+    || !dataSurfaceMetadataText.includes("responseId: referenceGeometryImportResponseId(input.responseId, responsePayloadForId)")
+    || !dataSurfaceMetadataText.includes("requestId: safeRequestId")
+    || !dataSurfaceMetadataText.includes('label: "Reference Geometry Import Workspace Response"')
+    || !dataSurfaceMetadataText.includes('icon: "reference-plane"')
+    || !dataSurfaceMetadataText.includes('kind: "Reference Import Workspace Response"')
+    || dataSurfaceMetadataText.includes("requestId: cleanString(input.requestId")
+    || dataSurfaceMetadataText.includes("responseId: cleanString(input.responseId")
+    || dataSurfaceMetadataText.includes("requestKind: cleanString(input.requestKind")
+    || dataSurfaceMetadataText.includes("commandId: cleanString(input.commandId")
+    || dataSurfaceMetadataText.includes("requestDescriptorId: cleanString(input.requestDescriptorId")
+    || dataSurfaceMetadataText.includes("resultDescriptorId: cleanString(input.resultDescriptorId")
+  ) {
+    fail(errors, "data-surface-metadata must derive reference import workspace response ids and descriptor metadata from app-side safe-id helpers/constants, not pasted host response strings");
+  }
+  const workspaceResponseKnownStageFilters = dataSurfaceMetadataText.match(/stageId = referenceGeometryImportKnownStageId\(/g) || [];
+  if (
+    workspaceResponseKnownStageFilters.length < 2
+    || dataSurfaceMetadataText.includes("stageId = cleanString(input.stageId)")
+  ) {
+    fail(errors, "data-surface-metadata must filter reference import workspace response stage ids through known workflow stages before session or envelope routing");
+  }
+  if (
+    !dataSurfaceMetadataText.includes("referenceGeometryImportWorkspaceFingerprintSummary")
+    || !dataSurfaceMetadataText.includes("function referenceGeometryImportSha256Fingerprint")
+    || !dataSurfaceMetadataText.includes("function referenceGeometryImportFirstSha256Fingerprint")
+    || !dataSurfaceMetadataText.includes("/^sha256:[0-9a-f]{64}$/")
+    || !dataSurfaceMetadataText.includes("referenceSourceDescriptionFingerprint: referenceGeometryImportSha256Fingerprint")
+    || !dataSurfaceMetadataText.includes("referenceImportPlanFingerprint: referenceGeometryImportFirstSha256Fingerprint")
+    || !dataSurfaceMetadataText.includes("adapterRequestFingerprint: referenceGeometryImportFirstSha256Fingerprint")
+    || !dataSurfaceMetadataText.includes("referenceTranslatedManifestFingerprint: referenceGeometryImportSha256Fingerprint")
+    || !dataSurfaceMetadataText.includes("referenceManifestFingerprint: referenceGeometryImportFirstSha256Fingerprint")
+    || !dataSurfaceMetadataText.includes("referenceAuditFingerprint: referenceGeometryImportSha256Fingerprint")
+    || dataSurfaceMetadataText.includes("Fingerprint: cleanString")
+  ) {
+    fail(errors, "data-surface-metadata must filter reference import fingerprintSummary and public response summary fingerprint fields to valid lowercase sha256 fingerprints before session routing");
+  }
+  if (
+    !dataSurfaceMetadataText.includes("function nullableBoolean")
+    || !dataSurfaceMetadataText.includes("sourceFileReadyForImport: nullableBoolean(value.sourceFileReadyForImport)")
+    || !dataSurfaceMetadataText.includes("projectPointerReady: nullableBoolean(value.projectPointerReady)")
+    || !dataSurfaceMetadataText.includes("adapterRequestReady: nullableBoolean(value.adapterRequestReady)")
+    || !dataSurfaceMetadataText.includes("writesProjectJson: nullableBoolean(value.writesProjectJson)")
+  ) {
+    fail(errors, "data-surface-metadata must filter reference import stage-decision readiness and write-boundary booleans to true/false/null before session routing");
+  }
+  if (
+    !dataSurfaceMetadataText.includes("function firstNullableBoolean")
+    || !dataSurfaceMetadataText.includes("projectPointerReady: firstNullableBoolean(decision.projectPointerReady, resultJson.projectPointerReady)")
+    || !dataSurfaceMetadataText.includes("adapterRequestReady = firstNullableBoolean(decision.adapterRequestReady, resultJson.adapterRequestReady)")
+    || !dataSurfaceMetadataText.includes("projectJsonWritten: firstNullableBoolean(decision.projectJsonWritten, resultJson.projectJsonWritten)")
+    || !dataSurfaceMetadataText.includes("workflowStageComplete: firstNullableBoolean(decision.workflowStageComplete, workflowStatus.workflowStageComplete)")
+  ) {
+    fail(errors, "data-surface-metadata must filter reference import summary readiness and write-boundary booleans to true/false/null before panel/session routing");
+  }
+  if (
+    !dataSurfaceMetadataText.includes("function referenceGeometryImportAssetId")
+    || !dataSurfaceMetadataText.includes("function referenceGeometryImportFirstAssetId")
+    || !dataSurfaceMetadataText.includes("isSafeProjectReferenceGeometryAssetId(value)")
+    || !dataSurfaceMetadataText.includes("assetId: referenceGeometryImportAssetId(value.assetId)")
+    || !dataSurfaceMetadataText.includes("assetId: referenceGeometryImportFirstAssetId(decision.assetId, resultJson.assetId)")
+    || !dataSurfaceMetadataText.includes("requestedAssetId: referenceGeometryImportFirstAssetId")
+    || !dataSurfaceMetadataText.includes("highestPriorityAssetId: referenceGeometryImportAssetId")
+  ) {
+    fail(errors, "data-surface-metadata must filter reference import response asset ids through the project reference asset-id guard before panel/session routing");
+  }
+  if (
+    !dataSurfaceMetadataText.includes('const REFERENCE_GEOMETRY_CANONICAL_SCHEMA_NAME = "bobercad-reference-geometry"')
+    || !dataSurfaceMetadataText.includes('const REFERENCE_GEOMETRY_CANONICAL_SCHEMA_VERSION = "0.1.0"')
+    || !dataSurfaceMetadataText.includes("REFERENCE_GEOMETRY_IMPORT_REFERENCE_UNIT_TOKENS")
+    || !dataSurfaceMetadataText.includes("function referenceGeometryImportReferenceSchemaName")
+    || !dataSurfaceMetadataText.includes("function referenceGeometryImportFirstReferenceSchemaName")
+    || !dataSurfaceMetadataText.includes("referenceSchema: referenceGeometryImportReferenceSchemaName")
+    || !dataSurfaceMetadataText.includes("referenceSchema: referenceGeometryImportFirstReferenceSchemaName")
+    || !dataSurfaceMetadataText.includes("referenceSchemaVersion: referenceGeometryImportReferenceSchemaVersion")
+    || !dataSurfaceMetadataText.includes("referenceSchemaVersion: referenceGeometryImportFirstReferenceSchemaVersion")
+    || !dataSurfaceMetadataText.includes("referenceUnits: referenceGeometryImportReferenceUnits")
+    || !dataSurfaceMetadataText.includes("referenceUnits: referenceGeometryImportFirstReferenceUnits")
+    || dataSurfaceMetadataText.includes("referenceSchema: cleanString")
+    || dataSurfaceMetadataText.includes("referenceSchemaVersion: cleanString")
+    || dataSurfaceMetadataText.includes("referenceUnits: cleanString")
+  ) {
+    fail(errors, "data-surface-metadata must filter reference import canonical schema identity and units through the published reference geometry contract before panel/session routing");
+  }
+  if (
+    !dataSurfaceMetadataText.includes('const REFERENCE_GEOMETRY_BUILT_IN_TRANSLATOR_ID = "tools/reference-geometry/translate_reference_geometry.mjs"')
+    || !dataSurfaceMetadataText.includes("function referenceGeometryImportSourceTranslator")
+    || !dataSurfaceMetadataText.includes("function referenceGeometryImportSourceTranslatorVersion")
+    || !dataSurfaceMetadataText.includes('text.startsWith("external:")')
+    || !dataSurfaceMetadataText.includes("return referenceGeometryImportMachineToken(text)")
+    || !dataSurfaceMetadataText.includes("sourceTranslator: referenceGeometryImportSourceTranslator")
+    || !dataSurfaceMetadataText.includes("sourceTranslatorVersion: referenceGeometryImportSourceTranslatorVersion")
+    || dataSurfaceMetadataText.includes("sourceTranslator: cleanString")
+    || dataSurfaceMetadataText.includes("sourceTranslatorVersion: cleanString")
+  ) {
+    fail(errors, "data-surface-metadata must filter reference import source translator provenance and translator-version tokens before panel/session routing");
+  }
+  const unsafeTranslatorVersionResponse = dataSurfaceMetadata.referenceGeometryImportWorkspaceResponse({
+    stageId: "dry-run",
+    resultJson: {
+      ok: true,
+      referenceImportExecutionMode: "dry-run",
+      translationMode: "external-adapter",
+      assetId: "unsafe_version_reference",
+      referenceImportName: "Unsafe Version Reference",
+      sourceFormat: "dwg",
+      sourceRequestedFormat: "dwg",
+      sourceAdapter: "dwg_adapter",
+      sourceTranslator: "C:/private/adapter.mjs",
+      sourceTranslatorVersion: "C:/private/adapter-version.txt",
+      referenceSchema: "bobercad-reference-geometry",
+      referenceSchemaVersion: "0.1.0",
+      referenceUnits: "mm",
+      referenceObjectCount: 1
+    }
+  });
+  if (
+    unsafeTranslatorVersionResponse?.referenceOutputSummary?.sourceTranslator !== ""
+    || unsafeTranslatorVersionResponse?.referenceOutputSummary?.sourceTranslatorVersion !== ""
+  ) {
+    fail(errors, `data-surface-metadata must drop unsafe source translator/version provenance from workspace summaries: ${JSON.stringify(unsafeTranslatorVersionResponse?.referenceOutputSummary)}`);
+  }
+  const safeTranslatorVersionResponse = dataSurfaceMetadata.referenceGeometryImportWorkspaceResponse({
+    stageId: "dry-run",
+    resultJson: {
+      ok: true,
+      referenceImportExecutionMode: "dry-run",
+      translationMode: "external-adapter",
+      assetId: "safe_version_reference",
+      referenceImportName: "Safe Version Reference",
+      sourceFormat: "dwg",
+      sourceRequestedFormat: "dwg",
+      sourceAdapter: "dwg_adapter",
+      sourceTranslator: "external:dwg_adapter",
+      sourceTranslatorVersion: "0.1.0",
+      referenceSchema: "bobercad-reference-geometry",
+      referenceSchemaVersion: "0.1.0",
+      referenceUnits: "mm",
+      referenceObjectCount: 1
+    }
+  });
+  if (
+    safeTranslatorVersionResponse?.referenceOutputSummary?.sourceTranslator !== "external:dwg_adapter"
+    || safeTranslatorVersionResponse?.referenceOutputSummary?.sourceTranslatorVersion !== "0.1.0"
+  ) {
+    fail(errors, `data-surface-metadata must preserve safe source translator/version provenance in workspace summaries: ${JSON.stringify(safeTranslatorVersionResponse?.referenceOutputSummary)}`);
+  }
+  const unsafePromotionTranslatorVersionResponse = dataSurfaceMetadata.referenceGeometryImportWorkspaceResponse({
+    stageId: "import",
+    resultJson: {
+      ok: true,
+      referenceImportExecutionMode: "import",
+      translationMode: "external-adapter",
+      assetId: "unsafe_promotion_version_reference",
+      referenceImportName: "Unsafe Promotion Version Reference",
+      sourceFormat: "dwg",
+      sourceRequestedFormat: "dwg",
+      sourceAdapter: "dwg_adapter",
+      sourceTranslator: "C:/private/adapter.mjs",
+      sourceTranslatorVersion: "C:/private/adapter-version.txt",
+      referenceSchema: "bobercad-reference-geometry",
+      referenceSchemaVersion: "0.1.0",
+      referenceUnits: "mm",
+      referenceObjectCount: 1,
+      projectJsonWritten: true,
+      targetReferenceManifestWritten: true,
+      promotedOutputFingerprintsReady: true,
+      referenceManifestFingerprint: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      referenceArtifactFingerprint: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  });
+  if (
+    unsafePromotionTranslatorVersionResponse?.referencePromotionSummary?.sourceTranslator !== ""
+    || unsafePromotionTranslatorVersionResponse?.referencePromotionSummary?.sourceTranslatorVersion !== ""
+  ) {
+    fail(errors, `data-surface-metadata must drop unsafe source translator/version provenance from promotion summaries: ${JSON.stringify(unsafePromotionTranslatorVersionResponse?.referencePromotionSummary)}`);
+  }
+  const safePromotionTranslatorVersionResponse = dataSurfaceMetadata.referenceGeometryImportWorkspaceResponse({
+    stageId: "import",
+    resultJson: {
+      ok: true,
+      referenceImportExecutionMode: "import",
+      translationMode: "external-adapter",
+      assetId: "safe_promotion_version_reference",
+      referenceImportName: "Safe Promotion Version Reference",
+      sourceFormat: "dwg",
+      sourceRequestedFormat: "dwg",
+      sourceAdapter: "dwg_adapter",
+      sourceTranslator: "external:dwg_adapter",
+      sourceTranslatorVersion: "0.1.0",
+      referenceSchema: "bobercad-reference-geometry",
+      referenceSchemaVersion: "0.1.0",
+      referenceUnits: "mm",
+      referenceObjectCount: 1,
+      projectJsonWritten: true,
+      targetReferenceManifestWritten: true,
+      promotedOutputFingerprintsReady: true,
+      referenceManifestFingerprint: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      referenceArtifactFingerprint: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    }
+  });
+  if (
+    safePromotionTranslatorVersionResponse?.referencePromotionSummary?.sourceTranslator !== "external:dwg_adapter"
+    || safePromotionTranslatorVersionResponse?.referencePromotionSummary?.sourceTranslatorVersion !== "0.1.0"
+  ) {
+    fail(errors, `data-surface-metadata must preserve safe source translator/version provenance in promotion summaries: ${JSON.stringify(safePromotionTranslatorVersionResponse?.referencePromotionSummary)}`);
+  }
+  if (
+    !dataSurfaceMetadataText.includes("REFERENCE_GEOMETRY_IMPORT_FIX_AREA_TOKENS")
+    || !dataSurfaceMetadataText.includes("REFERENCE_GEOMETRY_IMPORT_FAILURE_KIND_TOKENS")
+    || !dataSurfaceMetadataText.includes("REFERENCE_GEOMETRY_IMPORT_AUDIT_STATUS_TOKENS")
+    || !dataSurfaceMetadataText.includes("REFERENCE_GEOMETRY_IMPORT_DIAGNOSTIC_SEVERITY_TOKENS")
+    || !dataSurfaceMetadataText.includes("REFERENCE_GEOMETRY_IMPORT_OBJECT_KIND_TOKENS")
+    || !dataSurfaceMetadataText.includes("REFERENCE_GEOMETRY_IMPORT_ADAPTER_OUTPUT_VALIDATION_KIND_TOKENS")
+    || !dataSurfaceMetadataText.includes("likelyFixArea: referenceGeometryImportFixAreaToken")
+    || !dataSurfaceMetadataText.includes("adapterPreflightLikelyFixArea: referenceGeometryImportFixAreaToken")
+    || !dataSurfaceMetadataText.includes("blockingStatuses: Object.freeze(referenceGeometryImportAuditStatusArray")
+    || !dataSurfaceMetadataText.includes("blockingDiagnosticCodes: Object.freeze(referenceGeometryImportMachineTokenArray")
+    || !dataSurfaceMetadataText.includes("diagnosticSeverityCounts: cleanDiagnosticSeverityCountRecord")
+    || !dataSurfaceMetadataText.includes("diagnosticCodeCounts: cleanMachineTokenCountRecord")
+    || !dataSurfaceMetadataText.includes("referenceObjectKindCounts: cleanObjectKindCountRecord")
+    || !dataSurfaceMetadataText.includes("referenceAuditStatusCounts: cleanAuditStatusCountRecord")
+    || !dataSurfaceMetadataText.includes("referenceAuditSeverityCounts: cleanAuditSeverityCountRecord")
+    || !dataSurfaceMetadataText.includes("objectKindCounts: cleanObjectKindCountRecord")
+    || !dataSurfaceMetadataText.includes("adapterErrorCode = referenceGeometryImportFirstMachineToken")
+    || !dataSurfaceMetadataText.includes("adapterOutputValidationKind: referenceGeometryImportAdapterOutputValidationKindToken")
+  ) {
+    fail(errors, "data-surface-metadata must whitelist reference import fix-area, failure, audit, diagnostic, object-kind, adapter error, and adapter validation kind tokens before panel/session routing");
+  }
+  if (
+    !referenceImportCommand
+    || !(registry.MODEL_REFERENCE_COMMANDS || []).some((command) => command.id === "model.referenceGeometry.import")
+    || referenceImportCommand.action !== "onReferenceGeometryImportOpen"
+    || referenceImportCommand.group !== "model"
+    || referenceImportCommand.ribbonSection !== "references"
+    || referenceImportCommand.navSurface !== "feature-navbar"
+    || referenceImportCommand.icon !== "reference-plane"
+    || referenceImportCommand.status !== "available"
+    || referenceImportCommand.implemented !== true
+    || referenceImportCommand.disabledReason
+    || !referenceImportCommand.description?.includes(referenceImportFilePicker?.accept || "missing-accept")
+    || referenceImportCommand.referenceImport?.filePickerDescriptorId !== referenceImportFilePicker?.id
+    || referenceImportCommand.referenceImport?.inputDescriptorId !== referenceImportInputs?.id
+    || JSON.stringify(referenceImportCommand.referenceImport?.inputDescriptorIds) !== JSON.stringify(referenceImportInputs?.descriptorIds)
+    || referenceImportCommand.referenceImport?.cliBlueprintId !== referenceImportCliBlueprints?.id
+    || referenceImportCommand.referenceImport?.resultDescriptorId !== referenceImportResults?.id
+    || referenceImportCommand.referenceImport?.adapterPreflightDescriptorId !== referenceImportAdapterPreflight?.id
+    || referenceImportCommand.referenceImport?.commandPlanDescriptorId !== referenceImportCommandPlan?.id
+    || referenceImportCommand.referenceImport?.workspaceRequestDescriptorId !== referenceImportWorkspaceRequest?.id
+    || referenceImportCommand.referenceImport?.workspaceResponseDescriptorId !== referenceImportWorkspaceResponse?.id
+    || referenceImportCommand.referenceImport?.sessionDescriptorId !== referenceImportSession?.id
+    || referenceImportCommand.referenceImport?.workflowDescriptorId !== referenceImportWorkflow?.id
+    || referenceImportCommand.referenceImport?.actionPreviewDescriptorId !== referenceImportActionPreview?.id
+    || referenceImportCommand.referenceImport?.sourceInputDescriptorId !== referenceImportInputs?.sourceInputDescriptorId
+    || referenceImportCommand.referenceImport?.projectInputDescriptorId !== referenceImportInputs?.projectInputDescriptorId
+    || referenceImportCommand.referenceImport?.adapterRequestArtifactDescriptorId !== referenceImportInputs?.adapterRequestArtifactDescriptorId
+    || referenceImportCommand.referenceImport?.accept !== referenceImportFilePicker?.accept
+    || JSON.stringify(referenceImportCommand.referenceImport?.canonicalFormats) !== JSON.stringify((referenceImportFilePicker?.sourceGroups || []).map((group) => group.canonicalFormat))
+    || referenceImportCommand.referenceImport?.safeFirstExecutionMode !== referenceImportFilePicker?.safeFirstExecutionMode
+    || referenceImportCommand.referenceImport?.recommendedPrewriteValidationMode !== referenceImportFilePicker?.recommendedPrewriteValidationMode
+    || referenceImportCommand.referenceImport?.targetPromotionExecutionMode !== referenceImportFilePicker?.targetPromotionExecutionMode
+    || JSON.stringify(referenceImportCommand.referenceImport?.safeGateOrder) !== JSON.stringify(referenceImportFilePicker?.safeGateOrder)
+    || JSON.stringify(referenceImportCommand.referenceImport?.externalAdapterGateOrder) !== JSON.stringify(referenceImportFilePicker?.externalAdapterGateOrder)
+    || JSON.stringify(referenceImportCommand.referenceImport?.workflowStages) !== JSON.stringify(referenceImportWorkflow?.workflowStages)
+    || JSON.stringify(referenceImportCommand.referenceImport?.stageRequiredInputDescriptorIds) !== JSON.stringify(referenceImportWorkflow?.stageRequiredInputDescriptorIds)
+    || JSON.stringify(referenceImportCommand.referenceImport?.stageArtifactDescriptorIds) !== JSON.stringify(referenceImportWorkflow?.stageArtifactDescriptorIds)
+    || JSON.stringify(referenceImportCommand.referenceImport?.stageRequiredCliFlags) !== JSON.stringify(referenceImportCliBlueprints?.stageRequiredCliFlags)
+    || JSON.stringify(referenceImportCommand.referenceImport?.stageOptionalCliFlags) !== JSON.stringify(referenceImportCliBlueprints?.stageOptionalCliFlags)
+    || JSON.stringify(referenceImportCommand.referenceImport?.cliFlagBindings) !== JSON.stringify(referenceImportCliBlueprints?.cliFlagBindings)
+    || JSON.stringify(referenceImportCommand.referenceImport?.successEnvelopeFields) !== JSON.stringify(referenceImportResults?.successEnvelopeFields)
+    || JSON.stringify(referenceImportCommand.referenceImport?.errorEnvelopeFields) !== JSON.stringify(referenceImportResults?.errorEnvelopeFields)
+    || referenceImportCommand.referenceImport?.failureDecisionField !== referenceImportResults?.failureDecisionField
+    || referenceImportCommand.referenceImport?.adapterPreflightCommand !== referenceImportAdapterPreflight?.discoveryCommand
+    || JSON.stringify(referenceImportCommand.referenceImport?.adapterPreflightRequiredInputDescriptorIds) !== JSON.stringify(referenceImportAdapterPreflight?.requiredInputDescriptorIds)
+    || referenceImportCommand.referenceImport?.adapterPreflightDecisionField !== referenceImportAdapterPreflight?.preflightDecisionField
+    || JSON.stringify(referenceImportCommand.referenceImport?.adapterPreflightDiagnosticCodes) !== JSON.stringify(referenceImportAdapterPreflight?.diagnosticCodes)
+    || referenceImportCommand.referenceImport?.commandPlanFunction !== referenceImportCommandPlan?.commandPlanFunction
+    || JSON.stringify(referenceImportCommand.referenceImport?.commandPlanFields) !== JSON.stringify(referenceImportCommandPlan?.commandPlanFields)
+    || referenceImportCommand.referenceImport?.commandPlanRuntimeCommand !== referenceImportCommandPlan?.runtimeCommand
+    || referenceImportCommand.referenceImport?.commandPlanCliEntrypoint !== referenceImportCommandPlan?.cliEntrypoint
+    || referenceImportCommand.referenceImport?.commandPlanRequiresWorkspaceCommandHost !== true
+    || JSON.stringify(referenceImportCommand.referenceImport?.commandPlanRuntimeBoundary) !== JSON.stringify(referenceImportCommandPlan?.appRuntimeBoundary)
+    || referenceImportCommand.referenceImport?.workspaceRequestKind !== referenceImportWorkspaceRequest?.requestKind
+    || referenceImportCommand.referenceImport?.workspaceRequestBuilderFunction !== referenceImportWorkspaceRequest?.requestBuilderFunction
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceRequestFields) !== JSON.stringify(referenceImportWorkspaceRequest?.requestFields)
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceRequestResultRoutingFields) !== JSON.stringify(referenceImportWorkspaceRequest?.resultRoutingFields)
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceRequestRequiresWriteConfirmationStages) !== JSON.stringify(referenceImportWorkspaceRequest?.requiresWriteConfirmationStages)
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceRequestCommandHostBoundary) !== JSON.stringify(referenceImportWorkspaceRequest?.commandHostBoundary)
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceRequestRuntimeBoundary) !== JSON.stringify(referenceImportWorkspaceRequest?.appRuntimeBoundary)
+    || referenceImportCommand.referenceImport?.workspaceResponseBuilderFunction !== referenceImportWorkspaceResponse?.responseBuilderFunction
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceResponseFields) !== JSON.stringify(referenceImportWorkspaceResponse?.responseFields)
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceResponseStatuses) !== JSON.stringify(referenceImportWorkspaceResponse?.responseStatuses)
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceResponseParsePolicy) !== JSON.stringify(referenceImportWorkspaceResponse?.parsePolicy)
+    || JSON.stringify(referenceImportCommand.referenceImport?.workspaceResponseRuntimeBoundary) !== JSON.stringify(referenceImportWorkspaceResponse?.appRuntimeBoundary)
+    || referenceImportCommand.referenceImport?.sessionBuilderFunction !== referenceImportSession?.sessionBuilderFunction
+    || JSON.stringify(referenceImportCommand.referenceImport?.sessionFields) !== JSON.stringify(referenceImportSession?.sessionFields)
+    || JSON.stringify(referenceImportCommand.referenceImport?.sessionStageStateFields) !== JSON.stringify(referenceImportSession?.stageStateFields)
+    || referenceImportCommand.referenceImport?.sessionDryRunRequiredBeforeImport !== true
+    || JSON.stringify(referenceImportCommand.referenceImport?.sessionNextRequestPolicy) !== JSON.stringify(referenceImportSession?.nextRequestPolicy)
+    || JSON.stringify(referenceImportCommand.referenceImport?.sessionRuntimeBoundary) !== JSON.stringify(referenceImportSession?.appRuntimeBoundary)
+    || JSON.stringify(referenceImportCommand.referenceImport?.optionalWorkflowStages) !== JSON.stringify(referenceImportWorkflow?.optionalStages)
+    || JSON.stringify(referenceImportCommand.referenceImport?.noProjectOrTargetWriteStages) !== JSON.stringify(referenceImportWorkflow?.noProjectOrTargetWriteStages)
+    || JSON.stringify(referenceImportCommand.referenceImport?.promotedWriteStages) !== JSON.stringify(referenceImportWorkflow?.promotedWriteStages)
+    || referenceImportCommand.referenceImport?.workflowStatusField !== referenceImportWorkflow?.workflowStatusField
+    || JSON.stringify(referenceImportCommand.referenceImport?.actionPreviewRuntimeBoundary) !== JSON.stringify(referenceImportActionPreview?.appRuntimeBoundary)
+  ) {
+    fail(errors, `UI reference import command must open the safe import panel and derive metadata from app-side reference import descriptors: ${JSON.stringify(referenceImportCommand)}`);
+  }
+  if (
+    !viewerCommandRegistrationText.includes("onReferenceGeometryImportOpen")
+    || !viewerCommandRegistrationText.includes("model.referenceGeometry.import")
+    || !viewerCommandRegistrationText.includes('showDataDockTab?.("reference-import")')
+    || !viewerCommandRegistrationText.includes("getReferenceImportPanelUi()?.focusSource?.()")
+  ) {
+    fail(errors, "Viewer command registration must open the Reference Import Data Dock tab without executing importer CLI");
+  }
   const dataLibraryDescriptor = dataSurfaceMetadata.dataLibraryDescriptor?.("profiles", {
     libraryId: "starter-profiles",
     version: "1.0.0",
@@ -501,8 +890,9 @@ async function checkUiWorkspace(errors) {
     if (tab.icon && !iconNames.has(tab.icon)) fail(errors, `data-dock-metadata tab ${tab.id} references unknown icon: ${tab.icon}`);
   }
   const metadataDataDockTabOrder = (dataDockMetadata.DATA_DOCK_TABS || []).map((tab) => tab.id);
-  if (JSON.stringify(metadataDataDockTabOrder) !== JSON.stringify(["project", "files", "data", "model", "connections", "components"])) {
-    fail(errors, `data-dock-metadata must keep Project/Files/Data/Model/Connections/Components tab order: ${JSON.stringify(metadataDataDockTabOrder)}`);
+  const expectedDataDockTabOrder = ["project", "files", "reference-import", "data", "model", "connections", "components"];
+  if (JSON.stringify(metadataDataDockTabOrder) !== JSON.stringify(expectedDataDockTabOrder)) {
+    fail(errors, `data-dock-metadata must keep Project/Files/Import/Data/Model/Connections/Components tab order: ${JSON.stringify(metadataDataDockTabOrder)}`);
   }
   if (!dataDockMetadata.DATA_DOCK_PANEL_DESCRIPTION || !dataDockMetadata.DATA_DOCK_PANEL_ICON || !dataDockMetadata.DATA_DOCK_PANEL_DOCK) {
     fail(errors, "data-dock-metadata must declare panel description, icon, and dock constants");
@@ -556,13 +946,13 @@ async function checkUiWorkspace(errors) {
     width: 300,
     dock: "left",
     pinned: true,
-    tabIds: ["project", "files", "data", "model", "connections", "components"],
+    tabIds: [...expectedDataDockTabOrder],
     hiddenTabIds: ["model"],
     activeTab: "components"
   };
   const panelTabReordered = workspaceCustomizer.movePanelTabBefore?.(panelTabReorderInput, panelTabConfig, "components", "data");
   if (
-    JSON.stringify(panelTabReordered?.tabIds) !== JSON.stringify(["project", "files", "components", "data", "model", "connections"])
+    JSON.stringify(panelTabReordered?.tabIds) !== JSON.stringify(["project", "files", "reference-import", "components", "data", "model", "connections"])
     || JSON.stringify(panelTabReordered?.hiddenTabIds) !== JSON.stringify(["model"])
     || panelTabReordered?.activeTab !== "components"
     || workspaceCustomizer.movePanelTabBefore?.(panelTabReorderInput, panelTabConfig, "missing", "data") !== panelTabReorderInput

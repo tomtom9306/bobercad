@@ -550,7 +550,8 @@
             "cuttingObjects",
             "fasteners",
             "grids",
-            "referencePlanes"
+            "referencePlanes",
+            "referenceGeometry"
           ],
           "properties": {
             "cuttingObjects": {
@@ -563,6 +564,9 @@
               "type": "boolean"
             },
             "referencePlanes": {
+              "type": "boolean"
+            },
+            "referenceGeometry": {
               "type": "boolean"
             }
           },
@@ -639,6 +643,28 @@
             "lineWidth": {
               "type": "number",
               "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "referenceGeometry": {
+          "type": "object",
+          "properties": {
+            "pointPreviewLimit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "pointPreviewChunkLimit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lineSegmentPreviewLimit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "meshFacePreviewLimit": {
+              "type": "integer",
+              "minimum": 0
             }
           },
           "additionalProperties": false

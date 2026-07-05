@@ -300,7 +300,8 @@
       "cuttingObjects": true,
       "fasteners": true,
       "grids": true,
-      "referencePlanes": true
+      "referencePlanes": true,
+      "referenceGeometry": true
     },
     "datum": {
       "gridColor": "#0ea5e9",
@@ -324,6 +325,12 @@
       "plateColor": "#4b5563",
       "fastenerHeadColor": "#facc15",
       "lineWidth": 1
+    },
+    "referenceGeometry": {
+      "pointPreviewLimit": 5000,
+      "pointPreviewChunkLimit": 128,
+      "lineSegmentPreviewLimit": 100000,
+      "meshFacePreviewLimit": 50000
     },
     "dimensions": {
       "fontFamily": "Arial, sans-serif",

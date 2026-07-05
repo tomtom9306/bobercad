@@ -1,0 +1,17 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP quoted reference reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_string_refs.step', '2026-06-28T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('fake origin', (900.0, 900.0, 900.0));
+#2 = CARTESIAN_POINT('real origin', (100.0, 200.0, 0.0));
+#3 = DIRECTION('z', (0.0, 0.0, 1.0));
+#4 = DIRECTION('x', (1.0, 0.0, 0.0));
+#5 = AXIS2_PLACEMENT_3D('label mentions #1 but uses #2', #2, #3, #4);
+#6 = CIRCLE('', #5, 15.0);
+#7 = GEOMETRIC_CURVE_SET('', (#6));
+#8 = SHAPE_REPRESENTATION('', (#7), $);
+ENDSEC;
+END-ISO-10303-21;

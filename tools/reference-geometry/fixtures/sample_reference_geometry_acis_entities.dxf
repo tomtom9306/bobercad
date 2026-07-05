@@ -1,0 +1,96 @@
+0
+SECTION
+2
+TABLES
+0
+TABLE
+2
+LAYER
+0
+LAYER
+2
+ACIS_REF
+62
+6
+0
+ENDTAB
+0
+ENDSEC
+0
+SECTION
+2
+ENTITIES
+0
+LINE
+8
+ACIS_REF
+10
+0
+20
+0
+30
+0
+11
+100
+21
+0
+31
+0
+0
+3DSOLID
+8
+ACIS_REF
+1
+ACIS 3dsolid payload placeholder
+0
+BODY
+8
+ACIS_REF
+1
+ACIS body payload placeholder
+0
+REGION
+8
+ACIS_REF
+1
+ACIS region payload placeholder
+0
+SURFACE
+8
+ACIS_REF
+1
+ACIS surface payload placeholder
+0
+PLANESURFACE
+8
+ACIS_REF
+1
+ACIS plane surface payload placeholder
+0
+EXTRUDEDSURFACE
+8
+ACIS_REF
+1
+ACIS extruded surface payload placeholder
+0
+REVOLVEDSURFACE
+8
+ACIS_REF
+1
+ACIS revolved surface payload placeholder
+0
+LOFTEDSURFACE
+8
+ACIS_REF
+1
+ACIS lofted surface payload placeholder
+0
+SWEPTSURFACE
+8
+ACIS_REF
+1
+ACIS swept surface payload placeholder
+0
+ENDSEC
+0
+EOF

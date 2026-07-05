@@ -9,10 +9,34 @@ import { INSPECTOR_COMMAND_DESCRIPTION, INSPECTOR_COMMAND_ICON, INSPECTOR_COMMAN
 import { COMMAND_GROUPS } from "./command-group-metadata.mjs";
 import { SNAP_SCOPE_MODES, SNAP_STRENGTH_SPECS, SNAP_TARGET_SPECS } from "./snap-metadata.mjs";
 import { DISPLAY_MODE_SPECS, VIEW_ORIENTATION_SPECS } from "./view-metadata.mjs";
+import {
+  referenceGeometryImportAdapterPreflightDescriptors,
+  referenceGeometryImportActionPreview,
+  referenceGeometryImportCommandPlanDescriptor,
+  referenceGeometryImportFilePickerDescriptor,
+  referenceGeometryImportCliBlueprints,
+  referenceGeometryImportInputDescriptors,
+  referenceGeometryImportResultDescriptors,
+  referenceGeometryImportSessionDescriptor,
+  referenceGeometryImportWorkspaceRequestDescriptor,
+  referenceGeometryImportWorkspaceResponseDescriptor,
+  referenceGeometryImportWorkflowDescriptor
+} from "./data-surface-metadata.mjs";
 
 export { COMMAND_GROUPS };
 
 const FEATURE_NAVBAR_SURFACE = "feature-navbar";
+const REFERENCE_GEOMETRY_IMPORT_FILE_PICKER = referenceGeometryImportFilePickerDescriptor();
+const REFERENCE_GEOMETRY_IMPORT_INPUTS = referenceGeometryImportInputDescriptors();
+const REFERENCE_GEOMETRY_IMPORT_CLI_BLUEPRINTS = referenceGeometryImportCliBlueprints();
+const REFERENCE_GEOMETRY_IMPORT_RESULTS = referenceGeometryImportResultDescriptors();
+const REFERENCE_GEOMETRY_IMPORT_ADAPTER_PREFLIGHT = referenceGeometryImportAdapterPreflightDescriptors();
+const REFERENCE_GEOMETRY_IMPORT_COMMAND_PLAN = referenceGeometryImportCommandPlanDescriptor();
+const REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST = referenceGeometryImportWorkspaceRequestDescriptor();
+const REFERENCE_GEOMETRY_IMPORT_WORKSPACE_RESPONSE = referenceGeometryImportWorkspaceResponseDescriptor();
+const REFERENCE_GEOMETRY_IMPORT_SESSION = referenceGeometryImportSessionDescriptor();
+const REFERENCE_GEOMETRY_IMPORT_WORKFLOW = referenceGeometryImportWorkflowDescriptor();
+const REFERENCE_GEOMETRY_IMPORT_ACTION_PREVIEW = referenceGeometryImportActionPreview();
 
 export const MODELING_TOOLBAR_COMMANDS = [
   {
@@ -191,6 +215,86 @@ export const MODEL_REFERENCE_COMMANDS = [
     navSurface: FEATURE_NAVBAR_SURFACE,
     ribbonSection: "references",
     icon: "grid"
+  },
+  {
+    id: "model.referenceGeometry.import",
+    action: "onReferenceGeometryImportOpen",
+    label: "Reference Import",
+    title: "Import reference geometry",
+    description: `Open an isolated reference geometry import session for ${REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.accept}.`,
+    group: "model",
+    status: "available",
+    implemented: true,
+    navSurface: FEATURE_NAVBAR_SURFACE,
+    ribbonSection: "references",
+    icon: "reference-plane",
+    referenceImport: Object.freeze({
+      filePickerDescriptorId: REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.id,
+      inputDescriptorId: REFERENCE_GEOMETRY_IMPORT_INPUTS.id,
+      inputDescriptorIds: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_INPUTS.descriptorIds]),
+      cliBlueprintId: REFERENCE_GEOMETRY_IMPORT_CLI_BLUEPRINTS.id,
+      resultDescriptorId: REFERENCE_GEOMETRY_IMPORT_RESULTS.id,
+      adapterPreflightDescriptorId: REFERENCE_GEOMETRY_IMPORT_ADAPTER_PREFLIGHT.id,
+      commandPlanDescriptorId: REFERENCE_GEOMETRY_IMPORT_COMMAND_PLAN.id,
+      workspaceRequestDescriptorId: REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST.id,
+      workspaceResponseDescriptorId: REFERENCE_GEOMETRY_IMPORT_WORKSPACE_RESPONSE.id,
+      sessionDescriptorId: REFERENCE_GEOMETRY_IMPORT_SESSION.id,
+      workflowDescriptorId: REFERENCE_GEOMETRY_IMPORT_WORKFLOW.id,
+      actionPreviewDescriptorId: REFERENCE_GEOMETRY_IMPORT_ACTION_PREVIEW.id,
+      sourceInputDescriptorId: REFERENCE_GEOMETRY_IMPORT_INPUTS.sourceInputDescriptorId,
+      projectInputDescriptorId: REFERENCE_GEOMETRY_IMPORT_INPUTS.projectInputDescriptorId,
+      adapterRequestArtifactDescriptorId: REFERENCE_GEOMETRY_IMPORT_INPUTS.adapterRequestArtifactDescriptorId,
+      accept: REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.accept,
+      canonicalFormats: Object.freeze(REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.sourceGroups.map((group) => group.canonicalFormat)),
+      targetFormatCoverage: REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.targetFormatCoverage,
+      safeFirstExecutionMode: REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.safeFirstExecutionMode,
+      recommendedPrewriteValidationMode: REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.recommendedPrewriteValidationMode,
+      targetPromotionExecutionMode: REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.targetPromotionExecutionMode,
+      safeGateOrder: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.safeGateOrder]),
+      externalAdapterGateOrder: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_FILE_PICKER.externalAdapterGateOrder]),
+      workflowStages: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKFLOW.workflowStages]),
+      stageRequiredInputDescriptorIds: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_WORKFLOW.stageRequiredInputDescriptorIds }),
+      stageArtifactDescriptorIds: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_WORKFLOW.stageArtifactDescriptorIds }),
+      stageRequiredCliFlags: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_CLI_BLUEPRINTS.stageRequiredCliFlags }),
+      stageOptionalCliFlags: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_CLI_BLUEPRINTS.stageOptionalCliFlags }),
+      cliFlagBindings: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_CLI_BLUEPRINTS.cliFlagBindings }),
+      successEnvelopeFields: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_RESULTS.successEnvelopeFields]),
+      errorEnvelopeFields: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_RESULTS.errorEnvelopeFields]),
+      failureDecisionField: REFERENCE_GEOMETRY_IMPORT_RESULTS.failureDecisionField,
+      adapterPreflightCommand: REFERENCE_GEOMETRY_IMPORT_ADAPTER_PREFLIGHT.discoveryCommand,
+      adapterPreflightRequiredInputDescriptorIds: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_ADAPTER_PREFLIGHT.requiredInputDescriptorIds]),
+      adapterPreflightDecisionField: REFERENCE_GEOMETRY_IMPORT_ADAPTER_PREFLIGHT.preflightDecisionField,
+      adapterPreflightDiagnosticCodes: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_ADAPTER_PREFLIGHT.diagnosticCodes]),
+      commandPlanFunction: REFERENCE_GEOMETRY_IMPORT_COMMAND_PLAN.commandPlanFunction,
+      commandPlanFields: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_COMMAND_PLAN.commandPlanFields]),
+      commandPlanRuntimeCommand: REFERENCE_GEOMETRY_IMPORT_COMMAND_PLAN.runtimeCommand,
+      commandPlanCliEntrypoint: REFERENCE_GEOMETRY_IMPORT_COMMAND_PLAN.cliEntrypoint,
+      commandPlanRequiresWorkspaceCommandHost: REFERENCE_GEOMETRY_IMPORT_COMMAND_PLAN.requiresWorkspaceCommandHost,
+      commandPlanRuntimeBoundary: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_COMMAND_PLAN.appRuntimeBoundary }),
+      workspaceRequestKind: REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST.requestKind,
+      workspaceRequestBuilderFunction: REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST.requestBuilderFunction,
+      workspaceRequestFields: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST.requestFields]),
+      workspaceRequestResultRoutingFields: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST.resultRoutingFields]),
+      workspaceRequestRequiresWriteConfirmationStages: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST.requiresWriteConfirmationStages]),
+      workspaceRequestCommandHostBoundary: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST.commandHostBoundary }),
+      workspaceRequestRuntimeBoundary: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_REQUEST.appRuntimeBoundary }),
+      workspaceResponseBuilderFunction: REFERENCE_GEOMETRY_IMPORT_WORKSPACE_RESPONSE.responseBuilderFunction,
+      workspaceResponseFields: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_RESPONSE.responseFields]),
+      workspaceResponseStatuses: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_RESPONSE.responseStatuses]),
+      workspaceResponseParsePolicy: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_RESPONSE.parsePolicy }),
+      workspaceResponseRuntimeBoundary: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_WORKSPACE_RESPONSE.appRuntimeBoundary }),
+      sessionBuilderFunction: REFERENCE_GEOMETRY_IMPORT_SESSION.sessionBuilderFunction,
+      sessionFields: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_SESSION.sessionFields]),
+      sessionStageStateFields: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_SESSION.stageStateFields]),
+      sessionDryRunRequiredBeforeImport: REFERENCE_GEOMETRY_IMPORT_SESSION.dryRunRequiredBeforeImport,
+      sessionNextRequestPolicy: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_SESSION.nextRequestPolicy }),
+      sessionRuntimeBoundary: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_SESSION.appRuntimeBoundary }),
+      optionalWorkflowStages: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKFLOW.optionalStages]),
+      noProjectOrTargetWriteStages: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKFLOW.noProjectOrTargetWriteStages]),
+      promotedWriteStages: Object.freeze([...REFERENCE_GEOMETRY_IMPORT_WORKFLOW.promotedWriteStages]),
+      workflowStatusField: REFERENCE_GEOMETRY_IMPORT_WORKFLOW.workflowStatusField,
+      actionPreviewRuntimeBoundary: Object.freeze({ ...REFERENCE_GEOMETRY_IMPORT_ACTION_PREVIEW.appRuntimeBoundary })
+    })
   }
 ];
 

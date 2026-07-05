@@ -4,7 +4,7 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 
 function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, ""));
 }
 
 function walk(dir, files = []) {
@@ -49,6 +49,12 @@ function typeMatches(value, expected) {
 
 function valueEquals(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function isDateTimeString(value) {
+  if (typeof value !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return false;
+  return Number.isFinite(Date.parse(value));
 }
 
 function pathLabel(parts) {
@@ -113,6 +119,12 @@ function validateValue(value, schema, rootSchema, errors = [], valuePath = []) {
       if (key in value) validateValue(value[key], childSchema, rootSchema, errors, [...valuePath, key]);
     }
 
+    if (schema.propertyNames) {
+      for (const key of Object.keys(value)) {
+        validateValue(key, schema.propertyNames, rootSchema, errors, [...valuePath, key]);
+      }
+    }
+
     if ("minProperties" in schema && Object.keys(value).length < schema.minProperties) addError(errors, valuePath, `must have at least ${schema.minProperties} properties`);
     if ("maxProperties" in schema && Object.keys(value).length > schema.maxProperties) addError(errors, valuePath, `must have at most ${schema.maxProperties} properties`);
 
@@ -141,10 +153,11 @@ function validateValue(value, schema, rootSchema, errors = [], valuePath = []) {
     for (let index = 0; index < prefixCount && index < value.length; index += 1) {
       validateValue(value[index], schema.prefixItems[index], rootSchema, errors, [...valuePath, index]);
     }
-    if (schema.items) {
+    if ("items" in schema) {
       const start = prefixCount || 0;
       for (let index = start; index < value.length; index += 1) {
-        validateValue(value[index], schema.items, rootSchema, errors, [...valuePath, index]);
+        if (schema.items === false) addError(errors, [...valuePath, index], "is not allowed");
+        else validateValue(value[index], schema.items, rootSchema, errors, [...valuePath, index]);
       }
     }
   }
@@ -153,6 +166,7 @@ function validateValue(value, schema, rootSchema, errors = [], valuePath = []) {
     if ("minLength" in schema && value.length < schema.minLength) addError(errors, valuePath, `must contain at least ${schema.minLength} characters`);
     if ("maxLength" in schema && value.length > schema.maxLength) addError(errors, valuePath, `must contain at most ${schema.maxLength} characters`);
     if (schema.pattern && !new RegExp(schema.pattern).test(value)) addError(errors, valuePath, `must match pattern ${schema.pattern}`);
+    if (schema.format === "date-time" && !isDateTimeString(value)) addError(errors, valuePath, "must be a valid date-time");
   }
 
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -187,9 +201,11 @@ function validateFile(filePath) {
 
 function defaultFiles() {
   const projects = walk(path.join(ROOT, "bobercad/data/projects")).filter((file) => file.endsWith(".json"));
+  const referenceGeometry = walk(path.join(ROOT, "bobercad/data/references")).filter((file) => file.endsWith(".json"));
+  const referenceGeometryAdapterConfigs = [path.join(ROOT, "tools/reference-geometry/reference_geometry_adapters.example.json")].filter((file) => fs.existsSync(file));
   const smartComponentRegister = path.join(ROOT, "bobercad/data/libraries/smart-components/smart-component-register.json");
   const smartComponentConfigs = walk(path.join(ROOT, "bobercad/data/libraries/smart-components/components")).filter((file) => file.endsWith(`${path.sep}config.json`));
-  return [...projects, smartComponentRegister, ...smartComponentConfigs];
+  return [...projects, ...referenceGeometry, ...referenceGeometryAdapterConfigs, smartComponentRegister, ...smartComponentConfigs];
 }
 
 function formatError(result, error) {

@@ -53,6 +53,7 @@ export function createViewerCommandRegistration({
   getPlateSketchEdit = () => null,
   getModelBrowserUi = () => null,
   getProjectFilesPanelUi = () => null,
+  getReferenceImportPanelUi = () => null,
   getProjectDataPanelUi = () => null,
   getSmartComponentBrowserUi = () => null,
   getConnectionComponentBrowserUi = () => null,
@@ -545,7 +546,8 @@ export function createViewerCommandRegistration({
       onBoltGroupOpen: () => viewerApp.runCommand("model.boltGroup.open"),
       onBoltOpen: () => viewerApp.runCommand("model.bolt.open"),
       onAutoConnectionOpen: () => viewerApp.runCommand("model.autoConnection.open"),
-      onGridCreate: () => viewerApp.runCommand("model.grid.create")
+      onGridCreate: () => viewerApp.runCommand("model.grid.create"),
+      onReferenceGeometryImportOpen: () => viewerApp.runCommand("model.referenceGeometry.import")
     };
   }
 
@@ -606,6 +608,12 @@ export function createViewerCommandRegistration({
       "model.bolt.open": () => showModelCollectionCommand("holePatterns", "Bolts"),
       "model.autoConnection.open": () => showModelCollectionCommand("connectionZones", "Auto connections"),
       "model.grid.create": () => startGridCreate(),
+      "model.referenceGeometry.import": () => {
+        workspaceBindings?.showDataDockTab?.("reference-import");
+        getReferenceImportPanelUi()?.focusSource?.();
+        updateModelingStatus("Reference import opened.");
+        return true;
+      },
       "view.reset": () => {
         if (viewer.resetView?.()) {
           syncCameraSurfaces(viewer.viewCamera?.());

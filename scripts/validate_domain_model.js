@@ -1,8 +1,45 @@
 const fs = require("fs");
 const path = require("path");
+const { validateFile, formatError } = require("./validate_json_schema");
 
 const ROOT = path.resolve(__dirname, "..");
 const PROJECTS_DIR = path.join(ROOT, "bobercad/data/projects");
+const REFERENCE_GEOMETRY_DIR = path.join(ROOT, "bobercad/data/references");
+const REFERENCE_GEOMETRY_SCHEMA_VERSION = "0.1.0";
+const POINT_CLOUD_CHUNK_SCHEMA_VERSION = "0.1.0";
+const REFERENCE_METADATA_MAX_JSON_LENGTH = 8192;
+const REFERENCE_METADATA_MAX_DEPTH = 3;
+const REFERENCE_METADATA_MAX_ENTRY_COUNT = 32;
+const REFERENCE_METADATA_MAX_ARRAY_LENGTH = 128;
+const REFERENCE_METADATA_MAX_STRING_LENGTH = 512;
+const REFERENCE_METADATA_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
+const REFERENCE_METADATA_ALLOWED_SLASH_STRINGS = new Set([
+  "tools/reference-geometry/translate_reference_geometry.mjs"
+]);
+const REFERENCE_METADATA_FORBIDDEN_NORMALIZED_KEYS = new Set([
+  "absolutepath",
+  "adapterlogpath",
+  "adapterstderrpath",
+  "adapterstdoutpath",
+  "chunkpath",
+  "filecontents",
+  "filepath",
+  "inputpath",
+  "localpath",
+  "outputpath",
+  "payload",
+  "raw",
+  "rawcontents",
+  "rawpayload",
+  "requestpath",
+  "resolvedpath",
+  "scratchpath",
+  "sourcedirectory",
+  "sourcepath",
+  "stagepath"
+]);
+const RESERVED_REFERENCE_IDS = new Set(["__proto__", "prototype", "constructor"]);
+const REFERENCE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const INDEXED_MODEL_COLLECTIONS = new Set([
   "assemblies",
   "connectionZones",
@@ -34,7 +71,93 @@ function isRecord(value) {
 }
 
 function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, ""));
+}
+
+function isSubpath(parentPath, childPath) {
+  const relative = path.relative(parentPath, childPath);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function finiteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function finiteVec3(value) {
+  return Array.isArray(value) && value.length === 3 && value.every(finiteNumber);
+}
+
+function samePoint(a, b) {
+  return finiteVec3(a) && finiteVec3(b) && a.every((value, index) => Math.abs(value - b[index]) <= 1e-9);
+}
+
+function boundsFor(points) {
+  const bounds = {
+    min: [Infinity, Infinity, Infinity],
+    max: [-Infinity, -Infinity, -Infinity]
+  };
+  for (const point of points) {
+    if (!finiteVec3(point)) continue;
+    for (let axis = 0; axis < 3; axis += 1) {
+      bounds.min[axis] = Math.min(bounds.min[axis], point[axis]);
+      bounds.max[axis] = Math.max(bounds.max[axis], point[axis]);
+    }
+  }
+  return bounds.min.every(Number.isFinite) && bounds.max.every(Number.isFinite) ? bounds : null;
+}
+
+function sameBounds(a, b) {
+  return samePoint(a?.min, b?.min) && samePoint(a?.max, b?.max);
+}
+
+function unionBounds(boundsList) {
+  const validBounds = boundsList.filter((bounds) => finiteVec3(bounds?.min) && finiteVec3(bounds?.max));
+  if (!validBounds.length) return null;
+  const min = [...validBounds[0].min];
+  const max = [...validBounds[0].max];
+  for (const bounds of validBounds.slice(1)) {
+    for (let axis = 0; axis < 3; axis += 1) {
+      min[axis] = Math.min(min[axis], bounds.min[axis]);
+      max[axis] = Math.max(max[axis], bounds.max[axis]);
+    }
+  }
+  return { min, max };
+}
+
+function completeUnionBounds(boundsList) {
+  const values = boundsList || [];
+  if (!values.length) return null;
+  if (values.some((bounds) => !finiteVec3(bounds?.min) || !finiteVec3(bounds?.max))) return null;
+  return unionBounds(values);
+}
+
+function payloadBoundsForReferenceObject(referenceObject, chunks = {}) {
+  if (referenceObject?.kind === "line-set" || referenceObject?.kind === "mesh") {
+    return Array.isArray(referenceObject.vertices) && referenceObject.vertices.length ? boundsFor(referenceObject.vertices) : null;
+  }
+  if (referenceObject?.kind === "point-cloud") {
+    if (Array.isArray(referenceObject.points) && referenceObject.points.length) return boundsFor(referenceObject.points);
+    if (Array.isArray(referenceObject.chunkIds) && referenceObject.chunkIds.length) {
+      return completeUnionBounds(referenceObject.chunkIds.map((chunkId) => chunks[chunkId]?.bounds));
+    }
+  }
+  return null;
+}
+
+function vecCross(a, b) {
+  return [
+    a[1] * b[2] - a[2] * b[1],
+    a[2] * b[0] - a[0] * b[2],
+    a[0] * b[1] - a[1] * b[0]
+  ];
+}
+
+function vecDot(a, b) {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+function vecLength(a) {
+  return Math.hypot(a[0], a[1], a[2]);
 }
 
 function fail(errors, message) {
@@ -45,6 +168,10 @@ function objectIndex(project) {
   return isRecord(project.objectIndex) ? project.objectIndex : {};
 }
 
+function isReferenceGeometryId(value) {
+  return typeof value === "string" && REFERENCE_ID_PATTERN.test(value) && !RESERVED_REFERENCE_IDS.has(value);
+}
+
 function model(project) {
   return isRecord(project.model) ? project.model : {};
 }
@@ -52,6 +179,24 @@ function model(project) {
 function collection(project, collectionName) {
   const value = model(project)[collectionName];
   return isRecord(value) ? value : {};
+}
+
+function modelReferenceAssetLocations(project, assetId) {
+  const projectModel = model(project);
+  const locations = [];
+  if (Object.prototype.hasOwnProperty.call(projectModel, assetId)) {
+    locations.push(`model.${assetId}`);
+  }
+  for (const collectionName of INDEXED_MODEL_COLLECTIONS) {
+    const objects = projectModel[collectionName];
+    if (isRecord(objects) && Object.prototype.hasOwnProperty.call(objects, assetId)) {
+      locations.push(`model.${collectionName}.${assetId}`);
+    }
+  }
+  if (isRecord(projectModel.addonData) && Object.prototype.hasOwnProperty.call(projectModel.addonData, assetId)) {
+    locations.push(`model.addonData.${assetId}`);
+  }
+  return locations;
 }
 
 function indexedObject(project, objectId) {
@@ -404,7 +549,480 @@ function validateTrimJoints(errors, relative, project) {
   }
 }
 
-function validateProject(relative, project) {
+function validateSchemaBackedJson(errors, filePath) {
+  let result;
+  try {
+    result = validateFile(filePath);
+  } catch (error) {
+    fail(errors, `${repoPath(filePath)}: ${error.message}`);
+    return false;
+  }
+  for (const error of result.errors) fail(errors, formatError(result, error));
+  return result.errors.length === 0;
+}
+
+function chunkById(referenceData) {
+  const chunks = {};
+  for (const chunk of referenceData.chunks || []) {
+    if (!chunk?.id) continue;
+    chunks[chunk.id] = chunk;
+  }
+  return chunks;
+}
+
+const POINT_ATTRIBUTE_KEYS = ["colors", "intensities", "classifications", "normals"];
+
+function validatePointAttributeLengths(errors, relative, pointAttributes, pointCount, context) {
+  if (pointAttributes === undefined) return;
+  if (!isRecord(pointAttributes)) {
+    fail(errors, `${relative}: ${context}.pointAttributes must be an object`);
+    return;
+  }
+  for (const key of POINT_ATTRIBUTE_KEYS) {
+    const values = pointAttributes[key];
+    if (!Array.isArray(values)) continue;
+    if (values.length !== pointCount) {
+      fail(errors, `${relative}: ${context}.pointAttributes.${key} has ${values.length} item(s), expected ${pointCount}`);
+    }
+  }
+}
+
+function validateReferenceIndex(errors, relative, index, count, context) {
+  if (!Number.isInteger(index) || index < 0 || index >= count) {
+    fail(errors, `${relative}: ${context} index ${index} is outside 0..${Math.max(0, count - 1)}`);
+  }
+}
+
+function validateReferenceObjectGeometry(errors, relative, objectId, referenceObject) {
+  if (referenceObject?.kind !== "line-set" && referenceObject?.kind !== "mesh") return;
+  const vertices = Array.isArray(referenceObject.vertices) ? referenceObject.vertices : [];
+  if (referenceObject.kind === "line-set") {
+    const lineSegments = Array.isArray(referenceObject.lineSegments) ? referenceObject.lineSegments : [];
+    if (!lineSegments.length) fail(errors, `${relative}: line-set ${objectId}.lineSegments must contain at least one segment`);
+    for (const [segmentIndex, segment] of lineSegments.entries()) {
+      validateReferenceIndex(errors, relative, segment?.[0], vertices.length, `line-set ${objectId}.lineSegments[${segmentIndex}][0]`);
+      validateReferenceIndex(errors, relative, segment?.[1], vertices.length, `line-set ${objectId}.lineSegments[${segmentIndex}][1]`);
+      if (segment?.[0] === segment?.[1]) {
+        fail(errors, `${relative}: line-set ${objectId}.lineSegments[${segmentIndex}] must reference two distinct vertices`);
+      }
+    }
+  } else if (referenceObject.kind === "mesh") {
+    const faces = Array.isArray(referenceObject.faces) ? referenceObject.faces : [];
+    if (!faces.length) fail(errors, `${relative}: mesh ${objectId}.faces must contain at least one face`);
+    for (const [faceIndex, face] of faces.entries()) {
+      for (const [indexIndex, vertexIndex] of (face || []).entries()) {
+        validateReferenceIndex(errors, relative, vertexIndex, vertices.length, `mesh ${objectId}.faces[${faceIndex}][${indexIndex}]`);
+      }
+      if (new Set(face || []).size < 3) {
+        fail(errors, `${relative}: mesh ${objectId}.faces[${faceIndex}] must reference at least three distinct vertices`);
+      }
+    }
+  }
+}
+
+function validateReferenceCoordinateSystem(errors, relative, coordinateSystem) {
+  if (!isRecord(coordinateSystem)) {
+    fail(errors, `${relative}: asset.coordinateSystem must be an object`);
+    return;
+  }
+  if (!finiteVec3(coordinateSystem.origin)) fail(errors, `${relative}: asset.coordinateSystem.origin must be a finite vec3`);
+  for (const key of ["axisX", "axisY", "axisZ"]) {
+    const axis = coordinateSystem[key];
+    if (!finiteVec3(axis)) {
+      fail(errors, `${relative}: asset.coordinateSystem.${key} must be a finite vec3`);
+      continue;
+    }
+    if (vecLength(axis) <= 1e-9) fail(errors, `${relative}: asset.coordinateSystem.${key} must be non-zero`);
+  }
+  if (finiteVec3(coordinateSystem.axisX) && finiteVec3(coordinateSystem.axisY) && finiteVec3(coordinateSystem.axisZ)) {
+    const determinant = vecDot(vecCross(coordinateSystem.axisX, coordinateSystem.axisY), coordinateSystem.axisZ);
+    if (Math.abs(determinant) <= 1e-9) {
+      fail(errors, `${relative}: asset.coordinateSystem axes must form a non-degenerate 3D basis`);
+    }
+  }
+}
+
+function validateReferenceProjectTransform(errors, relative, assetId, transform) {
+  if (transform === undefined) return;
+  if (!isRecord(transform)) {
+    fail(errors, `${relative}: referenceGeometry.assets.${assetId}.transform must be an object`);
+    return;
+  }
+  if (transform.origin !== undefined && !finiteVec3(transform.origin)) {
+    fail(errors, `${relative}: referenceGeometry.assets.${assetId}.transform.origin must be a finite vec3`);
+  }
+  if (transform.scale !== undefined && (!finiteNumber(transform.scale) || transform.scale <= 0)) {
+    fail(errors, `${relative}: referenceGeometry.assets.${assetId}.transform.scale must be greater than zero`);
+  }
+
+  const axes = {
+    axisX: transform.axisX === undefined ? [1, 0, 0] : transform.axisX,
+    axisY: transform.axisY === undefined ? [0, 1, 0] : transform.axisY,
+    axisZ: transform.axisZ === undefined ? [0, 0, 1] : transform.axisZ
+  };
+  let axesAreFinite = true;
+  for (const [key, axis] of Object.entries(axes)) {
+    if (!finiteVec3(axis)) {
+      fail(errors, `${relative}: referenceGeometry.assets.${assetId}.transform.${key} must be a finite vec3`);
+      axesAreFinite = false;
+      continue;
+    }
+    if (vecLength(axis) <= 1e-9) {
+      fail(errors, `${relative}: referenceGeometry.assets.${assetId}.transform.${key} must be non-zero`);
+      axesAreFinite = false;
+    }
+  }
+  if (axesAreFinite) {
+    const determinant = vecDot(vecCross(axes.axisX, axes.axisY), axes.axisZ);
+    if (Math.abs(determinant) <= 1e-9) {
+      fail(errors, `${relative}: referenceGeometry.assets.${assetId}.transform axes must form a non-degenerate 3D basis`);
+    }
+  }
+}
+
+function validateReferenceBounds(errors, relative, label, bounds) {
+  if (bounds === undefined) return;
+  if (!isRecord(bounds)) {
+    fail(errors, `${relative}: ${label} must be an object`);
+    return;
+  }
+  if (!finiteVec3(bounds.min)) fail(errors, `${relative}: ${label}.min must be a finite vec3`);
+  if (!finiteVec3(bounds.max)) fail(errors, `${relative}: ${label}.max must be a finite vec3`);
+  if (finiteVec3(bounds.min) && finiteVec3(bounds.max)) {
+    for (let axis = 0; axis < 3; axis += 1) {
+      if (bounds.min[axis] > bounds.max[axis]) {
+        fail(errors, `${relative}: ${label}.min[${axis}] must be <= ${label}.max[${axis}]`);
+      }
+    }
+  }
+}
+
+function referenceMetadataFailure(errors, relative, label) {
+  fail(errors, `${relative}: ${label}.metadata must be bounded path-free canonical metadata`);
+}
+
+function normalizedReferenceMetadataKey(key) {
+  return String(key || "").replace(/[_.-]/g, "").toLowerCase();
+}
+
+function safeReferenceMetadataKey(key) {
+  if (typeof key !== "string" || !REFERENCE_METADATA_KEY_PATTERN.test(key) || RESERVED_REFERENCE_IDS.has(key)) return false;
+  const normalized = normalizedReferenceMetadataKey(key);
+  if (REFERENCE_METADATA_FORBIDDEN_NORMALIZED_KEYS.has(normalized)) return false;
+  return !normalized.endsWith("path") && !normalized.endsWith("directory");
+}
+
+function safeReferenceMetadataString(value) {
+  if (typeof value !== "string") return false;
+  if (!value || value.length > REFERENCE_METADATA_MAX_STRING_LENGTH) return false;
+  if (/[\u0000-\u001f\u007f]/.test(value)) return false;
+  if (REFERENCE_METADATA_ALLOWED_SLASH_STRINGS.has(value)) return true;
+  if (value.includes("\\") || value.includes("/")) return false;
+  if (/^[A-Za-z]:/.test(value)) return false;
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(value)) return false;
+  return true;
+}
+
+function validateReferenceMetadataValue(errors, relative, label, value, depth = 0) {
+  if (value === null || typeof value === "boolean") return;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) referenceMetadataFailure(errors, relative, label);
+    return;
+  }
+  if (typeof value === "string") {
+    if (!safeReferenceMetadataString(value)) referenceMetadataFailure(errors, relative, label);
+    return;
+  }
+  if (Array.isArray(value)) {
+    if (depth >= REFERENCE_METADATA_MAX_DEPTH || value.length > REFERENCE_METADATA_MAX_ARRAY_LENGTH) {
+      referenceMetadataFailure(errors, relative, label);
+      return;
+    }
+    for (const item of value) validateReferenceMetadataValue(errors, relative, label, item, depth + 1);
+    return;
+  }
+  if (isRecord(value)) {
+    if (depth >= REFERENCE_METADATA_MAX_DEPTH) {
+      referenceMetadataFailure(errors, relative, label);
+      return;
+    }
+    const entries = Object.entries(value);
+    if (entries.length > REFERENCE_METADATA_MAX_ENTRY_COUNT) {
+      referenceMetadataFailure(errors, relative, label);
+      return;
+    }
+    for (const [key, child] of entries) {
+      if (!safeReferenceMetadataKey(key)) {
+        referenceMetadataFailure(errors, relative, label);
+        continue;
+      }
+      validateReferenceMetadataValue(errors, relative, label, child, depth + 1);
+    }
+    return;
+  }
+  referenceMetadataFailure(errors, relative, label);
+}
+
+function validateReferenceMetadataRecord(errors, relative, label, metadata) {
+  if (metadata === undefined) return;
+  if (!isRecord(metadata)) {
+    referenceMetadataFailure(errors, relative, label);
+    return;
+  }
+  const encoded = JSON.stringify(metadata);
+  if (typeof encoded !== "string" || encoded.length > REFERENCE_METADATA_MAX_JSON_LENGTH) {
+    referenceMetadataFailure(errors, relative, label);
+    return;
+  }
+  validateReferenceMetadataValue(errors, relative, label, metadata);
+}
+
+function validateReferencePointCloudChunk(errors, relative, assetId, chunk, chunkPath) {
+  if (!validateSchemaBackedJson(errors, chunkPath)) return null;
+  let chunkData;
+  try {
+    chunkData = readJson(chunkPath);
+  } catch (error) {
+    fail(errors, `${repoPath(chunkPath)}: invalid JSON: ${error.message}`);
+    return null;
+  }
+  if (chunkData.schema !== "bobercad-reference-point-cloud-chunk") {
+    fail(errors, `${repoPath(chunkPath)}: referenceGeometry.assets.${assetId} chunk ${chunk.id} must use bobercad-reference-point-cloud-chunk schema`);
+  }
+  if (chunkData.schemaVersion !== POINT_CLOUD_CHUNK_SCHEMA_VERSION) {
+    fail(errors, `${repoPath(chunkPath)}: chunk ${chunk.id} schemaVersion must be ${POINT_CLOUD_CHUNK_SCHEMA_VERSION}, got ${chunkData.schemaVersion || "<missing>"}`);
+  }
+  if (chunkData.id !== chunk.id) {
+    fail(errors, `${repoPath(chunkPath)}: chunk id ${chunkData.id || "<missing>"} must match manifest chunk ${chunk.id}`);
+  }
+  if (chunkData.objectId !== chunk.objectId) {
+    fail(errors, `${repoPath(chunkPath)}: chunk ${chunk.id} objectId must match manifest objectId ${chunk.objectId}`);
+  }
+  validateReferenceBounds(errors, repoPath(chunkPath), `chunk ${chunk.id}.bounds`, chunkData.bounds);
+  if (chunk.bounds && chunkData.bounds && !sameBounds(chunk.bounds, chunkData.bounds)) {
+    fail(errors, `${repoPath(chunkPath)}: manifest chunk ${chunk.id}.bounds must match sidecar bounds`);
+  }
+  if (Array.isArray(chunkData.points) && Number.isInteger(chunkData.pointCount) && chunkData.points.length !== chunkData.pointCount) {
+    fail(errors, `${repoPath(chunkPath)}: chunk ${chunk.id} pointCount ${chunkData.pointCount} must match ${chunkData.points.length} point(s)`);
+  }
+  if (Array.isArray(chunkData.points) && chunkData.bounds) {
+    const payloadBounds = boundsFor(chunkData.points);
+    if (payloadBounds && !sameBounds(chunkData.bounds, payloadBounds)) {
+      fail(errors, `${repoPath(chunkPath)}: chunk ${chunk.id}.bounds must match point payload bounds`);
+    }
+  }
+  const pointCount = Array.isArray(chunkData.points) ? chunkData.points.length : chunkData.pointCount;
+  if (Number.isInteger(pointCount) && pointCount <= 0) {
+    fail(errors, `${repoPath(chunkPath)}: point-cloud chunk ${chunk.id} must contain at least one point`);
+  }
+  if (Number.isInteger(chunk.pointCount) && Number.isInteger(pointCount) && chunk.pointCount !== pointCount) {
+    fail(errors, `${repoPath(chunkPath)}: chunk ${chunk.id} manifest pointCount ${chunk.pointCount} must match sidecar point count ${pointCount}`);
+  }
+  if (Number.isInteger(pointCount)) {
+    validatePointAttributeLengths(errors, repoPath(chunkPath), chunkData.pointAttributes, pointCount, `chunk ${chunk.id}`);
+  }
+  validateReferenceMetadataRecord(errors, repoPath(chunkPath), `chunk ${chunk.id}`, chunkData.metadata);
+  return chunkData;
+}
+
+function validateReferenceGeometryAsset(errors, relative, project, projectPath, assetId, asset, referencesDir = REFERENCE_GEOMETRY_DIR) {
+  if (objectIndex(project)[assetId]) {
+    fail(errors, `${relative}: referenceGeometry.assets.${assetId} must not be stored in objectIndex`);
+  }
+  for (const location of modelReferenceAssetLocations(project, assetId)) {
+    fail(errors, `${relative}: referenceGeometry.assets.${assetId} must not be stored in ${location}`);
+  }
+  validateReferenceProjectTransform(errors, relative, assetId, asset?.transform);
+  if (typeof asset?.path !== "string" || !asset.path) {
+    fail(errors, `${relative}: referenceGeometry.assets.${assetId}.path must be a non-empty string`);
+    return;
+  }
+
+  const referencePath = path.resolve(path.dirname(projectPath), asset.path);
+  if (!isSubpath(referencesDir, referencePath)) {
+    fail(errors, `${relative}: referenceGeometry.assets.${assetId}.path must resolve under ${repoPath(referencesDir)}`);
+    return;
+  }
+  if (!fs.existsSync(referencePath)) {
+    fail(errors, `${relative}: referenceGeometry.assets.${assetId}.path points to missing file ${asset.path}`);
+    return;
+  }
+  if (!validateSchemaBackedJson(errors, referencePath)) return;
+
+  let referenceData;
+  try {
+    referenceData = readJson(referencePath);
+  } catch (error) {
+    fail(errors, `${repoPath(referencePath)}: invalid JSON: ${error.message}`);
+    return;
+  }
+  if (referenceData.schema !== "bobercad-reference-geometry") {
+    fail(errors, `${repoPath(referencePath)}: referenceGeometry.assets.${assetId} must point to bobercad-reference-geometry JSON`);
+    return;
+  }
+  if (referenceData.schemaVersion !== REFERENCE_GEOMETRY_SCHEMA_VERSION) {
+    fail(errors, `${repoPath(referencePath)}: referenceGeometry.assets.${assetId} schemaVersion must be ${REFERENCE_GEOMETRY_SCHEMA_VERSION}, got ${referenceData.schemaVersion || "<missing>"}`);
+  }
+  if (referenceData.asset?.id !== assetId) {
+    fail(errors, `${repoPath(referencePath)}: referenceGeometry.assets.${assetId} must point to a reference manifest whose asset.id is ${assetId}, got ${referenceData.asset?.id || "<missing>"}`);
+  }
+  validateReferenceCoordinateSystem(errors, repoPath(referencePath), referenceData.asset?.coordinateSystem);
+  validateReferenceBounds(errors, repoPath(referencePath), "asset.bounds", referenceData.asset?.bounds);
+
+  const seenChunkIds = new Set();
+  for (const chunk of referenceData.chunks || []) {
+    if (!chunk?.id) continue;
+    if (seenChunkIds.has(chunk.id)) {
+      fail(errors, `${repoPath(referencePath)}: duplicate chunk id ${chunk.id}`);
+    }
+    if (Number.isInteger(chunk.pointCount) && chunk.pointCount <= 0) {
+      fail(errors, `${repoPath(referencePath)}: chunk ${chunk.id}.pointCount must be greater than zero`);
+    }
+    validateReferenceBounds(errors, repoPath(referencePath), `chunk ${chunk.id}.bounds`, chunk.bounds);
+    seenChunkIds.add(chunk.id);
+  }
+  const chunks = chunkById(referenceData);
+  const referencedChunkIds = new Set();
+  const layers = referenceData.layers || {};
+  for (const [layerId, layer] of Object.entries(layers)) {
+    if (layer?.id !== layerId) {
+      fail(errors, `${repoPath(referencePath)}: reference layer key ${layerId} must match id ${layer?.id || "<missing>"}`);
+    }
+  }
+  for (const [objectId, referenceObject] of Object.entries(referenceData.objects || {})) {
+    if (referenceObject?.id !== objectId) {
+      fail(errors, `${repoPath(referencePath)}: reference object key ${objectId} must match id ${referenceObject?.id || "<missing>"}`);
+    }
+    if (objectIndex(project)[objectId]) {
+      fail(errors, `${relative}: reference object ${objectId} from ${assetId} collides with project.objectIndex`);
+    }
+    if (referenceObject?.layer && !layers[referenceObject.layer]) {
+      fail(errors, `${repoPath(referencePath)}: reference object ${objectId} points to missing layer ${referenceObject.layer}`);
+    }
+    validateReferenceBounds(errors, repoPath(referencePath), `object ${objectId}.bounds`, referenceObject?.bounds);
+    validateReferenceMetadataRecord(errors, repoPath(referencePath), `object ${objectId}`, referenceObject?.metadata);
+    validateReferenceObjectGeometry(errors, repoPath(referencePath), objectId, referenceObject);
+    const objectPayloadBounds = referenceObject?.kind === "line-set" || referenceObject?.kind === "mesh"
+      ? payloadBoundsForReferenceObject(referenceObject, chunks)
+      : null;
+    if (referenceObject?.bounds && objectPayloadBounds && !sameBounds(referenceObject.bounds, objectPayloadBounds)) {
+      fail(errors, `${repoPath(referencePath)}: object ${objectId}.bounds must match object payload bounds`);
+    }
+    if (referenceObject?.kind !== "point-cloud") continue;
+    if (Array.isArray(referenceObject.points) && Array.isArray(referenceObject.chunkIds) && referenceObject.chunkIds.length) {
+      fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId} must not mix inline points and chunkIds`);
+    }
+    if (Array.isArray(referenceObject.points) && !referenceObject.points.length) {
+      fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId}.points must contain at least one point`);
+    }
+    if (!Array.isArray(referenceObject.points) && Array.isArray(referenceObject.chunkIds) && !referenceObject.chunkIds.length) {
+      fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId}.chunkIds must contain at least one chunk id`);
+    }
+    if (Array.isArray(referenceObject.chunkIds)) {
+      const objectChunkIds = new Set();
+      for (const chunkId of referenceObject.chunkIds) {
+        if (objectChunkIds.has(chunkId)) {
+          fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId}.chunkIds contains duplicate chunk id ${chunkId}`);
+        }
+        objectChunkIds.add(chunkId);
+        referencedChunkIds.add(chunkId);
+      }
+    }
+    if (referenceObject.pointAttributes && !Array.isArray(referenceObject.points)) {
+      fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId} stores pointAttributes without inline points; chunked attributes must live in point-cloud chunk sidecars`);
+    }
+    if (Array.isArray(referenceObject.points)) {
+      validatePointAttributeLengths(errors, repoPath(referencePath), referenceObject.pointAttributes, referenceObject.points.length, `point-cloud ${objectId}`);
+      if (referenceObject.bounds) {
+        const payloadBounds = boundsFor(referenceObject.points);
+        if (payloadBounds && !sameBounds(referenceObject.bounds, payloadBounds)) {
+          fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId}.bounds must match point payload bounds`);
+        }
+      }
+    }
+    for (const chunkId of referenceObject.chunkIds || []) {
+      const chunk = chunks[chunkId];
+      if (!chunk) {
+        fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId} references missing chunk ${chunkId}`);
+        continue;
+      }
+      if (chunk.objectId !== objectId) {
+        fail(errors, `${repoPath(referencePath)}: chunk ${chunkId}.objectId ${chunk.objectId} must match point-cloud object ${objectId}`);
+      }
+      if (typeof chunk.path !== "string" || !chunk.path) {
+        fail(errors, `${repoPath(referencePath)}: chunk ${chunkId}.path must be a non-empty string`);
+        continue;
+      }
+      const chunkPath = path.resolve(path.dirname(referencePath), chunk.path);
+      if (!isSubpath(referencesDir, chunkPath)) {
+        fail(errors, `${repoPath(referencePath)}: chunk ${chunkId}.path must resolve under ${repoPath(referencesDir)}`);
+        continue;
+      }
+      if (!fs.existsSync(chunkPath)) {
+        fail(errors, `${repoPath(referencePath)}: chunk ${chunkId}.path points to missing file ${chunk.path}`);
+        continue;
+      }
+      validateReferencePointCloudChunk(errors, relative, assetId, chunk, chunkPath);
+    }
+    if (referenceObject.bounds && Array.isArray(referenceObject.chunkIds) && referenceObject.chunkIds.length) {
+      const objectChunkBounds = completeUnionBounds(referenceObject.chunkIds.map((chunkId) => chunks[chunkId]?.bounds));
+      if (!objectChunkBounds) {
+        fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId}.bounds cannot be verified without complete referenced chunk bounds`);
+      } else if (!sameBounds(referenceObject.bounds, objectChunkBounds)) {
+        fail(errors, `${repoPath(referencePath)}: point-cloud ${objectId}.bounds must match referenced chunk bounds`);
+      }
+    }
+  }
+  for (const [diagnosticIndex, diagnostic] of (referenceData.diagnostics || []).entries()) {
+    if (diagnostic?.objectId && !referenceData.objects?.[diagnostic.objectId]) {
+      fail(errors, `${repoPath(referencePath)}: diagnostics[${diagnosticIndex}].objectId ${diagnostic.objectId} points to a missing reference object`);
+    }
+    for (const [objectRefIndex, objectRef] of (diagnostic?.objectRefs || []).entries()) {
+      if (!referenceData.objects?.[objectRef]) {
+        fail(errors, `${repoPath(referencePath)}: diagnostics[${diagnosticIndex}].objectRefs[${objectRefIndex}] ${objectRef} points to a missing reference object`);
+      }
+    }
+  }
+
+  for (const chunk of referenceData.chunks || []) {
+    const chunkOwner = referenceData.objects?.[chunk.objectId];
+    if (!chunkOwner) {
+      fail(errors, `${repoPath(referencePath)}: chunk ${chunk.id} points to missing object ${chunk.objectId}`);
+    } else if (chunkOwner.kind !== "point-cloud") {
+      fail(errors, `${repoPath(referencePath)}: chunk ${chunk.id} points to non-point-cloud object ${chunk.objectId}`);
+    }
+    if (chunk?.id && !referencedChunkIds.has(chunk.id)) {
+      fail(errors, `${repoPath(referencePath)}: chunk ${chunk.id} is not referenced by point-cloud ${chunk.objectId}.chunkIds`);
+    }
+  }
+  if (referenceData.asset?.bounds) {
+    const objectBounds = Object.values(referenceData.objects || {}).map((object) => payloadBoundsForReferenceObject(object, chunks));
+    const assetPayloadBounds = completeUnionBounds(objectBounds);
+    if (!assetPayloadBounds) {
+      fail(errors, `${repoPath(referencePath)}: asset.bounds cannot be verified without complete reference object payload bounds`);
+    } else if (!sameBounds(referenceData.asset.bounds, assetPayloadBounds)) {
+      fail(errors, `${repoPath(referencePath)}: asset.bounds must match reference object payload bounds`);
+    }
+  }
+}
+
+function validateReferenceGeometry(errors, relative, project, projectPath, referencesDir = REFERENCE_GEOMETRY_DIR) {
+  const assets = project.referenceGeometry?.assets;
+  if (assets === undefined) return;
+  if (!isRecord(assets)) {
+    fail(errors, `${relative}: referenceGeometry.assets must be an object`);
+    return;
+  }
+  for (const [assetId, asset] of Object.entries(assets)) {
+    if (!isReferenceGeometryId(assetId)) {
+      fail(errors, `${relative}: referenceGeometry.assets.${assetId} must use a safe canonical reference id`);
+      continue;
+    }
+    validateReferenceGeometryAsset(errors, relative, project, projectPath, assetId, asset, referencesDir);
+  }
+}
+
+function validateProject(relative, project, projectPath = null) {
   const errors = [];
   if (!isRecord(project)) {
     fail(errors, `${relative}: project must be an object`);
@@ -420,6 +1038,7 @@ function validateProject(relative, project) {
   validateFastenerGroups(errors, relative, project);
   validateSmartComponents(errors, relative, project);
   validateTrimJoints(errors, relative, project);
+  if (projectPath) validateReferenceGeometry(errors, relative, project, projectPath);
 
   return errors;
 }
@@ -441,7 +1060,7 @@ function validateAllProjects() {
       continue;
     }
     checked += 1;
-    errors.push(...validateProject(relative, project));
+    errors.push(...validateProject(relative, project, filePath));
   }
   return { checked, errors };
 }
@@ -458,5 +1077,6 @@ if (require.main === module) {
 
 module.exports = {
   validateAllProjects,
-  validateProject
+  validateProject,
+  validateReferenceGeometry
 };

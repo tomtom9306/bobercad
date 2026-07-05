@@ -1,0 +1,16 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP presentation layer curve reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_presentation_layer_curve.step', '2026-06-28T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('p1', (0.0, 0.0, 0.0));
+#2 = CARTESIAN_POINT('p2', (100.0, 0.0, 0.0));
+#3 = CARTESIAN_POINT('p3', (150.0, 50.0, 25.0));
+#10 = POLYLINE('', (#1, #2, #3));
+#20 = GEOMETRIC_CURVE_SET('', (#10));
+#30 = PRESENTATION_LAYER_ASSIGNMENT('Survey Grid', $, (#20));
+#40 = SHAPE_REPRESENTATION('', (#20), $);
+ENDSEC;
+END-ISO-10303-21;

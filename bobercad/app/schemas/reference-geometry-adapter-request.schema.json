@@ -1,0 +1,570 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bobercad/app/schemas/reference-geometry-adapter-request.schema.json",
+  "title": "BoberCAD Reference Geometry Adapter Request Schema",
+  "description": "Staged request payload passed to isolated external reference geometry adapters.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "schemaVersion",
+    "adapterRequestFingerprint",
+    "adapterRequestEvidenceFingerprint",
+    "adapterRunId",
+    "input",
+    "sourceDirectory",
+    "sourceFileName",
+    "sourceFileStem",
+    "sourceFileExtension",
+    "sourceFileSizeBytes",
+    "sourceFileModifiedTime",
+    "sourceStatFingerprint",
+    "output",
+    "outputDir",
+    "stageDir",
+    "request",
+    "scratchDir",
+    "outputFileName",
+    "outputFileStem",
+    "chunkDir",
+    "chunkPathPrefix",
+    "adapterLogPath",
+    "adapterStdoutPath",
+    "adapterStderrPath",
+    "outputMode",
+    "format",
+    "requestedFormat",
+    "assetId",
+    "name",
+    "units",
+    "pointCloudChunkSize",
+    "timeoutMs",
+    "schemaVersions",
+    "schemas"
+  ],
+  "properties": {
+    "$schema": {
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "schema": {
+      "const": "bobercad-reference-adapter-request"
+    },
+    "schemaVersion": {
+      "const": "0.1.0"
+    },
+    "adapterRequestFingerprint": {
+      "description": "Stable sha256 fingerprint over the adapter request payload with this field omitted. Use it to compare staged request JSON across plan, request-only, dry-run, import, and direct wrapper debugging flows.",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "adapterRequestEvidenceFingerprint": {
+      "description": "Portable sha256 fingerprint over path-free source stat evidence, adapter config stat evidence, selected adapter registry fingerprints, schema versions, and import options. It complements adapterRequestFingerprint, which still covers the exact local request payload.",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "adapterRunId": {
+      "description": "Opaque identifier for this staged adapter request/run. Use it to correlate adapter logs, process streams, and automation results without parsing paths.",
+      "type": "string",
+      "minLength": 8,
+      "pattern": "^[A-Za-z0-9_.:-]{8,}$"
+    },
+    "input": {
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "sourceDirectory": {
+      "description": "Absolute or adapter-resolved directory containing the source input file.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "sourceFileName": {
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "sourceFileStem": {
+      "description": "Source file basename without the final extension.",
+      "type": "string"
+    },
+    "sourceFileExtension": {
+      "description": "Lowercase input file extension without a leading dot; empty when the input path has no extension. For known canonical formats this must be empty or a real extension in the same source format family.",
+      "type": "string",
+      "pattern": "^$|^[a-z0-9][a-z0-9_-]*$"
+    },
+    "sourceFileSizeBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sourceFileModifiedTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sourceStatFingerprint": {
+      "description": "Cheap source identity derived from public source extension, size, and modified time; not a content checksum.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^stat-sha256:[0-9a-f]{64}$"
+    },
+    "output": {
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "outputDir": {
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "stageDir": {
+      "description": "Isolated staging directory for this adapter run. It is the same directory as outputDir, so the staged canonical manifest, adapter request, scratch directory, chunk directory, and diagnostics share one generated stage root.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "request": {
+      "description": "Absolute or adapter-resolved path to this staged adapter request JSON. Checked-in wrappers require it to match the actual --request file path.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "scratchDir": {
+      "description": "Dedicated translator-generated stageDir/scratch directory for adapter-owned intermediate files such as converter outputs. Adapters should prefer this over the stage root for temporary DWG, OBJ, XYZ, or other bridge artifacts.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "outputFileName": {
+      "description": "Basename of the staged canonical output manifest path.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "outputFileStem": {
+      "description": "Staged output manifest basename without the final extension.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "chunkDir": {
+      "description": "Translator-generated stageDir/chunks directory intended for point-cloud chunk sidecars produced by the adapter. Chunk paths in the canonical manifest should stay relative, typically under chunks/.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "chunkPathPrefix": {
+      "description": "Canonical manifest-relative prefix adapters should use for point-cloud chunk paths written under chunkDir.",
+      "const": "chunks/"
+    },
+    "adapterLogPath": {
+      "description": "Translator-generated stageDir/reference-adapter.log path reserved for verbose adapter diagnostics. The translator may remove it with the stage unless --keep-stage-on-error is used.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "adapterStdoutPath": {
+      "description": "Translator-generated stageDir/reference-adapter.stdout.log path where the translator writes the adapter process stdout stream after launch. It is cleaned with the stage unless --keep-stage-on-error preserves a failing run.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "adapterStderrPath": {
+      "description": "Translator-generated stageDir/reference-adapter.stderr.log path where the translator writes the adapter process stderr stream after launch. It is cleaned with the stage unless --keep-stage-on-error preserves a failing run.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "outputMode": {
+      "description": "How the selected adapter is expected to return canonical bobercad-reference-geometry JSON for this run. In file mode it writes output. In stdout mode it writes the complete manifest to process stdout and the translator captures that stream to output before validation.",
+      "enum": [
+        "file",
+        "stdout"
+      ]
+    },
+    "format": {
+      "enum": [
+        "dxf",
+        "dwg",
+        "step",
+        "ifc",
+        "e57"
+      ]
+    },
+    "requestedFormat": {
+      "description": "Lowercase source format token requested by the caller or inferred from the input extension before canonical normalization. For example, p21, ifczip, or e57pointcloud may normalize to step, ifc, or e57 in format.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "adapterKey": {
+      "description": "Selected local adapter key when the request was staged by a configured external adapter run.",
+      "$ref": "#/$defs/id"
+    },
+    "adapterConfigPath": {
+      "description": "Absolute local adapter config path when the request was staged from a configured adapter run.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "adapterConfigDir": {
+      "description": "Absolute directory containing adapterConfigPath when known.",
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "adapterConfigFileSizeBytes": {
+      "description": "Size in bytes of adapterConfigPath when known.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "adapterConfigFileModifiedTime": {
+      "description": "Modified time of adapterConfigPath when known.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "adapterConfigStatFingerprint": {
+      "description": "Cheap adapter config identity derived from public config category, size, and modified time; not a content checksum.",
+      "type": "string",
+      "pattern": "^stat-sha256:[0-9a-f]{64}$"
+    },
+    "adapterRegistryFingerprint": {
+      "description": "Stable sha256 fingerprint over the sanitized adapter registry reported by --list-adapters for adapterConfigPath. This lets wrappers correlate a staged request with the adapter declaration without reading config contents.",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "adapterRegistryAdapterFingerprint": {
+      "description": "Stable sha256 fingerprint over the sanitized selected adapter declaration reported by --list-adapters for adapterKey.",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "assetId": {
+      "$ref": "#/$defs/id"
+    },
+    "name": {
+      "$ref": "#/$defs/nonBlankString"
+    },
+    "units": {
+      "enum": [
+        "mm",
+        "m",
+        "in",
+        "ft"
+      ]
+    },
+    "pointCloudChunkSize": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "timeoutMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "schemaVersions": {
+      "description": "Contract versions the adapter should target when writing canonical output.",
+      "type": "object",
+      "required": [
+        "adapterRequest",
+        "referenceGeometry",
+        "pointCloudChunk"
+      ],
+      "properties": {
+        "adapterRequest": {
+          "$ref": "#/$defs/schemaVersion"
+        },
+        "referenceGeometry": {
+          "$ref": "#/$defs/schemaVersion"
+        },
+        "pointCloudChunk": {
+          "$ref": "#/$defs/schemaVersion"
+        }
+      },
+      "additionalProperties": false
+    },
+    "schemas": {
+      "type": "object",
+      "required": [
+        "adapterRequest",
+        "referenceGeometry",
+        "pointCloudChunk"
+      ],
+      "properties": {
+        "adapterRequest": {
+          "$ref": "#/$defs/nonBlankString"
+        },
+        "referenceGeometry": {
+          "$ref": "#/$defs/nonBlankString"
+        },
+        "pointCloudChunk": {
+          "$ref": "#/$defs/nonBlankString"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "format": {
+            "const": "dxf"
+          }
+        },
+        "required": [
+          "format"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sourceFileExtension": {
+            "enum": [
+              "",
+              "dxf"
+            ]
+          },
+          "requestedFormat": {
+            "enum": [
+              "dxf"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "format": {
+            "const": "dwg"
+          }
+        },
+        "required": [
+          "format"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sourceFileExtension": {
+            "enum": [
+              "",
+              "dwg"
+            ]
+          },
+          "requestedFormat": {
+            "enum": [
+              "dwg"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "format": {
+            "const": "step"
+          }
+        },
+        "required": [
+          "format"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sourceFileExtension": {
+            "enum": [
+              "",
+              "step",
+              "stp",
+              "p21",
+              "stpnc"
+            ]
+          },
+          "requestedFormat": {
+            "enum": [
+              "step",
+              "stp",
+              "p21",
+              "stpnc"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "format": {
+            "const": "ifc"
+          }
+        },
+        "required": [
+          "format"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sourceFileExtension": {
+            "enum": [
+              "",
+              "ifc",
+              "ifcxml",
+              "ifczip"
+            ]
+          },
+          "requestedFormat": {
+            "enum": [
+              "ifc",
+              "ifcxml",
+              "ifczip"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "format": {
+            "const": "e57"
+          }
+        },
+        "required": [
+          "format"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sourceFileExtension": {
+            "enum": [
+              "",
+              "e57"
+            ]
+          },
+          "requestedFormat": {
+            "enum": [
+              "e57",
+              "e57pointcloud",
+              "e57pc"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "adapterKey"
+        ]
+      },
+      "then": {
+        "required": [
+          "adapterConfigPath",
+          "adapterConfigDir",
+          "adapterConfigFileSizeBytes",
+          "adapterConfigFileModifiedTime"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "adapterConfigPath"
+        ]
+      },
+      "then": {
+        "required": [
+          "adapterKey",
+          "adapterConfigDir",
+          "adapterConfigFileSizeBytes",
+          "adapterConfigFileModifiedTime"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "adapterConfigDir"
+        ]
+      },
+      "then": {
+        "required": [
+          "adapterKey",
+          "adapterConfigPath",
+          "adapterConfigFileSizeBytes",
+          "adapterConfigFileModifiedTime"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "adapterConfigFileSizeBytes"
+        ]
+      },
+      "then": {
+        "required": [
+          "adapterKey",
+          "adapterConfigPath",
+          "adapterConfigDir",
+          "adapterConfigFileModifiedTime"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "adapterConfigFileModifiedTime"
+        ]
+      },
+      "then": {
+        "required": [
+          "adapterKey",
+          "adapterConfigPath",
+          "adapterConfigDir",
+          "adapterConfigFileSizeBytes"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "adapterConfigStatFingerprint"
+        ]
+      },
+      "then": {
+        "required": [
+          "adapterKey",
+          "adapterConfigPath",
+          "adapterConfigDir",
+          "adapterConfigFileSizeBytes",
+          "adapterConfigFileModifiedTime"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "adapterRegistryFingerprint"
+        ]
+      },
+      "then": {
+        "required": [
+          "adapterKey",
+          "adapterConfigPath",
+          "adapterConfigDir",
+          "adapterConfigFileSizeBytes",
+          "adapterConfigFileModifiedTime",
+          "adapterRegistryAdapterFingerprint"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "adapterRegistryAdapterFingerprint"
+        ]
+      },
+      "then": {
+        "required": [
+          "adapterKey",
+          "adapterConfigPath",
+          "adapterConfigDir",
+          "adapterConfigFileSizeBytes",
+          "adapterConfigFileModifiedTime",
+          "adapterRegistryFingerprint"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "not": {
+        "enum": [
+          "__proto__",
+          "prototype",
+          "constructor"
+        ]
+      }
+    },
+    "nonBlankString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "schemaVersion": {
+      "const": "0.1.0"
+    }
+  }
+}

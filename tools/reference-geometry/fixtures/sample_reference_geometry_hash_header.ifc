@@ -1,0 +1,18 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD IFC reference fixture with hash marks in header strings'), '2;1');
+FILE_NAME('A#### - LOT # - MODEL - Rev_###.ifc', '2026-06-23T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('IFC4'));
+ENDSEC;
+DATA;
+#1 = IFCCARTESIANPOINT((0.0, 0.0, 0.0));
+#2 = IFCCARTESIANPOINT((100.0, 0.0, 0.0));
+#3 = IFCCARTESIANPOINT((100.0, 50.0, 0.0));
+#4 = IFCCARTESIANPOINT((0.0, 50.0, 0.0));
+#10 = IFCPOLYLOOP((#1, #2, #3, #4));
+#11 = IFCFACEOUTERBOUND(#10, .T.);
+#12 = IFCFACE((#11));
+#13 = IFCCLOSEDSHELL((#12));
+#14 = IFCFACETEDBREP(#13);
+ENDSEC;
+END-ISO-10303-21;

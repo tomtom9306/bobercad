@@ -9,6 +9,7 @@ import {
   dataLibraryDescriptor,
   dataLibraryFallbackSpec,
   dataSourceDescriptor,
+  projectReferenceGeometryFileSources,
   sortDataLibraryEntries
 } from "../commands/data-surface-metadata.mjs";
 import {
@@ -25,6 +26,7 @@ const PROJECT_FILES_PANEL_SPEC = Object.freeze({
   emptySearchMessage: "No matching files.",
   emptySectionMessage: "No files available.",
   sourceLabel: "Project Sources",
+  referenceLabel: "Reference Geometry",
   libraryLabel: "Library Configs"
 });
 
@@ -65,6 +67,7 @@ export function mountProjectFilesPanel({
     const rows = fileRows(project, sources, { sourceBaseUrl });
     const sections = filterSections([
       { label: PROJECT_FILES_PANEL_SPEC.sourceLabel, rows: rows.sources },
+      { label: PROJECT_FILES_PANEL_SPEC.referenceLabel, rows: rows.references },
       { label: PROJECT_FILES_PANEL_SPEC.libraryLabel, rows: rows.libraries }
     ], state.query);
     const empty = sections.length ? null : dataPanelEmpty({
@@ -72,7 +75,7 @@ export function mountProjectFilesPanel({
       message: PROJECT_FILES_PANEL_SPEC.emptySearchMessage
     });
     root.replaceChildren(
-      header(project, rows.sources.length + rows.libraries.length),
+      header(project, rows.sources.length + rows.references.length + rows.libraries.length),
       renderSearch(),
       ...sections.map((item) => section(item.label, item.rows)),
       ...[empty].filter(Boolean)
@@ -144,6 +147,10 @@ function fileRows(project, sources = [], options = {}) {
   const explicitSources = Array.isArray(sources) ? sources : [];
   const explicitRows = explicitSources.map((source) => fileRow(source, options)).filter(Boolean);
   const explicitIds = new Set(explicitSources.map((source) => source?.id).filter(Boolean));
+  const references = projectReferenceGeometryFileEntries(project)
+    .filter((entry) => !explicitIds.has(entry.id))
+    .map((entry) => fileRow(entry, options))
+    .filter(Boolean);
   const libraries = projectLibraryEntries(project)
     .filter((entry) => !explicitIds.has(`library-${entry.id}`))
     .map((entry) => {
@@ -157,7 +164,11 @@ function fileRows(project, sources = [], options = {}) {
       }, options);
     })
     .filter(Boolean);
-  return { sources: explicitRows, libraries };
+  return { sources: explicitRows, references, libraries };
+}
+
+export function projectReferenceGeometryFileEntries(project = {}) {
+  return projectReferenceGeometryFileSources(project);
 }
 
 function fileRow(source, options = {}) {
@@ -170,9 +181,9 @@ function fileRow(source, options = {}) {
     namespace: "bc-project-files",
     icon: descriptor.icon,
     label: descriptor.label,
-    value: rowValue(descriptor.displayPath, descriptor.kind),
+    value: rowValue(descriptor.displayPath, descriptor.statusMeta || descriptor.meta || descriptor.kind),
     href,
-    rowDataset: projectFilesRowDataset(`source-${descriptor.id}`, actionSpec.id, href),
+    rowDataset: projectFilesRowDataset(`source-${descriptor.id}`, actionSpec.id, href, descriptor.searchText),
     mainDataset: projectFilesActionDataset(actionSpec.id, href),
     actionDataset: projectFilesActionDataset(actionSpec.id, href),
     mainLabel: projectDataActionTitle(actionSpec.id, source.label),
@@ -205,9 +216,10 @@ function rowMatchesQuery(row, terms, sectionLabel = "") {
   return terms.every((term) => haystack.includes(term));
 }
 
-function projectFilesRowDataset(id, action, target) {
+function projectFilesRowDataset(id, action, target, searchText = "") {
   return {
     projectFilesId: id,
+    projectFilesKeywords: searchText,
     ...projectFilesActionDataset(action, target)
   };
 }

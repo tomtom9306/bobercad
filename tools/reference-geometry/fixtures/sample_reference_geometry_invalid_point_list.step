@@ -1,0 +1,13 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD invalid point-list STEP reference fixture'),'2;1');
+FILE_NAME('sample_reference_geometry_invalid_point_list.step','2026-06-29T00:00:00',('BoberCAD'),('BoberCAD'),'BoberCAD','BoberCAD','');
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
+ENDSEC;
+DATA;
+#1=CARTESIAN_POINT_LIST_3D(((0.,0.,0.),(100.,0.,0.),(0.,100.,0.)));
+#2=TRIANGULATED_FACE_SET($,#1,$,$,$,((1,2,3)));
+#3=CARTESIAN_POINT_LIST_3D(((200.,0.,0.),(300.,bad,0.),(200.,100.,0.)));
+#4=TRIANGULATED_FACE_SET($,#3,$,$,$,((1,2,3)));
+ENDSEC;
+END-ISO-10303-21;

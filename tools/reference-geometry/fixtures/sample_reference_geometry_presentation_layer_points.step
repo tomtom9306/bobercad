@@ -1,0 +1,13 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP presentation layer point reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_presentation_layer_points.step', '2026-06-28T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN_CC2'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('survey-point-1', (10.0, 20.0, 30.0));
+#10 = VERTEX_POINT('', #1);
+#20 = SHAPE_REPRESENTATION('', (#10), $);
+#30 = PRESENTATION_LAYER_ASSIGNMENT('Survey Points', $, (#20));
+ENDSEC;
+END-ISO-10303-21;

@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bobercad/app/schemas/reference-geometry-adapters.schema.json",
+  "title": "BoberCAD Reference Geometry External Adapter Config Schema",
+  "description": "Local tool configuration for running isolated external adapters that emit canonical reference geometry JSON.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "schemaVersion",
+    "adapters"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema": {
+      "const": "bobercad-reference-geometry-adapters"
+    },
+    "schemaVersion": {
+      "const": "0.1.0"
+    },
+    "adapters": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "$ref": "#/$defs/adapterKey"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/adapter"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "adapterKey": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "not": {
+        "enum": [
+          "__proto__",
+          "prototype",
+          "constructor"
+        ]
+      }
+    },
+    "envName": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "nonBlankString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "format": {
+      "enum": [
+        "dxf",
+        "dwg",
+        "step",
+        "stp",
+        "p21",
+        "stpnc",
+        "ifc",
+        "ifcxml",
+        "ifczip",
+        "e57",
+        "e57pointcloud",
+        "e57pc"
+      ]
+    },
+    "adapter": {
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/format"
+        },
+        "formats": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/format"
+          }
+        },
+        "command": {
+          "$ref": "#/$defs/nonBlankString"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "$ref": "#/$defs/nonBlankString"
+        },
+        "env": {
+          "type": "object",
+          "description": "Optional environment variables to pass only to this adapter process. Launcher values may use the same placeholders as command args, while wrapper raw config env values such as shell flags or E57 point-text parser settings must stay literal.",
+          "propertyNames": {
+            "$ref": "#/$defs/envName"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "requiredFiles": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Optional adapter support files that must exist before preflight or launch. Relative paths resolve from the adapter working directory and may use the same placeholders as command args.",
+          "items": {
+            "$ref": "#/$defs/nonBlankString"
+          }
+        },
+        "requiredDirectories": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Optional adapter support directories that must exist before preflight or launch. Relative paths resolve from the adapter working directory and may use the same placeholders as command args.",
+          "items": {
+            "$ref": "#/$defs/nonBlankString"
+          }
+        },
+        "requiredCommands": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Optional adapter support commands that must resolve before preflight or launch. Relative command paths resolve from the adapter working directory; bare command names resolve through the final adapter process PATH and may use the same placeholders as command args.",
+          "items": {
+            "$ref": "#/$defs/nonBlankString"
+          }
+        },
+        "requiredEnv": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Optional environment variable names that must be present in the final adapter process environment before preflight or launch. Values are never exposed by discovery or preflight output.",
+          "items": {
+            "$ref": "#/$defs/envName"
+          }
+        },
+        "outputMode": {
+          "enum": [
+            "file",
+            "stdout"
+          ],
+          "description": "How the adapter returns canonical bobercad-reference-geometry JSON. The default file mode expects the adapter to write {output}; stdout mode captures process stdout into the staged output manifest before validation."
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "streamMaxBufferBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional maximum byte buffer for the adapter process stdout/stderr capture. Raise this only for adapters that intentionally return large canonical JSON on stdout; file output remains preferred for large reference geometry."
+        },
+        "shell": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "format"
+          ]
+        },
+        {
+          "required": [
+            "formats"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

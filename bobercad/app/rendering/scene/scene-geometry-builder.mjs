@@ -8,6 +8,7 @@ import { addGridSystems, addTrimJoint, addViewerAxes } from "./scene-datum-refer
 import { memberFeatures } from "./scene-feature-cutters.mjs";
 import { addCurvedMember, addInstancedMember, addMember, canInstanceMember, curvedMemberPath } from "./scene-member-geometry-adapters.mjs";
 import { addCutBody, addFastenerGroups, addPlate, addSketchObject, addWelds } from "./scene-object-geometry-adapters.mjs";
+import { addReferenceGeometry } from "./reference-geometry-scene.mjs";
 
 function buildLodDetails(scene) {
   const pointsById = new Map();
@@ -131,6 +132,7 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
   addFastenerGroups(sceneData, project, renderCollectionObjects(project, "fastenerGroups", renderObjectIds));
   addWelds(sceneData, project, renderCollectionObjects(project, "welds", renderObjectIds));
   if (shouldRenderGrids(sceneData)) addGridSystems(sceneData, project, renderObjectIds);
+  addReferenceGeometry(sceneData, renderObjectIds ? [] : options.referenceGeometryAssets);
 
   sceneData.bounds = sceneBounds(sceneData);
   sceneData.vertices = bounds3Corners(sceneData.bounds);

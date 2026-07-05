@@ -21,6 +21,7 @@ import { mountTrimJointEditorPanel } from "./panels/trim-joint-editor-panel.mjs"
 import { mountCommandPalette } from "../shell/command-palette.mjs";
 import { mountStatusBar } from "../shell/status-bar.mjs";
 import { normalizeDisplayMode, normalizeViewOrientation } from "../commands/view-metadata.mjs";
+import { projectReferenceGeometryRuntimeFileSources } from "../commands/data-surface-metadata.mjs";
 import { applyTooltip, topbarMenuButton } from "../design-system/ui-elements.mjs";
 import { createViewerAppController } from "./viewer-app-controller.mjs";
 import { createViewerCommandRegistration } from "./viewer-command-registration.mjs";
@@ -30,6 +31,7 @@ import { mountModelBrowser } from "./model-browser.mjs";
 import { mountProjectDataPanel } from "./project-data-panel.mjs";
 import { mountProjectFilesPanel } from "./project-files-panel.mjs";
 import { mountProjectPropertiesPanel } from "./project-properties-panel.mjs";
+import { mountReferenceImportPanel } from "./reference-import-panel.mjs";
 import { mountSmartComponentBrowser } from "./smart-component-browser.mjs";
 import { createSmartComponentPreviewService } from "./smart-component-preview-service.mjs";
 import { SMART_COMPONENT_CONNECTION_BROWSER_PANEL_SPEC } from "../commands/smart-component-browser-metadata.mjs";
@@ -39,6 +41,7 @@ import { createIcon } from "../icons/icon-registry.mjs";
 import { createViewerRenderScheduler, memberSmartComponentDetailObjectIds, shouldUseProgressiveDetails } from "./viewer-render-scheduler.mjs";
 import { createViewerDomRuntime } from "./viewer-dom-runtime.mjs";
 import { smartComponentHighlightObjectIds } from "./viewer-smart-component-highlights.mjs";
+import { referenceAssetUrl, referenceChunkLoadError, referenceChunkUrl, referenceGeometryRootUrl, referenceManifestLoadError, referencePreviewChunkIds, referenceProjectAssetLoadError, runtimeReferenceAssetBoundsError, runtimeReferenceGeometryData } from "./reference-geometry-runtime-paths.mjs";
 
 const canvas = document.getElementById("view");
 const title = document.getElementById("title");
@@ -59,6 +62,7 @@ const memberTransformPanel = document.getElementById("member-transform-panel");
 const libraryPanel = document.getElementById("library-panel");
 const projectPropertiesPanelRoot = document.getElementById("project-properties-panel");
 const projectFilesPanelRoot = document.getElementById("project-files-panel");
+const referenceImportPanelRoot = document.getElementById("reference-import-panel");
 const projectDataPanelRoot = document.getElementById("project-data-panel");
 const modelBrowserRoot = document.getElementById("model-browser");
 const connectionComponentLibraryPanel = document.getElementById("connection-component-library");
@@ -71,6 +75,7 @@ const initialQaSelectObject = initialSearchParams.get("qaSelectObject");
 const TOPBAR_FILE_COMMAND_QUERY = "file";
 const settingsUrl = new URL("./viewer-settings.json", import.meta.url);
 const defaultWorkspaceUrl = new URL("../workspaces/default-workspace.json", import.meta.url);
+const REFERENCE_LOAD_DIAGNOSTIC_LIMIT = 500;
 
 let settings = null;
 let viewer = null;
@@ -161,6 +166,172 @@ async function loadRegisteredFrameLibrary(project, projectUrl) {
   return loadJson(libraryUrl);
 }
 
+function referenceGeometryAssetEntries(project) {
+  return Object.entries(project?.referenceGeometry?.assets || {})
+    .map(([id, asset]) => ({ id, asset }))
+    .filter((entry) => entry.asset?.path);
+}
+
+function recordReferenceGeometryLoadDiagnostic(diagnostics, entry) {
+  if (!Array.isArray(diagnostics) || diagnostics.length >= REFERENCE_LOAD_DIAGNOSTIC_LIMIT) return;
+  diagnostics.push({
+    assetId: entry.assetId || null,
+    chunkId: entry.chunkId || null,
+    objectId: entry.objectId || null,
+    stage: entry.stage || "load",
+    severity: entry.severity || "error",
+    code: entry.code || "reference-load-error",
+    message: entry.message || "Reference geometry load diagnostic"
+  });
+}
+
+function referenceGeometryChunkEntries(assetData, runtimeSettings) {
+  const chunks = arrayValues(assetData?.chunks).filter((chunk) => chunk?.id && chunk?.path);
+  const selectedChunkIds = referencePreviewChunkIds(assetData, runtimeSettings);
+
+  return chunks.filter((chunk) => selectedChunkIds.has(chunk.id));
+}
+
+async function loadReferenceGeometryChunks(assetId, assetData, assetUrl, runtimeSettings, referenceRootUrl, diagnostics = []) {
+  const loaded = await Promise.all(referenceGeometryChunkEntries(assetData, runtimeSettings).map(async (chunk) => {
+    const url = referenceChunkUrl(chunk.path, assetUrl, referenceRootUrl);
+    if (!url) {
+      const message = `Reference geometry chunk path rejected: ${assetId}/${chunk.id}`;
+      console.warn(message);
+      recordReferenceGeometryLoadDiagnostic(diagnostics, {
+        assetId,
+        chunkId: chunk.id,
+        stage: "chunk-path",
+        code: "reference-chunk-path-rejected",
+        message
+      });
+      return null;
+    }
+    try {
+      const data = await loadJson(url);
+      const chunkError = referenceChunkLoadError(chunk, data);
+      if (chunkError) {
+        const message = `Reference geometry chunk rejected: ${assetId}/${chunk.id}: ${chunkError}`;
+        console.warn(message);
+        recordReferenceGeometryLoadDiagnostic(diagnostics, {
+          assetId,
+          chunkId: chunk.id,
+          stage: "chunk",
+          code: "reference-chunk-rejected",
+          message
+        });
+        return null;
+      }
+      return {
+        id: chunk.id,
+        metadata: chunk,
+        url,
+        data
+      };
+    } catch (error) {
+      const message = `Reference geometry chunk failed to load: ${assetId}/${chunk.id}: ${error?.message || error}`;
+      console.warn(`Reference geometry chunk failed to load: ${assetId}/${chunk.id}`, error);
+      recordReferenceGeometryLoadDiagnostic(diagnostics, {
+        assetId,
+        chunkId: chunk.id,
+        stage: "chunk-fetch",
+        code: "reference-chunk-load-failed",
+        message
+      });
+      return null;
+    }
+  }));
+  return Object.fromEntries(loaded.filter(Boolean).map((entry) => [entry.id, entry]));
+}
+
+async function loadReferenceGeometryAssets(project, projectUrl, runtimeSettings, diagnostics = []) {
+  const entries = referenceGeometryAssetEntries(project);
+  const referenceRootUrl = referenceGeometryRootUrl(projectUrl);
+  const loaded = await Promise.all(entries.map(async ({ id, asset }) => {
+    const projectAssetError = referenceProjectAssetLoadError(id, asset);
+    if (projectAssetError) {
+      const message = `Reference geometry project asset rejected: ${id}: ${projectAssetError}`;
+      console.warn(message);
+      recordReferenceGeometryLoadDiagnostic(diagnostics, {
+        assetId: id,
+        stage: "project-pointer",
+        code: "reference-project-asset-rejected",
+        message
+      });
+      return null;
+    }
+    const url = referenceAssetUrl(asset.path, projectUrl);
+    if (!url) {
+      const message = `Reference geometry path rejected: ${id}`;
+      console.warn(message);
+      recordReferenceGeometryLoadDiagnostic(diagnostics, {
+        assetId: id,
+        stage: "manifest-path",
+        code: "reference-manifest-path-rejected",
+        message
+      });
+      return null;
+    }
+    try {
+      const data = await loadJson(url);
+      const manifestError = referenceManifestLoadError(id, data);
+      if (manifestError) {
+        const message = `Reference geometry manifest rejected: ${id}: ${manifestError}`;
+        console.warn(message);
+        recordReferenceGeometryLoadDiagnostic(diagnostics, {
+          assetId: id,
+          stage: "manifest",
+          code: "reference-manifest-rejected",
+          message
+        });
+        return null;
+      }
+      const runtimeData = runtimeReferenceGeometryData(data, (objectId, objectError) => {
+        const message = `Reference geometry object rejected: ${id}/${objectId}: ${objectError}`;
+        console.warn(message);
+        recordReferenceGeometryLoadDiagnostic(diagnostics, {
+          assetId: id,
+          objectId,
+          stage: "object",
+          severity: "warning",
+          code: "reference-object-rejected",
+          message
+        });
+      });
+      const boundsError = runtimeReferenceAssetBoundsError(runtimeData);
+      if (boundsError) {
+        const message = `Reference geometry manifest rejected: ${id}: ${boundsError}`;
+        console.warn(message);
+        recordReferenceGeometryLoadDiagnostic(diagnostics, {
+          assetId: id,
+          stage: "asset-bounds",
+          code: "reference-asset-bounds-rejected",
+          message
+        });
+        return null;
+      }
+      return {
+        id,
+        projectAsset: asset,
+        url,
+        data: runtimeData,
+        loadedChunks: await loadReferenceGeometryChunks(id, runtimeData, url, runtimeSettings, referenceRootUrl, diagnostics)
+      };
+    } catch (error) {
+      const message = `Reference geometry failed to load: ${id}: ${error?.message || error}`;
+      console.warn(`Reference geometry failed to load: ${id}`, error);
+      recordReferenceGeometryLoadDiagnostic(diagnostics, {
+        assetId: id,
+        stage: "manifest-fetch",
+        code: "reference-manifest-load-failed",
+        message
+      });
+      return null;
+    }
+  }));
+  return loaded.filter(Boolean);
+}
+
 function applyUiSettings(project) {
   if (hud) hud.hidden = !settings.ui.showHud;
   if (meta) meta.hidden = !settings.ui.showMeta;
@@ -205,6 +376,8 @@ async function main() {
     const runtimeSettings = cloneRuntimeSettings(settings);
     const projectUrl = new URL(projectPath(), settingsUrl);
     const project = await loadJson(projectUrl);
+    const referenceGeometryLoadDiagnostics = [];
+    const referenceGeometryAssets = await loadReferenceGeometryAssets(project, projectUrl, runtimeSettings, referenceGeometryLoadDiagnostics);
     const profilesUrl = new URL(project.libraries.profiles.path, projectUrl);
     const fastenersUrl = new URL(project.libraries.fasteners.path, projectUrl);
     const materialsUrl = new URL(project.libraries.materials.path, projectUrl);
@@ -260,6 +433,7 @@ async function main() {
     let smartComponentBrowserUi = null;
     let projectPropertiesPanelUi = null;
     let projectFilesPanelUi = null;
+    let referenceImportPanelUi = null;
     let projectDataPanelUi = null;
     let statusBar = null;
     let commandPalette = null;
@@ -340,6 +514,7 @@ async function main() {
       getPlateSketchEdit: () => plateSketchEdit,
       getModelBrowserUi: () => modelBrowserUi,
       getProjectFilesPanelUi: () => projectFilesPanelUi,
+      getReferenceImportPanelUi: () => referenceImportPanelUi,
       getProjectDataPanelUi: () => projectDataPanelUi,
       getSmartComponentBrowserUi: () => smartComponentBrowserUi,
       getConnectionComponentBrowserUi: () => connectionComponentBrowserUi,
@@ -370,10 +545,22 @@ async function main() {
     });
     refreshStatusBar();
     function projectDataSources() {
+      const referenceSources = projectReferenceGeometryRuntimeFileSources(api.project(), {
+        loadedAssets: referenceGeometryAssets,
+        diagnostics: referenceGeometryLoadDiagnostics
+      });
       return [
         { id: "project", label: "Project JSON", kind: "Project", icon: "file", path: projectUrl.href },
         { id: "settings", label: "Viewer settings", kind: "UI", icon: "settings", path: settingsUrl.href },
-        { id: "workspace", label: "Default workspace", kind: "UI", icon: "settings", path: defaultWorkspaceUrl.href }
+        { id: "workspace", label: "Default workspace", kind: "UI", icon: "settings", path: defaultWorkspaceUrl.href },
+        ...referenceSources,
+        ...referenceGeometryAssets.flatMap((entry) => Object.values(entry.loadedChunks || {}).map((chunk) => ({
+          id: `reference-${entry.id}-${chunk.id}`,
+          label: chunk.id,
+          kind: "Reference Chunk",
+          icon: "file",
+          path: chunk.url.href
+        })))
       ];
     }
     function focusObjectIds(objectIds = []) {
@@ -560,6 +747,7 @@ async function main() {
       getProject: () => api.project(),
       getPreviewMembers: () => authoringPreview,
       getPreviewPlates: () => authoringPreviewPlates,
+      getReferenceGeometryAssets: () => referenceGeometryAssets,
       getActiveSmartComponentId: () => dimensionEdit?.smartComponentId() || null,
       getForceDetailObjectIds: () => focusedMemberId ? memberSmartComponentDetailObjectIds(api.project(), focusedMemberId) : [],
       getActiveTrimRenderOptions: () => trimJointEditorApi?.sceneFocus?.() || {},
@@ -583,7 +771,9 @@ async function main() {
       settings: runtimeSettings,
       searchParams: initialSearchParams,
       hiddenCaptureElements: [hud, modelingToolbar, modelingStatus, memberTransformPanel, objectEditor, featureEditorPanel, trimJointEditorPanel, libraryPanel, customPanel],
-      renderProject
+      renderProject,
+      getReferenceGeometryAssets: () => referenceGeometryAssets,
+      getReferenceGeometryLoadDiagnostics: () => referenceGeometryLoadDiagnostics
     });
     const memberTransformUi = mountMemberTransformPanel({
       panel: memberTransformPanel,
@@ -1104,6 +1294,12 @@ async function main() {
       app: viewerApp,
       sourceBaseUrl: projectUrl.href,
       sources: projectDataSources()
+    }));
+    referenceImportPanelUi = trackDisposable(mountReferenceImportPanel({
+      root: referenceImportPanelRoot,
+      app: viewerApp,
+      projectPath: projectPath(),
+      onStatusChange: updateModelingStatus
     }));
     projectDataPanelUi = trackDisposable(mountProjectDataPanel({
       root: projectDataPanelRoot,

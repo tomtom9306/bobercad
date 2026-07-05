@@ -1,5 +1,5 @@
 import { DATA_DOCK_TABS } from "./data-dock-metadata.mjs";
-import { dataLibraryDescriptor, dataSourceDescriptor, sortDataLibraryEntries } from "./data-surface-metadata.mjs";
+import { dataLibraryDescriptor, dataSourceDescriptor, projectReferenceGeometryFileSources, sortDataLibraryEntries } from "./data-surface-metadata.mjs";
 import { MODEL_COLLECTION_SPECS, modelCollectionSelectionKind, modelObjectSearchDescriptor } from "./model-collection-metadata.mjs";
 import { smartComponentKindIcon, smartComponentTitleCase } from "./smart-component-browser-metadata.mjs";
 import { commandPaletteResultKindLabel } from "./command-palette-metadata.mjs";
@@ -63,6 +63,19 @@ function projectFileResults(project, sources = []) {
       });
     });
   const explicitSourceIds = new Set(explicitSources.map((source) => source?.id).filter(Boolean));
+  const referenceSourceResults = projectReferenceGeometryFileSources(project)
+    .filter((source) => !explicitSourceIds.has(source.id))
+    .map((source) => {
+      const descriptor = dataSourceDescriptor(source);
+      return fileResult({
+        id: `leftDock.files.source.${safeId(descriptor.id)}`,
+        title: descriptor.label,
+        description: descriptor.description,
+        icon: descriptor.icon,
+        rowId: `source-${descriptor.id}`,
+        keywords: descriptor.keywords
+      });
+    });
   const libraries = project?.libraries && typeof project.libraries === "object" && !Array.isArray(project.libraries)
     ? project.libraries
     : {};
@@ -86,7 +99,7 @@ function projectFileResults(project, sources = []) {
         keywords: [...descriptor.keywords, ...sourceDescriptor.keywords]
       });
     });
-  return [...sourceResults, ...librarySourceResults];
+  return [...sourceResults, ...referenceSourceResults, ...librarySourceResults];
 }
 
 function projectDataResults(project) {

@@ -1,5 +1,6 @@
 import { clamp, finiteNumber, finiteNumberOr, screenDistance, v } from "../../engine/core/math.mjs";
 import { faceNormal, triangulateFace } from "../../engine/geometry/polygon.mjs";
+import { triangulateSceneFace } from "./webgl-reference-triangulation.mjs";
 
 function barycentric(point, a, b, c) {
   const v0x = b.x - a.x;
@@ -89,7 +90,7 @@ export function createWebglPicker({
       if (filteredIds && !filteredIds.has(face.objectId)) continue;
       if (componentKind && face.componentKind !== componentKind) continue;
       if (!shouldDrawSceneItem(face)) continue;
-      for (const triangle of triangulateFace(face.points)) {
+      for (const triangle of triangulateSceneFace(face)) {
         const projected = triangle.map((point) => camera.projectPoint(point, currentScene, canvas));
         const xs = projected.map((point) => point.x);
         const ys = projected.map((point) => point.y);

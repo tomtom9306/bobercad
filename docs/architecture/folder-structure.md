@@ -188,23 +188,30 @@ bobercad
         |                   |-- config.json
         |                   `-- build.mjs
         |
-        `-- projects
-            `-- sample_*.json
+        |-- projects
+        |   `-- sample_*.json
+        |
+        `-- references
+            |-- sample_reference_geometry.json
+            `-- chunks
+                `-- sample_reference_scan_points.chunk.json
 ```
 
 Ownership rule:
 
 ```text
-If changing it changes how the app works, it belongs in bobercad/bobercad/app.
-If changing it changes what knowledge/content the app has, it belongs in bobercad/bobercad/data.
-If changing it changes a JSON contract used by app validation, it belongs in bobercad/bobercad/app/schemas.
+If changing it changes how the app works, it belongs in bobercad/app.
+If changing it changes what knowledge/content the app has, it belongs in bobercad/data.
+If changing it changes a JSON contract used by app validation, it belongs in bobercad/app/schemas.
 Repo-only workflow files stay in the outer bobercad root.
 ```
+
+Reference geometry JSON files live in `bobercad/data/references`. Chunk sidecars live below the same folder, normally in `bobercad/data/references/chunks`. They are read-only viewer/editor overlays produced by translators from external CAD/BIM/scan formats, not project model objects.
 
 Schema rule:
 
 ```text
-All schemas live flat in bobercad/bobercad/app/schemas.
+All schemas live flat in bobercad/app/schemas.
 Do not split schemas into nested folders unless the folder count becomes painful.
 ```
 

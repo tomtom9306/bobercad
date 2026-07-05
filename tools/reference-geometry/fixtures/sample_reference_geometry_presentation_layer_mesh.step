@@ -1,0 +1,17 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD STEP presentation layer mesh reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_presentation_layer_mesh.step', '2026-06-28T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN_CC2'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('p1', (0.0, 0.0, 0.0));
+#2 = CARTESIAN_POINT('p2', (300.0, 0.0, 0.0));
+#3 = CARTESIAN_POINT('p3', (300.0, 180.0, 0.0));
+#4 = CARTESIAN_POINT('p4', (0.0, 180.0, 0.0));
+#20 = POLY_LOOP('', (#1, #2, #3, #4));
+#30 = FACE_OUTER_BOUND('', #20, .T.);
+#40 = ADVANCED_FACE('', (#30), $, .T.);
+#50 = PRESENTATION_LAYER_ASSIGNMENT('Fabrication Mesh', $, (#40));
+ENDSEC;
+END-ISO-10303-21;

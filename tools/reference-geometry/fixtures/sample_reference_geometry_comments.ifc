@@ -1,0 +1,13 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('BoberCAD IFC block comment reference fixture'), '2;1');
+FILE_NAME('sample_reference_geometry_comments.ifc', '2026-06-28T00:00:00', ('BoberCAD'), ('BoberCAD'), 'BoberCAD', 'BoberCAD', '');
+FILE_SCHEMA(('IFC4'));
+ENDSEC;
+DATA;
+/* #900 = IFCCARTESIANPOINT((900.0, 900.0, 900.0));
+   #901 = IFCVERTEXPOINT(#900); */
+#1 = IFCCARTESIANPOINT((10.0, /* y coordinate */ 20.0, 30.0));
+#2 = IFCVERTEXPOINT(#1);
+ENDSEC;
+END-ISO-10303-21;

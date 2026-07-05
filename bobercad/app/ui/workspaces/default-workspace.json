@@ -68,6 +68,7 @@
       "tabIds": [
         "project",
         "files",
+        "reference-import",
         "data",
         "model",
         "connections",

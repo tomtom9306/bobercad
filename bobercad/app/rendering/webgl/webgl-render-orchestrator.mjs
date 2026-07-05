@@ -7,6 +7,7 @@ import { createTextLabelRenderer } from "./text-label-renderer.mjs";
 import { createWebglDrawRuntime } from "./webgl-draw-utils.mjs";
 import { createWebglProgramRegistry } from "./webgl-programs.mjs";
 import { highlightedObjectIdsForOverlay as filteredHighlightedObjectIds } from "./webgl-highlight-policy.mjs";
+import { triangulateSceneFace } from "./webgl-reference-triangulation.mjs";
 
 export function createWebglRenderOrchestrator({
   gl,
@@ -270,7 +271,7 @@ export function createWebglRenderOrchestrator({
       const surfaceGroup = renderGroupBucket((face.opacity ?? 1) >= 1 ? opaqueFaces : transparentFaces);
       const rgba = shadedRgba(face.color, face.points, face.opacity ?? 1);
       const pickRgba = pickColorForItem(face);
-      for (const triangle of triangulateFace(face.points)) {
+      for (const triangle of triangulateSceneFace(face)) {
         for (const point of triangle) appendWorldVertex(surfaceGroup, point, rgba, pickRgba);
       }
       if (face.hideEdges) continue;

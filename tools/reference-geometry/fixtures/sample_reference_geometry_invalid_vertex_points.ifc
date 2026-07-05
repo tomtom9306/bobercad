@@ -1,0 +1,13 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('ViewDefinition [CoordinationView]'),'2;1');
+FILE_NAME('sample_reference_geometry_invalid_vertex_points.ifc','2026-06-29T00:00:00',('Codex'),('OpenAI'),'','','');
+FILE_SCHEMA(('IFC4'));
+ENDSEC;
+DATA;
+#1=IFCCARTESIANPOINT((10.,20.,30.));
+#2=IFCCARTESIANPOINT((40.,bad,60.));
+#3=IFCVERTEXPOINT(#1);
+#4=IFCVERTEXPOINT(#2);
+ENDSEC;
+END-ISO-10303-21;

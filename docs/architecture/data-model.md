@@ -18,6 +18,9 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - `bobercad/data/libraries/frames/frame-register.json` - frame template authoring library.
 - `bobercad/app/ui/viewer/viewer-settings.json` - viewer-only camera, UI, control, and render settings.
 - `bobercad/app/schemas/project.schema.json` - schema for project files.
+- `bobercad/app/schemas/reference-geometry-adapters.schema.json` - schema for local external translator adapter configuration.
+- `bobercad/app/schemas/reference-geometry.schema.json` - schema for read-only imported/reference geometry overlay files.
+- `bobercad/app/schemas/reference-point-cloud-chunk.schema.json` - schema for chunked point-cloud reference sidecars.
 - `bobercad/app/schemas/profile-library.schema.json` - schema for profile libraries.
 - `bobercad/app/schemas/material-library.schema.json` - schema for material libraries.
 - `bobercad/app/schemas/fastener-library.schema.json` - schema for fastener libraries.
@@ -30,6 +33,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 
 - Project JSON stores semantic model data only.
 - Do not store meshes, vertices, triangle indexes, B-reps, display geometry, generated solids, NC1 output, IFC output, STEP output, or drawing linework.
+- Imported/reference geometry lives in separate `bobercad-reference-geometry` JSON files. Project JSON may store only reference asset paths, visibility/display settings, and transforms.
 - Viewer/editor/exporter geometry is always derived.
 - `objectIndex` is stored and authoritative for now. Keep it in sync manually until app commands can maintain it.
 - Materials live in `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json`; project objects reference them with `"material": "S355"`.
@@ -43,6 +47,18 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - Repeated object values live in `modelDefaults`; objects only store fields that differ from those defaults.
 - BIM metadata lives on the object in a `bim` block.
 - Viewer camera, UI, and render preferences do not belong in project JSON; keep them in `bobercad/app/ui/viewer/viewer-settings.json`.
+
+## Reference Geometry
+
+Reference geometry import uses a separate canonical JSON contract so DXF, DWG, STEP, IFC, and E57 translators can evolve independently from the BIM model.
+
+The project may include a `referenceGeometry.assets` register. Each asset points to a `bobercad-reference-geometry` JSON file and may define a transform, display override, visibility, and snap policy. The referenced file may contain linework, meshes, or point-cloud metadata; large point payloads and aligned point attributes such as color and intensity live in `bobercad-reference-point-cloud-chunk` sidecars because they are not the project model source of truth. Viewer preview budgets for reference points, line segments, and mesh faces live in viewer settings rather than project data.
+
+The reference file's `asset.coordinateSystem` describes the translated source frame, and `asset.units` describes its length unit. The viewer converts reference units into `project.settings.units.length`, applies the source frame, then applies the project asset `transform`, which remains pointer-only project placement metadata.
+
+When `snapEnabled` is true, the editor may create low-priority snap candidates from rendered reference linework and mesh edges. Point-cloud preview glyphs are display-only and are not snap sources.
+
+Reference geometry must not be added to `objectIndex`, `model`, `modelDefaults`, fabrication data, Smart Component data, or NC1 export inputs. It is a read-only viewer/editor aid until an explicit conversion command creates real semantic project objects.
 
 ## Default Resolution
 
