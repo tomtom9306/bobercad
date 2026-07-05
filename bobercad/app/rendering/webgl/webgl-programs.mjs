@@ -14,6 +14,7 @@ const VIEW_VERTEX_SHADER = `
   uniform vec2 uViewport;
   uniform vec3 uPivot;
   uniform float uDepthHalf;
+  uniform float uPointSize;
 
   vec3 cameraRotate(vec3 point) {
     float cy = cos(uYaw);
@@ -63,7 +64,8 @@ export function createWebglProgramRegistry(gl) {
       pan: gl.getUniformLocation(program, "uPan"),
       viewport: gl.getUniformLocation(program, "uViewport"),
       pivot: gl.getUniformLocation(program, "uPivot"),
-      depthHalf: gl.getUniformLocation(program, "uDepthHalf")
+      depthHalf: gl.getUniformLocation(program, "uDepthHalf"),
+      pointSize: gl.getUniformLocation(program, "uPointSize")
     };
   }
 
@@ -102,6 +104,7 @@ export function createWebglProgramRegistry(gl) {
       void main() {
         vec3 view = cameraRotate(aWorldPosition - uPivot);
         gl_Position = clipPosition(view);
+        gl_PointSize = uPointSize;
         vColor = aColor;
       }
     `, COLOR_FRAGMENT_SHADER);
@@ -144,6 +147,7 @@ export function createWebglProgramRegistry(gl) {
         vec3 normal = normalize(aAxisX * aLocalNormal.x + aLocalNormal.y + aAxisZ * aLocalNormal.z);
         float shade = uAmbient + max(0.0, dot(normal, normalize(uLight))) * uDiffuse;
         gl_Position = clipPosition(view);
+        gl_PointSize = uPointSize;
         vColor = vec4(aColor.rgb * shade, aColor.a);
       }
     `, COLOR_FRAGMENT_SHADER);

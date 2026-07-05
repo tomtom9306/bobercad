@@ -187,7 +187,8 @@ export function createWebglRenderOrchestrator({
       ...arrayValues(staticSceneCache.opaqueFaces),
       ...arrayValues(staticSceneCache.transparentFaces),
       ...arrayValues(staticSceneCache.lines),
-      ...arrayValues(staticSceneCache.xrayLines)
+      ...arrayValues(staticSceneCache.xrayLines),
+      ...arrayValues(staticSceneCache.xrayPoints)
     ]) {
       deleteRenderGroup(group);
     }
@@ -237,12 +238,13 @@ export function createWebglRenderOrchestrator({
     if (pickRgba) group.pickColors.push(pickRgba[0], pickRgba[1], pickRgba[2], pickRgba[3]);
   }
 
-  function renderGroupBucket(bucket, key = "__visible") {
+  function renderGroupBucket(bucket, key = "__visible", patch = {}) {
     let group = bucket.get(key);
     if (!group) {
-      group = { lodDetailObjectId: null, positions: [], colors: [], pickColors: [] };
+      group = { lodDetailObjectId: null, positions: [], colors: [], pickColors: [], ...patch };
       bucket.set(key, group);
     }
+    Object.assign(group, patch);
     return group;
   }
 
@@ -252,6 +254,7 @@ export function createWebglRenderOrchestrator({
       .map((group) => ({
         mode,
         lodDetailObjectId: group.lodDetailObjectId,
+        pointSize: group.pointSize || null,
         vertexCount: group.positions.length / 3,
         positionBuffer: uploadBuffer(new Float32Array(group.positions)),
         colorBuffer: uploadBuffer(new Float32Array(group.colors)),
@@ -264,12 +267,13 @@ export function createWebglRenderOrchestrator({
     const transparentFaces = new Map();
     const lineGroups = new Map();
     const xrayLineGroups = new Map();
+    const xrayPointGroups = new Map();
     const defaultEdgeColor = settings.render.edges.defaultColor;
     for (const face of scene.faces) {
       if (!shouldDrawSceneItem(face)) continue;
-      const surfaceGroup = renderGroupBucket((face.opacity ?? 1) >= 1 ? opaqueFaces : transparentFaces);
+      const pickRgba = face.pickable === false ? null : pickColorForItem(face);
+      const surfaceGroup = renderGroupBucket((face.opacity ?? 1) >= 1 ? opaqueFaces : transparentFaces, pickRgba ? "__pickable" : "__nopickable");
       const rgba = shadedRgba(face.color, face.points, face.opacity ?? 1);
-      const pickRgba = pickColorForItem(face);
       for (const triangle of triangulateFace(face.points)) {
         for (const point of triangle) appendWorldVertex(surfaceGroup, point, rgba, pickRgba);
       }
@@ -288,11 +292,21 @@ export function createWebglRenderOrchestrator({
       appendWorldVertex(lineGroup, line.points[0], rgba);
       appendWorldVertex(lineGroup, line.points[1], rgba);
     }
+    for (const cloud of arrayValues(scene.pointClouds)) {
+      if (!shouldDrawSceneItem(cloud)) continue;
+      const pointSize = finiteNumberOr(cloud.pointSize, settings.render.points?.size || 3);
+      const pointGroup = renderGroupBucket(xrayPointGroups, String(pointSize), { pointSize });
+      const rgba = hexToRgba(cloud.color, cloud.opacity ?? 1);
+      for (const point of arrayValues(cloud.points)) {
+        if (v.isVec3(point)) appendWorldVertex(pointGroup, point, rgba);
+      }
+    }
     return {
       opaqueFaces: uploadRenderGroups(opaqueFaces, gl.TRIANGLES),
       transparentFaces: uploadRenderGroups(transparentFaces, gl.TRIANGLES),
       lines: uploadRenderGroups(lineGroups, gl.LINES),
-      xrayLines: uploadRenderGroups(xrayLineGroups, gl.LINES)
+      xrayLines: uploadRenderGroups(xrayLineGroups, gl.LINES),
+      xrayPoints: uploadRenderGroups(xrayPointGroups, gl.POINTS)
     };
   }
 
@@ -300,6 +314,7 @@ export function createWebglRenderOrchestrator({
     if (!groups.length) return;
     const state = prepareStaticSceneRenderer();
     for (const group of groups) {
+      if (state.uniforms?.pointSize) gl.uniform1f(state.uniforms.pointSize, finiteNumberOr(group.pointSize, settings.render.points?.size || 3));
       gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
       gl.enableVertexAttribArray(state.position);
       gl.vertexAttribPointer(state.position, 3, gl.FLOAT, false, 0, 0);
@@ -409,6 +424,7 @@ export function createWebglRenderOrchestrator({
     gl.uniform2fv(uniforms.viewport, view.viewport);
     gl.uniform3fv(uniforms.pivot, view.pivot);
     gl.uniform1f(uniforms.depthHalf, view.depthHalf);
+    if (uniforms.pointSize) gl.uniform1f(uniforms.pointSize, settings.render.points?.size || 3);
   }
 
   function setLightingUniforms(state, ambient, diffuse) {
@@ -735,6 +751,11 @@ export function createWebglRenderOrchestrator({
     if (staticSceneCache.xrayLines?.length) {
       gl.disable(gl.DEPTH_TEST);
       drawStaticRenderGroups(staticSceneCache.xrayLines);
+      gl.enable(gl.DEPTH_TEST);
+    }
+    if (staticSceneCache.xrayPoints?.length) {
+      gl.disable(gl.DEPTH_TEST);
+      drawStaticRenderGroups(staticSceneCache.xrayPoints);
       gl.enable(gl.DEPTH_TEST);
     }
     sceneTextRenderer?.draw({

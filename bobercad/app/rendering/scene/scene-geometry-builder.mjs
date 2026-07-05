@@ -1,4 +1,4 @@
-import { bounds3, bounds3Corners, validVec3Points, v } from "../../engine/core/math.mjs";
+import { bounds3, bounds3Corners, v } from "../../engine/core/math.mjs";
 import { arrayValues } from "../../engine/core/model.mjs";
 import { csgTessellationOptions } from "../../engine/geometry/csg.mjs";
 import { projectProfileCatalog } from "../../engine/api/project/profiles.mjs";
@@ -8,6 +8,7 @@ import { addGridSystems, addTrimJoint, addViewerAxes } from "./scene-datum-refer
 import { memberFeatures } from "./scene-feature-cutters.mjs";
 import { addCurvedMember, addInstancedMember, addMember, canInstanceMember, curvedMemberPath } from "./scene-member-geometry-adapters.mjs";
 import { addCutBody, addFastenerGroups, addPlate, addSketchObject, addWelds } from "./scene-object-geometry-adapters.mjs";
+import { addReferenceGeometry } from "./reference-geometry-scene.mjs";
 
 function buildLodDetails(scene) {
   const pointsById = new Map();
@@ -36,16 +37,34 @@ function buildLodDetails(scene) {
 }
 
 function sceneBounds(scene) {
-  const points = validVec3Points([
-    ...scene.faces.flatMap((face) => arrayValues(face.points)),
-    ...scene.lines.flatMap((line) => arrayValues(line.points)),
-    ...scene.memberInstances.flatMap((instance) => [
-      instance.start,
-      v.add(instance.start, v.mul(instance.axisX, instance.length))
-    ])
-  ]);
-  const data = bounds3(points.length ? points : [[0, 0, 0]]);
-  return { min: data.min, max: data.max, center: data.center, depthHalf: Math.max(1, v.len(data.size) / 2) };
+  let count = 0;
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  const addPoint = (point) => {
+    if (!v.isVec3(point)) return;
+    count += 1;
+    for (let index = 0; index < 3; index += 1) {
+      min[index] = Math.min(min[index], point[index]);
+      max[index] = Math.max(max[index], point[index]);
+    }
+  };
+  for (const face of scene.faces) {
+    for (const point of arrayValues(face.points)) addPoint(point);
+  }
+  for (const line of scene.lines) {
+    for (const point of arrayValues(line.points)) addPoint(point);
+  }
+  for (const cloud of scene.pointClouds) {
+    for (const point of arrayValues(cloud.points)) addPoint(point);
+  }
+  for (const instance of scene.memberInstances) {
+    addPoint(instance.start);
+    addPoint(v.add(instance.start, v.mul(instance.axisX, instance.length)));
+  }
+  if (!count) return { min: [0, 0, 0], max: [0, 0, 0], center: [0, 0, 0], depthHalf: 1 };
+  const center = min.map((value, index) => (value + max[index]) / 2);
+  const size = min.map((value, index) => max[index] - value);
+  return { min, max, center, depthHalf: Math.max(1, v.len(size) / 2) };
 }
 
 export function buildScene(project, profiles, fasteners, viewerSettings, options = {}) {
@@ -57,6 +76,7 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
   const sceneData = {
     faces: [],
     lines: [],
+    pointClouds: [],
     labels: [],
     callouts: [],
     vertices: [],
@@ -131,6 +151,7 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
   addFastenerGroups(sceneData, project, renderCollectionObjects(project, "fastenerGroups", renderObjectIds));
   addWelds(sceneData, project, renderCollectionObjects(project, "welds", renderObjectIds));
   if (shouldRenderGrids(sceneData)) addGridSystems(sceneData, project, renderObjectIds);
+  if (!renderObjectIds) addReferenceGeometry(sceneData, options.referenceGeometry);
 
   sceneData.bounds = sceneBounds(sceneData);
   sceneData.vertices = bounds3Corners(sceneData.bounds);

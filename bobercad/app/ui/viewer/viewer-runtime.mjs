@@ -39,6 +39,11 @@ import { createIcon } from "../icons/icon-registry.mjs";
 import { createViewerRenderScheduler, memberSmartComponentDetailObjectIds, shouldUseProgressiveDetails } from "./viewer-render-scheduler.mjs";
 import { createViewerDomRuntime } from "./viewer-dom-runtime.mjs";
 import { smartComponentHighlightObjectIds } from "./viewer-smart-component-highlights.mjs";
+import {
+  normalizeReferenceGeometry,
+  normalizedReferenceGeometryCounts
+} from "../../engine/reference-geometry/reference-geometry.mjs";
+import { translateReferenceGeometryFile } from "../../engine/reference-geometry/browser-reference-geometry-translator.mjs";
 
 const canvas = document.getElementById("view");
 const title = document.getElementById("title");
@@ -47,6 +52,8 @@ const reset = document.getElementById("reset");
 const hud = document.getElementById("hud");
 const featureNavbarRoot = document.getElementById("feature-navbar");
 const commandPaletteButton = document.getElementById("command-palette-open");
+const referenceImportButton = document.getElementById("reference-import-open");
+const referenceImportInput = document.getElementById("reference-import-input");
 const topbarFileButton = document.getElementById("topbar-file-open");
 const commandPaletteRoot = document.getElementById("command-palette");
 const viewerSettingsRoot = document.getElementById("viewer-settings-strip");
@@ -74,10 +81,19 @@ const defaultWorkspaceUrl = new URL("../workspaces/default-workspace.json", impo
 
 let settings = null;
 let viewer = null;
+let runtimeReferenceGeometry = null;
+let runtimeReferenceGeometryUrl = null;
 let authoringPreview = [];
 let authoringPreviewPlates = [];
 decorateResetAction(reset);
 decorateTopbarFileAction(topbarFileButton);
+decorateReferenceImportAction(referenceImportButton);
+
+function exposeRuntimeReferenceGeometry() {
+  window.__boberCadReferenceGeometry = runtimeReferenceGeometry;
+  window.__boberCadReferenceGeometryDiagnostics = runtimeReferenceGeometry?.diagnostics || [];
+  window.__boberCadReferenceGeometrySource = runtimeReferenceGeometry?.source || null;
+}
 
 function preventWorkspacePageZoom(event) {
   if (!event.ctrlKey && !event.metaKey) return;
@@ -101,6 +117,18 @@ function decorateTopbarFileAction(button) {
     label: "File",
     title: "File actions",
     ariaLabel: "File actions",
+    className: "bc-topbar-menu-button",
+    labelClassName: "bc-topbar-menu-label"
+  });
+}
+
+function decorateReferenceImportAction(button) {
+  if (!button) return;
+  topbarMenuButton(button, {
+    icon: "upload",
+    label: "Import IFC/DXF",
+    title: "Import IFC, DXF, DWG, STEP, E57, point cloud, OBJ, or JSON reference geometry",
+    ariaLabel: "Import IFC, DXF, DWG, STEP, E57, point cloud, OBJ, or JSON reference geometry",
     className: "bc-topbar-menu-button",
     labelClassName: "bc-topbar-menu-label"
   });
@@ -175,7 +203,49 @@ function projectPath() {
 
 function updateMeta(project) {
   if (!meta) return;
-  meta.textContent = `${Object.keys(project.model.members).length} members | ${Object.keys(project.model.plates).length} plates | ${Object.keys(project.model.sketches || {}).length} sketches | ${Object.keys(project.model.fastenerGroups).length} fasteners`;
+  const referenceCounts = runtimeReferenceGeometry ? normalizedReferenceGeometryCounts(runtimeReferenceGeometry) : null;
+  const referenceLabel = referenceCounts
+    ? ` | refs ${referenceCounts.lines + referenceCounts.polylines} lines / ${referenceCounts.meshes} meshes / ${referenceCounts.points} pts`
+    : "";
+  meta.textContent = `${Object.keys(project.model.members).length} members | ${Object.keys(project.model.plates).length} plates | ${Object.keys(project.model.sketches || {}).length} sketches | ${Object.keys(project.model.fastenerGroups).length} fasteners${referenceLabel}`;
+}
+
+function referenceGeometryStatusText(geometry, label = "Reference JSON loaded") {
+  const counts = normalizedReferenceGeometryCounts(geometry);
+  const diagnosticMessages = arrayValues(geometry?.diagnostics).map((item) => String(item?.message || item || "").trim()).filter(Boolean);
+  const diagnosticPreview = diagnosticMessages[0] ? ` (${diagnosticMessages[0].slice(0, 180)}${diagnosticMessages[0].length > 180 ? "..." : ""})` : "";
+  const diagnosticText = diagnosticMessages.length ? `, ${diagnosticMessages.length} diagnostics${diagnosticPreview}` : "";
+  return `${label}: ${counts.lines + counts.polylines} lines, ${counts.meshes} meshes, ${counts.points} pts${diagnosticText}.`;
+}
+
+async function loadReferenceGeometry(projectUrl) {
+  const referencePath = (initialSearchParams.get("reference") || initialSearchParams.get("ref") || "").trim();
+  if (!referencePath) return null;
+  const referenceUrl = new URL(referencePath, projectUrl);
+  runtimeReferenceGeometryUrl = referenceUrl;
+  try {
+    const geometry = normalizeReferenceGeometry(await loadJson(referenceUrl));
+    geometry.source = { ...geometry.source, loadedFrom: referenceUrl.href };
+    return geometry;
+  } catch (error) {
+    console.warn(`Reference geometry could not be loaded: ${error?.message || String(error)}`);
+    return normalizeReferenceGeometry({
+      source: { path: referenceUrl.href, loadedFrom: referenceUrl.href, format: "json" },
+      diagnostics: [{ severity: "warning", code: "load-failed", message: error?.message || String(error) }]
+    });
+  }
+}
+
+async function importReferenceGeometryFile(file) {
+  if (!file) return null;
+  const geometry = normalizeReferenceGeometry(await translateReferenceGeometryFile(file));
+  geometry.source = {
+    ...geometry.source,
+    path: file.name,
+    loadedFrom: `local-file:${file.name}`,
+    format: geometry.source?.format || "unknown"
+  };
+  return geometry;
 }
 
 function previewOnlyProject(project) {
@@ -205,6 +275,8 @@ async function main() {
     const runtimeSettings = cloneRuntimeSettings(settings);
     const projectUrl = new URL(projectPath(), settingsUrl);
     const project = await loadJson(projectUrl);
+    runtimeReferenceGeometry = await loadReferenceGeometry(projectUrl);
+    exposeRuntimeReferenceGeometry();
     const profilesUrl = new URL(project.libraries.profiles.path, projectUrl);
     const fastenersUrl = new URL(project.libraries.fasteners.path, projectUrl);
     const materialsUrl = new URL(project.libraries.materials.path, projectUrl);
@@ -373,7 +445,8 @@ async function main() {
       return [
         { id: "project", label: "Project JSON", kind: "Project", icon: "file", path: projectUrl.href },
         { id: "settings", label: "Viewer settings", kind: "UI", icon: "settings", path: settingsUrl.href },
-        { id: "workspace", label: "Default workspace", kind: "UI", icon: "settings", path: defaultWorkspaceUrl.href }
+        { id: "workspace", label: "Default workspace", kind: "UI", icon: "settings", path: defaultWorkspaceUrl.href },
+        ...(runtimeReferenceGeometryUrl ? [{ id: "reference-geometry", label: "Reference geometry", kind: "Reference", icon: "model-browser", path: runtimeReferenceGeometryUrl.href }] : [])
       ];
     }
     function focusObjectIds(objectIds = []) {
@@ -563,11 +636,32 @@ async function main() {
       getActiveSmartComponentId: () => dimensionEdit?.smartComponentId() || null,
       getForceDetailObjectIds: () => focusedMemberId ? memberSmartComponentDetailObjectIds(api.project(), focusedMemberId) : [],
       getActiveTrimRenderOptions: () => trimJointEditorApi?.sceneFocus?.() || {},
+      getReferenceGeometry: () => runtimeReferenceGeometry,
       updateMeta,
       renderDimensionOverlay: () => dimensionEdit?.render()
     });
     const { renderProject, renderProjectNow, rerender, hotSwapMemberDetails, applyProjectResult, patchProjectObjects } = renderScheduler;
     const handleProjectChange = (nextProject, result = api.lastCommandResult?.()) => applyProjectResult(nextProject, result);
+    addDomListener(referenceImportButton, "click", () => {
+      if (!referenceImportInput) return;
+      referenceImportInput.value = "";
+      referenceImportInput.click();
+    });
+    addDomListener(referenceImportInput, "change", async () => {
+      const [file] = Array.from(referenceImportInput.files || []);
+      if (!file) return;
+      try {
+        updateModelingStatus(`Importing ${file.name}...`);
+        runtimeReferenceGeometry = await importReferenceGeometryFile(file);
+        runtimeReferenceGeometryUrl = { href: runtimeReferenceGeometry.source.loadedFrom };
+        exposeRuntimeReferenceGeometry();
+        renderProject(api.project(), { preserveCamera: true });
+        updateModelingStatus(referenceGeometryStatusText(runtimeReferenceGeometry, `Reference imported from ${runtimeReferenceGeometry.source.format?.toUpperCase?.() || "file"}`));
+      } catch (error) {
+        console.warn(`Reference geometry could not be imported: ${error?.message || String(error)}`);
+        updateModelingStatus(`Reference import failed: ${error?.message || String(error)}`);
+      }
+    });
     const handleLocalObjectProjectChange = (nextProject, objectId, objectIds = []) => {
       const result = api.lastCommandResult?.();
       if (result?.changedObjectIds?.length || result?.removedObjectIds?.length || result?.regeneratedObjectIds?.length) {
@@ -977,6 +1071,7 @@ async function main() {
     }, { capture: true });
 
     renderProject(api.project());
+    if (runtimeReferenceGeometryUrl && runtimeReferenceGeometry) updateModelingStatus(referenceGeometryStatusText(runtimeReferenceGeometry, "Reference JSON loaded from URL"));
     qaBridge.mountQaApi({ api, profiles, snapManager });
     qaBridge.applyQaView(api.project()).catch((error) => console.error(error));
     if (libraryPanel) libraryPanel.hidden = false;

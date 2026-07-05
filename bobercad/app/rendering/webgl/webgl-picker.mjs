@@ -86,6 +86,7 @@ export function createWebglPicker({
     if (!currentScene) return [];
     const triangles = [];
     for (const face of currentScene.faces) {
+      if (face.pickable === false) continue;
       if (filteredIds && !filteredIds.has(face.objectId)) continue;
       if (componentKind && face.componentKind !== componentKind) continue;
       if (!shouldDrawSceneItem(face)) continue;

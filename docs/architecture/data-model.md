@@ -25,6 +25,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - `bobercad/app/schemas/smart-component-register.schema.json` - schema for the Smart Component register.
 - `bobercad/app/schemas/frame-library.schema.json` - schema for frame template libraries.
 - `bobercad/app/schemas/viewer-settings.schema.json` - schema for viewer settings.
+- `bobercad/app/schemas/reference-geometry.schema.json` - schema for external reference-geometry sidecars.
 
 ## Non-Negotiable Model Rules
 
@@ -43,6 +44,18 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - Repeated object values live in `modelDefaults`; objects only store fields that differ from those defaults.
 - BIM metadata lives on the object in a `bim` block.
 - Viewer camera, UI, and render preferences do not belong in project JSON; keep them in `bobercad/app/ui/viewer/viewer-settings.json`.
+
+## Reference Geometry Imports
+
+Imported reference geometry stays outside project JSON. The public import scope is DXF, DWG, STEP including gzip-compressed `.stpZ`/`.stepZ` inputs, IFC including `.ifczip`, and E57 point clouds (`.e57` / `e57pointcloud` names). Those sources are translated by `scripts/translate_reference_geometry.mjs` into one canonical `bobercad-reference-geometry` sidecar JSON shape: `units.length`, `lines`, `polylines`, `meshes`, and `pointClouds`. The schema is `bobercad/app/schemas/reference-geometry.schema.json`.
+
+The viewer loads reference geometry only from a plain sidecar JSON overlay. It must not parse DXF, DWG, STEP, IFC, or E57 point-cloud source files directly, and reference overlays are non-authoritative: they do not update project JSON, `objectIndex`, exporters, or model geometry. Use `?reference=../reference-geometry/name.reference.json` or `?ref=...` to load one overlay beside a project; run the translator again when a source file needs to change.
+
+Translator output records source provenance plus final `source.counts` and `source.bounds` after unit conversion and point sampling. The schema keeps geometry fields strict and leaves `source` metadata flexible so translator iterations do not require app/runtime changes. The default output units are `mm`; use `--units`, `--to-units`, and `--scale` when a source file needs explicit scale handling.
+
+External converters and their intermediate formats stay isolated to the translator: ODAFileConverter for DWG-to-DXF; FreeCADCmd or `assimp` for STEP-to-OBJ mesh conversion; Python `IfcOpenShell`, `IfcConvert`, or fallback `assimp` for IFC/IFCZIP-to-OBJ mesh conversion; and Python `pye57` or `pdal` for E57 point-cloud to point-text conversion. The translator resolves converters from explicit `BOBERCAD_*` paths, PATH, and common Windows install folders. Missing or failing converters should produce schema-valid diagnostic sidecars rather than application crashes. Use `node .\scripts\translate_reference_geometry.mjs --check-converters` to inspect local converter availability.
+
+Keep future import fixes in the translator or sidecar normalizer unless the canonical JSON contract itself must change. If the contract changes, update `bobercad/app/schemas/reference-geometry.schema.json` in the same change.
 
 ## Default Resolution
 

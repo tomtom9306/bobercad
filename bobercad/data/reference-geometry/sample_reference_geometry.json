@@ -1,0 +1,71 @@
+{
+  "$schema": "../../app/schemas/reference-geometry.schema.json",
+  "schema": "bobercad-reference-geometry",
+  "schemaVersion": "0.1",
+  "units": {
+    "length": "mm"
+  },
+  "source": {
+    "format": "json",
+    "path": "bobercad/data/reference-geometry/sample_reference_geometry.json",
+    "counts": {
+      "lines": 2,
+      "polylines": 1,
+      "meshes": 1,
+      "pointClouds": 1,
+      "points": 5
+    },
+    "bounds": {
+      "min": [-2500, -2500, -40],
+      "max": [2500, 2500, 420]
+    }
+  },
+  "layers": {
+    "survey": {
+      "name": "Survey",
+      "color": "#f59e0b"
+    },
+    "architectural": {
+      "name": "Architectural reference",
+      "color": "#38bdf8"
+    }
+  },
+  "lines": [
+    {
+      "id": "grid_reference_x",
+      "layer": "survey",
+      "points": [[-2500, -2500, 0], [2500, -2500, 0]]
+    },
+    {
+      "id": "grid_reference_y",
+      "layer": "survey",
+      "points": [[-2500, -2500, 0], [-2500, 2500, 0]]
+    }
+  ],
+  "polylines": [
+    {
+      "id": "architectural_outline",
+      "layer": "architectural",
+      "closed": true,
+      "points": [[-1800, -1200, 0], [1800, -1200, 0], [1800, 1200, 0], [-1800, 1200, 0]]
+    }
+  ],
+  "meshes": [
+    {
+      "id": "reference_slab",
+      "layer": "architectural",
+      "opacity": 0.14,
+      "vertices": [[-1600, -1000, -40], [1600, -1000, -40], [1600, 1000, -40], [-1600, 1000, -40]],
+      "faces": [[0, 1, 2, 3]]
+    }
+  ],
+  "pointClouds": [
+    {
+      "id": "survey_points",
+      "layer": "survey",
+      "pointSize": 4,
+      "points": [[-1200, -700, 250], [0, -500, 380], [900, -650, 310], [1100, 650, 420], [-900, 720, 360]]
+    }
+  ],
+  "diagnostics": []
+}
