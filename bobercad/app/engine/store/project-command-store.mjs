@@ -151,8 +151,37 @@ const DIAGNOSTIC_DISPLAY = {
   diagnosticState: "error"
 };
 
+function assertNoLegacyConnectionSmartComponents(project, smartComponentCatalog = {}) {
+  const presets = smartComponentCatalog?.smartComponents || {};
+  const instances = project?.model?.smartComponentInstances || {};
+  for (const [id, instance] of Object.entries(instances)) {
+    const effectiveInstance = effectiveCollectionObject(project, "smartComponentInstances", instance);
+    const sourceComponentId = String(effectiveInstance?.sourceComponent?.id || "");
+    const preset = sourceComponentId ? presets[sourceComponentId] : null;
+    const isConnection = effectiveInstance?.kind === "connection" || preset?.kind === "connection" || Boolean(effectiveInstance?.inputs?.connectionZoneId);
+    if (!isConnection) continue;
+    const legacyText = `${effectiveInstance?.type || ""} ${effectiveInstance?.status || ""} ${effectiveInstance?.definition || ""} ${sourceComponentId}`;
+    if (/\bmanual\b|manual-|_manual|legacy|not-parametric-yet/i.test(legacyText)) {
+      fail(`${id}: legacy connection Smart Components are not allowed`);
+    }
+    if (!preset) fail(`${id}: connection Smart Component preset is not registered: ${sourceComponentId || "(missing)"}`);
+    if (preset.kind !== "connection") fail(`${id}: connection Smart Component preset must have kind=connection: ${sourceComponentId}`);
+  }
+}
+
+function effectiveCollectionObject(project, collectionName, object) {
+  const collections = plainObject(project?.modelDefaults?.collections) ? project.modelDefaults.collections : {};
+  const defaults = plainObject(collections[collectionName]) ? collections[collectionName] : {};
+  const base = mergePatch(
+    plainObject(defaults["*"]) ? defaults["*"] : {},
+    plainObject(defaults[object?.type]) ? defaults[object.type] : {}
+  );
+  return mergePatch(base, plainObject(object) ? object : {});
+}
+
 export function createProjectStore({ project, profiles, smartComponentCatalog, fasteners, materials, cloneOnLoad = true }) {
   const initialProject = cloneOnLoad ? clone(project) : project;
+  assertNoLegacyConnectionSmartComponents(initialProject, smartComponentCatalog);
   const profilesFor = (projectState) => projectProfileCatalog(projectState, profiles);
   let currentProject = initialProject;
   const state = { currentProject };

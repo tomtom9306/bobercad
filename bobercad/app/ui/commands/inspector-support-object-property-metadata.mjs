@@ -35,11 +35,12 @@ function objectRefActions({ select = null, fit = null, value = "" } = {}) {
 
 function objectRefActionDescriptor(type, payload, value = "") {
   const spec = OBJECT_REF_ACTION_SPECS[type];
+  const overrides = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
   return {
     action: spec.action,
-    label: spec.label,
+    label: overrides.label || spec.label,
     icon: spec.icon,
-    title: value ? `${spec.label} ${value}` : spec.label,
+    title: overrides.title || (value ? `${spec.label} ${value}` : spec.label),
     payload: payload && typeof payload === "object" && !Array.isArray(payload) ? { ...payload } : { objectId: payload }
   };
 }
@@ -355,15 +356,15 @@ function interfacePropertiesSections(iface, actions = {}) {
 
 function connectionZonePropertiesSections(zone, actions = {}) {
   return [
+    connectionZoneMemberSection(zone, actions),
     {
       id: "inspector.properties.object.connectionZone",
       label: "Connection Zone",
       fields: [
         { type: "text", label: "Name", value: zone.name || "", commit: supportObjectCommit(SUPPORT_OBJECT_ACTIONS.connectionZone, "name") },
         { type: "text", label: "Notes", value: zone.notes || "", commit: supportObjectCommit(SUPPORT_OBJECT_ACTIONS.connectionZone, "notes") },
-        zone.mainObjectId ? { label: "Main object", value: zone.mainObjectId } : null,
         ...vectorPropertyFields("Origin", zone.origin, SUPPORT_OBJECT_ACTIONS.connectionZone, "origin"),
-        { label: "Secondary objects", value: String(arrayValues(zone.secondaryObjectIds).length) },
+        { label: "Members", value: String(connectionZoneMemberIds(zone).length) },
         { label: "Interfaces", value: String(arrayValues(zone.interfaceIds).length) },
         { label: "Managed objects", value: String(arrayValues(zone.objectIds).length) },
         { label: "Smart Components", value: String(arrayValues(zone.smartComponentInstanceIds).length) }
@@ -374,6 +375,89 @@ function connectionZonePropertiesSections(zone, actions = {}) {
     objectReferencePropertiesSection("inspector.properties.object.connectionZone.components", "Smart Components", zone.smartComponentInstanceIds, "Component", actions),
     inspectorMetadataSection({ id: "inspector.properties.object.connectionZone.authoring", object: zone })
   ].filter(Boolean);
+}
+
+function connectionZoneMemberSection(zone, actions = {}) {
+  const members = connectionZoneMemberIds(zone);
+  if (!members.length) return null;
+  const linkedConnection = connectionZoneConnectionSmartComponent(zone, actions);
+  const secondaryIds = arrayValues(zone.secondaryObjectIds);
+  const fields = [
+    connectionZoneCanSwapMembers(zone, linkedConnection)
+      ? connectionZoneMemberSwapField(linkedConnection.id, zone.mainObjectId, secondaryIds[0])
+      : null,
+    zone.mainObjectId ? connectionZoneMemberRefField("Main", zone.mainObjectId, "main", actions) : null,
+    ...secondaryIds.map((memberId, index) => connectionZoneMemberRefField(secondaryIds.length > 1 ? `Secondary ${index + 1}` : "Secondary", memberId, "secondary", actions))
+  ].filter(Boolean);
+  return {
+    id: "inspector.properties.object.connectionZone.members",
+    label: "Members",
+    priority: -20,
+    open: true,
+    fields
+  };
+}
+
+function connectionZoneMemberIds(zone) {
+  return [zone.mainObjectId, ...arrayValues(zone.secondaryObjectIds)].filter(Boolean);
+}
+
+function connectionZoneConnectionSmartComponent(zone, actions = {}) {
+  const instances = objectMap(actions.project?.model?.smartComponentInstances);
+  return arrayValues(zone.smartComponentInstanceIds)
+    .map((id) => instances[id])
+    .find((instance) => instance?.kind === "connection") || null;
+}
+
+function connectionZoneCanSwapMembers(zone, linkedConnection = null) {
+  const secondaryIds = arrayValues(zone.secondaryObjectIds);
+  if (!linkedConnection?.id || !zone.mainObjectId || secondaryIds.length !== 1 || zone.mainObjectId === secondaryIds[0]) return false;
+  if (linkedConnection.inputs?.memberSwapAllowed === false || linkedConnection.inputs?.allowMemberSwap === false) return false;
+  return false;
+}
+
+function connectionZoneMemberSwapField(smartComponentId, mainMemberId, secondaryMemberId) {
+  return {
+    type: "actionRow",
+    label: "Member actions",
+    actions: [{
+      label: "Swap",
+      icon: "swap",
+      title: "Swap Main and Secondary members",
+      action: "smartComponent.member.swap",
+      payload: {
+        smartComponentId,
+        mainMemberId,
+        secondaryMemberId
+      }
+    }]
+  };
+}
+
+function connectionZoneMemberRefField(label, memberId, status, actions = {}) {
+  const entry = actions.objectIndex?.[memberId];
+  const member = actions.project?.model?.members?.[memberId];
+  const selectable = Boolean(entry?.collection);
+  const displayValue = member ? connectionZoneMemberOptionLabel(member) : memberId;
+  return {
+    type: "objectRef",
+    label,
+    value: displayValue,
+    status: displayValue !== memberId ? memberId : status,
+    icon: entry ? inspectorObjectIconForEntry(entry) : null,
+    className: "bc-smart-component-member-field",
+    actions: objectRefActions({
+      select: selectable ? { objectId: memberId } : null,
+      value: displayValue
+    })
+  };
+}
+
+function connectionZoneMemberOptionLabel(member) {
+  const mark = member.fabrication?.partMark || member.bim?.propertySets?.Identity?.mark || "";
+  const name = member.bim?.name || "";
+  const profile = member.profile || "";
+  return [mark || member.id, name && name !== member.id && name !== mark ? name : "", profile].filter(Boolean).join(" - ");
 }
 
 function assemblyPropertiesSections(assembly, actions = {}) {

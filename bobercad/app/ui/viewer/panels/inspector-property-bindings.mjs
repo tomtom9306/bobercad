@@ -28,6 +28,14 @@ export function createInspectorPropertyBindings({
     }
   });
 
+  const swapSmartComponentMembers = (field) => {
+    const payload = field.payload || {};
+    const smartComponentId = payload.smartComponentId || selectedSmartComponentId();
+    const secondaryMemberId = payload.secondaryMemberId;
+    if (!smartComponentId || !secondaryMemberId) return;
+    smartComponents.setMember?.(smartComponentId, "main", secondaryMemberId);
+  };
+
   const quickActionBindings = () => ({
     "inspector.pickMember": () => selectionActions.pickMember?.(),
     "inspector.pickSmartComponent": () => selectionActions.pickSmartComponent?.(),
@@ -83,12 +91,18 @@ export function createInspectorPropertyBindings({
     ...generatedReferenceBindings(),
     actions: {
       ...generatedReferenceBindings().actions,
+      "smartComponent.member.swap": swapSmartComponentMembers,
       "gridSystem.add": () => support.addGridSystem?.(),
       "gridAxis.add": (field) => support.addGridAxis?.(field.payload?.axisGroup),
       "gridAxis.remove": (field) => support.removeGridAxis?.(field.payload?.axisGroup, field.payload?.axisId),
       "gridLevel.add": (field) => support.addGridLevel?.(field.payload?.gridSystemId)
     },
-    commits: supportObjectCommitBindings()
+    commits: {
+      ...supportObjectCommitBindings(),
+      "smartComponent.member.set": (memberId, commit = {}) => {
+        smartComponents.setMember?.(commit.smartComponentId || selectedSmartComponentId(), commit.role, memberId);
+      }
+    }
   });
 
   const generatedActiveToolBindings = () => ({
@@ -132,6 +146,12 @@ export function createInspectorPropertyBindings({
         const smartComponentId = commit.smartComponentId || selectedSmartComponentId();
         smartComponents.updateParameter?.(smartComponentId, definition(smartComponentId), commit.parameterPath, value);
       },
+      "smartComponent.parameterTab.set": (tabId, commit = {}) => {
+        smartComponents.setParameterTab?.(commit.smartComponentId || selectedSmartComponentId(), tabId);
+      },
+      "smartComponent.plateIncluded.set": (included, commit = {}) => {
+        smartComponents.setPlateIncluded?.(commit.smartComponentId || selectedSmartComponentId(), commit.plateId, included);
+      },
       "smartComponent.roleActive.set": (active, commit = {}) => {
         smartComponents.setRoleActive?.(commit.smartComponentId || selectedSmartComponentId(), commit.role, active);
       },
@@ -155,6 +175,11 @@ export function createInspectorPropertyBindings({
       },
       "smartComponent.diagnostics.resolve": (field) => smartComponents.resolveDiagnostics?.(field.payload?.smartComponentId || selectedSmartComponentId()),
       "smartComponent.parameters.open": (field) => smartComponents.openParameters?.(field.payload?.smartComponentId || selectedSmartComponentId()),
+      "smartComponent.member.swap": swapSmartComponentMembers,
+      "smartComponent.member.pick": (field) => {
+        const payload = field.payload || {};
+        smartComponents.pickMember?.(payload.smartComponentId || selectedSmartComponentId(), payload.role);
+      },
       "smartComponent.delete": (field) => smartComponents.deleteSmartComponent?.(field.payload?.smartComponentId || selectedSmartComponentId())
     }
   });

@@ -68,6 +68,78 @@
         }
       }
     },
+    "end-plate-m16-2x2": {
+      "id": "end-plate-m16-2x2",
+      "version": "0.1.0",
+      "name": "M16 2x2 end plate",
+      "parameters": {
+        "plate": {
+          "thickness": 12,
+          "width": 180,
+          "height": 240,
+          "offset": 0
+        },
+        "bolts": {
+          "fastenerRef": "M16_8_8",
+          "rows": 2,
+          "columns": 2,
+          "pitch": 130,
+          "gauge": 90
+        },
+        "holes": {
+          "diameter": 18,
+          "memberDepth": 30,
+          "type": "round"
+        },
+        "welds": {
+          "beamWeb": 6,
+          "beamFlanges": 6
+        },
+        "designAssumptions": {
+          "standard": "EN 1993-1-8",
+          "status": "not-calculated"
+        },
+        "loads": {
+          "status": "not-defined"
+        }
+      }
+    },
+    "beam-to-beam-end-plate-m16-2x3": {
+      "id": "beam-to-beam-end-plate-m16-2x3",
+      "version": "0.1.0",
+      "name": "Beam-to-beam M16 2x3 end plate",
+      "parameters": {
+        "plate": {
+          "thickness": 12,
+          "width": 220,
+          "height": 260,
+          "offset": 0
+        },
+        "bolts": {
+          "fastenerRef": "M16_8_8",
+          "rows": 3,
+          "columns": 2,
+          "pitch": 75,
+          "gauge": 90
+        },
+        "holes": {
+          "diameter": 18,
+          "memberDepth": 30,
+          "type": "round"
+        },
+        "welds": {
+          "beamWeb": 6,
+          "beamFlanges": 6
+        },
+        "designAssumptions": {
+          "standard": "EN 1993-1-8",
+          "status": "not-calculated"
+        },
+        "loads": {
+          "status": "not-defined"
+        }
+      }
+    },
     "end-plate": {
       "id": "end-plate",
       "version": "0.1.0",

@@ -528,6 +528,7 @@ function checkInspectorDescriptorContracts(context) {
       ["ID", "component-a"],
       ["Type", "fin-plate"],
       ["Kind", "connection"],
+      ["Preset", "-"],
       ["Diagnostics", "1 errors, 1 warnings"],
       ["Managed objects", "4"],
       ["Detached", "1"],
@@ -557,21 +558,46 @@ function checkInspectorDescriptorContracts(context) {
     diagnosticsSummary: { diagnostics: [{ severity: "warning", message: "Missing optional stiffener." }], errorCount: 0, warningCount: 1, health: "warning" },
     memberFields: [
       {
-        label: "Main member",
-        value: "member_a",
-        options: [{ id: "member_a", label: "member_a - IPE 300" }, { id: "member_b", label: "member_b - IPE 200" }],
-        commit: { action: "smartComponent.member.set", smartComponentId: "component-a", role: "main" }
+        type: "actionRow",
+        label: "Member actions",
+        actions: [{
+          label: "Swap",
+          icon: "swap",
+          action: "smartComponent.member.swap",
+          payload: { smartComponentId: "component-a", mainMemberId: "member_a", secondaryMemberId: "member_b" }
+        }]
       },
       {
-        label: "Secondary member",
+        type: "memberRef",
+        smartComponentId: "component-a",
+        label: "Main",
+        memberId: "member_a",
+        value: "member_a",
+        displayLabel: "Member A - IPE 300",
+        role: "main",
+        selectionGroup: "primary",
+        selectionLabel: "Primary",
+        memberRoleLabel: "Member"
+      },
+      {
+        type: "memberRef",
+        smartComponentId: "component-a",
+        label: "Secondary",
+        memberId: "member_b",
         value: "member_b",
-        options: [{ id: "member_a", label: "member_a - IPE 300" }, { id: "member_b", label: "member_b - IPE 200" }],
-        commit: { action: "smartComponent.member.set", smartComponentId: "component-a", role: "secondary" }
+        displayLabel: "Member B - IPE 200",
+        role: "secondary",
+        selectionGroup: "secondary",
+        selectionLabel: "Secondary",
+        memberRoleLabel: "Member"
       }
     ],
     quickParameterFields: [{ type: "number", label: "Thickness", value: 12, commit: { action: "smartComponent.parameter.set", smartComponentId: "component-a", parameterPath: "plate.thickness" } }],
     liveRoleOptions: [{ role: "plate", active: true }],
     objectIndex: {
+      "component-a": { collection: "smartComponentInstances", type: "connection" },
+      member_a: { collection: "members", type: "beam" },
+      member_b: { collection: "members", type: "beam" },
       object_a: { collection: "plates", type: "plate" },
       object_b: { collection: "plates", type: "plate" },
       object_c: { collection: "plates", type: "plate" },
@@ -586,12 +612,33 @@ function checkInspectorDescriptorContracts(context) {
     }
   });
   const smartComponentPropertyFields = smartComponentPropertySections?.flatMap((section) => section.fields || []) || [];
-  const smartComponentPropertyActions = smartComponentPropertyFields.flatMap((field) => [field, ...(field.actions || [])]);
+  const fieldActionGroups = (field) => Array.isArray(field?.actionGroups)
+    ? field.actionGroups.flatMap((group) => group?.actions || [])
+    : [];
+  const fieldItems = (field) => Array.isArray(field?.items) ? field.items : [];
+  const smartComponentPropertyActions = smartComponentPropertyFields.flatMap((field) => [
+    field,
+    ...(field.actions || []),
+    ...fieldActionGroups(field),
+    ...fieldItems(field).flatMap((item) => [item, ...(item.actions || [])])
+  ]);
+  const smartComponentOverviewSection = smartComponentPropertySections?.find((section) => section.id === "inspector.properties.smartComponent.connectionOverview");
+  const smartComponentOverviewCard = smartComponentOverviewSection?.fields?.find((field) => field.type === "summaryCard");
   const smartComponentDiagnosticsSection = smartComponentPropertySections?.find((section) => section.id === "inspector.properties.smartComponent.diagnostics");
+  const smartComponentActionsSection = smartComponentPropertySections?.find((section) => section.id === "inspector.properties.smartComponent.actions");
+  const smartComponentFitAction = smartComponentPropertyActions.find((field) => field.action === "objectRef.fit" && field.payload?.objectId === "component-a");
   const smartComponentMembersSection = smartComponentPropertySections?.find((section) => section.id === "inspector.properties.smartComponent.members");
-  const smartComponentMemberFields = smartComponentMembersSection?.fields || [];
-  const mainMemberField = smartComponentMemberFields.find((field) => field.label === "Main member");
-  const secondaryMemberField = smartComponentMemberFields.find((field) => field.label === "Secondary member");
+  const smartComponentMemberBoxes = smartComponentMembersSection?.fields?.filter((field) => field.type === "memberSelectionBox") || [];
+  const primaryMemberBox = smartComponentMemberBoxes.find((field) => field.label === "Primary");
+  const secondaryMemberBox = smartComponentMemberBoxes.find((field) => field.label === "Secondary");
+  const smartComponentMemberItems = smartComponentMemberBoxes.flatMap((field) => field.items || []);
+  const memberItemByPickRole = (role) => smartComponentMemberItems.find((field) => field.actions?.some((action) => action.action === "smartComponent.member.pick" && action.payload?.role === role));
+  const mainMemberField = memberItemByPickRole("main");
+  const secondaryMemberField = memberItemByPickRole("secondary");
+  const mainMemberPickAction = mainMemberField?.actions?.find((field) => field.action === "smartComponent.member.pick");
+  const secondaryMemberPickAction = secondaryMemberField?.actions?.find((field) => field.action === "smartComponent.member.pick");
+  const memberSwapAction = primaryMemberBox?.actions?.find((field) => field.action === "smartComponent.member.swap");
+  const memberFitActions = smartComponentMemberItems.flatMap((field) => field?.actions || []).filter((field) => field.action === "objectRef.fit");
   const smartComponentLifecycleFields = smartComponentPropertySections
     ?.find((section) => section.id === "inspector.properties.smartComponent.lifecycle")
     ?.fields || [];
@@ -599,29 +646,51 @@ function checkInspectorDescriptorContracts(context) {
   const lifecycleActionsForObjectId = (objectId) => lifecycleFieldByObjectId(objectId)?.actions || [];
   if (
     !Array.isArray(smartComponentPropertySections)
-    || !smartComponentPropertySections.some((section) => section.id === "inspector.properties.smartComponent.primaryParameters")
+    || smartComponentOverviewSection?.label !== "Connection"
+    || smartComponentOverviewSection?.priority !== -30
+    || smartComponentOverviewSection?.open !== true
+    || smartComponentOverviewCard?.title !== "Fin Plate"
+    || smartComponentOverviewCard?.status !== "warning"
+    || !smartComponentOverviewCard?.readouts?.some((readout) => readout.label === "Type" && readout.value === "fin-plate")
+    || smartComponentPropertySections.some((section) => section.id === "inspector.properties.smartComponent.primaryParameters")
+    || smartComponentActionsSection
     || smartComponentPropertySections.some((section) => section.id === "inspector.properties.smartComponent.preview")
     || smartComponentMembersSection?.label !== "Members"
     || smartComponentMembersSection?.open !== true
-    || smartComponentMembersSection?.priority !== -20
-    || mainMemberField?.type !== "optionGrid"
-    || mainMemberField?.value !== "member_a"
-    || mainMemberField?.commit?.action !== "smartComponent.member.set"
-    || mainMemberField?.commit?.role !== "main"
-    || mainMemberField?.options?.length !== 2
-    || mainMemberField?.className !== "bc-smart-component-member-field"
-    || mainMemberField?.buttonClassName !== "bc-smart-component-member-option"
-    || secondaryMemberField?.type !== "optionGrid"
-    || secondaryMemberField?.value !== "member_b"
-    || secondaryMemberField?.commit?.action !== "smartComponent.member.set"
-    || secondaryMemberField?.commit?.role !== "secondary"
-    || secondaryMemberField?.options?.length !== 2
-    || secondaryMemberField?.className !== "bc-smart-component-member-field"
-    || secondaryMemberField?.buttonClassName !== "bc-smart-component-member-option"
+    || smartComponentMembersSection?.priority !== -25
+    || smartComponentMembersSection?.fields?.length !== 2
+    || smartComponentMemberBoxes.length !== 2
+    || primaryMemberBox?.label !== "Primary"
+    || primaryMemberBox?.selectionGroup !== "primary"
+    || secondaryMemberBox?.label !== "Secondary"
+    || secondaryMemberBox?.selectionGroup !== "secondary"
+    || primaryMemberBox?.items?.length !== 1
+    || secondaryMemberBox?.items?.length !== 1
+    || smartComponentMemberItems.length !== 2
+    || smartComponentMembersSection?.fields?.some((field) => field.type === "nestedFieldCard" || field.type === "select" || field.type === "memberSlot")
+    || smartComponentFitAction?.label !== "Fit"
+    || smartComponentFitAction?.icon !== "zoom-fit"
+    || smartComponentFitAction?.title !== "Fit to connection"
+    || smartComponentFitAction?.payload?.objectId !== "component-a"
+    || mainMemberField?.role !== "Member"
+    || mainMemberField?.value !== "Member A - IPE 300"
+    || mainMemberField?.status !== "member_a"
+    || mainMemberPickAction?.payload?.smartComponentId !== "component-a"
+    || mainMemberPickAction?.payload?.role !== "main"
+    || memberFitActions.length !== 0
+    || secondaryMemberField?.role !== "Member"
+    || secondaryMemberField?.value !== "Member B - IPE 200"
+    || secondaryMemberField?.status !== "member_b"
+    || secondaryMemberPickAction?.payload?.smartComponentId !== "component-a"
+    || secondaryMemberPickAction?.payload?.role !== "secondary"
+    || memberSwapAction?.icon !== "swap"
+    || memberSwapAction?.payload?.smartComponentId !== "component-a"
+    || memberSwapAction?.payload?.secondaryMemberId !== "member_b"
     || smartComponentDiagnosticsSection?.label !== "Diagnostics"
     || smartComponentDiagnosticsSection?.open !== true
+    || !smartComponentPropertySections.some((section) => section.id === "inspector.properties.smartComponent.identity" && section.label === "Details" && section.open === false && section.priority === 80)
+    || !smartComponentPropertySections.some((section) => section.id === "inspector.properties.smartComponent.lifecycle" && section.label === "Managed Objects" && section.open === false && section.priority === 90)
     || !smartComponentDiagnosticsSection?.fields?.some((field) => field.type === "message" && field.state === "warning" && field.value === "Missing optional stiffener.")
-    || !smartComponentPropertyFields.some((field) => field.commit?.action === "smartComponent.roleActive.set")
     || lifecycleFieldByObjectId("object_a")?.type !== "objectRef"
     || lifecycleFieldByObjectId("object_c")?.type !== "objectRef"
     || lifecycleFieldByObjectId("object_d")?.type !== "objectRef"
@@ -635,11 +704,69 @@ function checkInspectorDescriptorContracts(context) {
     || !lifecycleActionsForObjectId("object_c").some((field) => field.action === "smartComponent.objectOverrides.reset" && field.payload?.objectId === "object_c")
     || !lifecycleActionsForObjectId("object_d").some((field) => field.action === "smartComponent.object.reattach" && field.payload?.objectId === "object_d")
     || !smartComponentPropertyActions.some((field) => field.action === "smartComponent.diagnostics.resolve")
-    || !smartComponentPropertyActions.some((field) => field.action === "smartComponent.parameters.open")
     || !smartComponentPropertyActions.some((field) => field.action === "smartComponent.delete")
     || generatedPropertyBindings.generatedPropertyDescriptorsContainFunctions?.(smartComponentPropertySections)
   ) {
     fail(errors, `inspector-property-metadata Smart Component property sections must be serializable descriptor data: ${JSON.stringify(smartComponentPropertySections)}`);
+  }
+  const spliceMemberSections = inspectorPropertyMetadata.inspectorSmartComponentPropertySections?.({
+    smartComponentId: "splice-a",
+    smartComponent: {
+      id: "splice-a",
+      type: "member-splice",
+      kind: "connection",
+      sourceComponent: { id: "member-splice" }
+    },
+    diagnosticsSummary: { diagnostics: [], errorCount: 0, warningCount: 0, health: "ok" },
+    memberFields: [
+      {
+        type: "memberRef",
+        smartComponentId: "splice-a",
+        label: "Main",
+        memberId: "member_a",
+        value: "member_a",
+        displayLabel: "Member A - IPE 300",
+        role: "main",
+        selectionGroup: "primary",
+        selectionLabel: "Primary",
+        memberRoleLabel: "Member 1"
+      },
+      {
+        type: "memberRef",
+        smartComponentId: "splice-a",
+        label: "Secondary",
+        memberId: "member_b",
+        value: "member_b",
+        displayLabel: "Member B - IPE 300",
+        role: "secondary",
+        selectionGroup: "primary",
+        selectionLabel: "Primary",
+        memberRoleLabel: "Member 2"
+      }
+    ],
+    objectIndex: {
+      "splice-a": { collection: "smartComponentInstances", type: "connection" },
+      member_a: { collection: "members", type: "beam" },
+      member_b: { collection: "members", type: "beam" }
+    }
+  });
+  const spliceMembersSection = spliceMemberSections?.find((section) => section.id === "inspector.properties.smartComponent.members");
+  const spliceMemberBoxes = spliceMembersSection?.fields?.filter((field) => field.type === "memberSelectionBox") || [];
+  const splicePrimaryBox = spliceMemberBoxes[0];
+  const spliceMemberItems = splicePrimaryBox?.items || [];
+  const splicePickRoles = spliceMemberItems.flatMap((item) => item.actions || [])
+    .filter((action) => action.action === "smartComponent.member.pick")
+    .map((action) => action.payload?.role)
+    .sort();
+  if (
+    spliceMemberBoxes.length !== 1
+    || splicePrimaryBox?.label !== "Primary"
+    || splicePrimaryBox?.selectionGroup !== "primary"
+    || spliceMemberItems.length !== 2
+    || JSON.stringify(spliceMemberItems.map((item) => item.role)) !== JSON.stringify(["Member 1", "Member 2"])
+    || JSON.stringify(splicePickRoles) !== JSON.stringify(["main", "secondary"])
+  ) {
+    fail(errors, `inspector-property-metadata must support multiple selected members in one role selection box for splice connections: ${JSON.stringify(spliceMemberSections)}`);
   }
   const boundSmartComponentSections = generatedPropertyBindings.bindGeneratedPropertySections?.(smartComponentPropertySections, {
     commits: {
@@ -653,21 +780,30 @@ function checkInspectorDescriptorContracts(context) {
       "smartComponent.object.reattach": () => "reattach",
       "smartComponent.diagnostics.resolve": () => "diagnostics",
       "smartComponent.parameters.open": () => "open",
+      "smartComponent.member.swap": () => "swap",
+      "smartComponent.member.pick": () => "pick",
+      "objectRef.select": () => "select",
+      "objectRef.fit": () => "fit",
       "smartComponent.delete": () => "delete"
     },
     select: () => "select",
     fit: () => "fit"
   }) || [];
   const boundSmartComponentFields = boundSmartComponentSections.flatMap((section) => section.fields || []);
-  const boundSmartComponentActions = boundSmartComponentFields.flatMap((field) => [field, ...(field.actions || [])]);
+  const boundSmartComponentActions = boundSmartComponentFields.flatMap((field) => [
+    field,
+    ...(field.actions || []),
+    ...fieldActionGroups(field),
+    ...fieldItems(field).flatMap((item) => [item, ...(item.actions || [])])
+  ]);
   if (
-    typeof boundSmartComponentFields.find((field) => field.commit?.action === "smartComponent.parameter.set")?.onChange !== "function"
-    || typeof boundSmartComponentFields.find((field) => field.commit?.action === "smartComponent.roleActive.set")?.onChange !== "function"
-    || typeof boundSmartComponentFields.find((field) => field.commit?.action === "smartComponent.member.set")?.onChange !== "function"
+    typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.member.pick" && field.payload?.role === "main")?.onClick !== "function"
+    || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.member.swap")?.onClick !== "function"
     || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.objectOverrides.reset")?.onClick !== "function"
     || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.object.detach")?.onClick !== "function"
     || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.object.reattach")?.onClick !== "function"
-    || typeof boundSmartComponentFields.find((field) => field.action === "smartComponent.diagnostics.resolve")?.onClick !== "function"
+    || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.diagnostics.resolve")?.onClick !== "function"
+    || typeof boundSmartComponentActions.find((field) => field.action === "smartComponent.delete")?.onClick !== "function"
   ) {
     fail(errors, `Generated Properties binding adapter must attach Smart Component handlers from metadata intents: ${JSON.stringify(boundSmartComponentSections)}`);
   }

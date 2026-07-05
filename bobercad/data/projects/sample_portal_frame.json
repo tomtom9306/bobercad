@@ -5,8 +5,8 @@
   "project": {
     "id": "project_portal_frame_1",
     "name": "Sample Portal Frame",
-    "description": "Simple grid-based portal frame sample. Geometry is stored directly in member start/end and plate placement; grids and placementIntent are descriptive only.",
-    "createdWith": "manual-seed-0.3.0",
+    "description": "Simple grid-based portal frame sample with library-generated end plate connections. Frame geometry is stored directly in member start/end; grids and placementIntent are descriptive only.",
+    "createdWith": "library-component-seed-0.4.0",
     "bim": {
       "name": "Sample Portal Frame",
       "propertySets": {
@@ -182,27 +182,27 @@
     },
     "cz_side_a_start": {
       "collection": "connectionZones",
-      "type": "manual-steel-to-steel-zone"
+      "type": "moment-end-plate-zone"
     },
     "cz_side_a_end": {
       "collection": "connectionZones",
-      "type": "manual-steel-to-steel-zone"
+      "type": "moment-end-plate-zone"
     },
     "cz_side_b_start": {
       "collection": "connectionZones",
-      "type": "manual-steel-to-steel-zone"
+      "type": "moment-end-plate-zone"
     },
     "cz_side_b_end": {
       "collection": "connectionZones",
-      "type": "manual-steel-to-steel-zone"
+      "type": "moment-end-plate-zone"
     },
     "cz_cross_a": {
       "collection": "connectionZones",
-      "type": "manual-steel-to-steel-zone"
+      "type": "moment-end-plate-zone"
     },
     "cz_cross_b": {
       "collection": "connectionZones",
-      "type": "manual-steel-to-steel-zone"
+      "type": "moment-end-plate-zone"
     },
     "column_1a": {
       "collection": "members",
@@ -248,106 +248,6 @@
       "collection": "plates",
       "type": "base-plate"
     },
-    "end_plate_side_a_start": {
-      "collection": "plates",
-      "type": "beam-end-plate"
-    },
-    "end_plate_side_a_end": {
-      "collection": "plates",
-      "type": "beam-end-plate"
-    },
-    "end_plate_side_b_start": {
-      "collection": "plates",
-      "type": "beam-end-plate"
-    },
-    "end_plate_side_b_end": {
-      "collection": "plates",
-      "type": "beam-end-plate"
-    },
-    "end_plate_cross_a": {
-      "collection": "plates",
-      "type": "beam-end-plate"
-    },
-    "end_plate_cross_b": {
-      "collection": "plates",
-      "type": "beam-end-plate"
-    },
-    "holes_side_a_start": {
-      "collection": "features",
-      "type": "hole-pattern"
-    },
-    "holes_side_a_end": {
-      "collection": "features",
-      "type": "hole-pattern"
-    },
-    "holes_side_b_start": {
-      "collection": "features",
-      "type": "hole-pattern"
-    },
-    "holes_side_b_end": {
-      "collection": "features",
-      "type": "hole-pattern"
-    },
-    "holes_cross_a": {
-      "collection": "features",
-      "type": "hole-pattern"
-    },
-    "holes_cross_b": {
-      "collection": "features",
-      "type": "hole-pattern"
-    },
-    "fasteners_side_a_start": {
-      "collection": "fastenerGroups",
-      "type": "fastener-group"
-    },
-    "fasteners_side_a_end": {
-      "collection": "fastenerGroups",
-      "type": "fastener-group"
-    },
-    "fasteners_side_b_start": {
-      "collection": "fastenerGroups",
-      "type": "fastener-group"
-    },
-    "fasteners_side_b_end": {
-      "collection": "fastenerGroups",
-      "type": "fastener-group"
-    },
-    "fasteners_cross_a": {
-      "collection": "fastenerGroups",
-      "type": "fastener-group"
-    },
-    "fasteners_cross_b": {
-      "collection": "fastenerGroups",
-      "type": "fastener-group"
-    },
-    "conn_side_a_start": {
-      "collection": "smartComponentInstances",
-      "type": "manual-steel-to-steel"
-    },
-    "conn_side_a_end": {
-      "collection": "smartComponentInstances",
-      "type": "manual-steel-to-steel"
-    },
-    "conn_side_b_start": {
-      "collection": "smartComponentInstances",
-      "type": "manual-steel-to-steel"
-    },
-    "conn_side_b_end": {
-      "collection": "smartComponentInstances",
-      "type": "manual-steel-to-steel"
-    },
-    "conn_cross_a": {
-      "collection": "smartComponentInstances",
-      "type": "manual-steel-to-steel"
-    },
-    "conn_cross_b": {
-      "collection": "smartComponentInstances",
-      "type": "manual-steel-to-steel"
-    },
-    "hole_pattern_steel_2x2": {
-      "collection": "holePatterns",
-      "type": "rectangular-grid"
-    },
     "main_grid": {
       "collection": "gridSystems",
       "type": "orthogonal-grid-system"
@@ -359,6 +259,246 @@
     "level_eaves": {
       "collection": "levels",
       "type": "datum-level"
+    },
+    "assembly_side_a_start_end_plate": {
+      "collection": "assemblies",
+      "type": "connection-assembly"
+    },
+    "assembly_side_a_end_end_plate": {
+      "collection": "assemblies",
+      "type": "connection-assembly"
+    },
+    "assembly_side_b_start_end_plate": {
+      "collection": "assemblies",
+      "type": "connection-assembly"
+    },
+    "assembly_side_b_end_end_plate": {
+      "collection": "assemblies",
+      "type": "connection-assembly"
+    },
+    "assembly_cross_a_end_plate": {
+      "collection": "assemblies",
+      "type": "connection-assembly"
+    },
+    "assembly_cross_b_end_plate": {
+      "collection": "assemblies",
+      "type": "connection-assembly"
+    },
+    "sc_cz_side_a_start_moment_end_plate_end_plate": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "sc_cz_side_a_start_moment_end_plate_bolt_grid": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    },
+    "sc_cz_side_a_start_moment_end_plate_beam_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "sc_cz_side_a_start_moment_end_plate_holes_plate": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_side_a_start_moment_end_plate_holes_main": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_side_a_start_moment_end_plate_beam_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "sc_cz_side_a_start_moment_end_plate_bolts": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "sc_cz_side_a_start_moment_end_plate_beam_weld": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    },
+    "sc_cz_side_a_end_moment_end_plate_end_plate": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "sc_cz_side_a_end_moment_end_plate_bolt_grid": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    },
+    "sc_cz_side_a_end_moment_end_plate_beam_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "sc_cz_side_a_end_moment_end_plate_holes_plate": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_side_a_end_moment_end_plate_holes_main": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_side_a_end_moment_end_plate_beam_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "sc_cz_side_a_end_moment_end_plate_bolts": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "sc_cz_side_a_end_moment_end_plate_beam_weld": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    },
+    "sc_cz_side_b_start_moment_end_plate_end_plate": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "sc_cz_side_b_start_moment_end_plate_bolt_grid": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    },
+    "sc_cz_side_b_start_moment_end_plate_beam_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "sc_cz_side_b_start_moment_end_plate_holes_plate": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_side_b_start_moment_end_plate_holes_main": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_side_b_start_moment_end_plate_beam_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "sc_cz_side_b_start_moment_end_plate_bolts": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "sc_cz_side_b_start_moment_end_plate_beam_weld": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    },
+    "sc_cz_side_b_end_moment_end_plate_end_plate": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "sc_cz_side_b_end_moment_end_plate_bolt_grid": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    },
+    "sc_cz_side_b_end_moment_end_plate_beam_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "sc_cz_side_b_end_moment_end_plate_holes_plate": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_side_b_end_moment_end_plate_holes_main": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_side_b_end_moment_end_plate_beam_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "sc_cz_side_b_end_moment_end_plate_bolts": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "sc_cz_side_b_end_moment_end_plate_beam_weld": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    },
+    "sc_cz_cross_a_moment_end_plate_end_plate": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "sc_cz_cross_a_moment_end_plate_bolt_grid": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    },
+    "sc_cz_cross_a_moment_end_plate_beam_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "sc_cz_cross_a_moment_end_plate_holes_plate": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_cross_a_moment_end_plate_holes_main": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_cross_a_moment_end_plate_beam_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "sc_cz_cross_a_moment_end_plate_bolts": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "sc_cz_cross_a_moment_end_plate_beam_weld": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    },
+    "sc_cz_cross_b_moment_end_plate_end_plate": {
+      "collection": "plates",
+      "type": "rectangular-plate"
+    },
+    "sc_cz_cross_b_moment_end_plate_bolt_grid": {
+      "collection": "holePatterns",
+      "type": "rectangular-grid"
+    },
+    "sc_cz_cross_b_moment_end_plate_beam_trim_plane": {
+      "collection": "referencePlanes",
+      "type": "reference-plane"
+    },
+    "sc_cz_cross_b_moment_end_plate_holes_plate": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_cross_b_moment_end_plate_holes_main": {
+      "collection": "features",
+      "type": "hole-pattern"
+    },
+    "sc_cz_cross_b_moment_end_plate_beam_trim": {
+      "collection": "trimJoints",
+      "type": "member-trim"
+    },
+    "sc_cz_cross_b_moment_end_plate_bolts": {
+      "collection": "fastenerGroups",
+      "type": "fastener-group"
+    },
+    "sc_cz_cross_b_moment_end_plate_beam_weld": {
+      "collection": "welds",
+      "type": "fillet-weld"
+    },
+    "conn_side_a_start": {
+      "collection": "smartComponentInstances",
+      "type": "moment-end-plate"
+    },
+    "conn_side_a_end": {
+      "collection": "smartComponentInstances",
+      "type": "moment-end-plate"
+    },
+    "conn_side_b_start": {
+      "collection": "smartComponentInstances",
+      "type": "moment-end-plate"
+    },
+    "conn_side_b_end": {
+      "collection": "smartComponentInstances",
+      "type": "moment-end-plate"
+    },
+    "conn_cross_a": {
+      "collection": "smartComponentInstances",
+      "type": "moment-end-plate"
+    },
+    "conn_cross_b": {
+      "collection": "smartComponentInstances",
+      "type": "moment-end-plate"
     }
   },
   "modelDefaults": {
@@ -477,7 +617,7 @@
             "ifcClass": "IfcPlate",
             "propertySets": {
               "Identity": {
-                "objectType": "Manual steel-to-steel end plate",
+                "objectType": "Steel end plate",
                 "category": "Steel connection plate"
               }
             }
@@ -515,7 +655,7 @@
             "lot": "lot_1",
             "status": "modeled"
           },
-          "status": "not-parametric-yet"
+          "status": "generated"
         }
       }
     }
@@ -539,23 +679,59 @@
           "base_plate_1b",
           "base_plate_2a",
           "base_plate_2b",
-          "end_plate_side_a_start",
-          "end_plate_side_a_end",
-          "end_plate_side_b_start",
-          "end_plate_side_b_end",
-          "end_plate_cross_a",
-          "end_plate_cross_b",
-          "fasteners_side_a_start",
-          "fasteners_side_a_end",
-          "fasteners_side_b_start",
-          "fasteners_side_b_end",
-          "fasteners_cross_a",
-          "fasteners_cross_b",
+          "sc_cz_side_a_start_moment_end_plate_end_plate",
+          "sc_cz_side_a_start_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_a_start_moment_end_plate_beam_trim",
+          "sc_cz_side_a_start_moment_end_plate_bolt_grid",
+          "sc_cz_side_a_start_moment_end_plate_holes_plate",
+          "sc_cz_side_a_start_moment_end_plate_holes_main",
+          "sc_cz_side_a_start_moment_end_plate_bolts",
+          "sc_cz_side_a_start_moment_end_plate_beam_weld",
           "conn_side_a_start",
+          "sc_cz_side_a_end_moment_end_plate_end_plate",
+          "sc_cz_side_a_end_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_a_end_moment_end_plate_beam_trim",
+          "sc_cz_side_a_end_moment_end_plate_bolt_grid",
+          "sc_cz_side_a_end_moment_end_plate_holes_plate",
+          "sc_cz_side_a_end_moment_end_plate_holes_main",
+          "sc_cz_side_a_end_moment_end_plate_bolts",
+          "sc_cz_side_a_end_moment_end_plate_beam_weld",
           "conn_side_a_end",
+          "sc_cz_side_b_start_moment_end_plate_end_plate",
+          "sc_cz_side_b_start_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_b_start_moment_end_plate_beam_trim",
+          "sc_cz_side_b_start_moment_end_plate_bolt_grid",
+          "sc_cz_side_b_start_moment_end_plate_holes_plate",
+          "sc_cz_side_b_start_moment_end_plate_holes_main",
+          "sc_cz_side_b_start_moment_end_plate_bolts",
+          "sc_cz_side_b_start_moment_end_plate_beam_weld",
           "conn_side_b_start",
+          "sc_cz_side_b_end_moment_end_plate_end_plate",
+          "sc_cz_side_b_end_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_b_end_moment_end_plate_beam_trim",
+          "sc_cz_side_b_end_moment_end_plate_bolt_grid",
+          "sc_cz_side_b_end_moment_end_plate_holes_plate",
+          "sc_cz_side_b_end_moment_end_plate_holes_main",
+          "sc_cz_side_b_end_moment_end_plate_bolts",
+          "sc_cz_side_b_end_moment_end_plate_beam_weld",
           "conn_side_b_end",
+          "sc_cz_cross_a_moment_end_plate_end_plate",
+          "sc_cz_cross_a_moment_end_plate_beam_trim_plane",
+          "sc_cz_cross_a_moment_end_plate_beam_trim",
+          "sc_cz_cross_a_moment_end_plate_bolt_grid",
+          "sc_cz_cross_a_moment_end_plate_holes_plate",
+          "sc_cz_cross_a_moment_end_plate_holes_main",
+          "sc_cz_cross_a_moment_end_plate_bolts",
+          "sc_cz_cross_a_moment_end_plate_beam_weld",
           "conn_cross_a",
+          "sc_cz_cross_b_moment_end_plate_end_plate",
+          "sc_cz_cross_b_moment_end_plate_beam_trim_plane",
+          "sc_cz_cross_b_moment_end_plate_beam_trim",
+          "sc_cz_cross_b_moment_end_plate_bolt_grid",
+          "sc_cz_cross_b_moment_end_plate_holes_plate",
+          "sc_cz_cross_b_moment_end_plate_holes_main",
+          "sc_cz_cross_b_moment_end_plate_bolts",
+          "sc_cz_cross_b_moment_end_plate_beam_weld",
           "conn_cross_b"
         ],
         "sourceTemplate": {
@@ -957,8 +1133,8 @@
     "connectionZones": {
       "cz_side_a_start": {
         "id": "cz_side_a_start",
-        "type": "manual-steel-to-steel-zone",
-        "name": "Side beam A start to column 1/A",
+        "type": "moment-end-plate-zone",
+        "name": "Side beam A start end plate",
         "mainObjectId": "column_1a",
         "secondaryObjectIds": [
           "side_beam_a"
@@ -968,9 +1144,14 @@
           "if_side_beam_a_start"
         ],
         "objectIds": [
-          "end_plate_side_a_start",
-          "holes_side_a_start",
-          "fasteners_side_a_start"
+          "sc_cz_side_a_start_moment_end_plate_end_plate",
+          "sc_cz_side_a_start_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_a_start_moment_end_plate_beam_trim",
+          "sc_cz_side_a_start_moment_end_plate_bolt_grid",
+          "sc_cz_side_a_start_moment_end_plate_holes_plate",
+          "sc_cz_side_a_start_moment_end_plate_holes_main",
+          "sc_cz_side_a_start_moment_end_plate_bolts",
+          "sc_cz_side_a_start_moment_end_plate_beam_weld"
         ],
         "smartComponentInstanceIds": [
           "conn_side_a_start"
@@ -978,8 +1159,8 @@
       },
       "cz_side_a_end": {
         "id": "cz_side_a_end",
-        "type": "manual-steel-to-steel-zone",
-        "name": "Side beam A end to column 2/A",
+        "type": "moment-end-plate-zone",
+        "name": "Side beam A end end plate",
         "mainObjectId": "column_2a",
         "secondaryObjectIds": [
           "side_beam_a"
@@ -989,9 +1170,14 @@
           "if_side_beam_a_end"
         ],
         "objectIds": [
-          "end_plate_side_a_end",
-          "holes_side_a_end",
-          "fasteners_side_a_end"
+          "sc_cz_side_a_end_moment_end_plate_end_plate",
+          "sc_cz_side_a_end_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_a_end_moment_end_plate_beam_trim",
+          "sc_cz_side_a_end_moment_end_plate_bolt_grid",
+          "sc_cz_side_a_end_moment_end_plate_holes_plate",
+          "sc_cz_side_a_end_moment_end_plate_holes_main",
+          "sc_cz_side_a_end_moment_end_plate_bolts",
+          "sc_cz_side_a_end_moment_end_plate_beam_weld"
         ],
         "smartComponentInstanceIds": [
           "conn_side_a_end"
@@ -999,8 +1185,8 @@
       },
       "cz_side_b_start": {
         "id": "cz_side_b_start",
-        "type": "manual-steel-to-steel-zone",
-        "name": "Side beam B start to column 1/B",
+        "type": "moment-end-plate-zone",
+        "name": "Side beam B start end plate",
         "mainObjectId": "column_1b",
         "secondaryObjectIds": [
           "side_beam_b"
@@ -1010,9 +1196,14 @@
           "if_side_beam_b_start"
         ],
         "objectIds": [
-          "end_plate_side_b_start",
-          "holes_side_b_start",
-          "fasteners_side_b_start"
+          "sc_cz_side_b_start_moment_end_plate_end_plate",
+          "sc_cz_side_b_start_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_b_start_moment_end_plate_beam_trim",
+          "sc_cz_side_b_start_moment_end_plate_bolt_grid",
+          "sc_cz_side_b_start_moment_end_plate_holes_plate",
+          "sc_cz_side_b_start_moment_end_plate_holes_main",
+          "sc_cz_side_b_start_moment_end_plate_bolts",
+          "sc_cz_side_b_start_moment_end_plate_beam_weld"
         ],
         "smartComponentInstanceIds": [
           "conn_side_b_start"
@@ -1020,8 +1211,8 @@
       },
       "cz_side_b_end": {
         "id": "cz_side_b_end",
-        "type": "manual-steel-to-steel-zone",
-        "name": "Side beam B end to column 2/B",
+        "type": "moment-end-plate-zone",
+        "name": "Side beam B end end plate",
         "mainObjectId": "column_2b",
         "secondaryObjectIds": [
           "side_beam_b"
@@ -1031,9 +1222,14 @@
           "if_side_beam_b_end"
         ],
         "objectIds": [
-          "end_plate_side_b_end",
-          "holes_side_b_end",
-          "fasteners_side_b_end"
+          "sc_cz_side_b_end_moment_end_plate_end_plate",
+          "sc_cz_side_b_end_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_b_end_moment_end_plate_beam_trim",
+          "sc_cz_side_b_end_moment_end_plate_bolt_grid",
+          "sc_cz_side_b_end_moment_end_plate_holes_plate",
+          "sc_cz_side_b_end_moment_end_plate_holes_main",
+          "sc_cz_side_b_end_moment_end_plate_bolts",
+          "sc_cz_side_b_end_moment_end_plate_beam_weld"
         ],
         "smartComponentInstanceIds": [
           "conn_side_b_end"
@@ -1041,8 +1237,8 @@
       },
       "cz_cross_a": {
         "id": "cz_cross_a",
-        "type": "manual-steel-to-steel-zone",
-        "name": "Cross beam start to side beam A",
+        "type": "moment-end-plate-zone",
+        "name": "Cross beam start end plate",
         "mainObjectId": "side_beam_a",
         "secondaryObjectIds": [
           "cross_beam_1"
@@ -1052,9 +1248,14 @@
           "if_cross_beam_1_start"
         ],
         "objectIds": [
-          "end_plate_cross_a",
-          "holes_cross_a",
-          "fasteners_cross_a"
+          "sc_cz_cross_a_moment_end_plate_end_plate",
+          "sc_cz_cross_a_moment_end_plate_beam_trim_plane",
+          "sc_cz_cross_a_moment_end_plate_beam_trim",
+          "sc_cz_cross_a_moment_end_plate_bolt_grid",
+          "sc_cz_cross_a_moment_end_plate_holes_plate",
+          "sc_cz_cross_a_moment_end_plate_holes_main",
+          "sc_cz_cross_a_moment_end_plate_bolts",
+          "sc_cz_cross_a_moment_end_plate_beam_weld"
         ],
         "smartComponentInstanceIds": [
           "conn_cross_a"
@@ -1062,8 +1263,8 @@
       },
       "cz_cross_b": {
         "id": "cz_cross_b",
-        "type": "manual-steel-to-steel-zone",
-        "name": "Cross beam end to side beam B",
+        "type": "moment-end-plate-zone",
+        "name": "Cross beam end end plate",
         "mainObjectId": "side_beam_b",
         "secondaryObjectIds": [
           "cross_beam_1"
@@ -1073,16 +1274,130 @@
           "if_cross_beam_1_end"
         ],
         "objectIds": [
-          "end_plate_cross_b",
-          "holes_cross_b",
-          "fasteners_cross_b"
+          "sc_cz_cross_b_moment_end_plate_end_plate",
+          "sc_cz_cross_b_moment_end_plate_beam_trim_plane",
+          "sc_cz_cross_b_moment_end_plate_beam_trim",
+          "sc_cz_cross_b_moment_end_plate_bolt_grid",
+          "sc_cz_cross_b_moment_end_plate_holes_plate",
+          "sc_cz_cross_b_moment_end_plate_holes_main",
+          "sc_cz_cross_b_moment_end_plate_bolts",
+          "sc_cz_cross_b_moment_end_plate_beam_weld"
         ],
         "smartComponentInstanceIds": [
           "conn_cross_b"
         ]
       }
     },
-    "assemblies": {},
+    "assemblies": {
+      "assembly_side_a_start_end_plate": {
+        "id": "assembly_side_a_start_end_plate",
+        "type": "connection-assembly",
+        "mark": "SA-ESA",
+        "name": "Side beam A start end plate assembly",
+        "parentAssemblyId": null,
+        "childAssemblyIds": [],
+        "memberIds": [
+          "column_1a",
+          "side_beam_a"
+        ],
+        "connectionZoneIds": [
+          "cz_side_a_start"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_side_a_start"
+        ]
+      },
+      "assembly_side_a_end_end_plate": {
+        "id": "assembly_side_a_end_end_plate",
+        "type": "connection-assembly",
+        "mark": "SA-EEA",
+        "name": "Side beam A end end plate assembly",
+        "parentAssemblyId": null,
+        "childAssemblyIds": [],
+        "memberIds": [
+          "column_2a",
+          "side_beam_a"
+        ],
+        "connectionZoneIds": [
+          "cz_side_a_end"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_side_a_end"
+        ]
+      },
+      "assembly_side_b_start_end_plate": {
+        "id": "assembly_side_b_start_end_plate",
+        "type": "connection-assembly",
+        "mark": "SA-ESB",
+        "name": "Side beam B start end plate assembly",
+        "parentAssemblyId": null,
+        "childAssemblyIds": [],
+        "memberIds": [
+          "column_1b",
+          "side_beam_b"
+        ],
+        "connectionZoneIds": [
+          "cz_side_b_start"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_side_b_start"
+        ]
+      },
+      "assembly_side_b_end_end_plate": {
+        "id": "assembly_side_b_end_end_plate",
+        "type": "connection-assembly",
+        "mark": "SA-EEB",
+        "name": "Side beam B end end plate assembly",
+        "parentAssemblyId": null,
+        "childAssemblyIds": [],
+        "memberIds": [
+          "column_2b",
+          "side_beam_b"
+        ],
+        "connectionZoneIds": [
+          "cz_side_b_end"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_side_b_end"
+        ]
+      },
+      "assembly_cross_a_end_plate": {
+        "id": "assembly_cross_a_end_plate",
+        "type": "connection-assembly",
+        "mark": "SA-EXA",
+        "name": "Cross beam start end plate assembly",
+        "parentAssemblyId": null,
+        "childAssemblyIds": [],
+        "memberIds": [
+          "side_beam_a",
+          "cross_beam_1"
+        ],
+        "connectionZoneIds": [
+          "cz_cross_a"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_cross_a"
+        ]
+      },
+      "assembly_cross_b_end_plate": {
+        "id": "assembly_cross_b_end_plate",
+        "type": "connection-assembly",
+        "mark": "SA-EXB",
+        "name": "Cross beam end end plate assembly",
+        "parentAssemblyId": null,
+        "childAssemblyIds": [],
+        "memberIds": [
+          "side_beam_b",
+          "cross_beam_1"
+        ],
+        "connectionZoneIds": [
+          "cz_cross_b"
+        ],
+        "smartComponentInstanceIds": [
+          "conn_cross_b"
+        ]
+      }
+    },
     "members": {
       "column_1a": {
         "id": "column_1a",
@@ -1155,7 +1470,10 @@
             0,
             3120
           ]
-        }
+        },
+        "featureIds": [
+          "sc_cz_side_a_start_moment_end_plate_holes_main"
+        ]
       },
       "column_1b": {
         "id": "column_1b",
@@ -1228,7 +1546,10 @@
             3000,
             3120
           ]
-        }
+        },
+        "featureIds": [
+          "sc_cz_side_b_start_moment_end_plate_holes_main"
+        ]
       },
       "column_2a": {
         "id": "column_2a",
@@ -1301,7 +1622,10 @@
             0,
             3120
           ]
-        }
+        },
+        "featureIds": [
+          "sc_cz_side_a_end_moment_end_plate_holes_main"
+        ]
       },
       "column_2b": {
         "id": "column_2b",
@@ -1374,7 +1698,10 @@
             3000,
             3120
           ]
-        }
+        },
+        "featureIds": [
+          "sc_cz_side_b_end_moment_end_plate_holes_main"
+        ]
       },
       "side_beam_a": {
         "id": "side_beam_a",
@@ -1446,7 +1773,10 @@
             0,
             3000
           ]
-        }
+        },
+        "featureIds": [
+          "sc_cz_cross_a_moment_end_plate_holes_main"
+        ]
       },
       "side_beam_b": {
         "id": "side_beam_b",
@@ -1518,7 +1848,10 @@
             3000,
             3000
           ]
-        }
+        },
+        "featureIds": [
+          "sc_cz_cross_b_moment_end_plate_holes_main"
+        ]
       },
       "cross_beam_1": {
         "id": "cross_beam_1",
@@ -2301,9 +2634,151 @@
           ]
         }
       },
-      "end_plate_side_a_start": {
-        "id": "end_plate_side_a_start",
-        "type": "beam-end-plate",
+      "sc_cz_side_a_start_moment_end_plate_end_plate": {
+        "id": "sc_cz_side_a_start_moment_end_plate_end_plate",
+        "type": "rectangular-plate",
+        "thickness": 12,
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "sc_cz_side_a_start_moment_end_plate_end_plate_v1",
+              "point": [
+                -90,
+                -120
+              ]
+            },
+            {
+              "id": "sc_cz_side_a_start_moment_end_plate_end_plate_v2",
+              "point": [
+                90,
+                -120
+              ]
+            },
+            {
+              "id": "sc_cz_side_a_start_moment_end_plate_end_plate_v3",
+              "point": [
+                90,
+                120
+              ]
+            },
+            {
+              "id": "sc_cz_side_a_start_moment_end_plate_end_plate_v4",
+              "point": [
+                -90,
+                120
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "sc_cz_side_a_start_moment_end_plate_end_plate_e1",
+              "from": "sc_cz_side_a_start_moment_end_plate_end_plate_v1",
+              "to": "sc_cz_side_a_start_moment_end_plate_end_plate_v2"
+            },
+            {
+              "id": "sc_cz_side_a_start_moment_end_plate_end_plate_e2",
+              "from": "sc_cz_side_a_start_moment_end_plate_end_plate_v2",
+              "to": "sc_cz_side_a_start_moment_end_plate_end_plate_v3"
+            },
+            {
+              "id": "sc_cz_side_a_start_moment_end_plate_end_plate_e3",
+              "from": "sc_cz_side_a_start_moment_end_plate_end_plate_v3",
+              "to": "sc_cz_side_a_start_moment_end_plate_end_plate_v4"
+            },
+            {
+              "id": "sc_cz_side_a_start_moment_end_plate_end_plate_e4",
+              "from": "sc_cz_side_a_start_moment_end_plate_end_plate_v4",
+              "to": "sc_cz_side_a_start_moment_end_plate_end_plate_v1"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_horizontal_sc_cz_side_a_start_moment_end_plate_end_plate_e1",
+              "type": "horizontal",
+              "edgeId": "sc_cz_side_a_start_moment_end_plate_end_plate_e1"
+            },
+            {
+              "id": "rel_vertical_sc_cz_side_a_start_moment_end_plate_end_plate_e2",
+              "type": "vertical",
+              "edgeId": "sc_cz_side_a_start_moment_end_plate_end_plate_e2"
+            },
+            {
+              "id": "rel_horizontal_sc_cz_side_a_start_moment_end_plate_end_plate_e3",
+              "type": "horizontal",
+              "edgeId": "sc_cz_side_a_start_moment_end_plate_end_plate_e3"
+            },
+            {
+              "id": "rel_vertical_sc_cz_side_a_start_moment_end_plate_end_plate_e4",
+              "type": "vertical",
+              "edgeId": "sc_cz_side_a_start_moment_end_plate_end_plate_e4"
+            },
+            {
+              "id": "rel_perpendicular_sc_cz_side_a_start_moment_end_plate_end_plate_e1_sc_cz_side_a_start_moment_end_plate_end_plate_e2",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e1",
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e2"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_cz_side_a_start_moment_end_plate_end_plate_e2_sc_cz_side_a_start_moment_end_plate_end_plate_e3",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e2",
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e3"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_cz_side_a_start_moment_end_plate_end_plate_e3_sc_cz_side_a_start_moment_end_plate_end_plate_e4",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e3",
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e4"
+              ]
+            },
+            {
+              "id": "rel_perpendicular_sc_cz_side_a_start_moment_end_plate_end_plate_e4_sc_cz_side_a_start_moment_end_plate_end_plate_e1",
+              "type": "perpendicular",
+              "edgeIds": [
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e1",
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e4"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_cz_side_a_start_moment_end_plate_end_plate_e1_sc_cz_side_a_start_moment_end_plate_end_plate_e3",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e1",
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e3"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_cz_side_a_start_moment_end_plate_end_plate_e1_sc_cz_side_a_start_moment_end_plate_end_plate_e3",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e1",
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e3"
+              ]
+            },
+            {
+              "id": "rel_parallel_sc_cz_side_a_start_moment_end_plate_end_plate_e2_sc_cz_side_a_start_moment_end_plate_end_plate_e4",
+              "type": "parallel",
+              "edgeIds": [
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e2",
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e4"
+              ]
+            },
+            {
+              "id": "rel_equal-length_sc_cz_side_a_start_moment_end_plate_end_plate_e2_sc_cz_side_a_start_moment_end_plate_end_plate_e4",
+              "type": "equal-length",
+              "edgeIds": [
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e2",
+                "sc_cz_side_a_start_moment_end_plate_end_plate_e4"
+              ]
+            }
+          ]
+        },
         "center": [
           156,
           0,
@@ -2324,49 +2799,66 @@
           0,
           1
         ],
-        "thickness": 12,
+        "featureIds": [
+          "sc_cz_side_a_start_moment_end_plate_holes_plate"
+        ],
+        "assemblyId": "assembly_side_a_start_end_plate",
         "placementIntent": {
-          "role": "side-beam-to-column-end-plate",
+          "role": "end-plate",
           "host": {
             "objectId": "side_beam_a",
             "end": "start"
           },
           "references": [
             {
-              "objectId": "column_1a"
+              "objectId": "column_1a",
+              "interfaceId": "if_column_1a_x_plus"
             }
           ],
-          "fit": "manual-steel-to-steel"
+          "fit": "support-face-to-fitted-secondary-end"
         },
         "fabrication": {
-          "partMark": "P-SA1"
+          "partMark": "EP1"
         },
+        "display": {
+          "color": "#355a70"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_a_start",
+          "componentRole": "endPlate",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_a_end_moment_end_plate_end_plate": {
+        "id": "sc_cz_side_a_end_moment_end_plate_end_plate",
+        "type": "rectangular-plate",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
             {
-              "id": "end_plate_side_a_start_v1",
+              "id": "sc_cz_side_a_end_moment_end_plate_end_plate_v1",
               "point": [
                 -90,
                 -120
               ]
             },
             {
-              "id": "end_plate_side_a_start_v2",
+              "id": "sc_cz_side_a_end_moment_end_plate_end_plate_v2",
               "point": [
                 90,
                 -120
               ]
             },
             {
-              "id": "end_plate_side_a_start_v3",
+              "id": "sc_cz_side_a_end_moment_end_plate_end_plate_v3",
               "point": [
                 90,
                 120
               ]
             },
             {
-              "id": "end_plate_side_a_start_v4",
+              "id": "sc_cz_side_a_end_moment_end_plate_end_plate_v4",
               "point": [
                 -90,
                 120
@@ -2375,124 +2867,120 @@
           ],
           "edges": [
             {
-              "id": "end_plate_side_a_start_e1",
-              "from": "end_plate_side_a_start_v1",
-              "to": "end_plate_side_a_start_v2"
+              "id": "sc_cz_side_a_end_moment_end_plate_end_plate_e1",
+              "from": "sc_cz_side_a_end_moment_end_plate_end_plate_v1",
+              "to": "sc_cz_side_a_end_moment_end_plate_end_plate_v2"
             },
             {
-              "id": "end_plate_side_a_start_e2",
-              "from": "end_plate_side_a_start_v2",
-              "to": "end_plate_side_a_start_v3"
+              "id": "sc_cz_side_a_end_moment_end_plate_end_plate_e2",
+              "from": "sc_cz_side_a_end_moment_end_plate_end_plate_v2",
+              "to": "sc_cz_side_a_end_moment_end_plate_end_plate_v3"
             },
             {
-              "id": "end_plate_side_a_start_e3",
-              "from": "end_plate_side_a_start_v3",
-              "to": "end_plate_side_a_start_v4"
+              "id": "sc_cz_side_a_end_moment_end_plate_end_plate_e3",
+              "from": "sc_cz_side_a_end_moment_end_plate_end_plate_v3",
+              "to": "sc_cz_side_a_end_moment_end_plate_end_plate_v4"
             },
             {
-              "id": "end_plate_side_a_start_e4",
-              "from": "end_plate_side_a_start_v4",
-              "to": "end_plate_side_a_start_v1"
+              "id": "sc_cz_side_a_end_moment_end_plate_end_plate_e4",
+              "from": "sc_cz_side_a_end_moment_end_plate_end_plate_v4",
+              "to": "sc_cz_side_a_end_moment_end_plate_end_plate_v1"
             }
           ],
           "relations": [
             {
-              "id": "rel_horizontal_end_plate_side_a_start_e1",
+              "id": "rel_horizontal_sc_cz_side_a_end_moment_end_plate_end_plate_e1",
               "type": "horizontal",
-              "edgeId": "end_plate_side_a_start_e1"
+              "edgeId": "sc_cz_side_a_end_moment_end_plate_end_plate_e1"
             },
             {
-              "id": "rel_vertical_end_plate_side_a_start_e2",
+              "id": "rel_vertical_sc_cz_side_a_end_moment_end_plate_end_plate_e2",
               "type": "vertical",
-              "edgeId": "end_plate_side_a_start_e2"
+              "edgeId": "sc_cz_side_a_end_moment_end_plate_end_plate_e2"
             },
             {
-              "id": "rel_horizontal_end_plate_side_a_start_e3",
+              "id": "rel_horizontal_sc_cz_side_a_end_moment_end_plate_end_plate_e3",
               "type": "horizontal",
-              "edgeId": "end_plate_side_a_start_e3"
+              "edgeId": "sc_cz_side_a_end_moment_end_plate_end_plate_e3"
             },
             {
-              "id": "rel_vertical_end_plate_side_a_start_e4",
+              "id": "rel_vertical_sc_cz_side_a_end_moment_end_plate_end_plate_e4",
               "type": "vertical",
-              "edgeId": "end_plate_side_a_start_e4"
+              "edgeId": "sc_cz_side_a_end_moment_end_plate_end_plate_e4"
             },
             {
-              "id": "rel_perpendicular_end_plate_side_a_start_e1_end_plate_side_a_start_e2",
+              "id": "rel_perpendicular_sc_cz_side_a_end_moment_end_plate_end_plate_e1_sc_cz_side_a_end_moment_end_plate_end_plate_e2",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_a_start_e1",
-                "end_plate_side_a_start_e2"
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e1",
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e2"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_a_start_e2_end_plate_side_a_start_e3",
+              "id": "rel_perpendicular_sc_cz_side_a_end_moment_end_plate_end_plate_e2_sc_cz_side_a_end_moment_end_plate_end_plate_e3",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_a_start_e2",
-                "end_plate_side_a_start_e3"
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e2",
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_a_start_e3_end_plate_side_a_start_e4",
+              "id": "rel_perpendicular_sc_cz_side_a_end_moment_end_plate_end_plate_e3_sc_cz_side_a_end_moment_end_plate_end_plate_e4",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_a_start_e3",
-                "end_plate_side_a_start_e4"
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e3",
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_a_start_e4_end_plate_side_a_start_e1",
+              "id": "rel_perpendicular_sc_cz_side_a_end_moment_end_plate_end_plate_e4_sc_cz_side_a_end_moment_end_plate_end_plate_e1",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_a_start_e1",
-                "end_plate_side_a_start_e4"
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e1",
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_side_a_start_e1_end_plate_side_a_start_e3",
+              "id": "rel_parallel_sc_cz_side_a_end_moment_end_plate_end_plate_e1_sc_cz_side_a_end_moment_end_plate_end_plate_e3",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_side_a_start_e1",
-                "end_plate_side_a_start_e3"
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e1",
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_side_a_start_e1_end_plate_side_a_start_e3",
+              "id": "rel_equal-length_sc_cz_side_a_end_moment_end_plate_end_plate_e1_sc_cz_side_a_end_moment_end_plate_end_plate_e3",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_side_a_start_e1",
-                "end_plate_side_a_start_e3"
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e1",
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_side_a_start_e2_end_plate_side_a_start_e4",
+              "id": "rel_parallel_sc_cz_side_a_end_moment_end_plate_end_plate_e2_sc_cz_side_a_end_moment_end_plate_end_plate_e4",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_side_a_start_e2",
-                "end_plate_side_a_start_e4"
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e2",
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_side_a_start_e2_end_plate_side_a_start_e4",
+              "id": "rel_equal-length_sc_cz_side_a_end_moment_end_plate_end_plate_e2_sc_cz_side_a_end_moment_end_plate_end_plate_e4",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_side_a_start_e2",
-                "end_plate_side_a_start_e4"
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e2",
+                "sc_cz_side_a_end_moment_end_plate_end_plate_e4"
               ]
             }
           ]
-        }
-      },
-      "end_plate_side_a_end": {
-        "id": "end_plate_side_a_end",
-        "type": "beam-end-plate",
+        },
         "center": [
           4844,
           0,
           3000
         ],
         "normal": [
-          1,
+          -1,
           0,
           0
         ],
@@ -2504,51 +2992,68 @@
         "localAxisZ": [
           0,
           0,
-          1
+          -1
         ],
-        "thickness": 12,
+        "featureIds": [
+          "sc_cz_side_a_end_moment_end_plate_holes_plate"
+        ],
+        "assemblyId": "assembly_side_a_end_end_plate",
         "placementIntent": {
-          "role": "side-beam-to-column-end-plate",
+          "role": "end-plate",
           "host": {
             "objectId": "side_beam_a",
             "end": "end"
           },
           "references": [
             {
-              "objectId": "column_2a"
+              "objectId": "column_2a",
+              "interfaceId": "if_column_2a_x_minus"
             }
           ],
-          "fit": "manual-steel-to-steel"
+          "fit": "support-face-to-fitted-secondary-end"
         },
         "fabrication": {
-          "partMark": "P-SA2"
+          "partMark": "EP1"
         },
+        "display": {
+          "color": "#355a70"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_a_end",
+          "componentRole": "endPlate",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_start_moment_end_plate_end_plate": {
+        "id": "sc_cz_side_b_start_moment_end_plate_end_plate",
+        "type": "rectangular-plate",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
             {
-              "id": "end_plate_side_a_end_v1",
+              "id": "sc_cz_side_b_start_moment_end_plate_end_plate_v1",
               "point": [
                 -90,
                 -120
               ]
             },
             {
-              "id": "end_plate_side_a_end_v2",
+              "id": "sc_cz_side_b_start_moment_end_plate_end_plate_v2",
               "point": [
                 90,
                 -120
               ]
             },
             {
-              "id": "end_plate_side_a_end_v3",
+              "id": "sc_cz_side_b_start_moment_end_plate_end_plate_v3",
               "point": [
                 90,
                 120
               ]
             },
             {
-              "id": "end_plate_side_a_end_v4",
+              "id": "sc_cz_side_b_start_moment_end_plate_end_plate_v4",
               "point": [
                 -90,
                 120
@@ -2557,117 +3062,113 @@
           ],
           "edges": [
             {
-              "id": "end_plate_side_a_end_e1",
-              "from": "end_plate_side_a_end_v1",
-              "to": "end_plate_side_a_end_v2"
+              "id": "sc_cz_side_b_start_moment_end_plate_end_plate_e1",
+              "from": "sc_cz_side_b_start_moment_end_plate_end_plate_v1",
+              "to": "sc_cz_side_b_start_moment_end_plate_end_plate_v2"
             },
             {
-              "id": "end_plate_side_a_end_e2",
-              "from": "end_plate_side_a_end_v2",
-              "to": "end_plate_side_a_end_v3"
+              "id": "sc_cz_side_b_start_moment_end_plate_end_plate_e2",
+              "from": "sc_cz_side_b_start_moment_end_plate_end_plate_v2",
+              "to": "sc_cz_side_b_start_moment_end_plate_end_plate_v3"
             },
             {
-              "id": "end_plate_side_a_end_e3",
-              "from": "end_plate_side_a_end_v3",
-              "to": "end_plate_side_a_end_v4"
+              "id": "sc_cz_side_b_start_moment_end_plate_end_plate_e3",
+              "from": "sc_cz_side_b_start_moment_end_plate_end_plate_v3",
+              "to": "sc_cz_side_b_start_moment_end_plate_end_plate_v4"
             },
             {
-              "id": "end_plate_side_a_end_e4",
-              "from": "end_plate_side_a_end_v4",
-              "to": "end_plate_side_a_end_v1"
+              "id": "sc_cz_side_b_start_moment_end_plate_end_plate_e4",
+              "from": "sc_cz_side_b_start_moment_end_plate_end_plate_v4",
+              "to": "sc_cz_side_b_start_moment_end_plate_end_plate_v1"
             }
           ],
           "relations": [
             {
-              "id": "rel_horizontal_end_plate_side_a_end_e1",
+              "id": "rel_horizontal_sc_cz_side_b_start_moment_end_plate_end_plate_e1",
               "type": "horizontal",
-              "edgeId": "end_plate_side_a_end_e1"
+              "edgeId": "sc_cz_side_b_start_moment_end_plate_end_plate_e1"
             },
             {
-              "id": "rel_vertical_end_plate_side_a_end_e2",
+              "id": "rel_vertical_sc_cz_side_b_start_moment_end_plate_end_plate_e2",
               "type": "vertical",
-              "edgeId": "end_plate_side_a_end_e2"
+              "edgeId": "sc_cz_side_b_start_moment_end_plate_end_plate_e2"
             },
             {
-              "id": "rel_horizontal_end_plate_side_a_end_e3",
+              "id": "rel_horizontal_sc_cz_side_b_start_moment_end_plate_end_plate_e3",
               "type": "horizontal",
-              "edgeId": "end_plate_side_a_end_e3"
+              "edgeId": "sc_cz_side_b_start_moment_end_plate_end_plate_e3"
             },
             {
-              "id": "rel_vertical_end_plate_side_a_end_e4",
+              "id": "rel_vertical_sc_cz_side_b_start_moment_end_plate_end_plate_e4",
               "type": "vertical",
-              "edgeId": "end_plate_side_a_end_e4"
+              "edgeId": "sc_cz_side_b_start_moment_end_plate_end_plate_e4"
             },
             {
-              "id": "rel_perpendicular_end_plate_side_a_end_e1_end_plate_side_a_end_e2",
+              "id": "rel_perpendicular_sc_cz_side_b_start_moment_end_plate_end_plate_e1_sc_cz_side_b_start_moment_end_plate_end_plate_e2",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_a_end_e1",
-                "end_plate_side_a_end_e2"
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e1",
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e2"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_a_end_e2_end_plate_side_a_end_e3",
+              "id": "rel_perpendicular_sc_cz_side_b_start_moment_end_plate_end_plate_e2_sc_cz_side_b_start_moment_end_plate_end_plate_e3",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_a_end_e2",
-                "end_plate_side_a_end_e3"
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e2",
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_a_end_e3_end_plate_side_a_end_e4",
+              "id": "rel_perpendicular_sc_cz_side_b_start_moment_end_plate_end_plate_e3_sc_cz_side_b_start_moment_end_plate_end_plate_e4",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_a_end_e3",
-                "end_plate_side_a_end_e4"
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e3",
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_a_end_e4_end_plate_side_a_end_e1",
+              "id": "rel_perpendicular_sc_cz_side_b_start_moment_end_plate_end_plate_e4_sc_cz_side_b_start_moment_end_plate_end_plate_e1",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_a_end_e1",
-                "end_plate_side_a_end_e4"
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e1",
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_side_a_end_e1_end_plate_side_a_end_e3",
+              "id": "rel_parallel_sc_cz_side_b_start_moment_end_plate_end_plate_e1_sc_cz_side_b_start_moment_end_plate_end_plate_e3",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_side_a_end_e1",
-                "end_plate_side_a_end_e3"
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e1",
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_side_a_end_e1_end_plate_side_a_end_e3",
+              "id": "rel_equal-length_sc_cz_side_b_start_moment_end_plate_end_plate_e1_sc_cz_side_b_start_moment_end_plate_end_plate_e3",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_side_a_end_e1",
-                "end_plate_side_a_end_e3"
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e1",
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_side_a_end_e2_end_plate_side_a_end_e4",
+              "id": "rel_parallel_sc_cz_side_b_start_moment_end_plate_end_plate_e2_sc_cz_side_b_start_moment_end_plate_end_plate_e4",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_side_a_end_e2",
-                "end_plate_side_a_end_e4"
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e2",
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_side_a_end_e2_end_plate_side_a_end_e4",
+              "id": "rel_equal-length_sc_cz_side_b_start_moment_end_plate_end_plate_e2_sc_cz_side_b_start_moment_end_plate_end_plate_e4",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_side_a_end_e2",
-                "end_plate_side_a_end_e4"
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e2",
+                "sc_cz_side_b_start_moment_end_plate_end_plate_e4"
               ]
             }
           ]
-        }
-      },
-      "end_plate_side_b_start": {
-        "id": "end_plate_side_b_start",
-        "type": "beam-end-plate",
+        },
         "center": [
           156,
           3000,
@@ -2688,49 +3189,66 @@
           0,
           1
         ],
-        "thickness": 12,
+        "featureIds": [
+          "sc_cz_side_b_start_moment_end_plate_holes_plate"
+        ],
+        "assemblyId": "assembly_side_b_start_end_plate",
         "placementIntent": {
-          "role": "side-beam-to-column-end-plate",
+          "role": "end-plate",
           "host": {
             "objectId": "side_beam_b",
             "end": "start"
           },
           "references": [
             {
-              "objectId": "column_1b"
+              "objectId": "column_1b",
+              "interfaceId": "if_column_1b_x_plus"
             }
           ],
-          "fit": "manual-steel-to-steel"
+          "fit": "support-face-to-fitted-secondary-end"
         },
         "fabrication": {
-          "partMark": "P-SB1"
+          "partMark": "EP1"
         },
+        "display": {
+          "color": "#355a70"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_b_start",
+          "componentRole": "endPlate",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_end_moment_end_plate_end_plate": {
+        "id": "sc_cz_side_b_end_moment_end_plate_end_plate",
+        "type": "rectangular-plate",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
             {
-              "id": "end_plate_side_b_start_v1",
+              "id": "sc_cz_side_b_end_moment_end_plate_end_plate_v1",
               "point": [
                 -90,
                 -120
               ]
             },
             {
-              "id": "end_plate_side_b_start_v2",
+              "id": "sc_cz_side_b_end_moment_end_plate_end_plate_v2",
               "point": [
                 90,
                 -120
               ]
             },
             {
-              "id": "end_plate_side_b_start_v3",
+              "id": "sc_cz_side_b_end_moment_end_plate_end_plate_v3",
               "point": [
                 90,
                 120
               ]
             },
             {
-              "id": "end_plate_side_b_start_v4",
+              "id": "sc_cz_side_b_end_moment_end_plate_end_plate_v4",
               "point": [
                 -90,
                 120
@@ -2739,124 +3257,120 @@
           ],
           "edges": [
             {
-              "id": "end_plate_side_b_start_e1",
-              "from": "end_plate_side_b_start_v1",
-              "to": "end_plate_side_b_start_v2"
+              "id": "sc_cz_side_b_end_moment_end_plate_end_plate_e1",
+              "from": "sc_cz_side_b_end_moment_end_plate_end_plate_v1",
+              "to": "sc_cz_side_b_end_moment_end_plate_end_plate_v2"
             },
             {
-              "id": "end_plate_side_b_start_e2",
-              "from": "end_plate_side_b_start_v2",
-              "to": "end_plate_side_b_start_v3"
+              "id": "sc_cz_side_b_end_moment_end_plate_end_plate_e2",
+              "from": "sc_cz_side_b_end_moment_end_plate_end_plate_v2",
+              "to": "sc_cz_side_b_end_moment_end_plate_end_plate_v3"
             },
             {
-              "id": "end_plate_side_b_start_e3",
-              "from": "end_plate_side_b_start_v3",
-              "to": "end_plate_side_b_start_v4"
+              "id": "sc_cz_side_b_end_moment_end_plate_end_plate_e3",
+              "from": "sc_cz_side_b_end_moment_end_plate_end_plate_v3",
+              "to": "sc_cz_side_b_end_moment_end_plate_end_plate_v4"
             },
             {
-              "id": "end_plate_side_b_start_e4",
-              "from": "end_plate_side_b_start_v4",
-              "to": "end_plate_side_b_start_v1"
+              "id": "sc_cz_side_b_end_moment_end_plate_end_plate_e4",
+              "from": "sc_cz_side_b_end_moment_end_plate_end_plate_v4",
+              "to": "sc_cz_side_b_end_moment_end_plate_end_plate_v1"
             }
           ],
           "relations": [
             {
-              "id": "rel_horizontal_end_plate_side_b_start_e1",
+              "id": "rel_horizontal_sc_cz_side_b_end_moment_end_plate_end_plate_e1",
               "type": "horizontal",
-              "edgeId": "end_plate_side_b_start_e1"
+              "edgeId": "sc_cz_side_b_end_moment_end_plate_end_plate_e1"
             },
             {
-              "id": "rel_vertical_end_plate_side_b_start_e2",
+              "id": "rel_vertical_sc_cz_side_b_end_moment_end_plate_end_plate_e2",
               "type": "vertical",
-              "edgeId": "end_plate_side_b_start_e2"
+              "edgeId": "sc_cz_side_b_end_moment_end_plate_end_plate_e2"
             },
             {
-              "id": "rel_horizontal_end_plate_side_b_start_e3",
+              "id": "rel_horizontal_sc_cz_side_b_end_moment_end_plate_end_plate_e3",
               "type": "horizontal",
-              "edgeId": "end_plate_side_b_start_e3"
+              "edgeId": "sc_cz_side_b_end_moment_end_plate_end_plate_e3"
             },
             {
-              "id": "rel_vertical_end_plate_side_b_start_e4",
+              "id": "rel_vertical_sc_cz_side_b_end_moment_end_plate_end_plate_e4",
               "type": "vertical",
-              "edgeId": "end_plate_side_b_start_e4"
+              "edgeId": "sc_cz_side_b_end_moment_end_plate_end_plate_e4"
             },
             {
-              "id": "rel_perpendicular_end_plate_side_b_start_e1_end_plate_side_b_start_e2",
+              "id": "rel_perpendicular_sc_cz_side_b_end_moment_end_plate_end_plate_e1_sc_cz_side_b_end_moment_end_plate_end_plate_e2",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_b_start_e1",
-                "end_plate_side_b_start_e2"
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e1",
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e2"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_b_start_e2_end_plate_side_b_start_e3",
+              "id": "rel_perpendicular_sc_cz_side_b_end_moment_end_plate_end_plate_e2_sc_cz_side_b_end_moment_end_plate_end_plate_e3",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_b_start_e2",
-                "end_plate_side_b_start_e3"
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e2",
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_b_start_e3_end_plate_side_b_start_e4",
+              "id": "rel_perpendicular_sc_cz_side_b_end_moment_end_plate_end_plate_e3_sc_cz_side_b_end_moment_end_plate_end_plate_e4",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_b_start_e3",
-                "end_plate_side_b_start_e4"
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e3",
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_b_start_e4_end_plate_side_b_start_e1",
+              "id": "rel_perpendicular_sc_cz_side_b_end_moment_end_plate_end_plate_e4_sc_cz_side_b_end_moment_end_plate_end_plate_e1",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_b_start_e1",
-                "end_plate_side_b_start_e4"
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e1",
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_side_b_start_e1_end_plate_side_b_start_e3",
+              "id": "rel_parallel_sc_cz_side_b_end_moment_end_plate_end_plate_e1_sc_cz_side_b_end_moment_end_plate_end_plate_e3",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_side_b_start_e1",
-                "end_plate_side_b_start_e3"
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e1",
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_side_b_start_e1_end_plate_side_b_start_e3",
+              "id": "rel_equal-length_sc_cz_side_b_end_moment_end_plate_end_plate_e1_sc_cz_side_b_end_moment_end_plate_end_plate_e3",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_side_b_start_e1",
-                "end_plate_side_b_start_e3"
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e1",
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_side_b_start_e2_end_plate_side_b_start_e4",
+              "id": "rel_parallel_sc_cz_side_b_end_moment_end_plate_end_plate_e2_sc_cz_side_b_end_moment_end_plate_end_plate_e4",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_side_b_start_e2",
-                "end_plate_side_b_start_e4"
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e2",
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_side_b_start_e2_end_plate_side_b_start_e4",
+              "id": "rel_equal-length_sc_cz_side_b_end_moment_end_plate_end_plate_e2_sc_cz_side_b_end_moment_end_plate_end_plate_e4",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_side_b_start_e2",
-                "end_plate_side_b_start_e4"
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e2",
+                "sc_cz_side_b_end_moment_end_plate_end_plate_e4"
               ]
             }
           ]
-        }
-      },
-      "end_plate_side_b_end": {
-        "id": "end_plate_side_b_end",
-        "type": "beam-end-plate",
+        },
         "center": [
           4844,
           3000,
           3000
         ],
         "normal": [
-          1,
+          -1,
           0,
           0
         ],
@@ -2868,51 +3382,68 @@
         "localAxisZ": [
           0,
           0,
-          1
+          -1
         ],
-        "thickness": 12,
+        "featureIds": [
+          "sc_cz_side_b_end_moment_end_plate_holes_plate"
+        ],
+        "assemblyId": "assembly_side_b_end_end_plate",
         "placementIntent": {
-          "role": "side-beam-to-column-end-plate",
+          "role": "end-plate",
           "host": {
             "objectId": "side_beam_b",
             "end": "end"
           },
           "references": [
             {
-              "objectId": "column_2b"
+              "objectId": "column_2b",
+              "interfaceId": "if_column_2b_x_minus"
             }
           ],
-          "fit": "manual-steel-to-steel"
+          "fit": "support-face-to-fitted-secondary-end"
         },
         "fabrication": {
-          "partMark": "P-SB2"
+          "partMark": "EP1"
         },
+        "display": {
+          "color": "#355a70"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_b_end",
+          "componentRole": "endPlate",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_a_moment_end_plate_end_plate": {
+        "id": "sc_cz_cross_a_moment_end_plate_end_plate",
+        "type": "rectangular-plate",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
             {
-              "id": "end_plate_side_b_end_v1",
+              "id": "sc_cz_cross_a_moment_end_plate_end_plate_v1",
               "point": [
                 -90,
                 -120
               ]
             },
             {
-              "id": "end_plate_side_b_end_v2",
+              "id": "sc_cz_cross_a_moment_end_plate_end_plate_v2",
               "point": [
                 90,
                 -120
               ]
             },
             {
-              "id": "end_plate_side_b_end_v3",
+              "id": "sc_cz_cross_a_moment_end_plate_end_plate_v3",
               "point": [
                 90,
                 120
               ]
             },
             {
-              "id": "end_plate_side_b_end_v4",
+              "id": "sc_cz_cross_a_moment_end_plate_end_plate_v4",
               "point": [
                 -90,
                 120
@@ -2921,117 +3452,113 @@
           ],
           "edges": [
             {
-              "id": "end_plate_side_b_end_e1",
-              "from": "end_plate_side_b_end_v1",
-              "to": "end_plate_side_b_end_v2"
+              "id": "sc_cz_cross_a_moment_end_plate_end_plate_e1",
+              "from": "sc_cz_cross_a_moment_end_plate_end_plate_v1",
+              "to": "sc_cz_cross_a_moment_end_plate_end_plate_v2"
             },
             {
-              "id": "end_plate_side_b_end_e2",
-              "from": "end_plate_side_b_end_v2",
-              "to": "end_plate_side_b_end_v3"
+              "id": "sc_cz_cross_a_moment_end_plate_end_plate_e2",
+              "from": "sc_cz_cross_a_moment_end_plate_end_plate_v2",
+              "to": "sc_cz_cross_a_moment_end_plate_end_plate_v3"
             },
             {
-              "id": "end_plate_side_b_end_e3",
-              "from": "end_plate_side_b_end_v3",
-              "to": "end_plate_side_b_end_v4"
+              "id": "sc_cz_cross_a_moment_end_plate_end_plate_e3",
+              "from": "sc_cz_cross_a_moment_end_plate_end_plate_v3",
+              "to": "sc_cz_cross_a_moment_end_plate_end_plate_v4"
             },
             {
-              "id": "end_plate_side_b_end_e4",
-              "from": "end_plate_side_b_end_v4",
-              "to": "end_plate_side_b_end_v1"
+              "id": "sc_cz_cross_a_moment_end_plate_end_plate_e4",
+              "from": "sc_cz_cross_a_moment_end_plate_end_plate_v4",
+              "to": "sc_cz_cross_a_moment_end_plate_end_plate_v1"
             }
           ],
           "relations": [
             {
-              "id": "rel_horizontal_end_plate_side_b_end_e1",
+              "id": "rel_horizontal_sc_cz_cross_a_moment_end_plate_end_plate_e1",
               "type": "horizontal",
-              "edgeId": "end_plate_side_b_end_e1"
+              "edgeId": "sc_cz_cross_a_moment_end_plate_end_plate_e1"
             },
             {
-              "id": "rel_vertical_end_plate_side_b_end_e2",
+              "id": "rel_vertical_sc_cz_cross_a_moment_end_plate_end_plate_e2",
               "type": "vertical",
-              "edgeId": "end_plate_side_b_end_e2"
+              "edgeId": "sc_cz_cross_a_moment_end_plate_end_plate_e2"
             },
             {
-              "id": "rel_horizontal_end_plate_side_b_end_e3",
+              "id": "rel_horizontal_sc_cz_cross_a_moment_end_plate_end_plate_e3",
               "type": "horizontal",
-              "edgeId": "end_plate_side_b_end_e3"
+              "edgeId": "sc_cz_cross_a_moment_end_plate_end_plate_e3"
             },
             {
-              "id": "rel_vertical_end_plate_side_b_end_e4",
+              "id": "rel_vertical_sc_cz_cross_a_moment_end_plate_end_plate_e4",
               "type": "vertical",
-              "edgeId": "end_plate_side_b_end_e4"
+              "edgeId": "sc_cz_cross_a_moment_end_plate_end_plate_e4"
             },
             {
-              "id": "rel_perpendicular_end_plate_side_b_end_e1_end_plate_side_b_end_e2",
+              "id": "rel_perpendicular_sc_cz_cross_a_moment_end_plate_end_plate_e1_sc_cz_cross_a_moment_end_plate_end_plate_e2",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_b_end_e1",
-                "end_plate_side_b_end_e2"
+                "sc_cz_cross_a_moment_end_plate_end_plate_e1",
+                "sc_cz_cross_a_moment_end_plate_end_plate_e2"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_b_end_e2_end_plate_side_b_end_e3",
+              "id": "rel_perpendicular_sc_cz_cross_a_moment_end_plate_end_plate_e2_sc_cz_cross_a_moment_end_plate_end_plate_e3",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_b_end_e2",
-                "end_plate_side_b_end_e3"
+                "sc_cz_cross_a_moment_end_plate_end_plate_e2",
+                "sc_cz_cross_a_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_b_end_e3_end_plate_side_b_end_e4",
+              "id": "rel_perpendicular_sc_cz_cross_a_moment_end_plate_end_plate_e3_sc_cz_cross_a_moment_end_plate_end_plate_e4",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_b_end_e3",
-                "end_plate_side_b_end_e4"
+                "sc_cz_cross_a_moment_end_plate_end_plate_e3",
+                "sc_cz_cross_a_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_side_b_end_e4_end_plate_side_b_end_e1",
+              "id": "rel_perpendicular_sc_cz_cross_a_moment_end_plate_end_plate_e4_sc_cz_cross_a_moment_end_plate_end_plate_e1",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_side_b_end_e1",
-                "end_plate_side_b_end_e4"
+                "sc_cz_cross_a_moment_end_plate_end_plate_e1",
+                "sc_cz_cross_a_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_side_b_end_e1_end_plate_side_b_end_e3",
+              "id": "rel_parallel_sc_cz_cross_a_moment_end_plate_end_plate_e1_sc_cz_cross_a_moment_end_plate_end_plate_e3",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_side_b_end_e1",
-                "end_plate_side_b_end_e3"
+                "sc_cz_cross_a_moment_end_plate_end_plate_e1",
+                "sc_cz_cross_a_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_side_b_end_e1_end_plate_side_b_end_e3",
+              "id": "rel_equal-length_sc_cz_cross_a_moment_end_plate_end_plate_e1_sc_cz_cross_a_moment_end_plate_end_plate_e3",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_side_b_end_e1",
-                "end_plate_side_b_end_e3"
+                "sc_cz_cross_a_moment_end_plate_end_plate_e1",
+                "sc_cz_cross_a_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_side_b_end_e2_end_plate_side_b_end_e4",
+              "id": "rel_parallel_sc_cz_cross_a_moment_end_plate_end_plate_e2_sc_cz_cross_a_moment_end_plate_end_plate_e4",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_side_b_end_e2",
-                "end_plate_side_b_end_e4"
+                "sc_cz_cross_a_moment_end_plate_end_plate_e2",
+                "sc_cz_cross_a_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_side_b_end_e2_end_plate_side_b_end_e4",
+              "id": "rel_equal-length_sc_cz_cross_a_moment_end_plate_end_plate_e2_sc_cz_cross_a_moment_end_plate_end_plate_e4",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_side_b_end_e2",
-                "end_plate_side_b_end_e4"
+                "sc_cz_cross_a_moment_end_plate_end_plate_e2",
+                "sc_cz_cross_a_moment_end_plate_end_plate_e4"
               ]
             }
           ]
-        }
-      },
-      "end_plate_cross_a": {
-        "id": "end_plate_cross_a",
-        "type": "beam-end-plate",
+        },
         "center": [
           2500,
           56,
@@ -3050,51 +3577,68 @@
         "localAxisZ": [
           0,
           0,
-          1
+          -1
         ],
-        "thickness": 12,
+        "featureIds": [
+          "sc_cz_cross_a_moment_end_plate_holes_plate"
+        ],
+        "assemblyId": "assembly_cross_a_end_plate",
         "placementIntent": {
-          "role": "cross-beam-to-side-beam-end-plate",
+          "role": "end-plate",
           "host": {
             "objectId": "cross_beam_1",
             "end": "start"
           },
           "references": [
             {
-              "objectId": "side_beam_a"
+              "objectId": "side_beam_a",
+              "interfaceId": "if_side_beam_a_inner_y_plus"
             }
           ],
-          "fit": "manual-steel-to-steel"
+          "fit": "support-face-to-fitted-secondary-end"
         },
         "fabrication": {
-          "partMark": "P-XA"
+          "partMark": "EP1"
         },
+        "display": {
+          "color": "#355a70"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_cross_a",
+          "componentRole": "endPlate",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_b_moment_end_plate_end_plate": {
+        "id": "sc_cz_cross_b_moment_end_plate_end_plate",
+        "type": "rectangular-plate",
+        "thickness": 12,
         "sketch": {
           "type": "plate-sketch",
           "vertices": [
             {
-              "id": "end_plate_cross_a_v1",
+              "id": "sc_cz_cross_b_moment_end_plate_end_plate_v1",
               "point": [
                 -90,
                 -120
               ]
             },
             {
-              "id": "end_plate_cross_a_v2",
+              "id": "sc_cz_cross_b_moment_end_plate_end_plate_v2",
               "point": [
                 90,
                 -120
               ]
             },
             {
-              "id": "end_plate_cross_a_v3",
+              "id": "sc_cz_cross_b_moment_end_plate_end_plate_v3",
               "point": [
                 90,
                 120
               ]
             },
             {
-              "id": "end_plate_cross_a_v4",
+              "id": "sc_cz_cross_b_moment_end_plate_end_plate_v4",
               "point": [
                 -90,
                 120
@@ -3103,117 +3647,113 @@
           ],
           "edges": [
             {
-              "id": "end_plate_cross_a_e1",
-              "from": "end_plate_cross_a_v1",
-              "to": "end_plate_cross_a_v2"
+              "id": "sc_cz_cross_b_moment_end_plate_end_plate_e1",
+              "from": "sc_cz_cross_b_moment_end_plate_end_plate_v1",
+              "to": "sc_cz_cross_b_moment_end_plate_end_plate_v2"
             },
             {
-              "id": "end_plate_cross_a_e2",
-              "from": "end_plate_cross_a_v2",
-              "to": "end_plate_cross_a_v3"
+              "id": "sc_cz_cross_b_moment_end_plate_end_plate_e2",
+              "from": "sc_cz_cross_b_moment_end_plate_end_plate_v2",
+              "to": "sc_cz_cross_b_moment_end_plate_end_plate_v3"
             },
             {
-              "id": "end_plate_cross_a_e3",
-              "from": "end_plate_cross_a_v3",
-              "to": "end_plate_cross_a_v4"
+              "id": "sc_cz_cross_b_moment_end_plate_end_plate_e3",
+              "from": "sc_cz_cross_b_moment_end_plate_end_plate_v3",
+              "to": "sc_cz_cross_b_moment_end_plate_end_plate_v4"
             },
             {
-              "id": "end_plate_cross_a_e4",
-              "from": "end_plate_cross_a_v4",
-              "to": "end_plate_cross_a_v1"
+              "id": "sc_cz_cross_b_moment_end_plate_end_plate_e4",
+              "from": "sc_cz_cross_b_moment_end_plate_end_plate_v4",
+              "to": "sc_cz_cross_b_moment_end_plate_end_plate_v1"
             }
           ],
           "relations": [
             {
-              "id": "rel_horizontal_end_plate_cross_a_e1",
+              "id": "rel_horizontal_sc_cz_cross_b_moment_end_plate_end_plate_e1",
               "type": "horizontal",
-              "edgeId": "end_plate_cross_a_e1"
+              "edgeId": "sc_cz_cross_b_moment_end_plate_end_plate_e1"
             },
             {
-              "id": "rel_vertical_end_plate_cross_a_e2",
+              "id": "rel_vertical_sc_cz_cross_b_moment_end_plate_end_plate_e2",
               "type": "vertical",
-              "edgeId": "end_plate_cross_a_e2"
+              "edgeId": "sc_cz_cross_b_moment_end_plate_end_plate_e2"
             },
             {
-              "id": "rel_horizontal_end_plate_cross_a_e3",
+              "id": "rel_horizontal_sc_cz_cross_b_moment_end_plate_end_plate_e3",
               "type": "horizontal",
-              "edgeId": "end_plate_cross_a_e3"
+              "edgeId": "sc_cz_cross_b_moment_end_plate_end_plate_e3"
             },
             {
-              "id": "rel_vertical_end_plate_cross_a_e4",
+              "id": "rel_vertical_sc_cz_cross_b_moment_end_plate_end_plate_e4",
               "type": "vertical",
-              "edgeId": "end_plate_cross_a_e4"
+              "edgeId": "sc_cz_cross_b_moment_end_plate_end_plate_e4"
             },
             {
-              "id": "rel_perpendicular_end_plate_cross_a_e1_end_plate_cross_a_e2",
+              "id": "rel_perpendicular_sc_cz_cross_b_moment_end_plate_end_plate_e1_sc_cz_cross_b_moment_end_plate_end_plate_e2",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_cross_a_e1",
-                "end_plate_cross_a_e2"
+                "sc_cz_cross_b_moment_end_plate_end_plate_e1",
+                "sc_cz_cross_b_moment_end_plate_end_plate_e2"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_cross_a_e2_end_plate_cross_a_e3",
+              "id": "rel_perpendicular_sc_cz_cross_b_moment_end_plate_end_plate_e2_sc_cz_cross_b_moment_end_plate_end_plate_e3",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_cross_a_e2",
-                "end_plate_cross_a_e3"
+                "sc_cz_cross_b_moment_end_plate_end_plate_e2",
+                "sc_cz_cross_b_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_cross_a_e3_end_plate_cross_a_e4",
+              "id": "rel_perpendicular_sc_cz_cross_b_moment_end_plate_end_plate_e3_sc_cz_cross_b_moment_end_plate_end_plate_e4",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_cross_a_e3",
-                "end_plate_cross_a_e4"
+                "sc_cz_cross_b_moment_end_plate_end_plate_e3",
+                "sc_cz_cross_b_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_perpendicular_end_plate_cross_a_e4_end_plate_cross_a_e1",
+              "id": "rel_perpendicular_sc_cz_cross_b_moment_end_plate_end_plate_e4_sc_cz_cross_b_moment_end_plate_end_plate_e1",
               "type": "perpendicular",
               "edgeIds": [
-                "end_plate_cross_a_e1",
-                "end_plate_cross_a_e4"
+                "sc_cz_cross_b_moment_end_plate_end_plate_e1",
+                "sc_cz_cross_b_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_cross_a_e1_end_plate_cross_a_e3",
+              "id": "rel_parallel_sc_cz_cross_b_moment_end_plate_end_plate_e1_sc_cz_cross_b_moment_end_plate_end_plate_e3",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_cross_a_e1",
-                "end_plate_cross_a_e3"
+                "sc_cz_cross_b_moment_end_plate_end_plate_e1",
+                "sc_cz_cross_b_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_cross_a_e1_end_plate_cross_a_e3",
+              "id": "rel_equal-length_sc_cz_cross_b_moment_end_plate_end_plate_e1_sc_cz_cross_b_moment_end_plate_end_plate_e3",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_cross_a_e1",
-                "end_plate_cross_a_e3"
+                "sc_cz_cross_b_moment_end_plate_end_plate_e1",
+                "sc_cz_cross_b_moment_end_plate_end_plate_e3"
               ]
             },
             {
-              "id": "rel_parallel_end_plate_cross_a_e2_end_plate_cross_a_e4",
+              "id": "rel_parallel_sc_cz_cross_b_moment_end_plate_end_plate_e2_sc_cz_cross_b_moment_end_plate_end_plate_e4",
               "type": "parallel",
               "edgeIds": [
-                "end_plate_cross_a_e2",
-                "end_plate_cross_a_e4"
+                "sc_cz_cross_b_moment_end_plate_end_plate_e2",
+                "sc_cz_cross_b_moment_end_plate_end_plate_e4"
               ]
             },
             {
-              "id": "rel_equal-length_end_plate_cross_a_e2_end_plate_cross_a_e4",
+              "id": "rel_equal-length_sc_cz_cross_b_moment_end_plate_end_plate_e2_sc_cz_cross_b_moment_end_plate_end_plate_e4",
               "type": "equal-length",
               "edgeIds": [
-                "end_plate_cross_a_e2",
-                "end_plate_cross_a_e4"
+                "sc_cz_cross_b_moment_end_plate_end_plate_e2",
+                "sc_cz_cross_b_moment_end_plate_end_plate_e4"
               ]
             }
           ]
-        }
-      },
-      "end_plate_cross_b": {
-        "id": "end_plate_cross_b",
-        "type": "beam-end-plate",
+        },
         "center": [
           2500,
           2944,
@@ -3221,7 +3761,7 @@
         ],
         "normal": [
           0,
-          1,
+          -1,
           0
         ],
         "localAxisY": [
@@ -3234,172 +3774,44 @@
           0,
           1
         ],
-        "thickness": 12,
+        "featureIds": [
+          "sc_cz_cross_b_moment_end_plate_holes_plate"
+        ],
+        "assemblyId": "assembly_cross_b_end_plate",
         "placementIntent": {
-          "role": "cross-beam-to-side-beam-end-plate",
+          "role": "end-plate",
           "host": {
             "objectId": "cross_beam_1",
             "end": "end"
           },
           "references": [
             {
-              "objectId": "side_beam_b"
+              "objectId": "side_beam_b",
+              "interfaceId": "if_side_beam_b_inner_y_minus"
             }
           ],
-          "fit": "manual-steel-to-steel"
+          "fit": "support-face-to-fitted-secondary-end"
         },
         "fabrication": {
-          "partMark": "P-XB"
+          "partMark": "EP1"
         },
-        "sketch": {
-          "type": "plate-sketch",
-          "vertices": [
-            {
-              "id": "end_plate_cross_b_v1",
-              "point": [
-                -90,
-                -120
-              ]
-            },
-            {
-              "id": "end_plate_cross_b_v2",
-              "point": [
-                90,
-                -120
-              ]
-            },
-            {
-              "id": "end_plate_cross_b_v3",
-              "point": [
-                90,
-                120
-              ]
-            },
-            {
-              "id": "end_plate_cross_b_v4",
-              "point": [
-                -90,
-                120
-              ]
-            }
-          ],
-          "edges": [
-            {
-              "id": "end_plate_cross_b_e1",
-              "from": "end_plate_cross_b_v1",
-              "to": "end_plate_cross_b_v2"
-            },
-            {
-              "id": "end_plate_cross_b_e2",
-              "from": "end_plate_cross_b_v2",
-              "to": "end_plate_cross_b_v3"
-            },
-            {
-              "id": "end_plate_cross_b_e3",
-              "from": "end_plate_cross_b_v3",
-              "to": "end_plate_cross_b_v4"
-            },
-            {
-              "id": "end_plate_cross_b_e4",
-              "from": "end_plate_cross_b_v4",
-              "to": "end_plate_cross_b_v1"
-            }
-          ],
-          "relations": [
-            {
-              "id": "rel_horizontal_end_plate_cross_b_e1",
-              "type": "horizontal",
-              "edgeId": "end_plate_cross_b_e1"
-            },
-            {
-              "id": "rel_vertical_end_plate_cross_b_e2",
-              "type": "vertical",
-              "edgeId": "end_plate_cross_b_e2"
-            },
-            {
-              "id": "rel_horizontal_end_plate_cross_b_e3",
-              "type": "horizontal",
-              "edgeId": "end_plate_cross_b_e3"
-            },
-            {
-              "id": "rel_vertical_end_plate_cross_b_e4",
-              "type": "vertical",
-              "edgeId": "end_plate_cross_b_e4"
-            },
-            {
-              "id": "rel_perpendicular_end_plate_cross_b_e1_end_plate_cross_b_e2",
-              "type": "perpendicular",
-              "edgeIds": [
-                "end_plate_cross_b_e1",
-                "end_plate_cross_b_e2"
-              ]
-            },
-            {
-              "id": "rel_perpendicular_end_plate_cross_b_e2_end_plate_cross_b_e3",
-              "type": "perpendicular",
-              "edgeIds": [
-                "end_plate_cross_b_e2",
-                "end_plate_cross_b_e3"
-              ]
-            },
-            {
-              "id": "rel_perpendicular_end_plate_cross_b_e3_end_plate_cross_b_e4",
-              "type": "perpendicular",
-              "edgeIds": [
-                "end_plate_cross_b_e3",
-                "end_plate_cross_b_e4"
-              ]
-            },
-            {
-              "id": "rel_perpendicular_end_plate_cross_b_e4_end_plate_cross_b_e1",
-              "type": "perpendicular",
-              "edgeIds": [
-                "end_plate_cross_b_e1",
-                "end_plate_cross_b_e4"
-              ]
-            },
-            {
-              "id": "rel_parallel_end_plate_cross_b_e1_end_plate_cross_b_e3",
-              "type": "parallel",
-              "edgeIds": [
-                "end_plate_cross_b_e1",
-                "end_plate_cross_b_e3"
-              ]
-            },
-            {
-              "id": "rel_equal-length_end_plate_cross_b_e1_end_plate_cross_b_e3",
-              "type": "equal-length",
-              "edgeIds": [
-                "end_plate_cross_b_e1",
-                "end_plate_cross_b_e3"
-              ]
-            },
-            {
-              "id": "rel_parallel_end_plate_cross_b_e2_end_plate_cross_b_e4",
-              "type": "parallel",
-              "edgeIds": [
-                "end_plate_cross_b_e2",
-                "end_plate_cross_b_e4"
-              ]
-            },
-            {
-              "id": "rel_equal-length_end_plate_cross_b_e2_end_plate_cross_b_e4",
-              "type": "equal-length",
-              "edgeIds": [
-                "end_plate_cross_b_e2",
-                "end_plate_cross_b_e4"
-              ]
-            }
-          ]
+        "display": {
+          "color": "#355a70"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_cross_b",
+          "componentRole": "endPlate",
+          "componentStatus": "managed"
         }
       }
     },
     "sketches": {},
     "features": {
-      "holes_side_a_start": {
-        "id": "holes_side_a_start",
+      "sc_cz_side_a_start_moment_end_plate_holes_plate": {
+        "id": "sc_cz_side_a_start_moment_end_plate_holes_plate",
         "type": "hole-pattern",
-        "ownerId": "end_plate_side_a_start",
+        "ownerId": "sc_cz_side_a_start_moment_end_plate_end_plate",
+        "holePatternRef": "sc_cz_side_a_start_moment_end_plate_bolt_grid",
         "reference": {
           "kind": "plate-face",
           "face": "back",
@@ -3415,24 +3827,33 @@
             1
           ]
         },
-        "placementIntent": {
-          "role": "connection-hole-pattern",
-          "host": {
-            "objectId": "end_plate_side_a_start",
-            "face": "back"
-          },
-          "fit": "inside-end-plate"
+        "fabrication": {
+          "operation": "drill"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_side_a_start",
+          "componentRole": "plateHoles",
+          "componentStatus": "managed"
+        }
       },
-      "holes_side_a_end": {
-        "id": "holes_side_a_end",
+      "sc_cz_side_a_start_moment_end_plate_holes_main": {
+        "id": "sc_cz_side_a_start_moment_end_plate_holes_main",
         "type": "hole-pattern",
-        "ownerId": "end_plate_side_a_end",
+        "ownerId": "column_1a",
+        "holePatternRef": "sc_cz_side_a_start_moment_end_plate_bolt_grid",
+        "depth": 30,
         "reference": {
-          "kind": "plate-face",
-          "face": "front",
-          "origin": "plate-center",
+          "kind": "member-face",
+          "origin": [
+            150,
+            0,
+            3000
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
           "localAxisY": [
             0,
             1,
@@ -3444,20 +3865,87 @@
             1
           ]
         },
-        "placementIntent": {
-          "role": "connection-hole-pattern",
-          "host": {
-            "objectId": "end_plate_side_a_end",
-            "face": "front"
-          },
-          "fit": "inside-end-plate"
+        "fabrication": {
+          "operation": "drill"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_side_a_start",
+          "componentRole": "memberHoles",
+          "componentStatus": "managed"
+        }
       },
-      "holes_side_b_start": {
-        "id": "holes_side_b_start",
+      "sc_cz_side_a_end_moment_end_plate_holes_plate": {
+        "id": "sc_cz_side_a_end_moment_end_plate_holes_plate",
         "type": "hole-pattern",
-        "ownerId": "end_plate_side_b_start",
+        "ownerId": "sc_cz_side_a_end_moment_end_plate_end_plate",
+        "holePatternRef": "sc_cz_side_a_end_moment_end_plate_bolt_grid",
+        "reference": {
+          "kind": "plate-face",
+          "face": "back",
+          "origin": "plate-center",
+          "localAxisY": [
+            0,
+            1,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            -1
+          ]
+        },
+        "fabrication": {
+          "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_a_end",
+          "componentRole": "plateHoles",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_a_end_moment_end_plate_holes_main": {
+        "id": "sc_cz_side_a_end_moment_end_plate_holes_main",
+        "type": "hole-pattern",
+        "ownerId": "column_2a",
+        "holePatternRef": "sc_cz_side_a_end_moment_end_plate_bolt_grid",
+        "depth": 30,
+        "reference": {
+          "kind": "member-face",
+          "origin": [
+            4850,
+            0,
+            3000
+          ],
+          "normal": [
+            -1,
+            0,
+            0
+          ],
+          "localAxisY": [
+            0,
+            1,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            -1
+          ]
+        },
+        "fabrication": {
+          "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_a_end",
+          "componentRole": "memberHoles",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_start_moment_end_plate_holes_plate": {
+        "id": "sc_cz_side_b_start_moment_end_plate_holes_plate",
+        "type": "hole-pattern",
+        "ownerId": "sc_cz_side_b_start_moment_end_plate_end_plate",
+        "holePatternRef": "sc_cz_side_b_start_moment_end_plate_bolt_grid",
         "reference": {
           "kind": "plate-face",
           "face": "back",
@@ -3473,24 +3961,33 @@
             1
           ]
         },
-        "placementIntent": {
-          "role": "connection-hole-pattern",
-          "host": {
-            "objectId": "end_plate_side_b_start",
-            "face": "back"
-          },
-          "fit": "inside-end-plate"
+        "fabrication": {
+          "operation": "drill"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_side_b_start",
+          "componentRole": "plateHoles",
+          "componentStatus": "managed"
+        }
       },
-      "holes_side_b_end": {
-        "id": "holes_side_b_end",
+      "sc_cz_side_b_start_moment_end_plate_holes_main": {
+        "id": "sc_cz_side_b_start_moment_end_plate_holes_main",
         "type": "hole-pattern",
-        "ownerId": "end_plate_side_b_end",
+        "ownerId": "column_1b",
+        "holePatternRef": "sc_cz_side_b_start_moment_end_plate_bolt_grid",
+        "depth": 30,
         "reference": {
-          "kind": "plate-face",
-          "face": "front",
-          "origin": "plate-center",
+          "kind": "member-face",
+          "origin": [
+            150,
+            3000,
+            3000
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
           "localAxisY": [
             0,
             1,
@@ -3502,20 +3999,154 @@
             1
           ]
         },
-        "placementIntent": {
-          "role": "connection-hole-pattern",
-          "host": {
-            "objectId": "end_plate_side_b_end",
-            "face": "front"
-          },
-          "fit": "inside-end-plate"
+        "fabrication": {
+          "operation": "drill"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_side_b_start",
+          "componentRole": "memberHoles",
+          "componentStatus": "managed"
+        }
       },
-      "holes_cross_a": {
-        "id": "holes_cross_a",
+      "sc_cz_side_b_end_moment_end_plate_holes_plate": {
+        "id": "sc_cz_side_b_end_moment_end_plate_holes_plate",
         "type": "hole-pattern",
-        "ownerId": "end_plate_cross_a",
+        "ownerId": "sc_cz_side_b_end_moment_end_plate_end_plate",
+        "holePatternRef": "sc_cz_side_b_end_moment_end_plate_bolt_grid",
+        "reference": {
+          "kind": "plate-face",
+          "face": "back",
+          "origin": "plate-center",
+          "localAxisY": [
+            0,
+            1,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            -1
+          ]
+        },
+        "fabrication": {
+          "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_b_end",
+          "componentRole": "plateHoles",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_end_moment_end_plate_holes_main": {
+        "id": "sc_cz_side_b_end_moment_end_plate_holes_main",
+        "type": "hole-pattern",
+        "ownerId": "column_2b",
+        "holePatternRef": "sc_cz_side_b_end_moment_end_plate_bolt_grid",
+        "depth": 30,
+        "reference": {
+          "kind": "member-face",
+          "origin": [
+            4850,
+            3000,
+            3000
+          ],
+          "normal": [
+            -1,
+            0,
+            0
+          ],
+          "localAxisY": [
+            0,
+            1,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            -1
+          ]
+        },
+        "fabrication": {
+          "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_b_end",
+          "componentRole": "memberHoles",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_a_moment_end_plate_holes_plate": {
+        "id": "sc_cz_cross_a_moment_end_plate_holes_plate",
+        "type": "hole-pattern",
+        "ownerId": "sc_cz_cross_a_moment_end_plate_end_plate",
+        "holePatternRef": "sc_cz_cross_a_moment_end_plate_bolt_grid",
+        "reference": {
+          "kind": "plate-face",
+          "face": "back",
+          "origin": "plate-center",
+          "localAxisY": [
+            1,
+            0,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            -1
+          ]
+        },
+        "fabrication": {
+          "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_cross_a",
+          "componentRole": "plateHoles",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_a_moment_end_plate_holes_main": {
+        "id": "sc_cz_cross_a_moment_end_plate_holes_main",
+        "type": "hole-pattern",
+        "ownerId": "side_beam_a",
+        "holePatternRef": "sc_cz_cross_a_moment_end_plate_bolt_grid",
+        "depth": 30,
+        "reference": {
+          "kind": "member-face",
+          "origin": [
+            2500,
+            50,
+            3000
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "localAxisY": [
+            1,
+            0,
+            0
+          ],
+          "localAxisZ": [
+            0,
+            0,
+            -1
+          ]
+        },
+        "fabrication": {
+          "operation": "drill"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_cross_a",
+          "componentRole": "memberHoles",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_b_moment_end_plate_holes_plate": {
+        "id": "sc_cz_cross_b_moment_end_plate_holes_plate",
+        "type": "hole-pattern",
+        "ownerId": "sc_cz_cross_b_moment_end_plate_end_plate",
+        "holePatternRef": "sc_cz_cross_b_moment_end_plate_bolt_grid",
         "reference": {
           "kind": "plate-face",
           "face": "back",
@@ -3531,24 +4162,33 @@
             1
           ]
         },
-        "placementIntent": {
-          "role": "connection-hole-pattern",
-          "host": {
-            "objectId": "end_plate_cross_a",
-            "face": "back"
-          },
-          "fit": "inside-end-plate"
+        "fabrication": {
+          "operation": "drill"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_cross_b",
+          "componentRole": "plateHoles",
+          "componentStatus": "managed"
+        }
       },
-      "holes_cross_b": {
-        "id": "holes_cross_b",
+      "sc_cz_cross_b_moment_end_plate_holes_main": {
+        "id": "sc_cz_cross_b_moment_end_plate_holes_main",
         "type": "hole-pattern",
-        "ownerId": "end_plate_cross_b",
+        "ownerId": "side_beam_b",
+        "holePatternRef": "sc_cz_cross_b_moment_end_plate_bolt_grid",
+        "depth": 30,
         "reference": {
-          "kind": "plate-face",
-          "face": "front",
-          "origin": "plate-center",
+          "kind": "member-face",
+          "origin": [
+            2500,
+            2950,
+            3000
+          ],
+          "normal": [
+            0,
+            -1,
+            0
+          ],
           "localAxisY": [
             1,
             0,
@@ -3560,147 +4200,310 @@
             1
           ]
         },
-        "placementIntent": {
-          "role": "connection-hole-pattern",
-          "host": {
-            "objectId": "end_plate_cross_b",
-            "face": "front"
-          },
-          "fit": "inside-end-plate"
+        "fabrication": {
+          "operation": "drill"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_cross_b",
+          "componentRole": "memberHoles",
+          "componentStatus": "managed"
+        }
       }
     },
     "fastenerGroups": {
-      "fasteners_side_a_start": {
-        "id": "fasteners_side_a_start",
+      "sc_cz_side_a_start_moment_end_plate_bolts": {
+        "id": "sc_cz_side_a_start_moment_end_plate_bolts",
         "type": "fastener-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "sc_cz_side_a_start_moment_end_plate_bolt_grid",
         "participants": [
-          "end_plate_side_a_start",
-          "side_beam_a",
+          "sc_cz_side_a_start_moment_end_plate_end_plate",
           "column_1a"
         ],
         "through": {
-          "fromFeatureId": "holes_side_a_start"
+          "fromFeatureId": "sc_cz_side_a_start_moment_end_plate_holes_plate",
+          "toFeatureId": "sc_cz_side_a_start_moment_end_plate_holes_main"
         },
-        "placementIntent": {
-          "role": "manual-steel-to-steel-fasteners",
-          "host": {
-            "objectId": "end_plate_side_a_start"
-          },
-          "fit": "use-stored-hole-pattern"
+        "orientation": {
+          "axis": [
+            -1,
+            0,
+            0
+          ],
+          "headSide": "secondary-member-side"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_side_a_start",
+          "componentRole": "fasteners",
+          "componentStatus": "managed"
+        }
       },
-      "fasteners_side_a_end": {
-        "id": "fasteners_side_a_end",
+      "sc_cz_side_a_end_moment_end_plate_bolts": {
+        "id": "sc_cz_side_a_end_moment_end_plate_bolts",
         "type": "fastener-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "sc_cz_side_a_end_moment_end_plate_bolt_grid",
         "participants": [
-          "end_plate_side_a_end",
-          "side_beam_a",
+          "sc_cz_side_a_end_moment_end_plate_end_plate",
           "column_2a"
         ],
         "through": {
-          "fromFeatureId": "holes_side_a_end"
+          "fromFeatureId": "sc_cz_side_a_end_moment_end_plate_holes_plate",
+          "toFeatureId": "sc_cz_side_a_end_moment_end_plate_holes_main"
         },
-        "placementIntent": {
-          "role": "manual-steel-to-steel-fasteners",
-          "host": {
-            "objectId": "end_plate_side_a_end"
-          },
-          "fit": "use-stored-hole-pattern"
+        "orientation": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "headSide": "secondary-member-side"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_side_a_end",
+          "componentRole": "fasteners",
+          "componentStatus": "managed"
+        }
       },
-      "fasteners_side_b_start": {
-        "id": "fasteners_side_b_start",
+      "sc_cz_side_b_start_moment_end_plate_bolts": {
+        "id": "sc_cz_side_b_start_moment_end_plate_bolts",
         "type": "fastener-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "sc_cz_side_b_start_moment_end_plate_bolt_grid",
         "participants": [
-          "end_plate_side_b_start",
-          "side_beam_b",
+          "sc_cz_side_b_start_moment_end_plate_end_plate",
           "column_1b"
         ],
         "through": {
-          "fromFeatureId": "holes_side_b_start"
+          "fromFeatureId": "sc_cz_side_b_start_moment_end_plate_holes_plate",
+          "toFeatureId": "sc_cz_side_b_start_moment_end_plate_holes_main"
         },
-        "placementIntent": {
-          "role": "manual-steel-to-steel-fasteners",
-          "host": {
-            "objectId": "end_plate_side_b_start"
-          },
-          "fit": "use-stored-hole-pattern"
+        "orientation": {
+          "axis": [
+            -1,
+            0,
+            0
+          ],
+          "headSide": "secondary-member-side"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_side_b_start",
+          "componentRole": "fasteners",
+          "componentStatus": "managed"
+        }
       },
-      "fasteners_side_b_end": {
-        "id": "fasteners_side_b_end",
+      "sc_cz_side_b_end_moment_end_plate_bolts": {
+        "id": "sc_cz_side_b_end_moment_end_plate_bolts",
         "type": "fastener-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "sc_cz_side_b_end_moment_end_plate_bolt_grid",
         "participants": [
-          "end_plate_side_b_end",
-          "side_beam_b",
+          "sc_cz_side_b_end_moment_end_plate_end_plate",
           "column_2b"
         ],
         "through": {
-          "fromFeatureId": "holes_side_b_end"
+          "fromFeatureId": "sc_cz_side_b_end_moment_end_plate_holes_plate",
+          "toFeatureId": "sc_cz_side_b_end_moment_end_plate_holes_main"
         },
-        "placementIntent": {
-          "role": "manual-steel-to-steel-fasteners",
-          "host": {
-            "objectId": "end_plate_side_b_end"
-          },
-          "fit": "use-stored-hole-pattern"
+        "orientation": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "headSide": "secondary-member-side"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_side_b_end",
+          "componentRole": "fasteners",
+          "componentStatus": "managed"
+        }
       },
-      "fasteners_cross_a": {
-        "id": "fasteners_cross_a",
+      "sc_cz_cross_a_moment_end_plate_bolts": {
+        "id": "sc_cz_cross_a_moment_end_plate_bolts",
         "type": "fastener-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "sc_cz_cross_a_moment_end_plate_bolt_grid",
         "participants": [
-          "end_plate_cross_a",
-          "cross_beam_1",
+          "sc_cz_cross_a_moment_end_plate_end_plate",
           "side_beam_a"
         ],
         "through": {
-          "fromFeatureId": "holes_cross_a"
+          "fromFeatureId": "sc_cz_cross_a_moment_end_plate_holes_plate",
+          "toFeatureId": "sc_cz_cross_a_moment_end_plate_holes_main"
         },
-        "placementIntent": {
-          "role": "manual-steel-to-steel-fasteners",
-          "host": {
-            "objectId": "end_plate_cross_a"
-          },
-          "fit": "use-stored-hole-pattern"
+        "orientation": {
+          "axis": [
+            0,
+            -1,
+            0
+          ],
+          "headSide": "secondary-member-side"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_cross_a",
+          "componentRole": "fasteners",
+          "componentStatus": "managed"
+        }
       },
-      "fasteners_cross_b": {
-        "id": "fasteners_cross_b",
+      "sc_cz_cross_b_moment_end_plate_bolts": {
+        "id": "sc_cz_cross_b_moment_end_plate_bolts",
         "type": "fastener-group",
+        "fastenerRef": "M16_8_8",
+        "holePatternRef": "sc_cz_cross_b_moment_end_plate_bolt_grid",
         "participants": [
-          "end_plate_cross_b",
-          "cross_beam_1",
+          "sc_cz_cross_b_moment_end_plate_end_plate",
           "side_beam_b"
         ],
         "through": {
-          "fromFeatureId": "holes_cross_b"
+          "fromFeatureId": "sc_cz_cross_b_moment_end_plate_holes_plate",
+          "toFeatureId": "sc_cz_cross_b_moment_end_plate_holes_main"
         },
-        "placementIntent": {
-          "role": "manual-steel-to-steel-fasteners",
-          "host": {
-            "objectId": "end_plate_cross_b"
-          },
-          "fit": "use-stored-hole-pattern"
+        "orientation": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "headSide": "secondary-member-side"
         },
-        "holePatternRef": "hole_pattern_steel_2x2"
+        "authoring": {
+          "componentInstanceId": "conn_cross_b",
+          "componentRole": "fasteners",
+          "componentStatus": "managed"
+        }
       }
     },
-    "welds": {},
+    "welds": {
+      "sc_cz_side_a_start_moment_end_plate_beam_weld": {
+        "id": "sc_cz_side_a_start_moment_end_plate_beam_weld",
+        "type": "fillet-weld",
+        "size": 6,
+        "participants": [
+          "side_beam_a",
+          "sc_cz_side_a_start_moment_end_plate_end_plate"
+        ],
+        "reference": {
+          "kind": "member-end-profile",
+          "memberId": "side_beam_a",
+          "end": "start",
+          "referencePlaneId": "sc_cz_side_a_start_moment_end_plate_beam_trim_plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_a_start",
+          "componentRole": "weld",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_a_end_moment_end_plate_beam_weld": {
+        "id": "sc_cz_side_a_end_moment_end_plate_beam_weld",
+        "type": "fillet-weld",
+        "size": 6,
+        "participants": [
+          "side_beam_a",
+          "sc_cz_side_a_end_moment_end_plate_end_plate"
+        ],
+        "reference": {
+          "kind": "member-end-profile",
+          "memberId": "side_beam_a",
+          "end": "end",
+          "referencePlaneId": "sc_cz_side_a_end_moment_end_plate_beam_trim_plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_a_end",
+          "componentRole": "weld",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_start_moment_end_plate_beam_weld": {
+        "id": "sc_cz_side_b_start_moment_end_plate_beam_weld",
+        "type": "fillet-weld",
+        "size": 6,
+        "participants": [
+          "side_beam_b",
+          "sc_cz_side_b_start_moment_end_plate_end_plate"
+        ],
+        "reference": {
+          "kind": "member-end-profile",
+          "memberId": "side_beam_b",
+          "end": "start",
+          "referencePlaneId": "sc_cz_side_b_start_moment_end_plate_beam_trim_plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_b_start",
+          "componentRole": "weld",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_end_moment_end_plate_beam_weld": {
+        "id": "sc_cz_side_b_end_moment_end_plate_beam_weld",
+        "type": "fillet-weld",
+        "size": 6,
+        "participants": [
+          "side_beam_b",
+          "sc_cz_side_b_end_moment_end_plate_end_plate"
+        ],
+        "reference": {
+          "kind": "member-end-profile",
+          "memberId": "side_beam_b",
+          "end": "end",
+          "referencePlaneId": "sc_cz_side_b_end_moment_end_plate_beam_trim_plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_b_end",
+          "componentRole": "weld",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_a_moment_end_plate_beam_weld": {
+        "id": "sc_cz_cross_a_moment_end_plate_beam_weld",
+        "type": "fillet-weld",
+        "size": 6,
+        "participants": [
+          "cross_beam_1",
+          "sc_cz_cross_a_moment_end_plate_end_plate"
+        ],
+        "reference": {
+          "kind": "member-end-profile",
+          "memberId": "cross_beam_1",
+          "end": "start",
+          "referencePlaneId": "sc_cz_cross_a_moment_end_plate_beam_trim_plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_cross_a",
+          "componentRole": "weld",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_b_moment_end_plate_beam_weld": {
+        "id": "sc_cz_cross_b_moment_end_plate_beam_weld",
+        "type": "fillet-weld",
+        "size": 6,
+        "participants": [
+          "cross_beam_1",
+          "sc_cz_cross_b_moment_end_plate_end_plate"
+        ],
+        "reference": {
+          "kind": "member-end-profile",
+          "memberId": "cross_beam_1",
+          "end": "end",
+          "referencePlaneId": "sc_cz_cross_b_moment_end_plate_beam_trim_plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_cross_b",
+          "componentRole": "weld",
+          "componentStatus": "managed"
+        }
+      }
+    },
     "relations": {},
     "addonData": {},
     "holePatterns": {
-      "hole_pattern_steel_2x2": {
-        "id": "hole_pattern_steel_2x2",
+      "sc_cz_side_a_start_moment_end_plate_bolt_grid": {
+        "id": "sc_cz_side_a_start_moment_end_plate_bolt_grid",
         "type": "rectangular-grid",
         "holeDiameter": 18,
+        "holeType": "round",
         "positions": [
           [
             -45,
@@ -3718,21 +4521,677 @@
             45,
             65
           ]
-        ]
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_side_a_start",
+          "componentRole": "holePattern",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_a_end_moment_end_plate_bolt_grid": {
+        "id": "sc_cz_side_a_end_moment_end_plate_bolt_grid",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "holeType": "round",
+        "positions": [
+          [
+            -45,
+            -65
+          ],
+          [
+            45,
+            -65
+          ],
+          [
+            -45,
+            65
+          ],
+          [
+            45,
+            65
+          ]
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_side_a_end",
+          "componentRole": "holePattern",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_start_moment_end_plate_bolt_grid": {
+        "id": "sc_cz_side_b_start_moment_end_plate_bolt_grid",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "holeType": "round",
+        "positions": [
+          [
+            -45,
+            -65
+          ],
+          [
+            45,
+            -65
+          ],
+          [
+            -45,
+            65
+          ],
+          [
+            45,
+            65
+          ]
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_side_b_start",
+          "componentRole": "holePattern",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_end_moment_end_plate_bolt_grid": {
+        "id": "sc_cz_side_b_end_moment_end_plate_bolt_grid",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "holeType": "round",
+        "positions": [
+          [
+            -45,
+            -65
+          ],
+          [
+            45,
+            -65
+          ],
+          [
+            -45,
+            65
+          ],
+          [
+            45,
+            65
+          ]
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_side_b_end",
+          "componentRole": "holePattern",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_a_moment_end_plate_bolt_grid": {
+        "id": "sc_cz_cross_a_moment_end_plate_bolt_grid",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "holeType": "round",
+        "positions": [
+          [
+            -45,
+            -65
+          ],
+          [
+            45,
+            -65
+          ],
+          [
+            -45,
+            65
+          ],
+          [
+            45,
+            65
+          ]
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_cross_a",
+          "componentRole": "holePattern",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_b_moment_end_plate_bolt_grid": {
+        "id": "sc_cz_cross_b_moment_end_plate_bolt_grid",
+        "type": "rectangular-grid",
+        "holeDiameter": 18,
+        "holeType": "round",
+        "positions": [
+          [
+            -45,
+            -65
+          ],
+          [
+            45,
+            -65
+          ],
+          [
+            -45,
+            65
+          ],
+          [
+            45,
+            65
+          ]
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_cross_b",
+          "componentRole": "holePattern",
+          "componentStatus": "managed"
+        }
       }
     },
     "objectPatterns": {},
     "workPoints": {},
-    "referencePlanes": {},
-    "trimJoints": {},
+    "referencePlanes": {
+      "sc_cz_side_a_start_moment_end_plate_beam_trim_plane": {
+        "id": "sc_cz_side_a_start_moment_end_plate_beam_trim_plane",
+        "type": "reference-plane",
+        "origin": [
+          162,
+          0,
+          3000
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "fabrication": {
+          "operation": "end-plate-outer-face-plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_a_start",
+          "componentRole": "beamTrimPlane",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_a_end_moment_end_plate_beam_trim_plane": {
+        "id": "sc_cz_side_a_end_moment_end_plate_beam_trim_plane",
+        "type": "reference-plane",
+        "origin": [
+          4838,
+          0,
+          3000
+        ],
+        "normal": [
+          -1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          -1
+        ],
+        "fabrication": {
+          "operation": "end-plate-outer-face-plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_a_end",
+          "componentRole": "beamTrimPlane",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_start_moment_end_plate_beam_trim_plane": {
+        "id": "sc_cz_side_b_start_moment_end_plate_beam_trim_plane",
+        "type": "reference-plane",
+        "origin": [
+          162,
+          3000,
+          3000
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "fabrication": {
+          "operation": "end-plate-outer-face-plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_b_start",
+          "componentRole": "beamTrimPlane",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_end_moment_end_plate_beam_trim_plane": {
+        "id": "sc_cz_side_b_end_moment_end_plate_beam_trim_plane",
+        "type": "reference-plane",
+        "origin": [
+          4838,
+          3000,
+          3000
+        ],
+        "normal": [
+          -1,
+          0,
+          0
+        ],
+        "axisX": [
+          0,
+          1,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          -1
+        ],
+        "fabrication": {
+          "operation": "end-plate-outer-face-plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_side_b_end",
+          "componentRole": "beamTrimPlane",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_a_moment_end_plate_beam_trim_plane": {
+        "id": "sc_cz_cross_a_moment_end_plate_beam_trim_plane",
+        "type": "reference-plane",
+        "origin": [
+          2500,
+          62,
+          3000
+        ],
+        "normal": [
+          0,
+          1,
+          0
+        ],
+        "axisX": [
+          1,
+          0,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          -1
+        ],
+        "fabrication": {
+          "operation": "end-plate-outer-face-plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_cross_a",
+          "componentRole": "beamTrimPlane",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_b_moment_end_plate_beam_trim_plane": {
+        "id": "sc_cz_cross_b_moment_end_plate_beam_trim_plane",
+        "type": "reference-plane",
+        "origin": [
+          2500,
+          2938,
+          3000
+        ],
+        "normal": [
+          0,
+          -1,
+          0
+        ],
+        "axisX": [
+          1,
+          0,
+          0
+        ],
+        "axisY": [
+          0,
+          0,
+          1
+        ],
+        "fabrication": {
+          "operation": "end-plate-outer-face-plane"
+        },
+        "authoring": {
+          "componentInstanceId": "conn_cross_b",
+          "componentRole": "beamTrimPlane",
+          "componentStatus": "managed"
+        }
+      }
+    },
+    "trimJoints": {
+      "sc_cz_side_a_start_moment_end_plate_beam_trim": {
+        "id": "sc_cz_side_a_start_moment_end_plate_beam_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "placementIntent": {
+          "role": "fit-secondary-member-to-end-plate",
+          "host": {
+            "objectId": "side_beam_a",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "sc_cz_side_a_start_moment_end_plate_end_plate"
+            }
+          ],
+          "fit": "secondary-end-to-end-plate-outer-face"
+        },
+        "fabrication": {
+          "operation": "trim-to-end-plate"
+        },
+        "display": {
+          "visible": false
+        },
+        "participants": [
+          {
+            "memberId": "side_beam_a",
+            "memberEnd": "start",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "sc_cz_side_a_start_moment_end_plate_beam_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "side_beam_a",
+            "memberAEnd": "start",
+            "referencePlaneIds": [
+              "sc_cz_side_a_start_moment_end_plate_beam_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "sc_cz_side_a_start_moment_end_plate_beam_trim_plane:-"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_side_a_start",
+          "componentRole": "beamTrim",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_a_end_moment_end_plate_beam_trim": {
+        "id": "sc_cz_side_a_end_moment_end_plate_beam_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "placementIntent": {
+          "role": "fit-secondary-member-to-end-plate",
+          "host": {
+            "objectId": "side_beam_a",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "sc_cz_side_a_end_moment_end_plate_end_plate"
+            }
+          ],
+          "fit": "secondary-end-to-end-plate-outer-face"
+        },
+        "fabrication": {
+          "operation": "trim-to-end-plate"
+        },
+        "display": {
+          "visible": false
+        },
+        "participants": [
+          {
+            "memberId": "side_beam_a",
+            "memberEnd": "end",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "sc_cz_side_a_end_moment_end_plate_beam_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "side_beam_a",
+            "memberAEnd": "end",
+            "referencePlaneIds": [
+              "sc_cz_side_a_end_moment_end_plate_beam_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "sc_cz_side_a_end_moment_end_plate_beam_trim_plane:-"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_side_a_end",
+          "componentRole": "beamTrim",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_start_moment_end_plate_beam_trim": {
+        "id": "sc_cz_side_b_start_moment_end_plate_beam_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "placementIntent": {
+          "role": "fit-secondary-member-to-end-plate",
+          "host": {
+            "objectId": "side_beam_b",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "sc_cz_side_b_start_moment_end_plate_end_plate"
+            }
+          ],
+          "fit": "secondary-end-to-end-plate-outer-face"
+        },
+        "fabrication": {
+          "operation": "trim-to-end-plate"
+        },
+        "display": {
+          "visible": false
+        },
+        "participants": [
+          {
+            "memberId": "side_beam_b",
+            "memberEnd": "start",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "sc_cz_side_b_start_moment_end_plate_beam_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "side_beam_b",
+            "memberAEnd": "start",
+            "referencePlaneIds": [
+              "sc_cz_side_b_start_moment_end_plate_beam_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "sc_cz_side_b_start_moment_end_plate_beam_trim_plane:-"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_side_b_start",
+          "componentRole": "beamTrim",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_side_b_end_moment_end_plate_beam_trim": {
+        "id": "sc_cz_side_b_end_moment_end_plate_beam_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "placementIntent": {
+          "role": "fit-secondary-member-to-end-plate",
+          "host": {
+            "objectId": "side_beam_b",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "sc_cz_side_b_end_moment_end_plate_end_plate"
+            }
+          ],
+          "fit": "secondary-end-to-end-plate-outer-face"
+        },
+        "fabrication": {
+          "operation": "trim-to-end-plate"
+        },
+        "display": {
+          "visible": false
+        },
+        "participants": [
+          {
+            "memberId": "side_beam_b",
+            "memberEnd": "end",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "sc_cz_side_b_end_moment_end_plate_beam_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "side_beam_b",
+            "memberAEnd": "end",
+            "referencePlaneIds": [
+              "sc_cz_side_b_end_moment_end_plate_beam_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "sc_cz_side_b_end_moment_end_plate_beam_trim_plane:-"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_side_b_end",
+          "componentRole": "beamTrim",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_a_moment_end_plate_beam_trim": {
+        "id": "sc_cz_cross_a_moment_end_plate_beam_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "placementIntent": {
+          "role": "fit-secondary-member-to-end-plate",
+          "host": {
+            "objectId": "cross_beam_1",
+            "end": "start"
+          },
+          "references": [
+            {
+              "objectId": "sc_cz_cross_a_moment_end_plate_end_plate"
+            }
+          ],
+          "fit": "secondary-end-to-end-plate-outer-face"
+        },
+        "fabrication": {
+          "operation": "trim-to-end-plate"
+        },
+        "display": {
+          "visible": false
+        },
+        "participants": [
+          {
+            "memberId": "cross_beam_1",
+            "memberEnd": "start",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "sc_cz_cross_a_moment_end_plate_beam_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "cross_beam_1",
+            "memberAEnd": "start",
+            "referencePlaneIds": [
+              "sc_cz_cross_a_moment_end_plate_beam_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "sc_cz_cross_a_moment_end_plate_beam_trim_plane:-"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_cross_a",
+          "componentRole": "beamTrim",
+          "componentStatus": "managed"
+        }
+      },
+      "sc_cz_cross_b_moment_end_plate_beam_trim": {
+        "id": "sc_cz_cross_b_moment_end_plate_beam_trim",
+        "type": "member-trim",
+        "gap": 0,
+        "placementIntent": {
+          "role": "fit-secondary-member-to-end-plate",
+          "host": {
+            "objectId": "cross_beam_1",
+            "end": "end"
+          },
+          "references": [
+            {
+              "objectId": "sc_cz_cross_b_moment_end_plate_end_plate"
+            }
+          ],
+          "fit": "secondary-end-to-end-plate-outer-face"
+        },
+        "fabrication": {
+          "operation": "trim-to-end-plate"
+        },
+        "display": {
+          "visible": false
+        },
+        "participants": [
+          {
+            "memberId": "cross_beam_1",
+            "memberEnd": "end",
+            "enabled": true
+          }
+        ],
+        "operations": [
+          {
+            "id": "sc_cz_cross_b_moment_end_plate_beam_trim_plane_trim",
+            "type": "plane-trim",
+            "memberAId": "cross_beam_1",
+            "memberAEnd": "end",
+            "referencePlaneIds": [
+              "sc_cz_cross_b_moment_end_plate_beam_trim_plane"
+            ],
+            "removedRegionKeys": [
+              "sc_cz_cross_b_moment_end_plate_beam_trim_plane:-"
+            ],
+            "gap": 0,
+            "enabled": true
+          }
+        ],
+        "authoring": {
+          "componentInstanceId": "conn_cross_b",
+          "componentRole": "beamTrim",
+          "componentStatus": "managed"
+        }
+      }
+    },
     "smartComponentInstances": {
       "conn_side_a_start": {
         "id": "conn_side_a_start",
-        "type": "manual-steel-to-steel",
+        "type": "moment-end-plate",
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "id": "end-plate-m16-2x2",
           "version": "0.1.0"
         },
         "inputs": {
@@ -3742,41 +5201,94 @@
           "secondary": {
             "memberId": "side_beam_a"
           },
-          "connectionZoneId": "cz_side_a_start"
+          "connectionZoneId": "cz_side_a_start",
+          "assemblyId": "assembly_side_a_start_end_plate"
         },
-        "referenceParameters": {},
+        "referenceParameters": {
+          "plate": {
+            "thickness": 12,
+            "width": 180,
+            "height": 240,
+            "offset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 2,
+            "columns": 2,
+            "pitch": 130,
+            "gauge": 90
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 30,
+            "type": "round"
+          },
+          "welds": {
+            "beamWeb": 6,
+            "beamFlanges": 6
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
         "parentInstanceId": null,
         "parentRole": null,
         "childComponentRoles": {},
-        "objectRoles": {},
-        "ownedObjectIds": [],
+        "objectRoles": {
+          "endPlate": "sc_cz_side_a_start_moment_end_plate_end_plate",
+          "beamTrimPlane": "sc_cz_side_a_start_moment_end_plate_beam_trim_plane",
+          "beamTrim": "sc_cz_side_a_start_moment_end_plate_beam_trim",
+          "holePattern": "sc_cz_side_a_start_moment_end_plate_bolt_grid",
+          "plateHoles": "sc_cz_side_a_start_moment_end_plate_holes_plate",
+          "memberHoles": "sc_cz_side_a_start_moment_end_plate_holes_main",
+          "fasteners": "sc_cz_side_a_start_moment_end_plate_bolts",
+          "weld": "sc_cz_side_a_start_moment_end_plate_beam_weld"
+        },
+        "outputs": {},
+        "ownedObjectIds": [
+          "sc_cz_side_a_start_moment_end_plate_end_plate",
+          "sc_cz_side_a_start_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_a_start_moment_end_plate_beam_trim",
+          "sc_cz_side_a_start_moment_end_plate_bolt_grid",
+          "sc_cz_side_a_start_moment_end_plate_holes_plate",
+          "sc_cz_side_a_start_moment_end_plate_holes_main",
+          "sc_cz_side_a_start_moment_end_plate_bolts",
+          "sc_cz_side_a_start_moment_end_plate_beam_weld"
+        ],
         "managedFields": {},
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
         "suppressedPatternPositions": {},
-        "status": "manual",
-        "definition": "manual-steel-to-steel",
+        "status": "generated",
         "health": "ok",
         "diagnostics": [],
         "authoring": {
           "source": "smart-component-library",
-          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "id": "end-plate-m16-2x2",
             "version": "0.1.0"
-          }
+          },
+          "notes": "Created from selected smart component and stored connection zone."
         },
-        "outputs": {}
+        "bim": {
+          "name": "M16 2x2 end plate"
+        },
+        "definition": "moment-end-plate",
+        "version": 1
       },
       "conn_side_a_end": {
         "id": "conn_side_a_end",
-        "type": "manual-steel-to-steel",
+        "type": "moment-end-plate",
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "id": "end-plate-m16-2x2",
           "version": "0.1.0"
         },
         "inputs": {
@@ -3786,41 +5298,94 @@
           "secondary": {
             "memberId": "side_beam_a"
           },
-          "connectionZoneId": "cz_side_a_end"
+          "connectionZoneId": "cz_side_a_end",
+          "assemblyId": "assembly_side_a_end_end_plate"
         },
-        "referenceParameters": {},
+        "referenceParameters": {
+          "plate": {
+            "thickness": 12,
+            "width": 180,
+            "height": 240,
+            "offset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 2,
+            "columns": 2,
+            "pitch": 130,
+            "gauge": 90
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 30,
+            "type": "round"
+          },
+          "welds": {
+            "beamWeb": 6,
+            "beamFlanges": 6
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
         "parentInstanceId": null,
         "parentRole": null,
         "childComponentRoles": {},
-        "objectRoles": {},
-        "ownedObjectIds": [],
+        "objectRoles": {
+          "endPlate": "sc_cz_side_a_end_moment_end_plate_end_plate",
+          "beamTrimPlane": "sc_cz_side_a_end_moment_end_plate_beam_trim_plane",
+          "beamTrim": "sc_cz_side_a_end_moment_end_plate_beam_trim",
+          "holePattern": "sc_cz_side_a_end_moment_end_plate_bolt_grid",
+          "plateHoles": "sc_cz_side_a_end_moment_end_plate_holes_plate",
+          "memberHoles": "sc_cz_side_a_end_moment_end_plate_holes_main",
+          "fasteners": "sc_cz_side_a_end_moment_end_plate_bolts",
+          "weld": "sc_cz_side_a_end_moment_end_plate_beam_weld"
+        },
+        "outputs": {},
+        "ownedObjectIds": [
+          "sc_cz_side_a_end_moment_end_plate_end_plate",
+          "sc_cz_side_a_end_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_a_end_moment_end_plate_beam_trim",
+          "sc_cz_side_a_end_moment_end_plate_bolt_grid",
+          "sc_cz_side_a_end_moment_end_plate_holes_plate",
+          "sc_cz_side_a_end_moment_end_plate_holes_main",
+          "sc_cz_side_a_end_moment_end_plate_bolts",
+          "sc_cz_side_a_end_moment_end_plate_beam_weld"
+        ],
         "managedFields": {},
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
         "suppressedPatternPositions": {},
-        "status": "manual",
-        "definition": "manual-steel-to-steel",
+        "status": "generated",
         "health": "ok",
         "diagnostics": [],
         "authoring": {
           "source": "smart-component-library",
-          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "id": "end-plate-m16-2x2",
             "version": "0.1.0"
-          }
+          },
+          "notes": "Created from selected smart component and stored connection zone."
         },
-        "outputs": {}
+        "bim": {
+          "name": "M16 2x2 end plate"
+        },
+        "definition": "moment-end-plate",
+        "version": 1
       },
       "conn_side_b_start": {
         "id": "conn_side_b_start",
-        "type": "manual-steel-to-steel",
+        "type": "moment-end-plate",
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "id": "end-plate-m16-2x2",
           "version": "0.1.0"
         },
         "inputs": {
@@ -3830,41 +5395,94 @@
           "secondary": {
             "memberId": "side_beam_b"
           },
-          "connectionZoneId": "cz_side_b_start"
+          "connectionZoneId": "cz_side_b_start",
+          "assemblyId": "assembly_side_b_start_end_plate"
         },
-        "referenceParameters": {},
+        "referenceParameters": {
+          "plate": {
+            "thickness": 12,
+            "width": 180,
+            "height": 240,
+            "offset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 2,
+            "columns": 2,
+            "pitch": 130,
+            "gauge": 90
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 30,
+            "type": "round"
+          },
+          "welds": {
+            "beamWeb": 6,
+            "beamFlanges": 6
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
         "parentInstanceId": null,
         "parentRole": null,
         "childComponentRoles": {},
-        "objectRoles": {},
-        "ownedObjectIds": [],
+        "objectRoles": {
+          "endPlate": "sc_cz_side_b_start_moment_end_plate_end_plate",
+          "beamTrimPlane": "sc_cz_side_b_start_moment_end_plate_beam_trim_plane",
+          "beamTrim": "sc_cz_side_b_start_moment_end_plate_beam_trim",
+          "holePattern": "sc_cz_side_b_start_moment_end_plate_bolt_grid",
+          "plateHoles": "sc_cz_side_b_start_moment_end_plate_holes_plate",
+          "memberHoles": "sc_cz_side_b_start_moment_end_plate_holes_main",
+          "fasteners": "sc_cz_side_b_start_moment_end_plate_bolts",
+          "weld": "sc_cz_side_b_start_moment_end_plate_beam_weld"
+        },
+        "outputs": {},
+        "ownedObjectIds": [
+          "sc_cz_side_b_start_moment_end_plate_end_plate",
+          "sc_cz_side_b_start_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_b_start_moment_end_plate_beam_trim",
+          "sc_cz_side_b_start_moment_end_plate_bolt_grid",
+          "sc_cz_side_b_start_moment_end_plate_holes_plate",
+          "sc_cz_side_b_start_moment_end_plate_holes_main",
+          "sc_cz_side_b_start_moment_end_plate_bolts",
+          "sc_cz_side_b_start_moment_end_plate_beam_weld"
+        ],
         "managedFields": {},
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
         "suppressedPatternPositions": {},
-        "status": "manual",
-        "definition": "manual-steel-to-steel",
+        "status": "generated",
         "health": "ok",
         "diagnostics": [],
         "authoring": {
           "source": "smart-component-library",
-          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "id": "end-plate-m16-2x2",
             "version": "0.1.0"
-          }
+          },
+          "notes": "Created from selected smart component and stored connection zone."
         },
-        "outputs": {}
+        "bim": {
+          "name": "M16 2x2 end plate"
+        },
+        "definition": "moment-end-plate",
+        "version": 1
       },
       "conn_side_b_end": {
         "id": "conn_side_b_end",
-        "type": "manual-steel-to-steel",
+        "type": "moment-end-plate",
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "id": "end-plate-m16-2x2",
           "version": "0.1.0"
         },
         "inputs": {
@@ -3874,41 +5492,94 @@
           "secondary": {
             "memberId": "side_beam_b"
           },
-          "connectionZoneId": "cz_side_b_end"
+          "connectionZoneId": "cz_side_b_end",
+          "assemblyId": "assembly_side_b_end_end_plate"
         },
-        "referenceParameters": {},
+        "referenceParameters": {
+          "plate": {
+            "thickness": 12,
+            "width": 180,
+            "height": 240,
+            "offset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 2,
+            "columns": 2,
+            "pitch": 130,
+            "gauge": 90
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 30,
+            "type": "round"
+          },
+          "welds": {
+            "beamWeb": 6,
+            "beamFlanges": 6
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
         "parentInstanceId": null,
         "parentRole": null,
         "childComponentRoles": {},
-        "objectRoles": {},
-        "ownedObjectIds": [],
+        "objectRoles": {
+          "endPlate": "sc_cz_side_b_end_moment_end_plate_end_plate",
+          "beamTrimPlane": "sc_cz_side_b_end_moment_end_plate_beam_trim_plane",
+          "beamTrim": "sc_cz_side_b_end_moment_end_plate_beam_trim",
+          "holePattern": "sc_cz_side_b_end_moment_end_plate_bolt_grid",
+          "plateHoles": "sc_cz_side_b_end_moment_end_plate_holes_plate",
+          "memberHoles": "sc_cz_side_b_end_moment_end_plate_holes_main",
+          "fasteners": "sc_cz_side_b_end_moment_end_plate_bolts",
+          "weld": "sc_cz_side_b_end_moment_end_plate_beam_weld"
+        },
+        "outputs": {},
+        "ownedObjectIds": [
+          "sc_cz_side_b_end_moment_end_plate_end_plate",
+          "sc_cz_side_b_end_moment_end_plate_beam_trim_plane",
+          "sc_cz_side_b_end_moment_end_plate_beam_trim",
+          "sc_cz_side_b_end_moment_end_plate_bolt_grid",
+          "sc_cz_side_b_end_moment_end_plate_holes_plate",
+          "sc_cz_side_b_end_moment_end_plate_holes_main",
+          "sc_cz_side_b_end_moment_end_plate_bolts",
+          "sc_cz_side_b_end_moment_end_plate_beam_weld"
+        ],
         "managedFields": {},
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
         "suppressedPatternPositions": {},
-        "status": "manual",
-        "definition": "manual-steel-to-steel",
+        "status": "generated",
         "health": "ok",
         "diagnostics": [],
         "authoring": {
           "source": "smart-component-library",
-          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "id": "end-plate-m16-2x2",
             "version": "0.1.0"
-          }
+          },
+          "notes": "Created from selected smart component and stored connection zone."
         },
-        "outputs": {}
+        "bim": {
+          "name": "M16 2x2 end plate"
+        },
+        "definition": "moment-end-plate",
+        "version": 1
       },
       "conn_cross_a": {
         "id": "conn_cross_a",
-        "type": "manual-steel-to-steel",
+        "type": "moment-end-plate",
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "id": "end-plate-m16-2x2",
           "version": "0.1.0"
         },
         "inputs": {
@@ -3918,41 +5589,94 @@
           "secondary": {
             "memberId": "cross_beam_1"
           },
-          "connectionZoneId": "cz_cross_a"
+          "connectionZoneId": "cz_cross_a",
+          "assemblyId": "assembly_cross_a_end_plate"
         },
-        "referenceParameters": {},
+        "referenceParameters": {
+          "plate": {
+            "thickness": 12,
+            "width": 180,
+            "height": 240,
+            "offset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 2,
+            "columns": 2,
+            "pitch": 130,
+            "gauge": 90
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 30,
+            "type": "round"
+          },
+          "welds": {
+            "beamWeb": 6,
+            "beamFlanges": 6
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
         "parentInstanceId": null,
         "parentRole": null,
         "childComponentRoles": {},
-        "objectRoles": {},
-        "ownedObjectIds": [],
+        "objectRoles": {
+          "endPlate": "sc_cz_cross_a_moment_end_plate_end_plate",
+          "beamTrimPlane": "sc_cz_cross_a_moment_end_plate_beam_trim_plane",
+          "beamTrim": "sc_cz_cross_a_moment_end_plate_beam_trim",
+          "holePattern": "sc_cz_cross_a_moment_end_plate_bolt_grid",
+          "plateHoles": "sc_cz_cross_a_moment_end_plate_holes_plate",
+          "memberHoles": "sc_cz_cross_a_moment_end_plate_holes_main",
+          "fasteners": "sc_cz_cross_a_moment_end_plate_bolts",
+          "weld": "sc_cz_cross_a_moment_end_plate_beam_weld"
+        },
+        "outputs": {},
+        "ownedObjectIds": [
+          "sc_cz_cross_a_moment_end_plate_end_plate",
+          "sc_cz_cross_a_moment_end_plate_beam_trim_plane",
+          "sc_cz_cross_a_moment_end_plate_beam_trim",
+          "sc_cz_cross_a_moment_end_plate_bolt_grid",
+          "sc_cz_cross_a_moment_end_plate_holes_plate",
+          "sc_cz_cross_a_moment_end_plate_holes_main",
+          "sc_cz_cross_a_moment_end_plate_bolts",
+          "sc_cz_cross_a_moment_end_plate_beam_weld"
+        ],
         "managedFields": {},
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
         "suppressedPatternPositions": {},
-        "status": "manual",
-        "definition": "manual-steel-to-steel",
+        "status": "generated",
         "health": "ok",
         "diagnostics": [],
         "authoring": {
           "source": "smart-component-library",
-          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "id": "end-plate-m16-2x2",
             "version": "0.1.0"
-          }
+          },
+          "notes": "Created from selected smart component and stored connection zone."
         },
-        "outputs": {}
+        "bim": {
+          "name": "M16 2x2 end plate"
+        },
+        "definition": "moment-end-plate",
+        "version": 1
       },
       "conn_cross_b": {
         "id": "conn_cross_b",
-        "type": "manual-steel-to-steel",
+        "type": "moment-end-plate",
         "kind": "connection",
         "sourceComponent": {
           "library": "smart-components",
-          "id": "manual_steel_to_steel_end_plate_m16_2x2",
+          "id": "end-plate-m16-2x2",
           "version": "0.1.0"
         },
         "inputs": {
@@ -3962,33 +5686,86 @@
           "secondary": {
             "memberId": "cross_beam_1"
           },
-          "connectionZoneId": "cz_cross_b"
+          "connectionZoneId": "cz_cross_b",
+          "assemblyId": "assembly_cross_b_end_plate"
         },
-        "referenceParameters": {},
+        "referenceParameters": {
+          "plate": {
+            "thickness": 12,
+            "width": 180,
+            "height": 240,
+            "offset": 0
+          },
+          "bolts": {
+            "fastenerRef": "M16_8_8",
+            "rows": 2,
+            "columns": 2,
+            "pitch": 130,
+            "gauge": 90
+          },
+          "holes": {
+            "diameter": 18,
+            "memberDepth": 30,
+            "type": "round"
+          },
+          "welds": {
+            "beamWeb": 6,
+            "beamFlanges": 6
+          },
+          "designAssumptions": {
+            "standard": "EN 1993-1-8",
+            "status": "not-calculated"
+          },
+          "loads": {
+            "status": "not-defined"
+          }
+        },
         "parentInstanceId": null,
         "parentRole": null,
         "childComponentRoles": {},
-        "objectRoles": {},
-        "ownedObjectIds": [],
+        "objectRoles": {
+          "endPlate": "sc_cz_cross_b_moment_end_plate_end_plate",
+          "beamTrimPlane": "sc_cz_cross_b_moment_end_plate_beam_trim_plane",
+          "beamTrim": "sc_cz_cross_b_moment_end_plate_beam_trim",
+          "holePattern": "sc_cz_cross_b_moment_end_plate_bolt_grid",
+          "plateHoles": "sc_cz_cross_b_moment_end_plate_holes_plate",
+          "memberHoles": "sc_cz_cross_b_moment_end_plate_holes_main",
+          "fasteners": "sc_cz_cross_b_moment_end_plate_bolts",
+          "weld": "sc_cz_cross_b_moment_end_plate_beam_weld"
+        },
+        "outputs": {},
+        "ownedObjectIds": [
+          "sc_cz_cross_b_moment_end_plate_end_plate",
+          "sc_cz_cross_b_moment_end_plate_beam_trim_plane",
+          "sc_cz_cross_b_moment_end_plate_beam_trim",
+          "sc_cz_cross_b_moment_end_plate_bolt_grid",
+          "sc_cz_cross_b_moment_end_plate_holes_plate",
+          "sc_cz_cross_b_moment_end_plate_holes_main",
+          "sc_cz_cross_b_moment_end_plate_bolts",
+          "sc_cz_cross_b_moment_end_plate_beam_weld"
+        ],
         "managedFields": {},
         "fieldOverrides": {},
         "detachedObjectIds": [],
         "suppressedRoles": [],
         "suppressedPatternPositions": {},
-        "status": "manual",
-        "definition": "manual-steel-to-steel",
+        "status": "generated",
         "health": "ok",
         "diagnostics": [],
         "authoring": {
           "source": "smart-component-library",
-          "notes": "Preset provenance only; detachedObjectIds contain source-of-truth geometry.",
           "sourceComponent": {
             "library": "smart-components",
-            "id": "manual_steel_to_steel_end_plate_m16_2x2",
+            "id": "end-plate-m16-2x2",
             "version": "0.1.0"
-          }
+          },
+          "notes": "Created from selected smart component and stored connection zone."
         },
-        "outputs": {}
+        "bim": {
+          "name": "M16 2x2 end plate"
+        },
+        "definition": "moment-end-plate",
+        "version": 1
       }
     },
     "gridSystems": {

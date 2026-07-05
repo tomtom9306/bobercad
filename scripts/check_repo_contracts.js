@@ -8,6 +8,7 @@ const { checkStrictProjectSchema } = require("./contracts/project_schema_contrac
 const { checkProjectStoreContracts } = require("./contracts/project_store_contracts");
 const { checkSmartComponentQuickProperties } = require("./contracts/smart_component_quick_property_contracts");
 const { checkAutoSmartComponentLifecycle, checkStairSystemGenerator } = require("./contracts/smart_component_lifecycle_contracts");
+const { checkDevServerContracts } = require("./contracts/dev_server_contracts");
 
 const ROOT = path.resolve(__dirname, "..");
 
@@ -20,6 +21,7 @@ const REQUIRED_FILES = [
   "scripts/check_repo.js",
   "scripts/check_repo_structure.js",
   "scripts/check_repo_contracts.js",
+  "scripts/contracts/dev_server_contracts.js",
   "scripts/generate_stair_samples.mjs",
   "scripts/validate_json_schema.js",
   "scripts/check_viewer_runtime.js",
@@ -1144,6 +1146,7 @@ async function main() {
   checkProjectSchemaIsolation(errors);
   checkStrictProjectSchema(errors);
   checkAppArchitectureContracts(errors);
+  checkDevServerContracts(errors);
   await checkUiWorkspace(errors);
   checkFolderRegister(errors, "bobercad/data/libraries/materials/material-register.json", "libraries");
   checkFolderRegister(errors, "bobercad/data/libraries/profiles/profile-register.json", "libraries");

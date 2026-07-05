@@ -54,14 +54,27 @@ function connectionFastenerUiItem(item, definition = {}) {
   return false;
 }
 
+function connectionComponentUiItem(item) {
+  if (!item || typeof item === "string") return false;
+  if (item.kind === "smartComponentPlates" || item.kind === "smartComponentRoles") return true;
+  if (item.kind === "section") {
+    const sectionText = normalizedText(`${item.id || ""} ${item.label || ""}`);
+    if (["component", "stiffener", "rib", "cleat", "bracket"].some((needle) => sectionText.includes(needle))) return true;
+    return (item.items || []).some(connectionComponentUiItem);
+  }
+  return false;
+}
+
 function splitConnectionPropertyItems(items = [], definition = {}) {
-  const primary = [];
+  const properties = [];
+  const components = [];
   const fasteners = [];
   for (const item of items) {
     if (connectionFastenerUiItem(item, definition)) fasteners.push(item);
-    else primary.push(item);
+    else if (connectionComponentUiItem(item)) components.push(item);
+    else properties.push(item);
   }
-  return { primary, fasteners };
+  return { properties, components, fasteners };
 }
 
 function connectionFastenerTabLabel(items = [], definition = {}) {
@@ -79,11 +92,13 @@ export function smartComponentParameterTabs(definition = {}) {
   const propertyTabs = sourceTabs.filter(connectionPropertyTabCandidate);
   if (!propertyTabs.length) return sourceTabs;
 
+  const components = [];
   const properties = [];
   const fastenerFallbackItems = [];
   for (const tab of propertyTabs.filter((entry) => !connectionDesignTab(entry))) {
     const split = splitConnectionPropertyItems(tab.items, definition);
-    properties.push(...split.primary);
+    properties.push(...split.properties);
+    components.push(...split.components);
     fastenerFallbackItems.push(...split.fasteners);
   }
 
@@ -108,12 +123,16 @@ export function smartComponentParameterTabs(definition = {}) {
     });
   }
 
-  return [
-    {
-      id: "properties",
-      label: "Properties",
-      items: properties
-    },
-    ...detailTabs
-  ];
+  const tabs = [];
+  if (properties.length) tabs.push({ id: "properties", label: "Properties", items: properties });
+  tabs.push(...detailTabs);
+  if (components.length) {
+    tabs.push({
+      id: "components",
+      label: "Components",
+      items: components
+    });
+  }
+
+  return tabs.length ? tabs : sourceTabs;
 }

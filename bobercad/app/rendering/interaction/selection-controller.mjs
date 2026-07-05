@@ -25,8 +25,8 @@ export function createSelectionController({ viewer, settings = {}, project = nul
   const scopeManager = createSnapSelectionManager({ viewer, settings });
   let pickMode = null;
 
-  function select(objectIds = []) {
-    return scopeManager.setSelected(unique(objectIds));
+  function select(objectIds = [], options = {}) {
+    return scopeManager.setSelected(unique(objectIds), options);
   }
 
   function cancelPick({ clear = true } = {}) {

@@ -143,7 +143,7 @@
     },
     "cz_connection_1": {
       "collection": "connectionZones",
-      "type": "manual-steel-to-steel-zone"
+      "type": "moment-end-plate-zone"
     },
     "assembly_connection_1": {
       "collection": "assemblies",
@@ -489,7 +489,7 @@
     "connectionZones": {
       "cz_connection_1": {
         "id": "cz_connection_1",
-        "type": "manual-steel-to-steel-zone",
+        "type": "moment-end-plate-zone",
         "name": "Beam 1 to column 1 end plate zone",
         "mainObjectId": "column_1",
         "secondaryObjectIds": [

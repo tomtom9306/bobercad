@@ -140,10 +140,15 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
       viewer.setDimensionOverlay(null);
       return;
     }
+    const definition = smartComponentDefinitionOrNull(smartComponentId);
+    if (!definition) {
+      viewer.setDimensionOverlay(null);
+      return;
+    }
     viewer.setDimensionOverlay(buildSmartComponentDimensions({
       project: api.project(),
       profiles,
-      definition: api.definition(smartComponentId),
+      definition,
       smartComponentId,
       activeParameterPath: path,
       activeDimensionId: dimensionId,
@@ -152,6 +157,14 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
       dimensionSettings: settings.render.dimensions,
       dimensionPlacementOffsets: Object.fromEntries(placementOffsets)
     }));
+  }
+
+  function smartComponentDefinitionOrNull(nextSmartComponentId) {
+    try {
+      return api.definition(nextSmartComponentId);
+    } catch {
+      return null;
+    }
   }
 
   function refocusDimension(dimension) {
@@ -176,7 +189,8 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
     });
 
     viewer.setDimensionModeHandler((dimension, modePath, modeValue) => safeDimensionHandler(() => {
-        const definition = api.definition(dimension.smartComponentId);
+        const definition = smartComponentDefinitionOrNull(dimension.smartComponentId);
+        if (!definition) return false;
         if (!definition.parameters[modePath]) return false;
         const parameters = clone(api.smartComponent(dimension.smartComponentId).referenceParameters);
         let changed = writeParameter(parameters, definition, modePath, modeValue);
@@ -208,7 +222,8 @@ export function createDimensionEditController({ viewer, api, profiles, settings,
     }));
 
     viewer.setDimensionValueHandler((dimension, value) => safeDimensionHandler(() => {
-        const definition = api.definition(dimension.smartComponentId);
+        const definition = smartComponentDefinitionOrNull(dimension.smartComponentId);
+        if (!definition) return false;
         const parameters = clone(api.smartComponent(dimension.smartComponentId).referenceParameters);
         if (!applyDimensionValue(parameters, definition, dimension, value)) return false;
         const nextProject = api.updateSmartComponent(dimension.smartComponentId, parameters);

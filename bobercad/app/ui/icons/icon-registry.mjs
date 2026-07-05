@@ -354,6 +354,14 @@ const ICONS = {
       <path d="M12 9.5v5" />
     </svg>
   `,
+  swap: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 7h10" />
+      <path d="M14 4l3 3-3 3" />
+      <path d="M17 17H7" />
+      <path d="M10 14l-3 3 3 3" />
+    </svg>
+  `,
   link: `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M9 8H7a4 4 0 0 0 0 8h3" />

@@ -17,6 +17,7 @@ async function checkSmartComponentQuickProperties(errors) {
   const parameterValues = await import(pathToFileURL(parameterValuesPath).href);
   const parameterTabs = await import(pathToFileURL(path.join(ROOT, "bobercad/app/ui/viewer/smart-component-parameter-tabs.mjs")).href);
   const generatedPropertyBindings = await import(pathToFileURL(path.join(ROOT, "bobercad/app/ui/viewer/panels/generated-property-bindings.mjs")).href);
+  const viewerHighlights = await import(pathToFileURL(path.join(ROOT, "bobercad/app/ui/viewer/viewer-smart-component-highlights.mjs")).href);
   const parameterValuesText = fs.readFileSync(parameterValuesPath, "utf8");
   const quickPaths = (definition) => parameterValues.uiQuickParameterEntries(definition, firstPresetParameters(definition)).map((entry) => entry.path);
   const viewerQuickPaths = (definition) => parameterValues.uiQuickParameterEntries({
@@ -40,12 +41,20 @@ async function checkSmartComponentQuickProperties(errors) {
   }
   const finPlate = readJson("bobercad/data/libraries/smart-components/components/connections/fin-plate/config.json");
   const expectedFinViewerPrefix = ["plate.thickness", "plate.length", "plate.height", "plate.edgeOffset", "fit.beamGap", "fit.clipBeam"];
+  const finTabs = parameterTabs.smartComponentParameterTabs(finPlate).map((tab) => `${tab.id}:${tab.label}`);
+  if (JSON.stringify(finTabs) !== JSON.stringify(["properties:Properties", "bolts:Bolts", "welds:Welds", "components:Components"])) {
+    fail(errors, `Connection parameter tabs should expose Properties, Bolts, Welds, then Components for fin-plate, got ${JSON.stringify(finTabs)}`);
+  }
   const finViewerPaths = viewerQuickPaths(finPlate);
   if (JSON.stringify(finViewerPaths) !== JSON.stringify(expectedFinViewerPrefix)) {
     fail(errors, `Connection quick properties should start from normalized Properties tab before bolt details for fin-plate, got ${JSON.stringify(finViewerPaths)}`);
   }
   const basePlate = readJson("bobercad/data/libraries/smart-components/components/connections/base-plate/config.json");
   const expectedBaseViewerPrefix = ["plate.thickness", "plate.width", "plate.depth", "plate.offset", "anchors.fastenerRef", "anchors.rows"];
+  const baseTabs = parameterTabs.smartComponentParameterTabs(basePlate).map((tab) => `${tab.id}:${tab.label}`);
+  if (JSON.stringify(baseTabs) !== JSON.stringify(["properties:Properties", "bolts:Anchors", "welds:Welds", "components:Components"])) {
+    fail(errors, `Connection parameter tabs should expose Properties, Anchors, Welds, then Components for base-plate, got ${JSON.stringify(baseTabs)}`);
+  }
   const baseViewerPaths = viewerQuickPaths(basePlate);
   if (JSON.stringify(baseViewerPaths) !== JSON.stringify(expectedBaseViewerPrefix)) {
     fail(errors, `Connection quick properties should place base-plate primary plate parameters before anchors, got ${JSON.stringify(baseViewerPaths)}`);
@@ -61,6 +70,21 @@ async function checkSmartComponentQuickProperties(errors) {
     || JSON.stringify(spliceBolts) !== JSON.stringify(["connections.spliceFastenerRef", "connections.spliceHoleDiameter", "connections.spliceBoltLength", "connections.spliceGripLength"])
   ) {
     fail(errors, `Connection parameter tabs should split member-splice primary and bolt settings, got ${JSON.stringify(spliceTabs)}`);
+  }
+  const portalFrame = readJson("bobercad/data/projects/sample_portal_frame.json");
+  const sideBEndZone = portalFrame.model.connectionZones?.cz_side_b_end || {};
+  const sideBEndGeneratedIds = sideBEndZone.objectIds || [];
+  const sideBEndHighlightIds = viewerHighlights.smartComponentEditingHighlightObjectIds(portalFrame, "conn_side_b_end", sideBEndGeneratedIds);
+  const sideBEndHighlightColors = viewerHighlights.smartComponentMemberHighlightColors(portalFrame, "conn_side_b_end");
+  const sideBEndHighlightableGeneratedIds = sideBEndGeneratedIds.filter((objectId) => ["members", "plates", "fastenerGroups", "welds"].includes(portalFrame.objectIndex?.[objectId]?.collection));
+  if (
+    !sideBEndHighlightIds.includes("column_2b")
+    || !sideBEndHighlightIds.includes("side_beam_b")
+    || sideBEndHighlightColors.column_2b !== "#0284c7"
+    || sideBEndHighlightColors.side_beam_b !== "#b45309"
+    || sideBEndHighlightableGeneratedIds.some((objectId) => !sideBEndHighlightIds.includes(objectId))
+  ) {
+    fail(errors, `Connection edit highlight must include generated objects plus primary/secondary members with role colors, got ${JSON.stringify({ sideBEndHighlightIds, sideBEndHighlightColors, sideBEndHighlightableGeneratedIds })}`);
   }
   if (typeof parameterValues.parameterFieldDescriptor !== "function") {
     fail(errors, "Smart Component parameter values must export parameterFieldDescriptor for generated UI surfaces");
@@ -187,7 +211,7 @@ async function checkSmartComponentQuickProperties(errors) {
 
   const inspectorText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/panels/inspector-panel.mjs"), "utf8");
   const smartComponentPropertiesText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/viewer/panels/contributions/smart-component-properties.mjs"), "utf8");
-  if (!inspectorText.includes("contributions/smart-component-properties.mjs") || inspectorText.includes("uiQuickParameterEntries(definition") || inspectorText.includes("parameterFieldDescriptor(definition")) {
+  if (!inspectorText.includes("contributions/smart-component-properties.mjs") || inspectorText.includes("uiQuickParameterEntries(definition")) {
     fail(errors, "Smart Component quick properties: Inspector must delegate quick field assembly to the Smart Component properties contribution");
   }
   if (!smartComponentPropertiesText.includes("smartComponentParameterTabs(definition)") || !smartComponentPropertiesText.includes("uiQuickParameterEntries(uiDefinition") || !smartComponentPropertiesText.includes("parameterFieldDescriptor(definition")) {

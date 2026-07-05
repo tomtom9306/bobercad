@@ -97,6 +97,7 @@ function renderPropertyFieldControl(field) {
   if (field.type === "actionRow") return actionRowField(field);
   if (field.type === "action") return actionField(field);
   if (field.type === "objectRef") return objectRefField(field);
+  if (field.type === "memberSelectionBox") return memberSelectionBoxField(field);
   if (field.type === "objectRefList") return objectRefListField(field);
   if (field.type === "statusGroupTitle") return statusGroupTitleControl(field);
   if (field.type === "statusRow") return statusRowControl(field);
@@ -172,6 +173,47 @@ function axisTransformGridField(field) {
 
 function objectRefField(field) {
   return objectRefControl(field);
+}
+
+function memberSelectionBoxField(field) {
+  const root = document.createElement("div");
+  root.className = "bc-selection-box";
+  if (field.selectionGroup) root.dataset.selectionGroup = field.selectionGroup;
+  const label = field.label || "Selections";
+  if (label) root.append(text("div", "bc-selection-box-label", label));
+  const frame = document.createElement("div");
+  frame.className = "bc-selection-box-frame";
+  frame.append(text("div", "bc-selection-box-rail", ""));
+  const list = document.createElement("div");
+  list.className = "bc-selection-box-list";
+  const items = Array.isArray(field.items) ? field.items : [];
+  if (!items.length) {
+    list.append(text("div", "bc-selection-box-empty", field.emptyLabel || "No members selected."));
+  }
+  for (const item of items) {
+    const row = document.createElement("div");
+    row.className = "bc-selection-box-item";
+    const copy = document.createElement("div");
+    copy.className = "bc-selection-box-copy";
+    copy.append(text("div", "bc-selection-box-role", item.role || item.label || "Member"));
+    copy.append(text("div", "bc-selection-box-title", formatPropertyValue(item.value)));
+    if (item.status) copy.append(text("div", "bc-selection-box-id", item.status));
+    row.append(copy);
+    const controls = actionRow(descriptorActions(item), {
+      className: "bc-selection-box-row-actions",
+      buttonClassName: propertyButtonClass
+    });
+    if (controls) row.append(controls);
+    list.append(row);
+  }
+  frame.append(list);
+  root.append(frame);
+  const controls = actionRow(descriptorActions(field), {
+    className: "bc-selection-box-actions",
+    buttonClassName: propertyButtonClass
+  });
+  if (controls) root.append(controls);
+  return root;
 }
 
 function objectRefListField(field) {

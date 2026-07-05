@@ -16,6 +16,7 @@ export function createWebglRenderOrchestrator({
   getScene,
   getDisplayMode,
   getHighlightedObjectIds,
+  getHighlightedObjectColor = () => null,
   getAuthoringOverlay,
   getAuthoringHoveredHandle,
   getDimensionOverlay,
@@ -496,6 +497,15 @@ export function createWebglRenderOrchestrator({
     }
   }
 
+  function appendMemberInstanceSurfaceFlat(positionData, colorData, instance, rgba, sourceScene = scene) {
+    const geometry = sourceScene?.memberInstanceGeometries?.[instance.profileId];
+    if (!geometry?.positions?.length) return;
+    for (let index = 0; index < geometry.positions.length; index += 3) {
+      const local = [geometry.positions[index], geometry.positions[index + 1], geometry.positions[index + 2]];
+      appendWorldVertex(positionData, colorData, memberInstancePoint(instance, local[0], local[1], local[2]), rgba);
+    }
+  }
+
   function appendWorldLine(positionData, colorData, a, b, rgba) {
     appendWorldVertex(positionData, colorData, a, rgba);
     appendWorldVertex(positionData, colorData, b, rgba);
@@ -619,15 +629,17 @@ export function createWebglRenderOrchestrator({
     if (!visibleHighlightedObjectIds.size || !useHighlightOverlay()) return;
     const positions = [];
     const colors = [];
-    const rgba = hexToRgba("#38bdf8");
+    const defaultRgba = hexToRgba("#38bdf8");
     for (const instance of arrayValues(scene.memberInstances)) {
       if (!visibleHighlightedObjectIds.has(instance.objectId)) continue;
       if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
+      const rgba = hexToRgba(getHighlightedObjectColor(instance.objectId), 1, [56, 189, 248]) || defaultRgba;
       appendMemberInstanceOutline(positions, colors, instance, rgba);
     }
     for (const face of arrayValues(scene.faces)) {
       if (!visibleHighlightedObjectIds.has(face.objectId) || face.hideEdges) continue;
       if (!shouldDrawSceneItem(face)) continue;
+      const rgba = hexToRgba(getHighlightedObjectColor(face.objectId), 1, [56, 189, 248]) || defaultRgba;
       for (let index = 0; index < face.points.length; index += 1) {
         appendWorldLine(positions, colors, face.points[index], face.points[(index + 1) % face.points.length], rgba);
       }
@@ -635,9 +647,36 @@ export function createWebglRenderOrchestrator({
     for (const line of arrayValues(scene.lines)) {
       if (!visibleHighlightedObjectIds.has(line.objectId)) continue;
       if (!shouldDrawSceneItem(line)) continue;
+      const rgba = hexToRgba(getHighlightedObjectColor(line.objectId), 1, [56, 189, 248]) || defaultRgba;
       appendWorldLine(positions, colors, line.points[0], line.points[1], rgba);
     }
     drawWorldArrays(gl.LINES, positions, colors);
+  }
+
+  function drawHighlightOverlaySurfaces() {
+    const visibleHighlightedObjectIds = filteredHighlightedObjectIds(getHighlightedObjectIds(), getAuthoringOverlay());
+    if (!visibleHighlightedObjectIds.size || !useHighlightOverlay()) return;
+    const positions = [];
+    const colors = [];
+    for (const instance of arrayValues(scene.memberInstances)) {
+      if (!visibleHighlightedObjectIds.has(instance.objectId)) continue;
+      if (instance.lodDetailObjectId && lodDetailVisible(instance.lodDetailObjectId)) continue;
+      const rgba = hexToRgba(getHighlightedObjectColor(instance.objectId), 0.42, [56, 189, 248]);
+      appendMemberInstanceSurfaceFlat(positions, colors, instance, rgba);
+    }
+    for (const face of arrayValues(scene.faces)) {
+      if (!visibleHighlightedObjectIds.has(face.objectId)) continue;
+      if (!shouldDrawSceneItem(face)) continue;
+      const rgba = hexToRgba(getHighlightedObjectColor(face.objectId), 0.42, [56, 189, 248]);
+      for (const triangle of triangulateFace(face.points)) {
+        for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
+      }
+    }
+    if (!positions.length) return;
+    gl.enable(gl.POLYGON_OFFSET_FILL);
+    gl.polygonOffset(-1, -1);
+    drawWorldArrays(gl.TRIANGLES, positions, colors);
+    gl.disable(gl.POLYGON_OFFSET_FILL);
   }
 
   function drawStaticPickGroups(groups) {
@@ -746,7 +785,10 @@ export function createWebglRenderOrchestrator({
     });
     drawObjectPreviewLines();
     drawAuthoringPreviewLines();
-    gl.lineWidth(Math.max(2, settings.render.edges.lineWidth));
+    gl.depthMask(false);
+    drawHighlightOverlaySurfaces();
+    gl.depthMask(true);
+    gl.lineWidth(Math.max(3, settings.render.edges.lineWidth * 2));
     drawHighlightOverlayLines();
     gl.lineWidth(settings.render.edges.lineWidth);
     drawAuthoringFaces();

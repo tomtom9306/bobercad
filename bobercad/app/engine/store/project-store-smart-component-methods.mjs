@@ -458,6 +458,13 @@ export function createSmartComponentStoreMethods({
         assembly.childAssemblyIds = unique([mainAssemblyId, secondaryAssemblyId].filter(Boolean));
       }
 
+      const changedObjectIds = [smartComponentId, mainMemberId, secondaryMemberId].filter(Boolean);
+      if (nextInstance.status !== "generated") {
+        return commitProject("smartComponent.connectionMember.set", next, {
+          changedObjectIds: [mainMemberId, secondaryMemberId].filter(Boolean)
+        });
+      }
+
       return commitProject("smartComponent.connectionMember.set", reconcileGeneratedSmartComponents(updateSmartComponentRuntime({
         project: next,
         profiles: profilesFor(next),
@@ -468,7 +475,7 @@ export function createSmartComponentStoreMethods({
         instanceId: smartComponentId,
         parameters: nextInstance.referenceParameters || {}
       })), {
-        changedObjectIds: [smartComponentId, mainMemberId, secondaryMemberId].filter(Boolean),
+        changedObjectIds,
         regeneratedObjectIds: [smartComponentId]
       });
     },

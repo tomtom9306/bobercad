@@ -73,7 +73,7 @@ function checkGeneratedPanelContracts(context) {
   const inspectorPropertyMetadataText = fs.readFileSync(inspectorPropertyMetadataPath, "utf8");
   const panelsAndControlsCssText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/design-system/panels-and-controls.css"), "utf8");
   const uiElementsText = fs.readFileSync(path.join(ROOT, "bobercad/app/ui/design-system/ui-elements.mjs"), "utf8");
-  for (const fieldType of ["number", "numberChoice", "numberList", "vector3", "vector2", "axisTransformGrid", "select", "segmented", "optionGrid", "checkbox", "text", "tabList", "readoutList", "actionList", "actionRow", "action", "objectRef", "objectRefList", "statusGroupTitle", "statusRow", "summaryCard", "statusListCard", "nestedFieldCard", "diagnosticList", "message"]) {
+  for (const fieldType of ["number", "numberChoice", "numberList", "vector3", "vector2", "axisTransformGrid", "select", "segmented", "optionGrid", "checkbox", "text", "tabList", "readoutList", "actionList", "actionRow", "action", "objectRef", "memberSelectionBox", "objectRefList", "statusGroupTitle", "statusRow", "summaryCard", "statusListCard", "nestedFieldCard", "diagnosticList", "message"]) {
     if (!generatedPropertiesText.includes(`field.type === "${fieldType}"`)) {
       fail(errors, `Generated Properties renderer must support descriptor field type: ${fieldType}`);
     }

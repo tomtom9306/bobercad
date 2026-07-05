@@ -95,12 +95,18 @@ function agentNumberFor(rootName, branch) {
   return null;
 }
 
-function addBranchQuery(defaultPath, branch) {
-  if (!branch) return defaultPath;
+function branchPathPrefix(branch) {
+  if (!branch) return "";
+  const branchPath = branch.split("/").filter(Boolean).map(encodeURIComponent).join("/");
+  return branchPath ? `/${branchPath}` : "";
+}
+
+function addBranchPathPrefix(defaultPath, branch) {
+  const prefix = branchPathPrefix(branch);
+  if (!prefix) return defaultPath;
   const url = new URL(defaultPath.startsWith("/") ? `http://local${defaultPath}` : `http://local/${defaultPath}`);
-  if (!url.searchParams.has("branch")) {
-    url.searchParams.set("branch", branch);
-  }
+  if (url.pathname === prefix || url.pathname.startsWith(`${prefix}/`)) return `${url.pathname}${url.search}`;
+  url.pathname = `${prefix}${url.pathname.startsWith("/") ? url.pathname : `/${url.pathname}`}`;
   return `${url.pathname}${url.search}`;
 }
 
@@ -113,9 +119,10 @@ function normalizeConfig(config) {
     throw new Error(`Invalid dev server port: ${config.port}`);
   }
   const host = String(config.host || DEFAULT_CONFIG.host);
-  const defaultPath = addBranchQuery(String(config.defaultPath || DEFAULT_CONFIG.defaultPath), branch);
+  const defaultPath = addBranchPathPrefix(String(config.defaultPath || DEFAULT_CONFIG.defaultPath), branch);
   return {
     branch,
+    branchPathPrefix: branchPathPrefix(branch),
     host,
     port,
     replaceExisting: config.replaceExisting !== false,
@@ -155,8 +162,17 @@ function stopExistingListeners(port) {
   }
 }
 
-function filePathForRequest(urlPath) {
-  const relativePath = decodeURIComponent(urlPath).replace(/^\/+/, "");
+function stripBranchPathPrefix(urlPath, config) {
+  const prefix = config.branchPathPrefix;
+  if (!prefix) return urlPath;
+  if (urlPath === prefix) return "/";
+  if (urlPath.startsWith(`${prefix}/`)) return urlPath.slice(prefix.length) || "/";
+  return urlPath;
+}
+
+function filePathForRequest(urlPath, config) {
+  const effectivePath = stripBranchPathPrefix(urlPath, config);
+  const relativePath = decodeURIComponent(effectivePath).replace(/^\/+/, "");
   const targetPath = path.resolve(ROOT, relativePath);
   const relativeToRoot = path.relative(ROOT, targetPath);
   if (relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot)) return null;
@@ -212,7 +228,7 @@ function createServer(config) {
     }
 
     const parsedUrl = new URL(request.url, "http://localhost");
-    if (parsedUrl.pathname === "/") {
+    if (parsedUrl.pathname === "/" || parsedUrl.pathname === config.branchPathPrefix) {
       response.writeHead(302, {
         "Cache-Control": "no-store",
         "Location": config.defaultPath
@@ -221,7 +237,7 @@ function createServer(config) {
       return;
     }
 
-    const filePath = filePathForRequest(parsedUrl.pathname);
+    const filePath = filePathForRequest(parsedUrl.pathname, config);
     if (!filePath) {
       sendResponse(response, 403, "Forbidden", { "Content-Type": "text/plain; charset=utf-8" });
       return;

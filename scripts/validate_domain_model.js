@@ -3,6 +3,7 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 const PROJECTS_DIR = path.join(ROOT, "bobercad/data/projects");
+const SMART_COMPONENT_REGISTER = path.join(ROOT, "bobercad/data/libraries/smart-components/smart-component-register.json");
 const INDEXED_MODEL_COLLECTIONS = new Set([
   "assemblies",
   "connectionZones",
@@ -37,6 +38,27 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function loadSmartComponentPresetIndex() {
+  const presets = new Map();
+  if (!fs.existsSync(SMART_COMPONENT_REGISTER)) return presets;
+  const register = readJson(SMART_COMPONENT_REGISTER);
+  const components = Array.isArray(register.components) ? register.components : [];
+  for (const componentPath of components) {
+    const configPath = path.resolve(path.dirname(SMART_COMPONENT_REGISTER), componentPath, "config.json");
+    if (!fs.existsSync(configPath)) continue;
+    const config = readJson(configPath);
+    for (const preset of Object.values(isRecord(config.presets) ? config.presets : {})) {
+      if (!preset?.id) continue;
+      presets.set(preset.id, {
+        id: preset.id,
+        type: config.type,
+        kind: config.kind
+      });
+    }
+  }
+  return presets;
+}
+
 function fail(errors, message) {
   errors.push(message);
 }
@@ -52,6 +74,22 @@ function model(project) {
 function collection(project, collectionName) {
   const value = model(project)[collectionName];
   return isRecord(value) ? value : {};
+}
+
+function mergeRecord(base, override) {
+  const result = isRecord(base) ? JSON.parse(JSON.stringify(base)) : {};
+  if (!isRecord(override)) return result;
+  for (const [key, value] of Object.entries(override)) {
+    result[key] = isRecord(result[key]) && isRecord(value) ? mergeRecord(result[key], value) : JSON.parse(JSON.stringify(value));
+  }
+  return result;
+}
+
+function effectiveCollectionObject(project, collectionName, object) {
+  const collections = isRecord(project.modelDefaults?.collections) ? project.modelDefaults.collections : {};
+  const defaults = isRecord(collections[collectionName]) ? collections[collectionName] : {};
+  const base = mergeRecord(defaults["*"], defaults[object?.type]);
+  return mergeRecord(base, object);
 }
 
 function indexedObject(project, objectId) {
@@ -339,37 +377,52 @@ function validateFastenerGroups(errors, relative, project) {
   }
 }
 
-function validateSmartComponents(errors, relative, project) {
+function validateSmartComponents(errors, relative, project, smartComponentPresets = new Map()) {
   for (const [smartComponentId, smartComponent] of Object.entries(collection(project, "smartComponentInstances"))) {
+    const effectiveSmartComponent = effectiveCollectionObject(project, "smartComponentInstances", smartComponent);
     for (const legacyKey of ["sourcePreset", "manualParts", "generator"]) {
       if (smartComponent[legacyKey] !== undefined) {
         fail(errors, `${relative}: smartComponentInstances.${smartComponentId} still uses legacy ${legacyKey}`);
       }
     }
-    if (smartComponent.inputs?.connectionZoneId) {
-      const zone = requireCollectionObject(errors, relative, project, "connectionZones", smartComponent.inputs.connectionZoneId, `smartComponentInstances.${smartComponentId}.inputs.connectionZoneId`);
+    if (effectiveSmartComponent.inputs?.connectionZoneId) {
+      const zone = requireCollectionObject(errors, relative, project, "connectionZones", effectiveSmartComponent.inputs.connectionZoneId, `smartComponentInstances.${smartComponentId}.inputs.connectionZoneId`);
       if (zone && !(zone.smartComponentInstanceIds || []).includes(smartComponentId)) {
-        fail(errors, `${relative}: connectionZones.${zone.id || smartComponent.inputs.connectionZoneId}.smartComponentInstanceIds must include ${smartComponentId}`);
+        fail(errors, `${relative}: connectionZones.${zone.id || effectiveSmartComponent.inputs.connectionZoneId}.smartComponentInstanceIds must include ${smartComponentId}`);
       }
     }
-    if (smartComponent.inputs?.assemblyId) {
-      const assembly = requireCollectionObject(errors, relative, project, "assemblies", smartComponent.inputs.assemblyId, `smartComponentInstances.${smartComponentId}.inputs.assemblyId`);
+    const sourceComponentId = effectiveSmartComponent.sourceComponent?.id || "";
+    const preset = smartComponentPresets.get(sourceComponentId);
+    const isConnection = effectiveSmartComponent.kind === "connection" || preset?.kind === "connection" || Boolean(effectiveSmartComponent.inputs?.connectionZoneId);
+    if (isConnection) {
+      const legacyText = `${effectiveSmartComponent.type || ""} ${effectiveSmartComponent.status || ""} ${effectiveSmartComponent.definition || ""} ${sourceComponentId}`;
+      if (/\bmanual\b|manual-|_manual|legacy|not-parametric-yet/i.test(legacyText)) {
+        fail(errors, `${relative}: smartComponentInstances.${smartComponentId} is a legacy/manual connection; use a registered Smart Component preset instead`);
+      }
+      if (!preset) {
+        fail(errors, `${relative}: smartComponentInstances.${smartComponentId}.sourceComponent.id is not registered in the Smart Component library: ${sourceComponentId || "(missing)"}`);
+      } else if (preset.kind !== "connection") {
+        fail(errors, `${relative}: smartComponentInstances.${smartComponentId}.sourceComponent.id must reference a connection preset, got ${preset.kind}: ${sourceComponentId}`);
+      }
+    }
+    if (effectiveSmartComponent.inputs?.assemblyId) {
+      const assembly = requireCollectionObject(errors, relative, project, "assemblies", effectiveSmartComponent.inputs.assemblyId, `smartComponentInstances.${smartComponentId}.inputs.assemblyId`);
       if (assembly && !(assembly.smartComponentInstanceIds || []).includes(smartComponentId)) {
-        fail(errors, `${relative}: assemblies.${assembly.id || smartComponent.inputs.assemblyId}.smartComponentInstanceIds must include ${smartComponentId}`);
+        fail(errors, `${relative}: assemblies.${assembly.id || effectiveSmartComponent.inputs.assemblyId}.smartComponentInstanceIds must include ${smartComponentId}`);
       }
     }
-    if (smartComponent.parentInstanceId) {
-      requireCollectionObject(errors, relative, project, "smartComponentInstances", smartComponent.parentInstanceId, `smartComponentInstances.${smartComponentId}.parentInstanceId`);
+    if (effectiveSmartComponent.parentInstanceId) {
+      requireCollectionObject(errors, relative, project, "smartComponentInstances", effectiveSmartComponent.parentInstanceId, `smartComponentInstances.${smartComponentId}.parentInstanceId`);
     }
-    for (const [role, objectId] of Object.entries(smartComponent.objectRoles || {})) {
+    for (const [role, objectId] of Object.entries(effectiveSmartComponent.objectRoles || {})) {
       requireIndexedObject(errors, relative, project, objectId, `smartComponentInstances.${smartComponentId}.objectRoles.${role}`);
     }
-    for (const [role, childId] of Object.entries(smartComponent.childComponentRoles || {})) {
+    for (const [role, childId] of Object.entries(effectiveSmartComponent.childComponentRoles || {})) {
       requireCollectionObject(errors, relative, project, "smartComponentInstances", childId, `smartComponentInstances.${smartComponentId}.childComponentRoles.${role}`);
     }
     for (const key of ["ownedObjectIds", "detachedObjectIds"]) {
-      requireUniqueIds(errors, relative, smartComponent[key], `smartComponentInstances.${smartComponentId}.${key}`);
-      for (const id of smartComponent[key] || []) {
+      requireUniqueIds(errors, relative, effectiveSmartComponent[key], `smartComponentInstances.${smartComponentId}.${key}`);
+      for (const id of effectiveSmartComponent[key] || []) {
         requireIndexedObject(errors, relative, project, id, `smartComponentInstances.${smartComponentId}.${key}`);
       }
     }
@@ -404,7 +457,15 @@ function validateTrimJoints(errors, relative, project) {
   }
 }
 
-function validateProject(relative, project) {
+function validateConnectionZones(errors, relative, project) {
+  for (const [zoneId, zone] of Object.entries(collection(project, "connectionZones"))) {
+    if (/manual|legacy/i.test(String(zone.type || ""))) {
+      fail(errors, `${relative}: connectionZones.${zoneId}.type is legacy/manual: ${zone.type}`);
+    }
+  }
+}
+
+function validateProject(relative, project, options = {}) {
   const errors = [];
   if (!isRecord(project)) {
     fail(errors, `${relative}: project must be an object`);
@@ -418,7 +479,8 @@ function validateProject(relative, project) {
   validateObjectIndex(errors, relative, project);
   validateCommonReferences(errors, relative, project);
   validateFastenerGroups(errors, relative, project);
-  validateSmartComponents(errors, relative, project);
+  validateConnectionZones(errors, relative, project);
+  validateSmartComponents(errors, relative, project, options.smartComponentPresets || new Map());
   validateTrimJoints(errors, relative, project);
 
   return errors;
@@ -426,6 +488,7 @@ function validateProject(relative, project) {
 
 function validateAllProjects() {
   const errors = [];
+  const smartComponentPresets = loadSmartComponentPresetIndex();
   if (!fs.existsSync(PROJECTS_DIR)) {
     return { checked: 0, errors: [`missing projects directory: ${repoPath(PROJECTS_DIR)}`] };
   }
@@ -441,7 +504,7 @@ function validateAllProjects() {
       continue;
     }
     checked += 1;
-    errors.push(...validateProject(relative, project));
+    errors.push(...validateProject(relative, project, { smartComponentPresets }));
   }
   return { checked, errors };
 }

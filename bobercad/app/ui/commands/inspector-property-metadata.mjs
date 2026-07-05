@@ -515,13 +515,15 @@ export function inspectorSmartComponentContext({
   diagnosticsSummary = null
 } = {}) {
   const summary = diagnosticsSummary || { health, errorCount, warningCount };
+  const isConnection = smartComponent?.kind === "connection";
+  const sourceLabel = smartComponentSourceLabel(smartComponent);
   return {
-    title: modelCollectionLabel("smartComponentInstances", { singular: true }),
-    subtitle: smartComponentId,
+    title: isConnection ? sourceLabel : modelCollectionLabel("smartComponentInstances", { singular: true }),
+    subtitle: isConnection ? `${smartComponentId} - ${smartComponent?.type || "connection"}` : smartComponentId,
     icon: modelCollectionIcon("smartComponentInstances"),
     badges: [
-      { label: summary.health || "ok", state: summary.errorCount ? "error" : summary.warningCount ? "warning" : "ok" },
-      smartComponent?.kind ? { label: smartComponent.kind } : null
+      { label: summary.errorCount ? "Errors" : summary.warningCount ? "Warnings" : "Ready", state: summary.errorCount ? "error" : summary.warningCount ? "warning" : "ok" },
+      isConnection ? { label: "Connection" } : smartComponent?.kind ? { label: smartComponent.kind } : null
     ].filter(Boolean)
   };
 }
@@ -544,16 +546,22 @@ export function inspectorSmartComponentIdentitySection({
   diagnosticsSummary = null,
   managedObjectCount = 0,
   detachedObjectCount = 0,
-  overrideObjectCount = 0
+  overrideObjectCount = 0,
+  label = "Identity",
+  open = true,
+  priority = undefined
 } = {}) {
   const summary = diagnosticsSummary || inspectorSmartComponentDiagnosticsSummary(smartComponent);
   return {
     id: "inspector.properties.smartComponent.identity",
-    label: "Identity",
+    label,
+    open,
+    priority,
     fields: [
       { label: "ID", value: smartComponentId },
       { label: "Type", value: smartComponent?.type || "-" },
       { label: "Kind", value: smartComponent?.kind || "-" },
+      { label: "Preset", value: smartComponent?.sourceComponent?.id || "-" },
       { label: "Diagnostics", value: `${summary.errorCount} errors, ${summary.warningCount} warnings` },
       { label: "Managed objects", value: String(managedObjectCount) },
       { label: "Detached", value: String(detachedObjectCount) },
@@ -579,53 +587,182 @@ export function inspectorSmartComponentPropertySections({
   const managedEntries = smartComponentManagedObjectEntries(smartComponent);
   const detachedObjectIds = new Set(arrayValues(smartComponent.detachedObjectIds));
   const overrideObjectIds = smartComponentOverrideObjectIds(smartComponent);
-  return [
-    inspectorSmartComponentIdentitySection({
+  const isConnection = smartComponent.kind === "connection";
+  const identitySection = inspectorSmartComponentIdentitySection({
       smartComponentId,
       smartComponent,
       diagnosticsSummary: summary,
       managedObjectCount: managedEntries.length,
       detachedObjectCount: detachedObjectIds.size,
-      overrideObjectCount: overrideObjectIds.size
-    }),
-    smartComponentMembersSection(memberFields),
-    smartComponentDiagnosticsSection({ diagnosticsSummary: summary }),
-    smartComponentQuickParameterSection(quickParameterFields),
-    smartComponentRoleSection({ smartComponent, definition, liveRoleOptions }),
-    smartComponentLifecycleSection({
+    overrideObjectCount: overrideObjectIds.size,
+    ...(isConnection ? { label: "Details", open: false, priority: 80 } : {})
+  });
+  const lifecycleSection = smartComponentLifecycleSection({
+    smartComponent,
+    entries: managedEntries,
+    detachedObjectIds,
+    overrideObjectIds,
+    objectIndex,
+    capabilities,
+    limit: managedObjectLimit,
+    ...(isConnection ? { open: false, priority: 90 } : {})
+  });
+  return [
+    isConnection ? smartComponentConnectionOverviewSection({
+      smartComponentId,
       smartComponent,
-      entries: managedEntries,
-      detachedObjectIds,
-      overrideObjectIds,
-      objectIndex,
-      capabilities,
-      limit: managedObjectLimit
-    }),
-    smartComponentActionsSection({ smartComponentId, diagnosticsSummary: summary, capabilities })
+      diagnosticsSummary: summary,
+      managedObjectCount: managedEntries.length,
+      detachedObjectCount: detachedObjectIds.size,
+      overrideObjectCount: overrideObjectIds.size,
+      capabilities
+    }) : identitySection,
+    smartComponentMembersSection(memberFields, { objectIndex }),
+    smartComponentDiagnosticsSection({ diagnosticsSummary: summary }),
+    isConnection ? null : smartComponentQuickParameterSection(quickParameterFields),
+    isConnection ? null : smartComponentRoleSection({ smartComponent, definition, liveRoleOptions }),
+    isConnection ? identitySection : lifecycleSection,
+    isConnection ? lifecycleSection : null,
+    isConnection ? null : smartComponentActionsSection({ smartComponentId, diagnosticsSummary: summary, capabilities })
   ].filter(Boolean);
 }
 
-function smartComponentMembersSection(memberFields = []) {
-  const fields = arrayValues(memberFields)
-    .filter((field) => field?.value)
-    .map((field) => ({
-      type: "optionGrid",
-      label: field.label || "Member",
-      value: field.value,
-      options: arrayValues(field.options),
-      commit: field.commit,
-      className: "bc-smart-component-member-field",
-      buttonClassName: "bc-smart-component-member-option",
-      help: field.help || ""
-    }));
-  if (!fields.length) return null;
+function smartComponentConnectionOverviewSection({
+  smartComponentId = "",
+  smartComponent = null,
+  diagnosticsSummary = {},
+  managedObjectCount = 0,
+  detachedObjectCount = 0,
+  overrideObjectCount = 0,
+  capabilities = {}
+} = {}) {
+  const status = diagnosticsSummary.errorCount ? "error" : diagnosticsSummary.warningCount ? "warning" : "ok";
+  const actions = [
+    {
+      label: "Fit",
+      icon: "zoom-fit",
+      title: "Fit to connection",
+      action: "objectRef.fit",
+      payload: { objectId: smartComponentId }
+    },
+    arrayValues(diagnosticsSummary.diagnostics).length && capabilities.resolveDiagnostics
+      ? { label: "Resolve", icon: "reset-view", title: "Resolve diagnostics", action: "smartComponent.diagnostics.resolve", payload: { smartComponentId } }
+      : null,
+    capabilities.deleteSmartComponent !== false
+      ? { label: "Remove", icon: "cancel", danger: true, title: "Remove Smart Component", action: "smartComponent.delete", payload: { smartComponentId } }
+      : null
+  ].filter(Boolean);
+  return {
+    id: "inspector.properties.smartComponent.connectionOverview",
+    label: "Connection",
+    priority: -30,
+    open: true,
+    fields: [{
+      type: "summaryCard",
+      title: smartComponentSourceLabel(smartComponent),
+      status,
+      readouts: [
+        { label: "Preset", value: smartComponent?.sourceComponent?.id || "-" },
+        { label: "Type", value: smartComponent?.type || "-" },
+        { label: "Diagnostics", value: `${diagnosticsSummary.errorCount || 0} errors, ${diagnosticsSummary.warningCount || 0} warnings` },
+        { label: "Managed", value: `${managedObjectCount}${detachedObjectCount ? ` / ${detachedObjectCount} detached` : ""}${overrideObjectCount ? ` / ${overrideObjectCount} overrides` : ""}` }
+      ],
+      actionGroups: [{ actions }]
+    }]
+  };
+}
+
+function smartComponentMembersSection(memberFields = [], options = {}) {
+  const groups = [];
+  const groupById = new Map();
+  const actions = [];
+  for (const field of arrayValues(memberFields).filter(Boolean)) {
+    if (field.type === "actionRow") actions.push(...arrayValues(field.actions));
+    else {
+      const groupId = field.selectionGroup || field.role || field.label || `members-${groups.length + 1}`;
+      let group = groupById.get(groupId);
+      if (!group) {
+        group = {
+          id: groupId,
+          label: field.selectionLabel || smartComponentMemberFieldLabel(field.label) || "Members",
+          items: []
+        };
+        groupById.set(groupId, group);
+        groups.push(group);
+      }
+      group.items.push(smartComponentMemberSelectionItem(field, options));
+    }
+  }
+  if (!groups.length && !actions.length) return null;
   return {
     id: "inspector.properties.smartComponent.members",
     label: "Members",
-    priority: -20,
+    priority: -25,
     open: true,
-    fields
+    fields: groups.map((group, index) => ({
+      type: "memberSelectionBox",
+      label: group.label,
+      selectionGroup: group.id,
+      items: group.items,
+      actions: index === 0 ? actions : []
+    }))
   };
+}
+
+function smartComponentMemberSelectionItem(field = {}, { objectIndex = {} } = {}) {
+  const memberId = field.memberId || field.value || "";
+  const entry = objectIndex?.[memberId];
+  const selectable = Boolean(memberId && entry?.collection);
+  const displayValue = field.displayLabel || memberId || "-";
+  const roleLabel = field.memberRoleLabel || smartComponentMemberFieldLabel(field.label);
+  return {
+    role: roleLabel,
+    value: displayValue,
+    status: memberId && displayValue !== memberId ? memberId : field.role || "",
+    icon: entry ? inspectorObjectIconForEntry(entry) : null,
+    actions: [
+      ...objectRefActions({
+        select: selectable ? { objectId: memberId } : null,
+        value: displayValue
+      }),
+      field.smartComponentId && field.role ? {
+        label: "Pick",
+        icon: "selection",
+        title: smartComponentMemberPickTitle(field, roleLabel),
+        action: "smartComponent.member.pick",
+        payload: {
+          smartComponentId: field.smartComponentId,
+          role: field.role
+        }
+      } : null
+    ].filter(Boolean)
+  };
+}
+
+function smartComponentMemberPickTitle(field = {}, roleLabel = "Member") {
+  const groupLabel = field.selectionLabel || "";
+  if (groupLabel && roleLabel === "Member") return `Pick ${groupLabel.toLowerCase()} member from model`;
+  if (groupLabel) return `Pick ${groupLabel.toLowerCase()} ${roleLabel.toLowerCase()} from model`;
+  return `Pick ${roleLabel} from model`;
+}
+
+function smartComponentMemberActionRow(field = {}) {
+  return {
+    type: "actionRow",
+    label: field.label || "Member actions",
+    actions: arrayValues(field.actions)
+  };
+}
+
+function smartComponentMemberFieldLabel(label = "") {
+  if (label === "Main member") return "Main";
+  if (label === "Secondary member") return "Secondary";
+  return label || "Member";
+}
+
+function smartComponentSourceLabel(smartComponent = null) {
+  const sourceId = smartComponent?.sourceComponent?.id || smartComponent?.type || "";
+  return inspectorMetadataLabel(sourceId || "Smart Component");
 }
 
 export function inspectorObjectGeneratedBySection({
@@ -760,11 +897,12 @@ function objectRefActions({ select = null, fit = null, value = "" } = {}) {
 
 function objectRefActionDescriptor(type, payload, value = "") {
   const spec = OBJECT_REF_ACTION_SPECS[type];
+  const overrides = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
   return {
     action: spec.action,
-    label: spec.label,
+    label: overrides.label || spec.label,
     icon: spec.icon,
-    title: value ? `${spec.label} ${value}` : spec.label,
+    title: overrides.title || (value ? `${spec.label} ${value}` : spec.label),
     payload: payload && typeof payload === "object" && !Array.isArray(payload) ? { ...payload } : { objectId: payload }
   };
 }
@@ -1039,7 +1177,9 @@ function smartComponentLifecycleSection({
   overrideObjectIds = new Set(),
   objectIndex = {},
   capabilities = {},
-  limit = 8
+  limit = 8,
+  open = null,
+  priority = undefined
 } = {}) {
   const allEntries = arrayValues(entries);
   if (!allEntries.length) return null;
@@ -1090,7 +1230,8 @@ function smartComponentLifecycleSection({
   return {
     id: "inspector.properties.smartComponent.lifecycle",
     label: "Managed Objects",
-    open: Boolean(detachedObjectIds.size || overrideObjectIds.size),
+    open: open === null ? Boolean(detachedObjectIds.size || overrideObjectIds.size) : open,
+    priority,
     fields
   };
 }
@@ -1102,6 +1243,14 @@ function smartComponentActionsSection({ smartComponentId = "", diagnosticsSummar
     placement: "actions",
     priority: 90,
     fields: [
+      {
+        type: "action",
+        label: "Fit",
+        icon: "zoom-fit",
+        title: "Fit connection",
+        action: "objectRef.fit",
+        payload: { objectId: smartComponentId }
+      },
       arrayValues(diagnosticsSummary.diagnostics).length && capabilities.resolveDiagnostics
         ? { type: "action", label: "Resolve Diagnostics", icon: "reset-view", action: "smartComponent.diagnostics.resolve", payload: { smartComponentId } }
         : null,

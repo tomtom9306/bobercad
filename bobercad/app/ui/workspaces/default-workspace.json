@@ -84,8 +84,7 @@
       "width": 380,
       "tabIds": [
         "properties",
-        "feature",
-        "component"
+        "feature"
       ],
       "hiddenTabIds": [],
       "activeTab": "properties"

@@ -5,6 +5,7 @@ import { memberAxisData, memberCenter } from "../../../engine/api/project/member
 import { plateBends, plateOutline as sketchPlateOutline, plateSketchDefinitionStatus, sketchConstructionEdges, sketchDefinitionStatus, sketchEdges } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
 import { trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd } from "../../../engine/api/project/trim-operations.mjs";
 import { reconcilePlaneTrimRemovedRegionKeys } from "../../../engine/api/model/trim-region-keys.mjs";
+import { conditionMatches, parameterFieldDescriptor } from "../../../engine/api/model/smart-component-parameter-values.mjs";
 import { setPath } from "../../../engine/modules/smart-components/smart-component-parameters-and-definition.mjs";
 import { MODELING_TOOLBAR_COMMANDS } from "../../commands/command-registry.mjs";
 import { trimOperationLabel, trimOperationSupportsGap } from "../../commands/trim-operation-metadata.mjs";
@@ -35,6 +36,7 @@ import { createInspectorPropertyBindings } from "./inspector-property-bindings.m
 import { sceneCollectionCounts, sceneReferencePoints } from "./inspector-scene-metrics.mjs";
 import { createPlateSketchInspector } from "./contributions/plate-sketch-inspector.mjs";
 import { smartComponentQuickParameterFields } from "./contributions/smart-component-properties.mjs";
+import { smartComponentParameterTabs } from "../smart-component-parameter-tabs.mjs";
 
 const MODELING_TOOL_COMMAND_BY_ID = new Map(MODELING_TOOLBAR_COMMANDS.map((command) => [command.id, command]));
 const DEFAULT_CUSTOM_PROFILE_POINTS = "-50 -100\n50 -100\n50 100\n-50 100";
@@ -102,6 +104,7 @@ export function mountEditorUi({
   selection,
   memberEdit,
   smartComponentHighlightObjectIds,
+  smartComponentHighlightOptions = () => ({}),
   onProjectChange,
   onLocalMemberProjectChange,
   onSmartComponentSelected,
@@ -116,6 +119,7 @@ export function mountEditorUi({
   let sceneSelected = true;
   let gridEditorEmpty = false;
   const memberCustomProfileDrafts = new Map();
+  const smartComponentActiveParameterTabs = new Map();
   const panelMessage = createPanelMessageState(() => render());
   const setMessage = panelMessage.set;
   const showError = (error) => setMessage(error.message, "error");
@@ -178,9 +182,9 @@ export function mountEditorUi({
     clearMemberEditSilently();
     selection.select(typeof smartComponentHighlightObjectIds === "function"
       ? smartComponentHighlightObjectIds(smartComponentId)
-      : api.smartComponentObjectIds(smartComponentId));
+      : api.smartComponentObjectIds(smartComponentId), smartComponentHighlightOptions(smartComponentId));
     clearObjectWindow();
-    onSmartComponentSelected(smartComponentId, options);
+    if (options.notify !== false) onSmartComponentSelected(smartComponentId, options);
     setMessage(`Selected ${smartComponentId}.`, "ok");
   };
 
@@ -419,6 +423,12 @@ export function mountEditorUi({
     },
     smartComponents: {
       updateParameter: (smartComponentId, definition, path, value) => updateSmartComponentParameter(smartComponentId, definition, path, value),
+      setParameterTab: (smartComponentId, tabId) => {
+        if (!smartComponentId || !tabId) return;
+        smartComponentActiveParameterTabs.set(smartComponentId, tabId);
+        render();
+      },
+      setPlateIncluded: (smartComponentId, plateId, included) => updateSmartComponentPlateIncluded(smartComponentId, plateId, included),
       setRoleActive: (smartComponentId, role, active) => updateSmartComponentById(
         smartComponentId,
         (smartComponentId) => api.setSmartComponentRoleActive(smartComponentId, role, active),
@@ -429,7 +439,8 @@ export function mountEditorUi({
       reattachObject: (smartComponentId, objectId) => reattachSmartComponentObject(smartComponentId, objectId),
       resolveDiagnostics: (smartComponentId) => resolveSmartComponentDiagnostics(smartComponentId),
       setMember: (smartComponentId, role, memberId) => updateSmartComponentMember(smartComponentId, role, memberId),
-      openParameters: (smartComponentId) => onSmartComponentSelected?.(smartComponentId, { inspectorPanel: "component" }),
+      pickMember: (smartComponentId, role) => pickSmartComponentMember(smartComponentId, role),
+      openParameters: (smartComponentId) => onSmartComponentSelected?.(smartComponentId, { inspectorPanel: "properties" }),
       deleteSmartComponent: (smartComponentId) => deleteSmartComponent(smartComponentId)
     },
     objects: {
@@ -857,6 +868,24 @@ export function mountEditorUi({
     );
   };
 
+  const pickSmartComponentMember = (smartComponentId, role) => {
+    if (!smartComponentId || (role !== "main" && role !== "secondary")) return;
+    selection.beginMemberPick({
+      count: 1,
+      onComplete: ([memberId]) => updateSmartComponentMember(smartComponentId, role, memberId),
+      onError: (message) => setMessage(message, "error")
+    });
+    setMessage(`Pick ${role} member for connection.`, "ok");
+  };
+
+  const updateSmartComponentPlateIncluded = (smartComponentId, plateId, included) => {
+    updateSmartComponentById(
+      smartComponentId,
+      (componentId) => api.setSmartComponentPlateIncluded(componentId, plateId, included),
+      included ? "Plate included." : "Plate excluded."
+    );
+  };
+
   const updateSmartComponentObjectLifecycle = (smartComponentId, objectId, update, message, options = {}) => {
     try {
       const nextProject = update(smartComponentId, objectId);
@@ -865,7 +894,7 @@ export function mountEditorUi({
         setSelectedState({ smartComponentId });
         selection.clear();
         clearObjectWindow();
-        onSmartComponentSelected?.(smartComponentId, { inspectorPanel: "component" });
+        onSmartComponentSelected?.(smartComponentId, { inspectorPanel: "properties" });
       }
       setMessage(message, "ok");
     } catch (error) {
@@ -935,46 +964,254 @@ export function mountEditorUi({
     if (!profileId) return "";
     const catalog = api.profiles?.() || profiles || {};
     const profile = catalog[profileId];
-    return profile?.designation && profile.designation !== profileId
-      ? `${profile.designation} / ${profileId}`
-      : profileId;
+    return profile?.designation || profileId;
   };
 
-  const smartComponentMemberOptions = () => Object.keys(api.project()?.model?.members || {})
-    .map((memberId) => {
-      let member = null;
-      try {
-        member = api.member(memberId);
-      } catch {
-        member = null;
-      }
-      const profileLabel = smartComponentProfileLabel(member?.profile);
-      return {
-        id: memberId,
-        label: profileLabel ? `${memberId} - ${profileLabel}` : memberId
-      };
-    })
-    .sort((a, b) => a.label.localeCompare(b.label));
+  const smartComponentMemberLabel = (memberId, member = null) => {
+    const mark = member?.fabrication?.partMark || member?.bim?.propertySets?.Identity?.mark || "";
+    const name = member?.bim?.name || "";
+    const profileLabel = smartComponentProfileLabel(member?.profile);
+    return [mark || memberId, name && name !== memberId && name !== mark ? name : "", profileLabel].filter(Boolean).join(" - ");
+  };
 
-  const smartComponentMemberFields = (smartComponent = {}) => {
+  const smartComponentConnectionZone = (smartComponent = {}) => {
     const zones = api.project()?.model?.connectionZones || {};
     const zoneId = smartComponent.inputs?.connectionZoneId || "";
-    const zone = zoneId ? zones[zoneId] : null;
-    const options = smartComponentMemberOptions();
-    const field = (label, memberId, role) => memberId ? {
+    if (zoneId && zones[zoneId]) return zones[zoneId];
+    return Object.values(zones).find((zone) => arrayValues(zone.smartComponentInstanceIds).includes(smartComponent.id)) || null;
+  };
+
+  const smartComponentMemberSwapAllowed = (smartComponent = {}, definition = null, zone = null, mainMemberId = "", secondaryMemberId = "") => {
+    if (!mainMemberId || !secondaryMemberId || mainMemberId === secondaryMemberId) return false;
+    if (smartComponent.inputs?.memberSwapAllowed === false || smartComponent.inputs?.allowMemberSwap === false) return false;
+    if (!definition) return false;
+    return smartComponentDefinitionInterfacesSwappable(definition);
+  };
+
+  const smartComponentDefinitionInterfacesSwappable = (definition = {}) => {
+    const interfaces = arrayValues(definition.interfaces);
+    const main = interfaces.find((item) => item?.role === "main");
+    const secondary = interfaces.find((item) => item?.role === "secondary");
+    if (!main?.auto || !secondary?.auto) return false;
+    return main.auto.type === secondary.auto.type
+      && (main.auto.faceRef || "") === (secondary.auto.faceRef || "")
+      && (main.auto.stationReference || "") === (secondary.auto.stationReference || "");
+  };
+
+  const smartComponentMemberSelectionRoleSpecs = (smartComponent = {}, definition = null, zone = null) => {
+    const connectionType = definition?.type || smartComponent.type || "";
+    if (connectionType === "member-splice" || zone?.type === "member-splice-zone") {
+      return {
+        main: { selectionGroup: "primary", selectionLabel: "Primary", memberRoleLabel: "Member 1" },
+        secondary: { selectionGroup: "primary", selectionLabel: "Primary", memberRoleLabel: "Member 2" }
+      };
+    }
+    return {
+      main: { selectionGroup: "primary", selectionLabel: "Primary", memberRoleLabel: "Member" },
+      secondary: { selectionGroup: "secondary", selectionLabel: "Secondary", memberRoleLabel: "Member" }
+    };
+  };
+
+  const smartComponentMemberFields = (smartComponent = {}, definition = null) => {
+    if (smartComponent.kind !== "connection") return [];
+    const zone = smartComponentConnectionZone(smartComponent);
+    const mainMemberId = zone?.mainObjectId || smartComponent.inputs?.main?.memberId || "";
+    const secondaryMemberId = arrayValues(zone?.secondaryObjectIds)[0] || smartComponent.inputs?.secondary?.memberId || "";
+    const roleSpecs = smartComponentMemberSelectionRoleSpecs(smartComponent, definition, zone);
+    const field = (label, memberId, role) => ({
       label,
-      value: memberId,
-      options,
-      commit: {
-        action: "smartComponent.member.set",
-        smartComponentId: smartComponent.id,
-        role
-      }
-    } : null;
+      type: "memberRef",
+      smartComponentId: smartComponent.id,
+      memberId,
+      value: memberId || "",
+      displayLabel: memberId ? smartComponentMemberLabel(memberId, api.project()?.model?.members?.[memberId] || null) : "",
+      role,
+      ...roleSpecs[role]
+    });
+    if (smartComponentMemberSwapAllowed(smartComponent, definition, zone, mainMemberId, secondaryMemberId)) {
+      return [
+        {
+          type: "actionRow",
+          label: "Member actions",
+          actions: [{
+            label: "Swap",
+            icon: "swap",
+            title: "Swap Main and Secondary members",
+            action: "smartComponent.member.swap",
+            payload: {
+              smartComponentId: smartComponent.id,
+              mainMemberId,
+              secondaryMemberId
+            }
+          }]
+        },
+        field("Main", mainMemberId, "main"),
+        field("Secondary", secondaryMemberId, "secondary")
+      ];
+    }
     return [
-      field("Main member", zone?.mainObjectId || smartComponent.inputs?.main?.memberId, "main"),
-      field("Secondary member", arrayValues(zone?.secondaryObjectIds)[0] || smartComponent.inputs?.secondary?.memberId, "secondary")
-    ].filter(Boolean);
+      field("Main", mainMemberId, "main"),
+      field("Secondary", secondaryMemberId, "secondary")
+    ];
+  };
+
+  const smartComponentParameterTabState = (smartComponentId, definition = {}) => {
+    const tabs = smartComponentParameterTabs(definition)
+      .map((tab, index) => ({
+        ...tab,
+        id: tab.id || `tab-${index}`,
+        label: tab.label || tab.id || `Tab ${index + 1}`,
+        items: Array.isArray(tab.items) ? tab.items : []
+      }))
+      .filter((tab) => tab.id);
+    if (!tabs.length) return null;
+    let activeTabId = smartComponentActiveParameterTabs.get(smartComponentId);
+    if (!tabs.some((tab) => tab.id === activeTabId)) activeTabId = tabs[0].id;
+    smartComponentActiveParameterTabs.set(smartComponentId, activeTabId);
+    return {
+      tabs,
+      activeTab: tabs.find((tab) => tab.id === activeTabId) || tabs[0]
+    };
+  };
+
+  const smartComponentParameterField = (smartComponent = {}, definition = {}, path = "") => {
+    if (!path) return null;
+    const parameters = smartComponent.referenceParameters || {};
+    return parameterFieldDescriptor(definition, parameters, path, {
+      api,
+      labelFor: inspectorMetadataLabel,
+      catalogOptions: (spec, value) => spec?.kind === "catalogRef"
+        ? catalogOptions(api, spec.catalog, String(value || ""))
+        : null,
+      commit: { action: "smartComponent.parameter.set", smartComponentId: smartComponent.id }
+    });
+  };
+
+  const smartComponentPlateField = (smartComponentId, plate = {}) => ({
+    type: "checkbox",
+    label: plate.label || plate.id,
+    value: Boolean(plate.included),
+    help: plate.required ? "required" : plate.role || "",
+    disabled: Boolean(plate.required),
+    disabledReason: plate.required ? "Required generated plate" : "",
+    commit: {
+      action: "smartComponent.plateIncluded.set",
+      smartComponentId,
+      plateId: plate.id
+    }
+  });
+
+  const smartComponentRoleField = (smartComponentId, component = {}) => ({
+    type: "checkbox",
+    label: component.label || inspectorMetadataLabel(component.role),
+    value: Boolean(component.active),
+    help: component.active ? "active" : "ghost",
+    commit: {
+      action: "smartComponent.roleActive.set",
+      smartComponentId,
+      role: component.role
+    }
+  });
+
+  const smartComponentParameterFieldsForItem = (item, context = {}) => {
+    const { smartComponent, definition, parameters } = context;
+    if (item?.visibleWhen && !conditionMatches(item.visibleWhen, parameters)) return [];
+    if (typeof item === "string") return [smartComponentParameterField(smartComponent, definition, item)].filter(Boolean);
+    if (item?.kind === "parameter") return [smartComponentParameterField(smartComponent, definition, item.path)].filter(Boolean);
+    if (item?.kind === "section") return arrayValues(item.items).flatMap((child) => smartComponentParameterFieldsForItem(child, context));
+    if (item?.kind === "smartComponentPlates") {
+      return typeof api.smartComponentPlateOptions === "function"
+        ? api.smartComponentPlateOptions(smartComponent.id).map((plate) => smartComponentPlateField(smartComponent.id, plate))
+        : [];
+    }
+    if (item?.kind === "smartComponentRoles") {
+      const allowedRoles = new Set(arrayValues(item.roles));
+      return smartComponentLiveRoleOptions(smartComponent.id)
+        .filter((component) => !allowedRoles.size || allowedRoles.has(component.role))
+        .map((component) => smartComponentRoleField(smartComponent.id, component));
+    }
+    if (item?.kind === "diagnostics" || item?.kind === "smartComponentOverrides") return [];
+    return item?.kind ? [{
+      type: "message",
+      label: inspectorMetadataLabel(item.kind),
+      value: `${inspectorMetadataLabel(item.kind)} is edited in its dedicated panel.`,
+      state: "info"
+    }] : [];
+  };
+
+  const smartComponentParameterSectionsForItems = (smartComponent = {}, definition = {}, tab = {}) => {
+    const context = {
+      smartComponent,
+      definition,
+      parameters: smartComponent.referenceParameters || {}
+    };
+    const sections = [];
+    let looseFields = [];
+    const safeId = (value) => String(value || "section").replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "section";
+    const flushLooseFields = () => {
+      if (!looseFields.length) return;
+      sections.push({
+        id: `inspector.properties.smartComponent.parameterTab.${safeId(tab.id)}.fields`,
+        label: tab.label || "Properties",
+        priority: -14,
+        open: true,
+        fields: looseFields
+      });
+      looseFields = [];
+    };
+
+    for (const item of arrayValues(tab.items)) {
+      if (item?.visibleWhen && !conditionMatches(item.visibleWhen, context.parameters)) continue;
+      if (item?.kind === "section") {
+        flushLooseFields();
+        const fields = arrayValues(item.items).flatMap((child) => smartComponentParameterFieldsForItem(child, context));
+        if (fields.length) {
+          sections.push({
+            id: `inspector.properties.smartComponent.parameterTab.${safeId(tab.id)}.${safeId(item.id || item.label)}`,
+            label: item.label || tab.label || "Properties",
+            priority: -13,
+            open: item.open !== false,
+            fields
+          });
+        }
+      } else {
+        looseFields.push(...smartComponentParameterFieldsForItem(item, context));
+      }
+    }
+    flushLooseFields();
+    return sections;
+  };
+
+  const smartComponentParameterSections = (smartComponent = {}, definition = null) => {
+    if (!definition || smartComponent.kind !== "connection") return [];
+    const state = smartComponentParameterTabState(smartComponent.id, definition);
+    if (!state) return [];
+    const tabSections = smartComponentParameterSectionsForItems(smartComponent, definition, state.activeTab);
+    const tabFields = tabSections.length
+      ? tabSections.flatMap((section) => [
+        tabSections.length > 1 ? { type: "statusGroupTitle", label: section.label || state.activeTab.label || "Properties" } : null,
+        ...arrayValues(section.fields)
+      ].filter(Boolean))
+      : [{ type: "message", value: "No editable fields in this group.", state: "info" }];
+    return [{
+      id: "inspector.properties.smartComponent.parameterEditor",
+      label: "Properties",
+      priority: -40,
+      open: true,
+      fields: [
+        {
+          type: "tabList",
+          id: `smart-component-parameters-${smartComponent.id}`,
+          label: "Connection property group",
+          value: state.activeTab.id,
+          options: state.tabs.map((tab) => ({ id: tab.id, label: tab.label || tab.id })),
+          className: "bc-panel-tab-strip",
+          buttonClassName: "bc-panel-tab",
+          commit: { action: "smartComponent.parameterTab.set", smartComponentId: smartComponent.id }
+        },
+        ...tabFields
+      ]
+    }];
   };
 
   const objectGeneratedByCapabilities = () => ({
@@ -988,29 +1225,34 @@ export function mountEditorUi({
     if (!smartComponent) return generatedPropertiesPanel({ emptyMessage: "Selected Smart Component is no longer in the project." });
     const definition = smartComponentDefinitionOrNull(selectedSmartComponentId);
     const diagnosticsSummary = inspectorSmartComponentDiagnosticsSummary(smartComponent);
+    const isConnection = smartComponent.kind === "connection";
+    const connectionParameterSections = smartComponentParameterSections(smartComponent, definition);
     return generatedPropertiesPanel({
       context: inspectorSmartComponentContext({
         smartComponentId: selectedSmartComponentId,
         smartComponent,
         diagnosticsSummary
       }),
-      sections: bindGeneratedPropertySections(inspectorSmartComponentPropertySections({
-        smartComponentId: selectedSmartComponentId,
-        smartComponent,
-        definition,
-        diagnosticsSummary,
-        memberFields: smartComponentMemberFields(smartComponent),
-        quickParameterFields: definition ? smartComponentQuickParameterFields({
-          api,
+      sections: bindGeneratedPropertySections([
+        ...inspectorSmartComponentPropertySections({
+          smartComponentId: selectedSmartComponentId,
           smartComponent,
-          definition,
-          labelFor: inspectorMetadataLabel,
-          catalogOptions: (catalog, currentId) => catalogOptions(api, catalog, String(currentId || ""))
-        }) : [],
-        liveRoleOptions: definition ? smartComponentLiveRoleOptions(selectedSmartComponentId) : [],
-        objectIndex: smartComponentObjectIndex(),
-        capabilities: { ...smartComponentCapabilities(), openParameters: Boolean(definition) }
-      }), generatedSmartComponentBindings())
+          definition: isConnection ? null : definition,
+          diagnosticsSummary,
+          memberFields: smartComponentMemberFields(smartComponent, definition),
+          quickParameterFields: definition && !isConnection ? smartComponentQuickParameterFields({
+            api,
+            smartComponent,
+            definition,
+            labelFor: inspectorMetadataLabel,
+            catalogOptions: (catalog, currentId) => catalogOptions(api, catalog, String(currentId || ""))
+          }) : [],
+          liveRoleOptions: definition && !isConnection ? smartComponentLiveRoleOptions(selectedSmartComponentId) : [],
+          objectIndex: smartComponentObjectIndex(),
+          capabilities: { ...smartComponentCapabilities(), openParameters: false }
+        }),
+        ...connectionParameterSections
+      ], generatedSmartComponentBindings())
     });
   };
 

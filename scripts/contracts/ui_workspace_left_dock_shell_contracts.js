@@ -145,9 +145,9 @@ function checkLeftDockShellContracts(context) {
     || !smartComponentBrowserText.includes("onPresetSelected?.(item)")
     || !viewerRuntimeTextForInspector.includes("mountPresetSmartComponentUi")
     || !viewerRuntimeTextForInspector.includes("onPresetSelected: (item) => showSmartComponentPresetEditor(item.id)")
-    || !viewerRuntimeTextForInspector.includes('editorApi?.selectSmartComponent(rootSmartComponent.id, { inspectorPanel: "component" })')
+    || !viewerRuntimeTextForInspector.includes('editorApi?.selectSmartComponent(rootSmartComponent.id, { inspectorPanel: "properties" })')
   ) {
-    fail(errors, "Smart Component browser must treat connection presets as settings selections, not member-pick actions, and route them to the right Component inspector tab");
+    fail(errors, "Smart Component browser must treat connection presets as settings selections, not member-pick actions, and route them to the right Properties inspector tab");
   }
   const leftDockResults = leftDockResultMetadata.leftDockResultSpecs?.({
     project: readJson("bobercad/data/projects/sample_portal_frame.json"),
@@ -761,12 +761,13 @@ function checkLeftDockShellContracts(context) {
     !viewerRuntimeIntegrationText.includes("function showInspectorProperties")
     || !viewerRuntimeIntegrationText.includes("if (activeCommandId) workspaceBindings?.showInspectorProperties?.()")
     || !viewerRuntimeIntegrationText.includes("workspaceBindings.showInspectorProperties();")
-    || !viewerRuntimeTextForInspector.includes('options.inspectorPanel === "component"')
-    || !viewerRuntimeTextForInspector.includes('showInspectorContext("component"')
-    || !viewerRuntimeTextForInspector.includes('onSmartComponentCreated: (smartComponentId) => showSmartComponentEditor(smartComponentId, { inspectorPanel: "component" })')
-    || !inspectorPanelText.includes('inspectorPanel: "component"')
+    || !viewerRuntimeTextForInspector.includes('onSmartComponentCreated: (smartComponentId) => showSmartComponentEditor(smartComponentId, { inspectorPanel: "properties" })')
+    || !viewerRuntimeTextForInspector.includes('editorApi?.selectSmartComponent(smartComponentId, { ...options, inspectorPanel, notify: false })')
+    || viewerRuntimeTextForInspector.includes('inspectorPanel: "component"')
+    || viewerRuntimeTextForInspector.includes('showInspectorContext("component"')
+    || !inspectorPanelText.includes('inspectorPanel: "properties"')
   ) {
-    fail(errors, "Viewer runtime and Inspector actions must explicitly choose generated Properties by default and Component context only for parameter editing");
+    fail(errors, "Viewer runtime and Inspector actions must route Smart Component editing through generated Properties, not a separate Component context");
   }
   if (
     !inspectorPanelText.includes("inspectorMemberIdentitySection")

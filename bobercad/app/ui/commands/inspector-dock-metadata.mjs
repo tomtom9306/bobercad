@@ -33,16 +33,6 @@ export const INSPECTOR_CONTEXTS = Object.freeze([
     description: "Advanced feature and cutting-body editor.",
     icon: "feature",
     panelSlot: "feature"
-  },
-  {
-    id: "component",
-    label: "Component",
-    commandId: "inspector.context.component",
-    action: "onInspectorContextComponent",
-    title: "Show component parameters",
-    description: "Smart Component parameters and diagnostics.",
-    icon: "smart-component",
-    panelSlot: "component"
   }
 ]);
 

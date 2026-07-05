@@ -670,13 +670,15 @@ textarea.bc-input {
 
 .bc-panel-tab-strip {
   overflow-x: hidden;
-  padding: var(--bc-space-4) var(--bc-space-5) 0;
-  border-bottom: 1px solid var(--bc-color-border);
-  background: color-mix(in srgb, var(--bc-color-surface-solid) 74%, var(--bc-color-border));
+  border: 1px solid var(--bc-color-border);
+  border-radius: var(--bc-radius-2);
+  background: color-mix(in srgb, var(--bc-color-surface-solid) 88%, var(--bc-color-border));
 }
 
 .bc-panel-tab {
-  background: color-mix(in srgb, var(--bc-color-surface-solid) 82%, var(--bc-color-border));
+  min-height: 30px;
+  padding: 0 var(--bc-space-3);
+  background: transparent;
 }
 
 .bc-option-grid-field {
@@ -728,24 +730,6 @@ textarea.bc-input {
   white-space: nowrap;
 }
 
-.bc-smart-component-member-field .bc-option-grid {
-  grid-template-columns: 1fr;
-}
-
-.bc-smart-component-member-option {
-  min-height: 34px;
-  justify-items: start;
-  padding: var(--bc-space-2) var(--bc-space-3);
-  text-align: left;
-}
-
-.bc-smart-component-member-option .bc-option-grid-label {
-  overflow: visible;
-  text-overflow: clip;
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
-
 .bc-number-choice-input {
   flex: 1 1 64px;
   width: 100%;
@@ -782,6 +766,7 @@ textarea.bc-input {
 
 .bc-properties-panel {
   display: grid;
+  align-content: start;
   gap: var(--bc-space-4);
   min-width: 0;
   padding: var(--bc-space-4);
@@ -842,12 +827,15 @@ textarea.bc-input {
 .bc-properties-badges {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
   gap: var(--bc-space-2);
   min-width: 0;
 }
 
 .bc-properties-badge {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   min-height: 20px;
   box-sizing: border-box;
@@ -1457,6 +1445,12 @@ textarea.bc-input {
   align-items: center;
 }
 
+.bc-smart-component-member-field {
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: start;
+  padding: var(--bc-space-2) 0;
+}
+
 .bc-object-ref-label {
   min-width: 0;
   overflow: hidden;
@@ -1474,6 +1468,13 @@ textarea.bc-input {
   color: var(--bc-color-text);
 }
 
+.bc-smart-component-member-field .bc-object-ref-value {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1px var(--bc-space-2);
+  align-items: center;
+}
+
 .bc-object-ref-value .bc-icon {
   width: 14px;
   height: 14px;
@@ -1488,10 +1489,149 @@ textarea.bc-input {
   white-space: nowrap;
 }
 
+.bc-smart-component-member-field .bc-object-ref-id {
+  white-space: normal;
+  line-height: var(--bc-line-tight);
+}
+
 .bc-object-ref-status {
   flex: 0 0 auto;
   color: var(--bc-color-text-muted);
   font-size: var(--bc-font-size-11);
+}
+
+.bc-smart-component-member-field .bc-object-ref-status {
+  grid-column: 2;
+  font-family: var(--bc-font-family-mono, var(--bc-font-family));
+}
+
+.bc-selection-box {
+  display: grid;
+  gap: var(--bc-space-3);
+  min-width: 0;
+  --bc-selection-box-accent: var(--bc-color-accent);
+  --bc-selection-box-surface: color-mix(in srgb, var(--bc-selection-box-accent) 15%, var(--bc-color-field));
+  --bc-selection-box-rail: color-mix(in srgb, var(--bc-selection-box-accent) 58%, var(--bc-color-field));
+  --bc-selection-box-row: color-mix(in srgb, var(--bc-color-field) 84%, transparent);
+}
+
+.bc-selection-box[data-selection-group="primary"] {
+  --bc-selection-box-accent: #0284c7;
+  --bc-selection-box-surface: color-mix(in srgb, #38bdf8 16%, var(--bc-color-field));
+  --bc-selection-box-rail: #0284c7;
+  --bc-selection-box-row: color-mix(in srgb, #e0f2fe 62%, var(--bc-color-field));
+}
+
+.bc-selection-box[data-selection-group="secondary"] {
+  --bc-selection-box-accent: #b45309;
+  --bc-selection-box-surface: color-mix(in srgb, #fbbf24 18%, var(--bc-color-field));
+  --bc-selection-box-rail: #b45309;
+  --bc-selection-box-row: color-mix(in srgb, #fef3c7 62%, var(--bc-color-field));
+}
+
+.bc-selection-box-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--bc-color-text);
+  font-weight: var(--bc-font-weight-bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bc-selection-box-frame {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  min-width: 0;
+  min-height: 58px;
+  border: 1px solid var(--bc-selection-box-accent);
+  background: var(--bc-selection-box-surface);
+}
+
+.bc-selection-box-rail {
+  background: var(--bc-selection-box-rail);
+  border-right: 1px solid color-mix(in srgb, var(--bc-selection-box-accent) 74%, var(--bc-color-border));
+}
+
+.bc-selection-box-list {
+  display: grid;
+  align-content: start;
+  gap: var(--bc-space-2);
+  min-width: 0;
+  padding: var(--bc-space-3);
+}
+
+.bc-selection-box-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--bc-space-3);
+  align-items: center;
+  min-width: 0;
+  min-height: 32px;
+  border: 1px solid color-mix(in srgb, var(--bc-selection-box-accent) 30%, transparent);
+  background: var(--bc-selection-box-row);
+  padding: var(--bc-space-2) var(--bc-space-3);
+}
+
+.bc-selection-box-copy {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1px var(--bc-space-3);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.bc-selection-box-role {
+  color: var(--bc-selection-box-accent);
+  font-size: var(--bc-font-size-11);
+  font-weight: var(--bc-font-weight-bold);
+  text-transform: uppercase;
+}
+
+.bc-selection-box-title,
+.bc-selection-box-id {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bc-selection-box-title {
+  color: var(--bc-color-text);
+  font-weight: var(--bc-font-weight-medium);
+}
+
+.bc-selection-box-id {
+  grid-column: 2;
+  color: var(--bc-color-text-muted);
+  font-family: var(--bc-font-family-mono, var(--bc-font-family));
+  font-size: var(--bc-font-size-11);
+}
+
+.bc-selection-box-row-actions,
+.bc-selection-box-actions {
+  display: inline-flex;
+  gap: var(--bc-space-2);
+  justify-content: flex-end;
+}
+
+.bc-selection-box-row-actions .bc-button {
+  width: 26px;
+  min-width: 26px;
+  min-height: 24px;
+  padding: 0;
+}
+
+.bc-selection-box-row-actions .bc-button-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.bc-selection-box-empty {
+  color: var(--bc-color-text-muted);
 }
 
 .bc-object-ref-actions {

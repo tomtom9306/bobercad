@@ -98,7 +98,7 @@ node .\scripts\validate_json_schema.js .\bobercad\data\projects\sample_seed_conn
 - Use `npm run dev` or `node .\scripts\serve_viewer.js` from the assigned worktree; do not start ad hoc local servers on random ports.
 - The integrator `main` server defaults to `http://127.0.0.1:5173/`.
 - Agent servers use dedicated ports automatically: `agent1` -> `5181`, `agent2` -> `5182`, ..., `agent10` -> `5190`.
-- Preview URLs reported by agents must include the branch query parameter printed by the server, for example `http://127.0.0.1:5182/bobercad/app/ui/viewer/index.html?demo=portal-frame-1&qaView=axonometric&branch=codex%2Fagent2`.
-- If an agent preview URL uses port `5173` or lacks the `branch=codex%2FagentN` query parameter, it is not acceptable for user review because it may be showing `main`.
+- Preview URLs reported by agents must put the branch immediately after the IP and port, as a path prefix printed by the server. For example: `http://127.0.0.1:5182/codex/agent2/bobercad/app/ui/viewer/index.html?demo=portal-frame-1&qaView=axonometric`.
+- If an agent preview URL uses port `5173` or does not start with `/codex/agentN/` after the IP and port, it is not acceptable for user review because it may be showing `main`.
 - `scripts/dev_server.config.json` is authoritative for host, port, default viewer path, and replacement policy.
 - When `replaceExisting` is `true`, the server stops any current listener only on that worktree's assigned port, so agent previews do not replace the integrator's `main` server.

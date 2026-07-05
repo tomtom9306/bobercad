@@ -532,6 +532,68 @@ function checkInspectorObjectContracts(context) {
       fail(errors, `Generated Properties binding adapter must attach support-object handlers from serializable intents for ${collection}: ${JSON.stringify(boundSupportSections)}`);
     }
   }
+  const connectionZoneMemberSections = inspectorPropertyMetadata.inspectorSupportObjectPropertySections?.({
+    collection: "connectionZones",
+    object: {
+      id: "zone-a",
+      name: "Zone A",
+      mainObjectId: "member_main",
+      secondaryObjectIds: ["member_secondary"],
+      interfaceIds: ["object_a"],
+      objectIds: ["object_b"],
+      smartComponentInstanceIds: ["component-a"]
+    },
+    actions: {
+      ...supportActions,
+      objectIndex: {
+        ...supportActions.objectIndex,
+        member_main: { collection: "members", type: "column" },
+        member_secondary: { collection: "members", type: "beam" },
+        "component-a": { collection: "smartComponentInstances", type: "fin-plate" }
+      },
+      project: {
+        model: {
+          members: {
+            member_main: { id: "member_main", fabrication: { partMark: "C1" }, bim: { name: "Column C1" } },
+            member_secondary: { id: "member_secondary", fabrication: { partMark: "B1" }, bim: { name: "Beam B1" } }
+          },
+          smartComponentInstances: {
+            "component-a": {
+              id: "component-a",
+              type: "moment-end-plate",
+              kind: "connection",
+              sourceComponent: { id: "end-plate-m16-2x2" },
+              inputs: {}
+            }
+          }
+        }
+      }
+    }
+  });
+  const connectionZoneMemberSection = connectionZoneMemberSections?.find((section) => section.id === "inspector.properties.object.connectionZone.members");
+  const connectionZoneMainMember = connectionZoneMemberSection?.fields?.find((field) => field.label === "Main");
+  const connectionZoneSecondaryMember = connectionZoneMemberSection?.fields?.find((field) => field.label === "Secondary");
+  const connectionZoneActionField = connectionZoneMemberSection?.fields?.find((field) => field.label === "Member actions");
+  const connectionZoneMainSelect = connectionZoneMainMember?.actions?.find((field) => field.action === "objectRef.select");
+  const connectionZoneMemberFitActions = [connectionZoneActionField, connectionZoneMainMember, connectionZoneSecondaryMember].flatMap((field) => field?.actions || []).filter((field) => field.action === "objectRef.fit");
+  if (
+    connectionZoneMemberSection?.label !== "Members"
+    || connectionZoneMemberSection?.open !== true
+    || connectionZoneMainMember?.type !== "objectRef"
+    || connectionZoneMainMember?.value !== "C1 - Column C1"
+    || connectionZoneMainMember?.status !== "member_main"
+    || connectionZoneMainMember?.className !== "bc-smart-component-member-field"
+    || connectionZoneMainSelect?.payload?.objectId !== "member_main"
+    || connectionZoneSecondaryMember?.type !== "objectRef"
+    || connectionZoneSecondaryMember?.value !== "B1 - Beam B1"
+    || connectionZoneSecondaryMember?.status !== "member_secondary"
+    || connectionZoneSecondaryMember?.className !== "bc-smart-component-member-field"
+    || connectionZoneMemberFitActions.length !== 0
+    || connectionZoneActionField
+    || generatedPropertyBindings.generatedPropertyDescriptorsContainFunctions?.(connectionZoneMemberSections)
+  ) {
+    fail(errors, `inspector-property-metadata connection zone must expose members without relying on legacy/manual swap behavior: ${JSON.stringify(connectionZoneMemberSections)}`);
+  }
   const objectReferenceSection = inspectorPropertyMetadata.inspectorObjectReferenceSection?.({
     id: "demo.refs",
     label: "References",
@@ -643,6 +705,7 @@ function checkInspectorObjectContracts(context) {
     smartComponents: {
       updateParameter: (smartComponentId, definition, path, value) => bindingEvents.push(["parameter", smartComponentId, definition.type, path, value]),
       setRoleActive: (smartComponentId, role, active) => bindingEvents.push(["role", smartComponentId, role, active]),
+      pickMember: (smartComponentId, role) => bindingEvents.push(["pickConnectionMember", smartComponentId, role]),
       resetObjectOverrides: (smartComponentId, objectId) => bindingEvents.push(["reset", smartComponentId, objectId]),
       detachObject: (smartComponentId, objectId) => bindingEvents.push(["detach", smartComponentId, objectId]),
       reattachObject: (smartComponentId, objectId) => bindingEvents.push(["reattach", smartComponentId, objectId])
@@ -694,6 +757,7 @@ function checkInspectorObjectContracts(context) {
   inspectorBindings.generatedSmartComponentBindings().actions["smartComponent.objectOverrides.reset"]({ payload: { smartComponentId: "component-a", objectId: "object-a" } });
   inspectorBindings.generatedSmartComponentBindings().actions["smartComponent.object.detach"]({ payload: { smartComponentId: "component-a", objectId: "object-detach" } });
   inspectorBindings.generatedSmartComponentBindings().actions["smartComponent.object.reattach"]({ payload: { smartComponentId: "component-a", objectId: "object-reattach" } });
+  inspectorBindings.generatedSmartComponentBindings().actions["smartComponent.member.pick"]({ payload: { smartComponentId: "component-a", role: "main" } });
   inspectorBindings.generatedSupportObjectBindings().commits["supportObject.workPoint.update"](4, { patchKey: "role" });
   inspectorBindings.generatedObjectBindings().actions["smartComponent.objectOverrides.reset"]({ payload: { smartComponentId: "component-b", objectId: "object-bound-reset" } });
   inspectorBindings.generatedObjectBindings().actions["smartComponent.object.detach"]({ payload: { smartComponentId: "component-b", objectId: "object-bound-detach" } });
@@ -767,6 +831,7 @@ function checkInspectorObjectContracts(context) {
     || !bindingEvents.some((event) => event[0] === "reset" && event[1] === "component-a" && event[2] === "object-a")
     || !bindingEvents.some((event) => event[0] === "detach" && event[1] === "component-a" && event[2] === "object-detach")
     || !bindingEvents.some((event) => event[0] === "reattach" && event[1] === "component-a" && event[2] === "object-reattach")
+    || !bindingEvents.some((event) => event[0] === "pickConnectionMember" && event[1] === "component-a" && event[2] === "main")
     || !bindingEvents.some((event) => event[0] === "reset" && event[1] === "component-b" && event[2] === "object-bound-reset")
     || !bindingEvents.some((event) => event[0] === "detach" && event[1] === "component-b" && event[2] === "object-bound-detach")
     || !bindingEvents.some((event) => event[0] === "reattach" && event[1] === "component-b" && event[2] === "object-bound-reattach")

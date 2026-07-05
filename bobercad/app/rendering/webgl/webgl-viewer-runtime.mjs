@@ -9,6 +9,30 @@ import { createWebglPickColorState } from "./webgl-pick-color-state.mjs";
 import { createWebglRenderOrchestrator } from "./webgl-render-orchestrator.mjs";
 import { attachWebglViewerControls } from "./webgl-viewer-controls.mjs";
 import { isActiveSmartComponentObject } from "../scene/scene-object-visibility.mjs";
+import { safeHexColor } from "./colors.mjs";
+
+function normalizeHighlightedObjectColors(colors = null) {
+  const entries = colors instanceof Map
+    ? [...colors.entries()]
+    : colors && typeof colors === "object" && !Array.isArray(colors)
+      ? Object.entries(colors)
+      : [];
+  const normalized = new Map();
+  for (const [objectId, color] of entries) {
+    const safeColor = safeHexColor(color, "");
+    if (objectId && safeColor) normalized.set(objectId, safeColor);
+  }
+  return normalized;
+}
+
+function sameHighlightColorMap(left = new Map(), right = new Map()) {
+  if (left.size !== right.size) return false;
+  for (const [objectId, color] of right) {
+    if (left.get(objectId) !== color) return false;
+  }
+  return true;
+}
+
 export function createWebglViewer(canvas, reset, settings, options = {}) {
   const domRuntime = options.domRuntime;
   const createDimensionOverlayUi = options.dimensionOverlayFactory;
@@ -136,6 +160,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     requestDraw
   });
   let highlightedObjectIds = new Set();
+  let highlightedObjectColors = new Map();
   const detailPixelThreshold = finiteNumber(settings.render.lod?.detailPixelThreshold)
     ? settings.render.lod.detailPixelThreshold
     : 24;
@@ -171,6 +196,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     getScene: () => scene,
     getDisplayMode: () => displayMode,
     getHighlightedObjectIds: () => highlightedObjectIds,
+    getHighlightedObjectColor: (objectId) => highlightedObjectColors.get(objectId) || null,
     getAuthoringOverlay: () => authoringOverlay,
     getAuthoringHoveredHandle: () => authoringHoveredHandle,
     getDimensionOverlay: () => dimensionOverlay,
@@ -891,10 +917,12 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     setDimensionPlacementHandler(handler) {
       dimensionPlacementHandler = handler;
     },
-    setHighlightedObjects(objectIds = []) {
-      if (sameIdSet(highlightedObjectIds, objectIds)) return;
+    setHighlightedObjects(objectIds = [], options = {}) {
+      const nextColors = normalizeHighlightedObjectColors(options.colors);
+      if (sameIdSet(highlightedObjectIds, objectIds) && sameHighlightColorMap(highlightedObjectColors, nextColors)) return;
       const memberOnlyHighlight = isMemberOnlyHighlightChange(scene, highlightedObjectIds, objectIds);
       highlightedObjectIds = new Set(objectIds);
+      highlightedObjectColors = nextColors;
       if (!memberOnlyHighlight) {
         invalidateMemberInstanceCache();
         invalidateStaticSceneCache();

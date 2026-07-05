@@ -5,7 +5,7 @@ import { projectProfileCatalog } from "../../engine/api/project/profiles.mjs";
 import { smartComponentConnectionZoneId, smartComponentDetachedObjectIds, smartComponentMainMemberId, smartComponentOwnedObjectIds, smartComponentSecondaryMemberId } from "../../engine/api/project/dependencies.mjs";
 import { memberAxesByTarget, normalizeCoordinateSpace } from "../../rendering/scene/authoring/member-axis-space.mjs";
 import { profileRadius, projectObjectCount } from "./viewer-render-scheduler.mjs";
-import { smartComponentHighlightObjectIds } from "./viewer-smart-component-highlights.mjs";
+import { smartComponentEditingHighlightObjectIds, smartComponentMemberHighlightColors } from "./viewer-smart-component-highlights.mjs";
 
 const { add, sub, mul, dot, len } = v;
 const norm = (point) => v.safeNorm(point, [0, 0, 1]);
@@ -502,7 +502,11 @@ export function createViewerQaBridge({
       viewer.setDimensionOverlay({ lines: [], labels: [] });
 
       const basis = smartComponentBasis(project, instance);
-      if (options.highlight) viewer.setHighlightedObjects(smartComponentHighlightObjectIds(project, smartComponentObjectIds));
+      if (options.highlight) {
+        viewer.setHighlightedObjects(smartComponentEditingHighlightObjectIds(project, smartComponentId, smartComponentObjectIds), {
+          colors: smartComponentMemberHighlightColors(project, smartComponentId)
+        });
+      }
       else viewer.setHighlightedObjects([]);
 
       const zone = project.model.connectionZones?.[smartComponentConnectionZoneId(instance)];
