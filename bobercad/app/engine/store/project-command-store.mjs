@@ -521,7 +521,19 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
     transaction.changed(objectId);
     return commitTransaction(transaction);
   };
-  const replacePlate = (plateId, update) => replaceClonedIndexedObject("plates", plateId, plateById, update, "plate");
+  const plateTypeCanChange = (from, to) => {
+    return from === to || (["plate", "bent-plate"].includes(from) && ["plate", "bent-plate"].includes(to));
+  };
+  const replacePlate = (plateId, update) => {
+    const transaction = createProjectTransaction(currentProject, { commandType: "plates.replace" });
+    const next = transaction.project;
+    const plate = plateById(next, plateId);
+    const updated = validateUpdatedModelObject(update(clone(plate)), plateId, "plate");
+    if (!plateTypeCanChange(plate.type, updated.type)) fail("plate type cannot be changed");
+    setIndexedModelObject(next, "plates", plateId, updated);
+    transaction.changed(plateId);
+    return commitTransaction(transaction);
+  };
   const replaceSketch = (sketchId, update) => replaceClonedIndexedObject("sketches", sketchId, sketchById, update, "sketch");
   const replaceGridSystem = (gridSystemId, update) => {
     const transaction = replacementTransaction("gridSystems", gridSystemId, "gridSystem.replace");
@@ -1002,7 +1014,9 @@ export function createProjectStore({ project, profiles, smartComponentCatalog, f
       return replaceFeature(featureId, (feature) => {
         if (feature.type !== "boolean-part") fail(`${featureId}: feature body is only supported for boolean-part features`);
         if (!feature.body || typeof feature.body !== "object" || Array.isArray(feature.body)) fail(`${featureId}: feature body must be an object`);
-        return { ...feature, body: mergePatch(feature.body, patch) };
+        const body = mergePatch(feature.body, patch);
+        if (patch.sketch !== undefined && body.type === "polygonal-prism") delete body.outline;
+        return { ...feature, body };
       });
     },
 

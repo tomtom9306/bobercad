@@ -243,7 +243,7 @@ function memberCsgPolygons(project, profiles, member, profile, color, scene = nu
     }
 
     if (feature.type === "clearance-cut") {
-      const bodies = cutBodiesForFeature(project, profiles, feature);
+      const bodies = cutBodiesForFeature(project, profiles, feature, { tessellation: scene.tessellation });
       if (!bodies.length) geometryError(`${feature.id}: clearance-cut missing derivable body`);
       for (const [bodyIndex, body] of bodies.entries()) {
         polygons = csgSubtract(polygons, cutBodyPolygons(body, featureCutterShared(shared, feature, body, bodyIndex), scene.tessellation));
@@ -253,7 +253,7 @@ function memberCsgPolygons(project, profiles, member, profile, color, scene = nu
 
     if (feature.type === "boolean-part") {
       if (!["BOOLEAN_CUT", "BOOLEAN_ADD", "BOOLEAN_WELDPREP"].includes(feature.booleanType)) geometryError(`${feature.id}: unsupported booleanType ${feature.booleanType}`);
-      const bodies = cutBodiesForFeature(project, profiles, feature);
+      const bodies = cutBodiesForFeature(project, profiles, feature, { tessellation: scene.tessellation });
       if (!bodies.length) geometryError(`${feature.id}: boolean-part missing derivable body`);
       const bodyPolygons = bodies.flatMap((body, bodyIndex) => cutBodyPolygons(body, featureCutterShared(shared, feature, body, bodyIndex), scene.tessellation));
       polygons = feature.booleanType === "BOOLEAN_ADD" ? csgUnion(polygons, bodyPolygons) : csgSubtract(polygons, bodyPolygons);

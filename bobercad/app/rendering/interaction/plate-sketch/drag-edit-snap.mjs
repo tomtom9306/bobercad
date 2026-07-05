@@ -1,6 +1,6 @@
 import { v } from "../../../engine/core/math.mjs";
 import { arrayValues } from "../../../engine/core/model.mjs";
-import { addPlateSketchConstructionLine as addPlateSketchConstructionLineData, insertPlateSketchVertex as insertPlateSketchVertexData, notchPlateSketchCorner as notchPlateSketchCornerData, orderedSketchLoop, plateSketchEntityDefinitionStatus, plateSketchRelationActionPreview, plateSketchRelationHealth, removePlateSketchRelation as removePlateSketchRelationData, removePlateSketchVertex as removePlateSketchVertexData, setPlateSketchEdgeAngle as setPlateSketchEdgeAngleData, setPlateSketchEdgeAngleMode as setPlateSketchEdgeAngleModeData, setPlateSketchEdgeLength as setPlateSketchEdgeLengthData, setPlateSketchEdgeLengthMode as setPlateSketchEdgeLengthModeData, setPlateSketchPointDistance as setPlateSketchPointDistanceData, setPlateSketchPointDistanceMode as setPlateSketchPointDistanceModeData, setPlateSketchVertex as setPlateSketchVertexData, setPlateSketchVertices as setPlateSketchVerticesData, sketchAngleRelationMode, sketchConstructionEdges, sketchConstructionVertices, sketchDistanceRelationMode, sketchEdgeAngleDegrees, sketchEdgeAxisRelation, sketchEdges, sketchFromOutline, sketchLengthRelationMode, sketchPointDistance, sketchRelationBadge, sketchRelationEdgeIds, sketchRelationKey, sketchRelationLabel, sketchRelationVertexIds, sketchRelations, sketchRelationsForEdge, sketchRelationsForVertex, sketchVertices, upsertPlateSketchRelation as upsertPlateSketchRelationData } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { addPlateSketchConstructionLine as addPlateSketchConstructionLineData, insertPlateSketchVertex as insertPlateSketchVertexData, notchPlateSketchCorner as notchPlateSketchCornerData, orderedSketchLoop, plateSketchEntityDefinitionStatus, plateSketchRelationActionPreview, plateSketchRelationHealth, removePlateSketchRelation as removePlateSketchRelationData, removePlateSketchVertex as removePlateSketchVertexData, setPlateSketchEdgeAngle as setPlateSketchEdgeAngleData, setPlateSketchEdgeAngleMode as setPlateSketchEdgeAngleModeData, setPlateSketchEdgeLength as setPlateSketchEdgeLengthData, setPlateSketchEdgeLengthMode as setPlateSketchEdgeLengthModeData, setPlateSketchPointDistance as setPlateSketchPointDistanceData, setPlateSketchPointDistanceMode as setPlateSketchPointDistanceModeData, setPlateSketchVertex as setPlateSketchVertexData, setPlateSketchVertices as setPlateSketchVerticesData, sketchAngleRelationMode, sketchConstructionEdges, sketchConstructionVertices, sketchDistanceRelationMode, sketchEdgeAngleDegrees, sketchEdgeAxisRelation, sketchEdgeIsCircularArc, sketchEdges, sketchFromOutline, sketchLengthRelationMode, sketchPointDistance, sketchRelationBadge, sketchRelationEdgeIds, sketchRelationKey, sketchRelationLabel, sketchRelationVertexIds, sketchRelations, sketchRelationsForEdge, sketchRelationsForVertex, sketchVertices, upsertPlateSketchRelation as upsertPlateSketchRelationData } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
 import { snapPointOverlay } from "../../scene/authoring/snap-overlays.mjs";
 import { adaptiveSnapGridStep, adaptiveSnapGridStepForHandle, snapScalarToGrid, snapSketchWorldTolerance } from "../snap-profiles.mjs";
 import { dimensionOverlayForPlate } from "./dimension-overlay.mjs";
@@ -29,6 +29,7 @@ export function edgeDragContext(plate, edgeId, settings = {}, options = {}) {
   const edges = sketchEdges(plate.sketch);
   const edge = edges.find((item) => item.id === edgeId);
   if (!edge) return null;
+  const currentIsCircularArc = sketchEdgeIsCircularArc(plate.sketch, edgeId);
   const loop = orderedSketchLoop(plate.sketch);
   const index = loop.findIndex((item) => item.outgoingEdgeId === edgeId);
   if (index < 0) return null;
@@ -55,6 +56,7 @@ export function edgeDragContext(plate, edgeId, settings = {}, options = {}) {
   }
   for (const candidateEdge of edges) {
     if (candidateEdge.id === edgeId) continue;
+    if (currentIsCircularArc || sketchEdgeIsCircularArc(plate.sketch, candidateEdge.id)) continue;
     const candidateFrom = loop.find((item) => item.vertexId === candidateEdge.from);
     const candidateTo = loop.find((item) => item.vertexId === candidateEdge.to);
     if (!candidateFrom || !candidateTo) continue;
@@ -172,6 +174,8 @@ export function vertexDragContext(plate, vertexId, settings = {}) {
   const outgoingConstraint = edgeTangentConstraint(plate.sketch, current.outgoingEdgeId, relationHealth);
   const incomingRelation = incomingConstraint?.relation || null;
   const outgoingRelation = outgoingConstraint?.relation || null;
+  const incomingLineRelationEligible = !sketchEdgeIsCircularArc(plate.sketch, current.incomingEdgeId);
+  const outgoingLineRelationEligible = !sketchEdgeIsCircularArc(plate.sketch, current.outgoingEdgeId);
   return {
     vertexId,
     basePoint: [...current.point],
@@ -188,6 +192,8 @@ export function vertexDragContext(plate, vertexId, settings = {}) {
     outgoingConstraint,
     incomingRelation,
     outgoingRelation,
+    incomingLineRelationEligible,
+    outgoingLineRelationEligible,
     hasLockedAdjacentRelation: Boolean(incomingConstraint || outgoingConstraint),
     incomingOrientation: incomingRelation?.type === "horizontal" ? "y" : incomingRelation?.type === "vertical" ? "z" : axisOrientation(previous.point, current.point),
     outgoingOrientation: outgoingRelation?.type === "horizontal" ? "y" : outgoingRelation?.type === "vertical" ? "z" : axisOrientation(current.point, next.point),
@@ -414,8 +420,8 @@ export function vertexSnapCandidates(drag, rawPoint, handle, settings = {}, inpu
     ], `Plate grid ${formatMm(gridStep)}`, 10);
   }
   const adjacentAxisRelation = (vertexId, relationType) => {
-    if (vertexId === drag.previousVertexId) return { type: relationType, edgeId: drag.incomingEdgeId };
-    if (vertexId === drag.nextVertexId) return { type: relationType, edgeId: drag.outgoingEdgeId };
+    if (vertexId === drag.previousVertexId && drag.incomingLineRelationEligible) return { type: relationType, edgeId: drag.incomingEdgeId };
+    if (vertexId === drag.nextVertexId && drag.outgoingLineRelationEligible) return { type: relationType, edgeId: drag.outgoingEdgeId };
     return null;
   };
   for (const item of drag.otherVertices) {
@@ -437,24 +443,32 @@ export function vertexSnapCandidates(drag, rawPoint, handle, settings = {}, inpu
     }
   }
   if (axisRelationSnaps) {
-    pushAxisRelationCandidate(candidates, drag.incomingEdgeId, drag.previousPoint, rawPoint, "horizontal", `Horizontal ${drag.incomingEdgeId}`, 38, relationMaxWorld);
-    pushAxisRelationCandidate(candidates, drag.incomingEdgeId, drag.previousPoint, rawPoint, "vertical", `Vertical ${drag.incomingEdgeId}`, 38, relationMaxWorld);
-    pushAxisRelationCandidate(candidates, drag.outgoingEdgeId, drag.nextPoint, rawPoint, "horizontal", `Horizontal ${drag.outgoingEdgeId}`, 38, relationMaxWorld);
-    pushAxisRelationCandidate(candidates, drag.outgoingEdgeId, drag.nextPoint, rawPoint, "vertical", `Vertical ${drag.outgoingEdgeId}`, 38, relationMaxWorld);
+    if (drag.incomingLineRelationEligible) {
+      pushAxisRelationCandidate(candidates, drag.incomingEdgeId, drag.previousPoint, rawPoint, "horizontal", `Horizontal ${drag.incomingEdgeId}`, 38, relationMaxWorld);
+      pushAxisRelationCandidate(candidates, drag.incomingEdgeId, drag.previousPoint, rawPoint, "vertical", `Vertical ${drag.incomingEdgeId}`, 38, relationMaxWorld);
+    }
+    if (drag.outgoingLineRelationEligible) {
+      pushAxisRelationCandidate(candidates, drag.outgoingEdgeId, drag.nextPoint, rawPoint, "horizontal", `Horizontal ${drag.outgoingEdgeId}`, 38, relationMaxWorld);
+      pushAxisRelationCandidate(candidates, drag.outgoingEdgeId, drag.nextPoint, rawPoint, "vertical", `Vertical ${drag.outgoingEdgeId}`, 38, relationMaxWorld);
+    }
   }
 
   if (equalLengthSnaps) {
-    pushEqualLengthCandidate(candidates, drag.incomingEdgeId, drag.previousPoint, rawPoint, drag.incomingEqualLength, `Equal ${drag.incomingEqualLength?.otherEdgeId || ""}`.trim(), 58, equalLengthMaxWorld);
-    pushEqualLengthCandidate(candidates, drag.outgoingEdgeId, drag.nextPoint, rawPoint, drag.outgoingEqualLength, `Equal ${drag.outgoingEqualLength?.otherEdgeId || ""}`.trim(), 58, equalLengthMaxWorld);
+    if (drag.incomingLineRelationEligible) {
+      pushEqualLengthCandidate(candidates, drag.incomingEdgeId, drag.previousPoint, rawPoint, drag.incomingEqualLength, `Equal ${drag.incomingEqualLength?.otherEdgeId || ""}`.trim(), 58, equalLengthMaxWorld);
+    }
+    if (drag.outgoingLineRelationEligible) {
+      pushEqualLengthCandidate(candidates, drag.outgoingEdgeId, drag.nextPoint, rawPoint, drag.outgoingEqualLength, `Equal ${drag.outgoingEqualLength?.otherEdgeId || ""}`.trim(), 58, equalLengthMaxWorld);
+    }
     for (const target of drag.equalLengthTargets || []) {
-      pushEqualLengthCandidate(candidates, drag.incomingEdgeId, drag.previousPoint, rawPoint, target, `Equal ${target.edgeId}`, 42, equalLengthMaxWorld);
-      pushEqualLengthCandidate(candidates, drag.outgoingEdgeId, drag.nextPoint, rawPoint, target, `Equal ${target.edgeId}`, 42, equalLengthMaxWorld);
+      if (drag.incomingLineRelationEligible) pushEqualLengthCandidate(candidates, drag.incomingEdgeId, drag.previousPoint, rawPoint, target, `Equal ${target.edgeId}`, 42, equalLengthMaxWorld);
+      if (drag.outgoingLineRelationEligible) pushEqualLengthCandidate(candidates, drag.outgoingEdgeId, drag.nextPoint, rawPoint, target, `Equal ${target.edgeId}`, 42, equalLengthMaxWorld);
     }
   }
 
   const chord = sub2(drag.nextPoint, drag.previousPoint);
   const radius = angleRelationSnaps ? len2(chord) / 2 : 0;
-  if (angleRelationSnaps && radius > EPSILON) {
+  if (angleRelationSnaps && drag.incomingLineRelationEligible && drag.outgoingLineRelationEligible && radius > EPSILON) {
     const center = midpoint(drag.previousPoint, drag.nextPoint);
     const fromCenter = sub2(rawPoint, center);
     const distance = len2(fromCenter);

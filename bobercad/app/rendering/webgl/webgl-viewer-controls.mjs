@@ -51,13 +51,22 @@ export function attachWebglViewerControls({
       // Pointer capture can be rejected after focus/control handoff; active drags still use received events.
     }
   };
+  const pointerModifiers = (event) => ({
+    altKey: Boolean(event.altKey),
+    ctrlKey: Boolean(event.ctrlKey),
+    metaKey: Boolean(event.metaKey),
+    shiftKey: Boolean(event.shiftKey)
+  });
 
   canvas.addEventListener("pointerdown", (event) => {
     if (!state.scene) return;
     event.preventDefault();
     const commandPointer = state.commandHandler?.active?.() && event.button === 0;
+    const commandNeedsHit = state.commandHandler?.needsPointerHit?.() !== false;
+    const commandNeedsPreciseHit = commandPointer && state.commandHandler?.needsPrecisePointerHit?.() === true;
     const pointer = pointerStateFromEvent(event, {
-      forceGpuHit: commandPointer && state.commandHandler.needsPointerHit?.() !== false
+      forceCpuHit: commandNeedsPreciseHit,
+      forceGpuHit: commandPointer && commandNeedsHit && !commandNeedsPreciseHit
     });
     const { x, y } = pointer.screen;
     const mode = event.button === 1 || event.button === 2 || event.shiftKey ? "pan" : "pending-orbit";
@@ -75,6 +84,20 @@ export function attachWebglViewerControls({
       state.commandHandler.pointerDown?.({ event, screen: pointer.screen, hit: pointer.hit, handle });
       return;
     }
+    if (event.button === 0 && !event.shiftKey) {
+      const clickResult = state.authoringHandler?.click?.({
+        handle,
+        screen: { x, y },
+        event,
+        hit: pointer.hit,
+        modifiers: pointerModifiers(event)
+      });
+      if (clickResult) {
+        clearAuthoringHover();
+        requestDraw();
+        return;
+      }
+    }
     if (handle?.kind === "coordinate-space-toggle") {
       if (state.authoringHandler?.click?.({ handle, screen: { x, y } }) !== false) {
         clearAuthoringHover();
@@ -87,12 +110,7 @@ export function attachWebglViewerControls({
         handle,
         screen: { x, y },
         event,
-        modifiers: {
-          altKey: Boolean(event.altKey),
-          ctrlKey: Boolean(event.ctrlKey),
-          metaKey: Boolean(event.metaKey),
-          shiftKey: Boolean(event.shiftKey)
-        }
+        modifiers: pointerModifiers(event)
       });
       if (beginResult === false) {
         // Continue into normal scene picking/orbiting when the authoring handler explicitly declines the handle.
@@ -120,12 +138,7 @@ export function attachWebglViewerControls({
         screen: { x, y },
         event,
         hit: pointer.hit,
-        modifiers: {
-          altKey: Boolean(event.altKey),
-          ctrlKey: Boolean(event.ctrlKey),
-          metaKey: Boolean(event.metaKey),
-          shiftKey: Boolean(event.shiftKey)
-        }
+        modifiers: pointerModifiers(event)
       });
       if (contextResult) {
         clearAuthoringHover();
@@ -190,11 +203,25 @@ export function attachWebglViewerControls({
   canvas.addEventListener("pointermove", (event) => {
     if (!state.drag) {
       if (state.commandHandler?.active?.()) {
+        const commandNeedsHit = state.commandHandler.needsPointerHit?.() !== false;
+        const commandNeedsPreciseHit = state.commandHandler.needsPrecisePointerHit?.() === true;
         const pointer = pointerStateFromEvent(event, {
-          includeHit: state.commandHandler.needsPointerHit?.() !== false,
-          forceGpuHit: state.commandHandler.needsPointerHit?.() !== false
+          includeHit: commandNeedsHit,
+          forceCpuHit: commandNeedsPreciseHit,
+          forceGpuHit: commandNeedsHit && !commandNeedsPreciseHit
         });
         state.commandHandler.pointerMove?.({ event, screen: pointer.screen, hit: pointer.hit });
+        return;
+      }
+      const authoringPointer = pointerStateFromEvent(event, { includeHit: false });
+      if (state.authoringHandler?.pointerMove?.({
+        event,
+        screen: authoringPointer.screen,
+        hit: authoringPointer.hit,
+        modifiers: pointerModifiers(event)
+      })) {
+        clearDimensionHover(event);
+        requestDraw();
         return;
       }
       pointerStateFromEvent(event);

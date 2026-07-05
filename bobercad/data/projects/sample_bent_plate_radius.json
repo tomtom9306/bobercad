@@ -1,0 +1,353 @@
+{
+  "$schema": "../../app/schemas/project.schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_bent_plate_radius_1",
+    "name": "Bent Plate Radius Demo",
+    "description": "Minimal project proving a bent plate renders visible curved bend-radius geometry from fabrication.bends radius data.",
+    "createdWith": "manual-seed-0.6.0"
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axisX": [
+        1,
+        0,
+        0
+      ],
+      "axisY": [
+        0,
+        1,
+        0
+      ],
+      "axisZ": [
+        0,
+        0,
+        1
+      ]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles/profile-libraries/starter-profiles/config.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials/material-libraries/starter-materials/config.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/frames/frame-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_bent_plate_radius",
+    "nodes": {
+      "site_bent_plate_radius": {
+        "id": "site_bent_plate_radius",
+        "type": "site",
+        "name": "Bent Plate Radius Site",
+        "children": [
+          "zone_bent_plate_radius"
+        ]
+      },
+      "zone_bent_plate_radius": {
+        "id": "zone_bent_plate_radius",
+        "type": "zone",
+        "name": "Bent Plate Radius Zone",
+        "children": []
+      }
+    }
+  },
+  "objectIndex": {
+    "bent_radius_plate_1": {
+      "collection": "plates",
+      "type": "bent-plate"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": [
+      "collectionDefault",
+      "typeDefault",
+      "object"
+    ],
+    "collections": {}
+  },
+  "model": {
+    "gridSystems": {},
+    "levels": {},
+    "workPoints": {},
+    "referencePlanes": {},
+    "groups": {},
+    "interfaces": {},
+    "connectionZones": {},
+    "assemblies": {},
+    "members": {},
+    "plates": {
+      "bent_radius_plate_1": {
+        "id": "bent_radius_plate_1",
+        "type": "bent-plate",
+        "material": "S355",
+        "thickness": 12,
+        "center": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "display": {
+          "color": "#dbeafe",
+          "edgeColor": "#0ea5e9"
+        },
+        "authoring": {
+          "source": "manual-bent-radius-test",
+          "notes": "Bent plate sample proving fabrication.bends radius renders as a visible curved bend strip at runtime."
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "bent_radius_plate_1_v1",
+              "point": [
+                -115,
+                -90
+              ]
+            },
+            {
+              "id": "bent_radius_plate_1_v2",
+              "point": [
+                115,
+                -90
+              ]
+            },
+            {
+              "id": "bent_radius_plate_1_v3",
+              "point": [
+                150,
+                -55
+              ]
+            },
+            {
+              "id": "bent_radius_plate_1_v4",
+              "point": [
+                150,
+                55
+              ]
+            },
+            {
+              "id": "bent_radius_plate_1_v5",
+              "point": [
+                115,
+                90
+              ]
+            },
+            {
+              "id": "bent_radius_plate_1_v6",
+              "point": [
+                -115,
+                90
+              ]
+            },
+            {
+              "id": "bent_radius_plate_1_v7",
+              "point": [
+                -150,
+                55
+              ]
+            },
+            {
+              "id": "bent_radius_plate_1_v8",
+              "point": [
+                -150,
+                -55
+              ]
+            }
+          ],
+          "constructionVertices": [
+            {
+              "id": "bent_radius_plate_1_cp1",
+              "point": [
+                95,
+                -55
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "bent_radius_plate_1_e1",
+              "from": "bent_radius_plate_1_v1",
+              "to": "bent_radius_plate_1_v2"
+            },
+            {
+              "id": "bent_radius_plate_1_e2",
+              "from": "bent_radius_plate_1_v2",
+              "to": "bent_radius_plate_1_v3",
+              "kind": "circular-arc",
+              "center": [
+                115,
+                -55
+              ],
+              "radius": 35,
+              "direction": "ccw"
+            },
+            {
+              "id": "bent_radius_plate_1_e3",
+              "from": "bent_radius_plate_1_v3",
+              "to": "bent_radius_plate_1_v4"
+            },
+            {
+              "id": "bent_radius_plate_1_e4",
+              "from": "bent_radius_plate_1_v4",
+              "to": "bent_radius_plate_1_v5",
+              "kind": "circular-arc",
+              "center": [
+                115,
+                55
+              ],
+              "radius": 35,
+              "direction": "ccw"
+            },
+            {
+              "id": "bent_radius_plate_1_e5",
+              "from": "bent_radius_plate_1_v5",
+              "to": "bent_radius_plate_1_v6"
+            },
+            {
+              "id": "bent_radius_plate_1_e6",
+              "from": "bent_radius_plate_1_v6",
+              "to": "bent_radius_plate_1_v7",
+              "kind": "circular-arc",
+              "center": [
+                -115,
+                55
+              ],
+              "radius": 35,
+              "direction": "ccw"
+            },
+            {
+              "id": "bent_radius_plate_1_e7",
+              "from": "bent_radius_plate_1_v7",
+              "to": "bent_radius_plate_1_v8"
+            },
+            {
+              "id": "bent_radius_plate_1_e8",
+              "from": "bent_radius_plate_1_v8",
+              "to": "bent_radius_plate_1_v1",
+              "kind": "circular-arc",
+              "center": [
+                -115,
+                -55
+              ],
+              "radius": 35,
+              "direction": "ccw"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_radius_bent_radius_plate_1_e2",
+              "type": "radius",
+              "edgeId": "bent_radius_plate_1_e2",
+              "value": 35,
+              "mode": "driven"
+            },
+            {
+              "id": "rel_radius_bent_radius_plate_1_e4",
+              "type": "radius",
+              "edgeId": "bent_radius_plate_1_e4",
+              "value": 35,
+              "mode": "driven"
+            },
+            {
+              "id": "rel_radius_bent_radius_plate_1_e6",
+              "type": "radius",
+              "edgeId": "bent_radius_plate_1_e6",
+              "value": 35,
+              "mode": "driven"
+            },
+            {
+              "id": "rel_radius_bent_radius_plate_1_e8",
+              "type": "radius",
+              "edgeId": "bent_radius_plate_1_e8",
+              "value": 35,
+              "mode": "driven"
+            }
+          ]
+        },
+        "fabrication": {
+          "bends": [
+            {
+              "id": "bend_radius_1",
+              "edgeId": "bent_radius_plate_1_e1",
+              "direction": "up",
+              "angle": 90,
+              "radius": 20,
+              "flangeLength": 120
+            }
+          ]
+        }
+      }
+    },
+    "sketches": {},
+    "holePatterns": {},
+    "objectPatterns": {},
+    "features": {},
+    "trimJoints": {},
+    "fastenerGroups": {},
+    "welds": {},
+    "smartComponentInstances": {},
+    "relations": {}
+  }
+}

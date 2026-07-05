@@ -1,8 +1,15 @@
-import { v } from "../../engine/core/math.mjs";
+import { sameVec3, v } from "../../engine/core/math.mjs";
 import { activeWorkPlane, pointFromPlaneCoordinates, pointToPlaneCoordinates } from "../../engine/api/project/work-plane.mjs";
+import { authoringLine } from "../scene/authoring/authoring-primitives.mjs";
 import { pointerPlanePoint } from "./pointer-plane-point.mjs";
 import { handleBackspaceOrEscape } from "./keyboard-shortcuts.mjs";
 import { createPointerFrameScheduler } from "./pointer-frame-scheduler.mjs";
+
+const SKETCH_PREVIEW_COLOR = "#0ea5e9";
+const SKETCH_PREVIEW_CLOSE_COLOR = "#38bdf8";
+const SKETCH_PREVIEW_POINT_COLOR = "#38bdf8";
+const SKETCH_PREVIEW_CURRENT_COLOR = "#f59e0b";
+const SAME_POINT_TOLERANCE = 1e-6;
 
 function centeredOutline(points) {
   const minY = Math.min(...points.map((point) => point[0]));
@@ -22,6 +29,8 @@ export function createSketchCreateController({
   snapManager,
   getWorkPlane,
   onProjectChange,
+  onSketchCreated,
+  onOverlayChange,
   onStatusChange
 }) {
   const pointerScheduler = createPointerFrameScheduler();
@@ -35,7 +44,54 @@ export function createSketchCreateController({
 
   function status() {
     const snap = state.previewSnap?.label ? ` | ${state.previewSnap.label}` : "";
+    if (state.points.length >= 3) {
+      return `Sketch: pick point ${state.points.length + 1}, or Enter/double-click to finish${snap}`;
+    }
     return `Sketch: pick point ${state.points.length + 1}${snap}`;
+  }
+
+  function overlayPoints(previewPoint = null) {
+    const points = [...state.points];
+    if (v.isVec3(previewPoint) && !sameVec3(previewPoint, points[points.length - 1], SAME_POINT_TOLERANCE)) {
+      points.push(previewPoint);
+    }
+    return points;
+  }
+
+  function renderOverlay(previewPoint = null) {
+    const points = overlayPoints(previewPoint);
+    const lines = [];
+    for (let index = 1; index < points.length; index += 1) {
+      lines.push(authoringLine([points[index - 1], points[index]], SKETCH_PREVIEW_COLOR, {
+        kind: "sketch-create-preview-edge"
+      }));
+    }
+    if (points.length >= 3) {
+      lines.push(authoringLine([points[points.length - 1], points[0]], SKETCH_PREVIEW_CLOSE_COLOR, {
+        kind: "sketch-create-preview-close"
+      }));
+    }
+    const committedHandles = state.points.map((point, index) => ({
+      kind: "sketch-create-point",
+      point,
+      index,
+      color: SKETCH_PREVIEW_POINT_COLOR,
+      radius: 7
+    }));
+    const handles = [...committedHandles];
+    if (v.isVec3(previewPoint) && !sameVec3(previewPoint, state.points[state.points.length - 1], SAME_POINT_TOLERANCE)) {
+      handles.push({
+        kind: "sketch-create-preview-point",
+        point: previewPoint,
+        color: SKETCH_PREVIEW_CURRENT_COLOR,
+        radius: 6
+      });
+    }
+    if (!lines.length && !handles.length) {
+      onOverlayChange?.(null);
+      return;
+    }
+    onOverlayChange?.({ lines, handles, labels: [] });
   }
 
   function reset() {
@@ -46,6 +102,7 @@ export function createSketchCreateController({
     state.lastPointer = null;
     state.previewSnap = null;
     snapManager?.resetCycle?.();
+    onOverlayChange?.(null);
     onStatusChange?.("No modeling command");
   }
 
@@ -57,7 +114,13 @@ export function createSketchCreateController({
     state.lastPointer = viewer.currentPointer?.() || null;
     state.previewSnap = null;
     snapManager?.resetCycle?.();
-    if (state.lastPointer) state.previewSnap = resolvedPointer(state.lastPointer).snap;
+    if (state.lastPointer) {
+      const result = resolvedPointer(state.lastPointer);
+      state.previewSnap = result.snap;
+      renderOverlay(result.point);
+    } else {
+      renderOverlay();
+    }
     onStatusChange?.(status());
   }
 
@@ -89,6 +152,7 @@ export function createSketchCreateController({
       });
       onProjectChange?.(result.project);
       reset();
+      onSketchCreated?.(result);
     } catch (error) {
       onStatusChange?.(error.message || "Sketch: could not create sketch");
     }
@@ -130,6 +194,7 @@ export function createSketchCreateController({
       state.lastPointer = nextPointer;
       const result = resolvedPointer(nextPointer);
       state.previewSnap = result.snap;
+      renderOverlay(result.point);
       onStatusChange?.(status());
     });
   }
@@ -146,7 +211,8 @@ export function createSketchCreateController({
     state.previewSnap = result.snap;
     const point = result.point;
     state.points.push(point);
-    if (state.points.length >= 3) return finish();
+    if (state.points.length >= 3 && Number(pointer?.event?.detail) >= 2) return finish();
+    renderOverlay();
     onStatusChange?.(status());
     return true;
   }
@@ -156,6 +222,7 @@ export function createSketchCreateController({
     snapManager?.cycle?.();
     const result = resolvedPointer(state.lastPointer);
     state.previewSnap = result.snap;
+    renderOverlay(result.point);
     onStatusChange?.(status());
     return true;
   }
@@ -165,6 +232,7 @@ export function createSketchCreateController({
     if (event.key === "Enter") return finish();
     return handleBackspaceOrEscape(event, () => {
       state.points.pop();
+      renderOverlay();
       onStatusChange?.(status());
     }, reset);
   }

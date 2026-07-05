@@ -257,10 +257,13 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     const { rect, screen, inside } = canvasPointer(event.clientX, event.clientY);
     if (inside) lastCanvasPointer = { screen, time: Date.now() };
     const includeHit = options.includeHit !== false;
+    const forceCpu = options.forceCpuHit === true;
     return {
       rect,
       screen,
-      hit: inside && includeHit ? pickCursorDepth(screen.x, screen.y, { forceGpu: options.forceGpuHit === true }) : null
+      hit: inside && includeHit
+        ? pickCursorDepth(screen.x, screen.y, { forceGpu: !forceCpu && options.forceGpuHit === true })
+        : null
     };
   }
   function currentPointerState() {
@@ -365,11 +368,59 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
         screenOffsetPx: label.screenOffsetPx ? { ...label.screenOffsetPx } : null
       })),
       handleKinds: arrayValues(authoringOverlay?.handles).map((handle) => handle.kind || handle.type || ""),
+      lines: arrayValues(authoringOverlay?.lines).map((line) => ({
+        kind: line.kind || "",
+        objectId: line.objectId || "",
+        edgeId: line.edgeId || "",
+        parentBendId: line.parentBendId || "",
+        parentEdge: line.parentEdge || "",
+        points: arrayValues(line.points).map(cloneScenePoint)
+      })),
+      handles: arrayValues(authoringOverlay?.handles).map((handle) => {
+        const screen = projectOffsetPoint(handle.point, handle.screenOffsetPx);
+        return {
+          kind: handle.kind || "",
+          type: handle.type || "",
+          target: handle.target || "",
+          objectId: handle.objectId || "",
+          plateId: handle.plateId || "",
+          vertexId: handle.vertexId || "",
+          edgeId: handle.edgeId || "",
+          cornerReliefId: handle.cornerReliefId || "",
+          cornerReliefVertexId: handle.cornerReliefVertexId || "",
+          point: cloneScenePoint(handle.point),
+          screen: screen ? { ...screen } : null,
+          screenOffsetPx: handle.screenOffsetPx ? { ...handle.screenOffsetPx } : null
+        };
+      }),
       quickLists: arrayValues(authoringOverlay?.quickLists).map((quickList) => ({
         id: quickList.id || "",
         title: quickList.title || "",
         items: arrayValues(quickList.items).map((item) => item.label || item.text || item.id || "")
       }))
+    };
+  }
+  function authoringHandleAtClientPoint(clientX, clientY) {
+    const { screen, inside } = canvasPointer(clientX, clientY);
+    const handle = inside ? pickAuthoringHandle(screen.x, screen.y) : null;
+    if (!handle) return { screen, inside, handle: null };
+    return {
+      screen,
+      inside,
+      handle: {
+        kind: handle.kind || "",
+        type: handle.type || "",
+        target: handle.target || "",
+        objectId: handle.objectId || "",
+        plateId: handle.plateId || "",
+        edgeId: handle.edgeId || "",
+        vertexId: handle.vertexId || "",
+        relationId: handle.relationId || "",
+        displayOnlySamplePointCount: Array.isArray(handle.displayOnlySamplePoints) ? handle.displayOnlySamplePoints.length : 0,
+        distance: Number.isFinite(handle.distance) ? handle.distance : null,
+        pickScore: Number.isFinite(handle.pickScore) ? handle.pickScore : null,
+        screen: handle.screen ? { ...handle.screen } : null
+      }
     };
   }
   function updateAuthoringOverlayDebugState() {
@@ -482,11 +533,30 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     return points.length >= 2 ? { center: center.screen, points } : null;
   }
   function screenPolylineDistance(point, points) {
+    return screenPolylineClosest(point, points).distance;
+  }
+  function screenPolylineClosest(point, points) {
     let best = Infinity;
+    let screen = null;
     for (let index = 1; index < points.length; index += 1) {
-      best = Math.min(best, screenLineDistance(point, points[index - 1], points[index]));
+      const start = points[index - 1];
+      const end = points[index];
+      const t = screenLineParameter(point, start, end);
+      const candidate = {
+        x: start.x + (end.x - start.x) * t,
+        y: start.y + (end.y - start.y) * t
+      };
+      const distance = screenDistance(point, candidate);
+      if (distance < best) {
+        best = distance;
+        screen = candidate;
+      }
     }
-    return best;
+    return { distance: best, screen };
+  }
+  function screenPointNearAny(point, points, tolerancePx) {
+    if (!Array.isArray(points) || points.length === 0 || !(tolerancePx > 0)) return false;
+    return points.some((candidate) => screenDistance(point, candidate) <= tolerancePx);
   }
   function authoringHandleKey(handle) {
     if (!handle) return "";
@@ -553,21 +623,23 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
         continue;
       }
       if ((handle.kind === "plate-sketch-edge" || handle.kind === "plate-sketch-construction-edge") && Array.isArray(handle.points) && handle.points.length >= 2) {
-        const start = projectPoint(handle.points[0]);
-        const end = projectPoint(handle.points[1]);
-        if (!start || !end) continue;
-        const distance = screenLineDistance(cursor, start, end);
+        const projectedPoints = handle.points.map((point) => projectPoint(point)).filter(Boolean);
+        if (projectedPoints.length < 2) continue;
+        const displayOnlyTolerance = Number.isFinite(handle.displayOnlySampleHitTolerancePx)
+          ? handle.displayOnlySampleHitTolerancePx
+          : 0;
+        if (displayOnlyTolerance > 0 && Array.isArray(handle.displayOnlySamplePoints) && handle.displayOnlySamplePoints.length) {
+          const projectedDisplayOnlyPoints = handle.displayOnlySamplePoints.map((point) => projectPoint(point)).filter(Boolean);
+          if (screenPointNearAny(cursor, projectedDisplayOnlyPoints, displayOnlyTolerance)) continue;
+        }
+        const closest = screenPolylineClosest(cursor, projectedPoints);
+        const distance = closest.distance;
         if (distance > (handle.hitTolerancePx || 12)) continue;
-        const t = screenLineParameter(cursor, start, end);
-        const screen = {
-          x: start.x + (end.x - start.x) * t,
-          y: start.y + (end.y - start.y) * t
-        };
         const pickPriority = Number.isFinite(handle.pickPriority) ? handle.pickPriority : 8;
         const pickScore = distance - pickPriority;
         if (!best || pickScore < best.pickScore) {
           const dragAxes = projectedDragAxes(handle);
-          best = { ...handle, distance, pickScore, screen, ...(dragAxes ? { dragAxesScreen: dragAxes } : {}) };
+          best = { ...handle, distance, pickScore, screen: closest.screen, ...(dragAxes ? { dragAxesScreen: dragAxes } : {}) };
         }
         continue;
       }
@@ -850,6 +922,7 @@ export function createWebglViewer(canvas, reset, settings, options = {}) {
     currentPointer() {
       return currentPointerState();
     },
+    authoringHandleAtClientPoint,
     snapVisibilityAt,
     authoringOverlaySnapshot,
     setAuthoringOverlay(overlay = { lines: [], handles: [] }) {

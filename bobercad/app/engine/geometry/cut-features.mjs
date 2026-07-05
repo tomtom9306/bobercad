@@ -1,5 +1,6 @@
 import { objectById } from "../core/model.mjs";
 import { finiteNonNegativeNumber, finiteNumber, v } from "../core/math.mjs";
+import { outlineFromSketch } from "../api/project/plate-sketch/sketch-geometry-and-relations.mjs";
 import { libraryProfileById } from "../api/project/profiles.mjs";
 import { memberFrame, memberFrameAt, memberLength, resolveInterfaceWithConnectionReference, sectionBounds, sectionWebBounds } from "./member-geometry.mjs";
 
@@ -23,6 +24,18 @@ function requiredObject(value, label) {
 function requiredString(value, label) {
   if (typeof value !== "string" || !value) fail(`${label} must be a non-empty string`);
   return value;
+}
+
+function resolvedCutBody(body, options = {}) {
+  const resolved = requiredObject(body, "feature body");
+  if (resolved.type !== "polygonal-prism" || resolved.sketch === undefined) return resolved;
+  const sketch = requiredObject(resolved.sketch, "polygonal-prism body.sketch");
+  const outline = outlineFromSketch(sketch, options.tessellation || {});
+  if (!Array.isArray(outline) || outline.length < 3) fail("polygonal-prism body.sketch must derive at least three outline points");
+  return {
+    ...resolved,
+    outline
+  };
 }
 
 function profileForMember(profiles, member) {
@@ -226,11 +239,11 @@ export function clearanceCutGeometry(project, profiles, feature) {
   };
 }
 
-export function cutBodiesForFeature(project, profiles, feature) {
+export function cutBodiesForFeature(project, profiles, feature, options = {}) {
   requiredObject(feature, "feature");
   if (feature.body !== undefined) {
     if (feature.type !== "boolean-part") fail(`${feature.id || "feature"}: body is only supported for boolean-part features`);
-    return [requiredObject(feature.body, `${feature.id || "feature"}.body`)];
+    return [resolvedCutBody(requiredObject(feature.body, `${feature.id || "feature"}.body`), options)];
   }
   const memberProfileCut = memberProfileCutGeometry(project, profiles, feature);
   if (memberProfileCut) return memberProfileCut.bodies;

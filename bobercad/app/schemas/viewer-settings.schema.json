@@ -342,6 +342,18 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "plateSketchDefaultCircleRadius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "plateSketchDefaultPlateThickness": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "plateSketchDefaultArcSweepDegrees": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
         "globalAxisSnapSpan": {
           "type": "number",
           "exclusiveMinimum": 0
@@ -528,6 +540,18 @@
             }
           },
           "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "geometry": {
+      "type": "object",
+      "properties": {
+        "sheetMetalReliefEvaluator": {
+            "enum": [
+              "legacy",
+              "charts-supported"
+            ]
         }
       },
       "additionalProperties": false
@@ -777,12 +801,17 @@
           "type": "object",
           "required": [
             "circleSegments",
+            "segmentLength",
             "discSegments"
           ],
           "properties": {
             "circleSegments": {
               "type": "integer",
               "minimum": 3
+            },
+            "segmentLength": {
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "discSegments": {
               "type": "integer",

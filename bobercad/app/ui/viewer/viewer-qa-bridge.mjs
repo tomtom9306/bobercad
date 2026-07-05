@@ -4,6 +4,8 @@ import { memberAuthoringPoints, memberAxisData, memberStationAtPoint } from "../
 import { projectProfileCatalog } from "../../engine/api/project/profiles.mjs";
 import { smartComponentConnectionZoneId, smartComponentDetachedObjectIds, smartComponentMainMemberId, smartComponentOwnedObjectIds, smartComponentSecondaryMemberId } from "../../engine/api/project/dependencies.mjs";
 import { memberAxesByTarget, normalizeCoordinateSpace } from "../../rendering/scene/authoring/member-axis-space.mjs";
+import { relationActionOverlayForSelection } from "../../rendering/interaction/plate-sketch/drag-edit-overlays.mjs";
+import { plateBendGeometry } from "../../rendering/scene/plate-bend-geometry.mjs";
 import { profileRadius, projectObjectCount } from "./viewer-render-scheduler.mjs";
 import { smartComponentHighlightObjectIds } from "./viewer-smart-component-highlights.mjs";
 
@@ -213,8 +215,7 @@ function writeQaDomResult(payload) {
 }
 
 function mountQaDomBridge(qaApi) {
-  document.addEventListener("bobercad:qa-request", (event) => {
-    const request = event.detail || {};
+  const runRequest = (request) => {
     const id = String(request.id || "");
     const method = String(request.method || "");
     const args = Array.isArray(request.args) ? request.args : [];
@@ -226,8 +227,78 @@ function mountQaDomBridge(qaApi) {
       .then(() => qaApi[method](...args))
       .then((result) => writeQaDomResult({ id, ok: true, result }))
       .catch((error) => writeQaDomResult({ id, ok: false, error: error?.message || String(error) }));
+  };
+
+  document.addEventListener("bobercad:qa-request", (event) => {
+    runRequest(event.detail || {});
   });
+
+  let requestNode = document.getElementById("bober-cad-qa-request");
+  if (!requestNode) {
+    requestNode = document.createElement("script");
+    requestNode.type = "application/json";
+    requestNode.id = "bober-cad-qa-request";
+    document.documentElement.append(requestNode);
+  }
+  let lastRequestId = "";
+  const readRequestNode = () => {
+    if (!requestNode.textContent) return;
+    let request = null;
+    try {
+      request = JSON.parse(requestNode.textContent);
+    } catch (error) {
+      writeQaDomResult({ id: "", ok: false, error: `Invalid QA DOM request: ${error.message}` });
+      return;
+    }
+    const id = String(request?.id || "");
+    if (!id || id === lastRequestId) return;
+    lastRequestId = id;
+    runRequest(request);
+  };
+  if (typeof MutationObserver === "function") {
+    const observer = new MutationObserver(readRequestNode);
+    observer.observe(requestNode, { childList: true, characterData: true, subtree: true });
+  }
+
+  let requestInput = document.getElementById("bober-cad-qa-request-input");
+  if (!requestInput) {
+    requestInput = document.createElement("textarea");
+    requestInput.id = "bober-cad-qa-request-input";
+    requestInput.setAttribute("aria-label", "Bobercad QA request");
+    requestInput.setAttribute("autocomplete", "off");
+    requestInput.spellcheck = false;
+    requestInput.style.cssText = [
+      "position:fixed",
+      "left:0",
+      "bottom:0",
+      "width:1px",
+      "height:1px",
+      "opacity:0.01",
+      "z-index:1",
+      "pointer-events:auto"
+    ].join(";");
+    document.body.append(requestInput);
+  }
+  let lastInputRequestId = "";
+  const readRequestInput = () => {
+    if (!requestInput.value) return;
+    let request = null;
+    try {
+      request = JSON.parse(requestInput.value);
+    } catch (error) {
+      writeQaDomResult({ id: "", ok: false, error: `Invalid QA input request: ${error.message}` });
+      return;
+    }
+    const id = String(request?.id || "");
+    if (!id || id === lastInputRequestId) return;
+    lastInputRequestId = id;
+    runRequest(request);
+  };
+  requestInput.addEventListener("input", readRequestInput);
+  requestInput.addEventListener("change", readRequestInput);
   document.documentElement.dataset.qaDomBridgeReady = "true";
+  document.documentElement.dataset.qaDomNodeBridgeReady = "true";
+  document.documentElement.dataset.qaDomInputBridgeReady = "true";
 }
 
 function runInitialQaSnapSmoke(qaApi, project, searchParams) {
@@ -337,7 +408,14 @@ export function createViewerQaBridge({
     }
   }
 
-  function mountQaApi({ api, profiles, snapManager = null }) {
+  function mountQaApi({
+    api,
+    profiles,
+    snapManager = null,
+    viewerApp = null,
+    plateSketchEdit = null,
+    getViewerCommandItems = null
+  }) {
     const smartComponentSummaries = () => Object.values(api.project().model.smartComponentInstances || {}).map((instance) => ({
       id: instance.id,
       type: instance.type,
@@ -459,6 +537,269 @@ export function createViewerQaBridge({
       const member = api.project().model.members?.[memberId];
       if (!member) throw new Error(`member not found: ${memberId}`);
       return { id: member.id, start: [...member.start], end: [...member.end], rotation: member.rotation || 0 };
+    };
+
+    const sketchObject = (objectId) => {
+      const project = api.project();
+      const entry = project.objectIndex?.[objectId] || null;
+      const collection = entry?.collection || "";
+      const object = collection ? project.model?.[collection]?.[objectId] : null;
+      if (!object?.sketch) throw new Error(`sketch object not found: ${objectId}`);
+      return { project, entry, collection, object };
+    };
+
+    const sketchWorldPoint = (object, point) => {
+      if (!Array.isArray(point) || point.length < 2) throw new Error("sketch point must be [y, z]");
+      const center = v.isVec3(object.center) ? object.center : [0, 0, 0];
+      const axisY = v.isVec3(object.localAxisY) ? object.localAxisY : [1, 0, 0];
+      const axisZ = v.isVec3(object.localAxisZ) ? object.localAxisZ : [0, 1, 0];
+      return add(add(center, mul(axisY, Number(point[0]))), mul(axisZ, Number(point[1])));
+    };
+
+    const sketchClientPoint = (objectId, point) => {
+      const { object } = sketchObject(objectId);
+      const world = sketchWorldPoint(object, point);
+      const client = clientPoint(world);
+      if (!client) throw new Error(`sketch point is not projectable: ${objectId}`);
+      return {
+        objectId,
+        local: [Number(point[0]), Number(point[1])],
+        world,
+        client
+      };
+    };
+
+    const plateBendTargets = (objectId) => {
+      const { collection, object } = sketchObject(objectId);
+      if (collection !== "plates") throw new Error(`plate bend targets require a plate: ${objectId}`);
+      const geometry = plateBendGeometry(object, settings.render?.curves || {});
+      return arrayValues(geometry.targetEdges).map((target) => {
+        const midpoint = mul(add(target.start, target.end), 0.5);
+        return {
+          id: target.id || "",
+          edgeId: target.edgeId || "",
+          parentBendId: target.parentBendId || "",
+          parentEdge: target.parentEdge || "",
+          edgeRole: target.edgeRole || "",
+          start: target.start,
+          end: target.end,
+          midpoint,
+          client: clientPoint(midpoint)
+        };
+      });
+    };
+
+    const sketchSummary = (objectId) => {
+      const { collection, object } = sketchObject(objectId);
+      const sketch = object.sketch || {};
+      const edges = arrayValues(sketch.edges);
+      const vertices = arrayValues(sketch.vertices);
+      const constructionEdges = arrayValues(sketch.constructionEdges);
+      const constructionVertices = arrayValues(sketch.constructionVertices);
+      const relations = arrayValues(sketch.relations);
+      const edgeKindCounts = {};
+      for (const edge of edges) {
+        const kind = edge?.kind || "line";
+        edgeKindCounts[kind] = (edgeKindCounts[kind] || 0) + 1;
+      }
+      const relationTypeCounts = {};
+      for (const relation of relations) {
+        const type = relation?.type || "unknown";
+        relationTypeCounts[type] = (relationTypeCounts[type] || 0) + 1;
+      }
+      const relationDetails = relations.map((relation) => ({
+        id: relation?.id || null,
+        type: relation?.type || "unknown",
+        edgeId: relation?.edgeId || null,
+        edgeIds: arrayValues(relation?.edgeIds),
+        vertexId: relation?.vertexId || null,
+        vertexIds: arrayValues(relation?.vertexIds),
+        mode: relation?.mode || null,
+        display: relation?.display || null,
+        value: Number.isFinite(Number(relation?.value)) ? Number(relation.value) : null
+      }));
+      const vertexById = new Map(vertices.map((vertex) => [vertex.id, vertex]));
+      const allVertexById = new Map([...vertices, ...constructionVertices].map((vertex) => [vertex.id, vertex]));
+      const edgeDetailsFor = (edgeList, edgeVertexById) => edgeList.map((edge) => {
+        const fromPoint = edgeVertexById.get(edge.from)?.point || null;
+        const toPoint = edgeVertexById.get(edge.to)?.point || null;
+        return {
+          id: edge.id,
+          kind: edge.kind || "line",
+          from: edge.from || null,
+          to: edge.to || null,
+          fromPoint: Array.isArray(fromPoint) ? [...fromPoint] : null,
+          toPoint: Array.isArray(toPoint) ? [...toPoint] : null,
+          midpoint: Array.isArray(fromPoint) && Array.isArray(toPoint)
+            ? [(fromPoint[0] + toPoint[0]) / 2, (fromPoint[1] + toPoint[1]) / 2]
+            : null,
+          center: Array.isArray(edge.center) ? [...edge.center] : null,
+          radius: Number.isFinite(Number(edge.radius)) ? Number(edge.radius) : null,
+          direction: edge.direction || null
+        };
+      });
+      const edgeDetails = edgeDetailsFor(edges, vertexById);
+      const constructionEdgeDetails = edgeDetailsFor(constructionEdges, allVertexById);
+      const constructionEdgeKindCounts = {};
+      for (const edge of constructionEdges) {
+        const kind = edge?.kind || "line";
+        constructionEdgeKindCounts[kind] = (constructionEdgeKindCounts[kind] || 0) + 1;
+      }
+      return {
+        objectId,
+        collection,
+        type: object.type,
+        vertexCount: vertices.length,
+        edgeCount: edges.length,
+        constructionVertexCount: constructionVertices.length,
+        constructionEdgeCount: constructionEdges.length,
+        relationCount: relations.length,
+        edgeKindCounts,
+        relationTypeCounts,
+        relations: relationDetails,
+        edges: edgeDetails,
+        constructionEdgeKindCounts,
+        constructionEdges: constructionEdgeDetails,
+        circularArcIds: edges.filter((edge) => edge?.kind === "circular-arc").map((edge) => edge.id),
+        constructionCircularArcIds: constructionEdges.filter((edge) => edge?.kind === "circular-arc").map((edge) => edge.id),
+        radiusRelationIds: relations.filter((relation) => relation?.type === "radius").map((relation) => relation.id)
+      };
+    };
+
+    const sketchSelectEntities = (objectId, selection = {}, options = {}) => {
+      sketchObject(objectId);
+      if (!plateSketchEdit?.selectObject || !plateSketchEdit?.selectEntities) {
+        throw new Error("plate sketch edit controller is unavailable");
+      }
+      const sketchMode = options.sketchMode || selection.sketchMode || "relations";
+      const notify = options.notify !== false;
+      const selectedObject = plateSketchEdit.selectObject(objectId, { sketchMode, notify: false });
+      if (!selectedObject) throw new Error(`could not select sketch object: ${objectId}`);
+      const selectedEntities = plateSketchEdit.selectEntities({
+        edgeIds: arrayValues(selection.edgeIds),
+        vertexIds: arrayValues(selection.vertexIds)
+      }, { sketchMode, notify, render: true });
+      return {
+        objectId,
+        notified: notify,
+        selected: selectedEntities !== false,
+        activeState: plateSketchEdit.activeState?.() || null
+      };
+    };
+
+    const sketchActiveState = () => {
+      if (!plateSketchEdit?.activeState) {
+        throw new Error("plate sketch edit controller is unavailable");
+      }
+      return plateSketchEdit.activeState() || null;
+    };
+
+    const sketchRenderOverlay = () => {
+      if (!plateSketchEdit?.renderOverlay) {
+        throw new Error("plate sketch edit controller is unavailable");
+      }
+      plateSketchEdit.renderOverlay();
+      return viewer.authoringOverlaySnapshot?.() || null;
+    };
+
+    const sketchQuickLists = () => {
+      if (!plateSketchEdit?.activeState) {
+        throw new Error("plate sketch edit controller is unavailable");
+      }
+      const activeState = plateSketchEdit.activeState() || null;
+      const activeObjectId = activeState?.plateId || "";
+      if (!activeObjectId) return [];
+      const { object } = sketchObject(activeObjectId);
+      const sketch = object.sketch || {};
+      const vertices = arrayValues(sketch.vertices);
+      const constructionVertices = arrayValues(sketch.constructionVertices);
+      const edges = [
+        ...arrayValues(sketch.edges),
+        ...arrayValues(sketch.constructionEdges)
+      ];
+      const constructionEdgeIds = new Set(arrayValues(sketch.constructionEdges).map((edge) => edge?.id).filter(Boolean));
+      const vertexMap = new Map([...vertices, ...constructionVertices].map((vertex) => [vertex.id, vertex]));
+      const actionOverlay = relationActionOverlayForSelection(object, {
+        edges,
+        vertexMap,
+        constructionEdgeIds,
+        selectedEdgeIds: arrayValues(activeState.selection?.edgeIds),
+        selectedVertexIds: arrayValues(activeState.selection?.vertexIds),
+        settings
+      });
+      return arrayValues(actionOverlay.quickLists).map((quickList) => ({
+        id: quickList?.id || "",
+        title: quickList?.title || "",
+        items: arrayValues(quickList?.items).map((item) => ({
+          id: item?.id || "",
+          label: item?.label || "",
+          badge: item?.badge || "",
+          tone: item?.tone || "",
+          title: item?.title || "",
+          relationType: item?.handle?.relationType || "",
+          hoverLabel: item?.handle?.hoverLabel || ""
+        }))
+      }));
+    };
+
+    const sketchOpenActions = () => {
+      const contextMenu = plateSketchEdit?.authoringHandler?.contextMenu;
+      if (typeof contextMenu !== "function") {
+        throw new Error("plate sketch action menu is unavailable");
+      }
+      const result = contextMenu();
+      return {
+        result,
+        activeState: plateSketchEdit.activeState?.() || null,
+        overlay: viewer.authoringOverlaySnapshot?.() || null
+      };
+    };
+
+    const authoringHandleAtClientPoint = (point) => {
+      if (!viewer.authoringHandleAtClientPoint) {
+        throw new Error("authoring handle diagnostics are unavailable");
+      }
+      const x = Number(Array.isArray(point) ? point[0] : point?.x);
+      const y = Number(Array.isArray(point) ? point[1] : point?.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error("authoring handle point must have finite x/y");
+      return viewer.authoringHandleAtClientPoint(x, y);
+    };
+
+    const runViewerCommand = (commandId) => {
+      if (!viewerApp?.canRunCommand?.(commandId)) throw new Error(`viewer command unavailable: ${commandId}`);
+      return {
+        commandId,
+        result: viewerApp.runCommand(commandId)
+      };
+    };
+
+    const viewerCommands = (options = {}) => {
+      const commandItemsForQa = typeof getViewerCommandItems === "function"
+        ? getViewerCommandItems
+        : viewerApp?.getViewerCommandItems;
+      if (typeof commandItemsForQa !== "function") {
+        throw new Error("viewer command diagnostics are unavailable");
+      }
+      const prefix = typeof options.prefix === "string" ? options.prefix : "";
+      const navSurface = typeof options.navSurface === "string" ? options.navSurface : "";
+      const commandOptions = { ...options };
+      delete commandOptions.prefix;
+      delete commandOptions.navSurface;
+      return commandItemsForQa({ ...commandOptions, includeState: true })
+        .filter((command) => (!prefix || command.id?.startsWith(prefix)))
+        .filter((command) => (!navSurface || command.navSurface === navSurface))
+        .map((command) => ({
+          id: command.id,
+          label: command.label || "",
+          title: command.title || "",
+          group: command.group || "",
+          groupLabel: command.groupLabel || "",
+          navSurface: command.navSurface || "",
+          ribbonSection: command.ribbonSection || "",
+          enabled: command.enabled !== false,
+          active: Boolean(command.active),
+          disabledReason: command.disabledReason || ""
+        }));
     };
 
     const memberSmartComponentObjectIds = (memberId) => {
@@ -610,6 +951,17 @@ export function createViewerQaBridge({
       memberInteractionTarget,
       memberManipulatorTargets,
       memberState,
+      plateBendTargets,
+      sketchClientPoint,
+      sketchSummary,
+      sketchSelectEntities,
+      sketchActiveState,
+      sketchRenderOverlay,
+      sketchQuickLists,
+      sketchOpenActions,
+      authoringHandleAtClientPoint,
+      runViewerCommand,
+      viewerCommands,
       memberSmartComponentObjectIds,
       memberSmartComponentPoints,
       captureView,

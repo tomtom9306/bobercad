@@ -242,6 +242,9 @@ function commandGroups(commands, groupOrder) {
     if (!allowedGroups.has(id)) continue;
     const group = groupsById.get(id);
     if (!group) continue;
+    if (command.groupLabel) group.label = command.groupLabel;
+    if (command.groupIcon) group.icon = command.groupIcon;
+    if (command.groupDescription) group.description = command.groupDescription;
     group.commands.push(command);
   }
   return groupOrder

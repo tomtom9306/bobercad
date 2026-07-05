@@ -2,7 +2,14 @@ import { WORLD_AXIS_ENTRIES, closestAxisPoints, closestPointOnSegment, finiteNum
 import { arrayValues, objectById, truthyValues, uniqueTruthy } from "../../engine/core/model.mjs";
 import { memberCenter, memberLayoutAxis } from "../../engine/api/project/members.mjs";
 import { allGridIntersectionPoints, allGridLineSegments, projectLevels } from "../../engine/api/project/datums.mjs";
-import { orderedSketchLoop } from "../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import {
+  orderedSketchLoop,
+  sketchEdgeCenterPoint,
+  sketchEdgeIsCircularArc,
+  sketchEdgeMidpoint,
+  sketchEdgeQuadrantPoints,
+  sketchEdgeSamplePoints
+} from "../../engine/api/project/plate-sketch-relations-and-bends.mjs";
 import { libraryProfileById } from "../../engine/api/project/profiles.mjs";
 import { memberFrameAt } from "../../engine/geometry/member-evaluator.mjs";
 
@@ -800,8 +807,12 @@ function addPlateSurfaceCandidates(candidates, plate, loop, worldPoints, center)
   }
 }
 
-function addPlateSketchCandidates(candidates, plate, options) {
+function addSketchGeometryCandidates(candidates, plate, options, config = {}) {
   if (!plate.sketch || !v.isVec3(plate.localAxisY) || !v.isVec3(plate.localAxisZ)) return;
+  const providerId = config.providerId || "model.plates";
+  const targetCollection = config.targetCollection || "plates";
+  const includeObjectId = config.includeObjectId !== false;
+  const objectData = includeObjectId ? { objectId: plate.id } : {};
   let loop;
   try {
     loop = orderedSketchLoop(plate.sketch);
@@ -815,47 +826,97 @@ function addPlateSketchCandidates(candidates, plate, options) {
   }));
   const center = worldPoints.reduce((sum, item) => v.add(sum, item.world), [0, 0, 0]).map((value) => value / worldPoints.length);
   pushPoint(candidates, center, {
-    providerId: "model.plates",
+    providerId,
     type: "plate-sketch-center",
-    objectId: plate.id,
+    ...objectData,
+    localPoint: null,
     label: "Plate sketch center",
     priority: 88,
-    target: target("plates", plate.id, "sketch-center", "sketch-center")
+    target: target(targetCollection, plate.id, "sketch-center", "sketch-center")
   });
-  if (options.profile?.includeSurfaceTargets === "faces") {
+  if (config.includeSurfaceTargets !== false && options.profile?.includeSurfaceTargets === "faces") {
     addPlateSurfaceCandidates(candidates, plate, loop, worldPoints, center);
   }
   for (const [index, item] of worldPoints.entries()) {
     pushPoint(candidates, item.world, {
-      providerId: "model.plates",
+      providerId,
       type: "plate-sketch-vertex",
-      objectId: plate.id,
+      ...objectData,
+      localPoint: [...item.point],
       label: "Plate corner",
       priority: 110,
-      target: target("plates", plate.id, item.vertexId || `vertex-${index + 1}`, "sketch-vertex")
+      target: target(targetCollection, plate.id, item.vertexId || `vertex-${index + 1}`, "sketch-vertex")
     });
     const next = worldPoints[(index + 1) % worldPoints.length];
     if (!next) continue;
-    const midpoint = v.mul(v.add(item.world, next.world), 0.5);
+    const edgeId = item.outgoingEdgeId || null;
+    const isCircularArc = edgeId ? sketchEdgeIsCircularArc(plate.sketch, edgeId) : false;
+    const midpointLocal = item.outgoingEdgeId ? sketchEdgeMidpoint(plate.sketch, item.outgoingEdgeId) : null;
+    const midpoint = Array.isArray(midpointLocal) ? platePoint(plate, midpointLocal) : v.mul(v.add(item.world, next.world), 0.5);
     pushPoint(candidates, midpoint, {
-      providerId: "model.plates",
-      type: "plate-sketch-edge-midpoint",
-      objectId: plate.id,
-      label: "Plate edge midpoint",
+      providerId,
+      type: isCircularArc ? "plate-sketch-arc-midpoint" : "plate-sketch-edge-midpoint",
+      ...objectData,
+      localPoint: Array.isArray(midpointLocal) ? [...midpointLocal] : null,
+      label: isCircularArc ? "Plate arc midpoint" : "Plate edge midpoint",
       priority: 96,
-      target: target("plates", plate.id, item.outgoingEdgeId || `edge-mid-${index + 1}`, "sketch-edge-midpoint")
+      target: target(targetCollection, plate.id, item.outgoingEdgeId || `edge-mid-${index + 1}`, isCircularArc ? "sketch-arc-midpoint" : "sketch-edge-midpoint")
     });
+    if (isCircularArc) {
+      const centerLocal = sketchEdgeCenterPoint(plate.sketch, edgeId);
+      if (Array.isArray(centerLocal)) {
+        pushPoint(candidates, platePoint(plate, centerLocal), {
+          providerId,
+          type: "plate-sketch-arc-center",
+          ...objectData,
+          localPoint: [...centerLocal],
+          label: "Plate arc center",
+          priority: 102,
+          target: target(targetCollection, plate.id, `${edgeId}:arc-center`, "sketch-arc-center")
+        });
+      }
+      for (const [quadrantIndex, quadrant] of sketchEdgeQuadrantPoints(plate.sketch, edgeId).entries()) {
+        pushPoint(candidates, platePoint(plate, quadrant.point), {
+          providerId,
+          type: "plate-sketch-arc-quadrant",
+          ...objectData,
+          localPoint: [...quadrant.point],
+          label: "Plate arc quadrant",
+          priority: 100,
+          target: target(targetCollection, plate.id, `${edgeId}:arc-quadrant-${quadrantIndex + 1}`, "sketch-arc-quadrant")
+        });
+      }
+    }
     if (options.includeLines !== false) {
-      pushLine(candidates, item.world, next.world, {
-        providerId: "model.plates",
-        type: "plate-sketch-edge",
-        objectId: plate.id,
-        label: "Plate edge",
-        priority: 72,
-        target: target("plates", plate.id, item.outgoingEdgeId || `edge-${index + 1}`, "sketch-edge")
-      });
+      const curveOptions = {
+        circleSegments: options.circleSegments,
+        segmentLength: options.curveSegmentLength || options.segmentLength
+      };
+      const samples = edgeId
+        ? sketchEdgeSamplePoints(plate.sketch, edgeId, curveOptions).map((point) => platePoint(plate, point))
+        : [item.world, next.world];
+      for (let sampleIndex = 1; sampleIndex < samples.length; sampleIndex += 1) {
+        const semanticSubId = edgeId || `edge-${index + 1}`;
+        pushLine(candidates, samples[sampleIndex - 1], samples[sampleIndex], {
+          providerId,
+          type: isCircularArc ? "plate-sketch-arc" : "plate-sketch-edge",
+          ...objectData,
+          label: isCircularArc ? "Plate arc" : "Plate edge",
+          priority: 72,
+          target: target(targetCollection, plate.id, semanticSubId, isCircularArc ? "sketch-arc" : "sketch-edge")
+        });
+      }
     }
   }
+}
+
+function addPlateSketchCandidates(candidates, plate, options) {
+  addSketchGeometryCandidates(candidates, plate, options, {
+    providerId: "model.plates",
+    targetCollection: "plates",
+    includeObjectId: true,
+    includeSurfaceTargets: true
+  });
 }
 
 function addPlateCandidates(candidates, project, options) {
@@ -986,6 +1047,12 @@ function addActiveSketchCandidates(candidates, context, options) {
       )
     });
   }
+  addSketchGeometryCandidates(candidates, plate, options, {
+    providerId: "sketch.active",
+    targetCollection: "activeSketch",
+    includeObjectId: false,
+    includeSurfaceTargets: false
+  });
 }
 
 function adaptiveGridCandidatePoint(spec) {
@@ -1378,7 +1445,9 @@ export function collectSnapCandidates({ project, profiles = {}, context = {}, sc
     globalAxisOrigin: context.globalAxisOrigin || [0, 0, 0],
     globalAxisSpan: context.globalAxisSpan || 100000,
     referencePlaneSnapSpan: context.referencePlaneSnapSpan,
-    maxPlateCandidates: context.maxPlateCandidates
+    maxPlateCandidates: context.maxPlateCandidates,
+    circleSegments: context.circleSegments,
+    curveSegmentLength: context.curveSegmentLength
   };
   const candidates = [];
   collectRegisteredSnapProviders({ candidates, project, profiles, context, options });

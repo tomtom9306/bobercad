@@ -23,13 +23,141 @@ const MODELING_COMMAND_ID_BY_TYPE = {
   plateBend: "model.plateBend.add",
   trim: "model.trim.create"
 };
-const MODELING_COMMANDS_WITH_SIDE_DOCK_EDITOR = new Set(["trim"]);
+const MODELING_COMMANDS_WITH_SIDE_DOCK_EDITOR = new Set(["plateBend", "trim"]);
+const SKETCH_CONTEXT_COMMAND_IDS = new Set([
+  "sketch.line.create",
+  "sketch.line.contour",
+  "sketch.circle.create",
+  "sketch.circle.diameter",
+  "sketch.circle.threePoint",
+  "sketch.rectangle.center",
+  "sketch.roundedRectangle.create",
+  "sketch.slot.create",
+  "sketch.slot.center",
+  "sketch.arc.center",
+  "sketch.arc.centerContour",
+  "sketch.arc.threePoint",
+  "sketch.arc.threePointContour",
+  "sketch.corner.fillet",
+  "sketch.edge.arc",
+  "sketch.arc.flip",
+  "sketch.arc.split",
+  "sketch.modify.trim",
+  "sketch.modify.extend",
+  "sketch.modify.delete",
+  "sketch.convert.toPlate",
+  "sketch.dimension.length",
+  "sketch.dimension.angle",
+  "sketch.dimension.distance",
+  "sketch.dimension.radius",
+  "sketch.dimension.diameter",
+  "sketch.relation.fix",
+  "sketch.relation.coincident",
+  "sketch.relation.pointOnCircle",
+  "sketch.relation.tangent",
+  "sketch.relation.concentric",
+  "sketch.relation.equalRadius",
+  "sketch.relations.toggle",
+  "sketch.relations.infer",
+  "sketch.view.clean",
+  "sketch.selection.clear",
+  "sketch.exit"
+]);
 const RENDER_VISIBILITY_LABELS = {
   cuttingObjects: "Cutting objects",
   fasteners: "Fasteners",
   grids: "Grids",
   referencePlanes: "Planes"
 };
+
+function sketchEdgeIsCircularArc(sketch, edgeId) {
+  const edges = [
+    ...Object.values(sketch?.edges || {}),
+    ...Object.values(sketch?.constructionEdges || {})
+  ];
+  return edges.some((edge) => edge?.id === edgeId && edge.kind === "circular-arc");
+}
+
+function sketchVertexTouchesOtherCircularArc(sketch, vertexId, targetEdgeId) {
+  if (!vertexId || !targetEdgeId) return false;
+  const edges = [
+    ...Object.values(sketch?.edges || {}),
+    ...Object.values(sketch?.constructionEdges || {})
+  ];
+  return edges.some((edge) => (
+    edge?.id
+    && edge.id !== targetEdgeId
+    && (edge.from === vertexId || edge.to === vertexId)
+    && edge.kind === "circular-arc"
+  ));
+}
+
+function sketchEdgeRelationDisabledReason({
+  label,
+  selectedEdgeCount,
+  selectedArcEdgeCount,
+  selectedVertexCount,
+  requiresTwoArcs = false
+}) {
+  if (selectedVertexCount > 0) return `Select only two sketch edges before using ${label}.`;
+  if (selectedEdgeCount > 2) return `Select exactly two sketch edges before using ${label}.`;
+  if (requiresTwoArcs) {
+    if (selectedEdgeCount < 2 || selectedArcEdgeCount === 0) return `Select two circular sketch edges before using ${label}.`;
+    return `Both selected sketch edges must be circular arcs before using ${label}.`;
+  }
+  if (selectedEdgeCount < 2) return `Select two sketch edges, including at least one circular arc, before using ${label}.`;
+  if (selectedArcEdgeCount < 1) return `Select at least one circular sketch edge before using ${label}.`;
+  return `Select two sketch edges before using ${label}.`;
+}
+
+function sketchArcDimensionDisabledReason({ label, selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount }) {
+  if (selectedVertexCount > 0) return `Clear selected sketch points before using ${label}; select only one circular sketch edge.`;
+  if (selectedEdgeCount > 1) return `Select exactly one circular sketch edge before using ${label}.`;
+  if (selectedEdgeCount === 1 && selectedArcEdgeCount === 0) return `Selected sketch edge must be circular before using ${label}.`;
+  return `Select one circular sketch edge before using ${label}.`;
+}
+
+function sketchLengthDimensionDisabledReason({ selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount }) {
+  if (selectedVertexCount > 0) return "Clear selected sketch points before using Length; select only one straight sketch edge.";
+  if (selectedEdgeCount > 1) return "Select exactly one straight sketch edge before using Length.";
+  if (selectedEdgeCount === 1 && selectedArcEdgeCount > 0) return "Use Radius or Diameter for circular arc edges before using Length.";
+  return "Select one straight sketch edge before using Length.";
+}
+
+function sketchAngleDimensionDisabledReason({ selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount }) {
+  if (selectedVertexCount > 0) return "Clear selected sketch points before using Angle; select only two straight sketch edges.";
+  if (selectedEdgeCount > 2) return "Select exactly two straight sketch edges before using Angle.";
+  if (selectedEdgeCount === 2 && selectedArcEdgeCount > 0) return "Angle currently works on straight sketch edges.";
+  return "Select two straight sketch edges before using Angle.";
+}
+
+function sketchDistanceDimensionDisabledReason({ selectedEdgeCount, selectedVertexCount }) {
+  if (selectedEdgeCount > 0) return "Clear selected sketch edges before using Distance; select only two sketch points.";
+  return "Select two sketch points before using Distance.";
+}
+
+function sketchPointRelationDisabledReason({ label, selectedEdgeCount }) {
+  if (selectedEdgeCount > 0) return `Clear selected sketch edges before using ${label}; select only two sketch points.`;
+  return `Select two sketch points before using ${label}.`;
+}
+
+function sketchPointOnCircleDisabledReason({ selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount, pointMovesOtherArc }) {
+  if (selectedVertexCount > 1) return "Clear selected sketch points before using On Circle; select only one sketch point and one circular sketch edge.";
+  if (selectedEdgeCount > 1) return "Clear selected sketch edges before using On Circle; select only one sketch point and one circular sketch edge.";
+  if (pointMovesOtherArc) return "Point On Circle cannot move a point that is already an endpoint of another circular arc.";
+  if (selectedEdgeCount === 1 && selectedArcEdgeCount === 0) return "Selected sketch edge must be circular before using On Circle.";
+  return "Select one sketch point and one circular sketch edge before using On Circle.";
+}
+
+function sketchArcModifierDisabledReason({ label, selectedEdgeCount, selectedArcEdgeCount, selectedConstructionEdgeCount, selectedVertexCount, requiresArc = true }) {
+  if (selectedVertexCount > 0) return `Clear selected sketch points before using ${label}; select only one outline sketch edge.`;
+  if (selectedConstructionEdgeCount > 0) return `${label} works on outline sketch edges.`;
+  if (selectedEdgeCount > 1) return `Select exactly one outline sketch edge before using ${label}.`;
+  if (requiresArc && selectedEdgeCount === 1 && selectedArcEdgeCount === 0) return `Selected outline sketch edge must be circular before using ${label}.`;
+  return requiresArc
+    ? `Select one circular outline sketch edge before using ${label}.`
+    : `Select one outline sketch edge before using ${label}.`;
+}
 
 export function createViewerCommandRegistration({
   settings,
@@ -273,10 +401,10 @@ export function createViewerCommandRegistration({
       return {
         available,
         active: visible,
-        title: visible ? "Hide plate sketch relations" : "Show plate sketch relations",
+        title: visible ? "Hide sketch relations" : "Show sketch relations",
         description: visible
-          ? "Hide relation helpers for the selected plate sketch."
-          : "Show relation helpers for the selected plate sketch."
+          ? "Hide relation helpers for the selected sketch."
+          : "Show relation helpers for the selected sketch."
       };
     }
     return {
@@ -289,6 +417,19 @@ export function createViewerCommandRegistration({
     };
   }
 
+  function activeSketchCommandContext() {
+    const active = getPlateSketchEdit()?.activeState?.();
+    const selected = getEditorApi()?.selectedState?.();
+    const available = Boolean(active?.plateId && selected?.objectId === active.plateId);
+    const sketchSelection = active?.selection || {};
+    return {
+      available,
+      active,
+      sketchSelection,
+      selected
+    };
+  }
+
   function relationCommandPaletteState(command) {
     if (command.id !== "settings.relations.toggle") return {};
     const state = relationCommandState();
@@ -297,6 +438,470 @@ export function createViewerCommandRegistration({
       title: state.title,
       description: state.description
     };
+  }
+
+  function sketchContextCommandState(command) {
+    const isSketchCommand = SKETCH_CONTEXT_COMMAND_IDS.has(command.id);
+    const context = activeSketchCommandContext();
+    if (context.available && command.group === "model" && !isSketchCommand) {
+      return { navSurface: undefined };
+    }
+    if (!isSketchCommand) return {};
+    if (!context.available) {
+      return {
+        enabled: false,
+        disabledReason: "Select a sketch to use Sketch tools."
+      };
+    }
+
+    const selectedVertexCount = Array.isArray(context.sketchSelection.vertexIds) ? context.sketchSelection.vertexIds.length : 0;
+    const selectedEdgeCount = Array.isArray(context.sketchSelection.edgeIds) ? context.sketchSelection.edgeIds.length : 0;
+    const activeSketchHost = context.active?.plateId
+      ? api.project()?.model?.[context.active.collection]?.[context.active.plateId] || null
+      : null;
+    const activeSketch = activeSketchHost?.sketch || null;
+    const selectedArcEdgeCount = Array.isArray(context.active?.selectedArcEdgeIds) ? context.active.selectedArcEdgeIds.length : 0;
+    const selectedConstructionEdgeCount = Array.isArray(context.active?.selectedConstructionEdgeIds) ? context.active.selectedConstructionEdgeIds.length : 0;
+    const selectedConstructionVertexCount = Array.isArray(context.active?.selectedConstructionVertexIds) ? context.active.selectedConstructionVertexIds.length : 0;
+    const selectedFixedRelationCount = Array.isArray(context.active?.selectedFixedRelationIds) ? context.active.selectedFixedRelationIds.length : 0;
+    const standaloneSketch = context.active?.collection === "sketches";
+    const hasSketchSelection = Boolean(
+      selectedVertexCount
+        || selectedEdgeCount
+        || context.sketchSelection.relationId
+    );
+    const hasDeleteTarget = Boolean(
+      context.sketchSelection.relationId
+        || (selectedVertexCount === 1 && selectedEdgeCount === 0)
+        || (selectedEdgeCount === 1 && selectedVertexCount === 0)
+    );
+    const hasTrimTarget = Boolean(
+      (selectedEdgeCount === 1 && selectedVertexCount <= 2)
+        || (selectedEdgeCount === 2 && selectedConstructionEdgeCount === 0 && selectedVertexCount <= 2)
+    );
+    const hasExtendTarget = Boolean(
+      selectedEdgeCount === 2
+        && selectedConstructionEdgeCount === 0
+        && selectedVertexCount <= 1
+    );
+    const base = {
+      navSurface: "feature-navbar",
+      groupLabel: "Sketch",
+      groupIcon: "sketch",
+      groupDescription: "Sketch editing tools for the active sketch."
+    };
+    if (command.id === "sketch.relations.toggle") {
+      const visible = context.active?.sketchMode === "relations";
+      return {
+        ...base,
+        active: visible,
+        label: visible ? "Hide Relations" : "Show Relations",
+        title: visible ? "Hide sketch relations" : "Show sketch relations",
+        description: visible
+          ? "Hide relation helpers for the active sketch."
+          : "Show relation helpers for the active sketch."
+      };
+    }
+    if (command.id === "sketch.line.create") {
+      return {
+        ...base,
+        enabled: true,
+        active: context.active?.activeSketchTool === "line",
+        disabledReason: ""
+      };
+    }
+    if (command.id === "sketch.line.contour") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "lineContour",
+        disabledReason: enabled
+          ? ""
+          : "Line Contour is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.circle.create") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "circle",
+        disabledReason: enabled
+          ? ""
+          : "Circle is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.circle.diameter") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "diameterCircle",
+        disabledReason: enabled
+          ? ""
+          : "Diameter Circle is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.circle.threePoint") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "threePointCircle",
+        disabledReason: enabled
+          ? ""
+          : "3 Point Circle is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.rectangle.center") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "centerRectangle",
+        disabledReason: enabled
+          ? ""
+          : "Center Rectangle is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.roundedRectangle.create") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "roundedRectangle",
+        disabledReason: enabled
+          ? ""
+          : "Rounded Rectangle is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.slot.create") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "slot",
+        disabledReason: enabled
+          ? ""
+          : "Slot is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.slot.center") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "centerSlot",
+        disabledReason: enabled
+          ? ""
+          : "Center Slot is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.arc.center") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "centerArc",
+        disabledReason: enabled
+          ? ""
+          : "Center Arc is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.arc.centerContour") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "centerArcContour",
+        disabledReason: enabled
+          ? ""
+          : "Center Arc Contour is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.arc.threePoint") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "threePointArc",
+        disabledReason: enabled
+          ? ""
+          : "3 Point Arc is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.arc.threePointContour") {
+      const enabled = context.active?.collection !== "features";
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "threePointArcContour",
+        disabledReason: enabled
+          ? ""
+          : "3 Point Arc Contour is currently available on plate and standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.corner.fillet") {
+      const hasSelectedEdges = selectedEdgeCount > 0;
+      const enabled = selectedVertexCount === 1 && selectedConstructionVertexCount === 0 && !hasSelectedEdges;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : hasSelectedEdges
+            ? "Clear selected sketch edges before using Fillet; select only one outline sketch corner."
+            : "Select one outline sketch corner before using Fillet."
+      };
+    }
+    if (command.id === "sketch.edge.arc") {
+      const label = "Edge Arc";
+      const enabled = selectedEdgeCount === 1 && selectedConstructionEdgeCount === 0 && selectedVertexCount === 0;
+      return {
+        ...base,
+        enabled,
+        active: context.active?.activeSketchTool === "edgeArc",
+        disabledReason: enabled
+          ? ""
+          : sketchArcModifierDisabledReason({
+            label,
+            selectedEdgeCount,
+            selectedArcEdgeCount,
+            selectedConstructionEdgeCount,
+            selectedVertexCount,
+            requiresArc: false
+          })
+      };
+    }
+    if (command.id === "sketch.arc.flip") {
+      const label = "Flip Arc";
+      const enabled = selectedEdgeCount === 1 && selectedArcEdgeCount === 1 && selectedConstructionEdgeCount === 0 && selectedVertexCount === 0;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchArcModifierDisabledReason({
+            label,
+            selectedEdgeCount,
+            selectedArcEdgeCount,
+            selectedConstructionEdgeCount,
+            selectedVertexCount
+          })
+      };
+    }
+    if (command.id === "sketch.arc.split") {
+      const label = "Split Arc";
+      const enabled = selectedEdgeCount === 1 && selectedArcEdgeCount === 1 && selectedConstructionEdgeCount === 0 && selectedVertexCount === 0;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchArcModifierDisabledReason({
+            label,
+            selectedEdgeCount,
+            selectedArcEdgeCount,
+            selectedConstructionEdgeCount,
+            selectedVertexCount
+          })
+      };
+    }
+    if (command.id === "sketch.modify.trim") {
+      return {
+        ...base,
+        enabled: hasTrimTarget,
+        disabledReason: hasTrimTarget
+          ? ""
+          : "Select one sketch edge or two outline sketch edges before using Trim."
+      };
+    }
+    if (command.id === "sketch.modify.extend") {
+      return {
+        ...base,
+        enabled: hasExtendTarget,
+        disabledReason: hasExtendTarget
+          ? ""
+          : "Select two outline sketch edges before using Extend."
+      };
+    }
+    if (command.id === "sketch.modify.delete") {
+      return {
+        ...base,
+        enabled: hasDeleteTarget,
+        disabledReason: hasDeleteTarget
+          ? ""
+          : "Select one sketch relation, one sketch corner, outline edge, construction point, or construction edge before using Delete."
+      };
+    }
+    if (command.id === "sketch.convert.toPlate") {
+      return {
+        ...base,
+        enabled: standaloneSketch,
+        disabledReason: standaloneSketch
+          ? ""
+          : "Convert To Plate is available for standalone sketch objects."
+      };
+    }
+    if (command.id === "sketch.dimension.length") {
+      const enabled = selectedEdgeCount === 1 && selectedArcEdgeCount === 0 && selectedVertexCount === 0;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchLengthDimensionDisabledReason({ selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount })
+      };
+    }
+    if (command.id === "sketch.dimension.angle") {
+      const enabled = selectedEdgeCount === 2 && selectedArcEdgeCount === 0 && selectedVertexCount === 0;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchAngleDimensionDisabledReason({ selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount })
+      };
+    }
+    if (command.id === "sketch.dimension.distance") {
+      const enabled = selectedVertexCount === 2 && selectedEdgeCount === 0;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchDistanceDimensionDisabledReason({ selectedEdgeCount, selectedVertexCount })
+      };
+    }
+    if (command.id === "sketch.dimension.radius") {
+      const label = "Radius";
+      const enabled = selectedEdgeCount === 1 && selectedArcEdgeCount === 1 && selectedVertexCount === 0;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchArcDimensionDisabledReason({ label, selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount })
+      };
+    }
+    if (command.id === "sketch.dimension.diameter") {
+      const label = "Diameter";
+      const enabled = selectedEdgeCount === 1 && selectedArcEdgeCount === 1 && selectedVertexCount === 0;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchArcDimensionDisabledReason({ label, selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount })
+      };
+    }
+    if (command.id === "sketch.relation.fix") {
+      const enabled = (selectedVertexCount === 1 && selectedEdgeCount === 0)
+        || (selectedEdgeCount === 1 && selectedVertexCount === 0);
+      const fixed = selectedFixedRelationCount > 0;
+      return {
+        ...base,
+        enabled,
+        active: fixed,
+        label: fixed ? "Unfix" : "Fix",
+        title: fixed ? "Remove fixed relation" : "Fix selected sketch item",
+        description: fixed
+          ? "Remove the fixed relation from the selected sketch point or edge."
+          : "Add a fixed relation to the selected sketch point or edge.",
+        disabledReason: enabled
+          ? ""
+          : "Select one sketch point or one sketch edge before using Fix."
+      };
+    }
+    if (command.id === "sketch.relation.coincident") {
+      const label = "Coincident";
+      const enabled = selectedVertexCount === 2 && selectedEdgeCount === 0;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchPointRelationDisabledReason({ label, selectedEdgeCount })
+      };
+    }
+    if (command.id === "sketch.relation.pointOnCircle") {
+      const selectedVertexId = selectedVertexCount === 1 ? context.sketchSelection.vertexIds[0] : null;
+      const selectedEdgeId = selectedEdgeCount === 1 ? context.sketchSelection.edgeIds[0] : null;
+      const selectedEdgeIsArc = Boolean(selectedEdgeId && sketchEdgeIsCircularArc(activeSketch, selectedEdgeId));
+      const pointMovesOtherArc = selectedEdgeIsArc
+        && sketchVertexTouchesOtherCircularArc(activeSketch, selectedVertexId, selectedEdgeId);
+      const enabled = selectedVertexCount === 1
+        && selectedEdgeCount === 1
+        && selectedEdgeIsArc
+        && !pointMovesOtherArc;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchPointOnCircleDisabledReason({
+            selectedEdgeCount,
+            selectedArcEdgeCount,
+            selectedVertexCount,
+            pointMovesOtherArc
+          })
+      };
+    }
+    if (command.id === "sketch.relation.tangent") {
+      const label = "Tangent";
+      const enabled = selectedVertexCount === 0 && selectedEdgeCount === 2 && selectedArcEdgeCount >= 1;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchEdgeRelationDisabledReason({ label, selectedEdgeCount, selectedArcEdgeCount, selectedVertexCount })
+      };
+    }
+    if (command.id === "sketch.relation.concentric" || command.id === "sketch.relation.equalRadius") {
+      const label = command.id === "sketch.relation.concentric" ? "Concentric" : "Equal Radius";
+      const enabled = selectedVertexCount === 0 && selectedEdgeCount === 2 && selectedArcEdgeCount === 2;
+      return {
+        ...base,
+        enabled,
+        disabledReason: enabled
+          ? ""
+          : sketchEdgeRelationDisabledReason({
+            label,
+            selectedEdgeCount,
+            selectedArcEdgeCount,
+            selectedVertexCount,
+            requiresTwoArcs: true
+          })
+      };
+    }
+    if (command.id === "sketch.relations.infer") {
+      return {
+        ...base,
+        enabled: true,
+        disabledReason: ""
+      };
+    }
+    if (command.id === "sketch.selection.clear") {
+      return {
+        ...base,
+        enabled: hasSketchSelection,
+        disabledReason: hasSketchSelection ? "" : "No sketch entities are selected."
+      };
+    }
+    if (command.id === "sketch.view.clean") {
+      return {
+        ...base,
+        enabled: true,
+        active: context.active?.sketchMode === "clean",
+        disabledReason: ""
+      };
+    }
+    if (command.id === "sketch.exit") {
+      return base;
+    }
+    return base;
   }
 
   function panelCommandState(command) {
@@ -359,7 +964,8 @@ export function createViewerCommandRegistration({
       ...panelCommandState(command),
       ...dataDockTabCommandState(command),
       ...inspectorContextCommandState(command),
-      ...plannedModelCommandState(command)
+      ...plannedModelCommandState(command),
+      ...sketchContextCommandState(command)
     };
   }
 
@@ -381,8 +987,8 @@ export function createViewerCommandRegistration({
       const nextState = relationCommandState();
       refreshStatusBar({ relations: nextState });
       updateModelingStatus(nextState.active
-        ? "Plate sketch relations shown."
-        : "Plate sketch relations hidden.");
+        ? "Sketch relations shown."
+        : "Sketch relations hidden.");
       return toggled;
     }
     autoRelationsEnabled = !autoRelationsEnabled;
@@ -545,7 +1151,44 @@ export function createViewerCommandRegistration({
       onBoltGroupOpen: () => viewerApp.runCommand("model.boltGroup.open"),
       onBoltOpen: () => viewerApp.runCommand("model.bolt.open"),
       onAutoConnectionOpen: () => viewerApp.runCommand("model.autoConnection.open"),
-      onGridCreate: () => viewerApp.runCommand("model.grid.create")
+      onGridCreate: () => viewerApp.runCommand("model.grid.create"),
+      onSketchLineCreate: () => viewerApp.runCommand("sketch.line.create"),
+      onSketchLineContourCreate: () => viewerApp.runCommand("sketch.line.contour"),
+      onSketchCircleCreate: () => viewerApp.runCommand("sketch.circle.create"),
+      onSketchDiameterCircleCreate: () => viewerApp.runCommand("sketch.circle.diameter"),
+      onSketchThreePointCircleCreate: () => viewerApp.runCommand("sketch.circle.threePoint"),
+      onSketchCenterRectangleCreate: () => viewerApp.runCommand("sketch.rectangle.center"),
+      onSketchRoundedRectangleCreate: () => viewerApp.runCommand("sketch.roundedRectangle.create"),
+      onSketchSlotCreate: () => viewerApp.runCommand("sketch.slot.create"),
+      onSketchCenterSlotCreate: () => viewerApp.runCommand("sketch.slot.center"),
+      onSketchCenterArcCreate: () => viewerApp.runCommand("sketch.arc.center"),
+      onSketchCenterArcContourCreate: () => viewerApp.runCommand("sketch.arc.centerContour"),
+      onSketchThreePointArcCreate: () => viewerApp.runCommand("sketch.arc.threePoint"),
+      onSketchThreePointArcContourCreate: () => viewerApp.runCommand("sketch.arc.threePointContour"),
+      onSketchCornerFillet: () => viewerApp.runCommand("sketch.corner.fillet"),
+      onSketchEdgeArc: () => viewerApp.runCommand("sketch.edge.arc"),
+      onSketchArcFlip: () => viewerApp.runCommand("sketch.arc.flip"),
+      onSketchArcSplit: () => viewerApp.runCommand("sketch.arc.split"),
+      onSketchTrim: () => viewerApp.runCommand("sketch.modify.trim"),
+      onSketchExtend: () => viewerApp.runCommand("sketch.modify.extend"),
+      onSketchDelete: () => viewerApp.runCommand("sketch.modify.delete"),
+      onSketchConvertToPlate: () => viewerApp.runCommand("sketch.convert.toPlate"),
+      onSketchLengthDimension: () => viewerApp.runCommand("sketch.dimension.length"),
+      onSketchAngleDimension: () => viewerApp.runCommand("sketch.dimension.angle"),
+      onSketchDistanceDimension: () => viewerApp.runCommand("sketch.dimension.distance"),
+      onSketchRadiusDimension: () => viewerApp.runCommand("sketch.dimension.radius"),
+      onSketchDiameterDimension: () => viewerApp.runCommand("sketch.dimension.diameter"),
+      onSketchFixRelation: () => viewerApp.runCommand("sketch.relation.fix"),
+      onSketchCoincidentRelation: () => viewerApp.runCommand("sketch.relation.coincident"),
+      onSketchPointOnCircleRelation: () => viewerApp.runCommand("sketch.relation.pointOnCircle"),
+      onSketchTangentRelation: () => viewerApp.runCommand("sketch.relation.tangent"),
+      onSketchConcentricRelation: () => viewerApp.runCommand("sketch.relation.concentric"),
+      onSketchEqualRadiusRelation: () => viewerApp.runCommand("sketch.relation.equalRadius"),
+      onSketchRelationsToggle: () => viewerApp.runCommand("sketch.relations.toggle"),
+      onSketchRelationsInfer: () => viewerApp.runCommand("sketch.relations.infer"),
+      onSketchCleanView: () => viewerApp.runCommand("sketch.view.clean"),
+      onSketchSelectionClear: () => viewerApp.runCommand("sketch.selection.clear"),
+      onSketchExit: () => viewerApp.runCommand("sketch.exit")
     };
   }
 
@@ -635,6 +1278,225 @@ export function createViewerCommandRegistration({
         refreshWorkspaceCommandState();
       },
       "settings.relations.toggle": () => toggleRelationsCommand(),
+      "sketch.relations.toggle": () => toggleRelationsCommand(),
+      "sketch.line.create": () => {
+        const created = getPlateSketchEdit()?.addLineForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.line.contour": () => {
+        const created = getPlateSketchEdit()?.createLineContourSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.circle.create": () => {
+        const created = getPlateSketchEdit()?.createCircleSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.circle.diameter": () => {
+        const created = getPlateSketchEdit()?.createDiameterCircleSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.circle.threePoint": () => {
+        const created = getPlateSketchEdit()?.createThreePointCircleSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.rectangle.center": () => {
+        const created = getPlateSketchEdit()?.createCenterRectangleSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.roundedRectangle.create": () => {
+        const created = getPlateSketchEdit()?.createRoundedRectangleSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.slot.create": () => {
+        const created = getPlateSketchEdit()?.createSlotSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.slot.center": () => {
+        const created = getPlateSketchEdit()?.createCenterSlotSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.arc.center": () => {
+        const created = getPlateSketchEdit()?.createCenterArcSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.arc.centerContour": () => {
+        const created = getPlateSketchEdit()?.createCenterArcContourSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.arc.threePoint": () => {
+        const created = getPlateSketchEdit()?.createThreePointArcFromSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.arc.threePointContour": () => {
+        const created = getPlateSketchEdit()?.createThreePointArcContourSketch?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return created;
+      },
+      "sketch.relations.infer": () => {
+        const inferred = getPlateSketchEdit()?.inferRelations?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return inferred;
+      },
+      "sketch.corner.fillet": () => {
+        const applied = getPlateSketchEdit()?.filletSelectedCorner?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return applied;
+      },
+      "sketch.edge.arc": () => {
+        const converted = getPlateSketchEdit()?.convertSelectedEdgeToArc?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return converted;
+      },
+      "sketch.arc.flip": () => {
+        const flipped = getPlateSketchEdit()?.flipSelectedArc?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return flipped;
+      },
+      "sketch.arc.split": () => {
+        const split = getPlateSketchEdit()?.splitSelectedArc?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return split;
+      },
+      "sketch.modify.trim": () => {
+        const trimmed = getPlateSketchEdit()?.trimSelectedSketchEntity?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return trimmed;
+      },
+      "sketch.modify.extend": () => {
+        const extended = getPlateSketchEdit()?.extendSelectedSketchEntity?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return extended;
+      },
+      "sketch.modify.delete": () => {
+        const removed = getPlateSketchEdit()?.removeSelectedSketchEntity?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return removed;
+      },
+      "sketch.convert.toPlate": () => {
+        const converted = getPlateSketchEdit()?.convertSketchToPlate?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return converted;
+      },
+      "sketch.dimension.length": () => {
+        const added = getPlateSketchEdit()?.addLengthDimensionForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.dimension.angle": () => {
+        const added = getPlateSketchEdit()?.addAngleDimensionForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.dimension.distance": () => {
+        const added = getPlateSketchEdit()?.addDistanceDimensionForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.dimension.radius": () => {
+        const added = getPlateSketchEdit()?.addRadiusDimensionForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.dimension.diameter": () => {
+        const added = getPlateSketchEdit()?.addDiameterDimensionForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.relation.fix": () => {
+        const toggled = getPlateSketchEdit()?.toggleFixedRelationForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return toggled;
+      },
+      "sketch.relation.coincident": () => {
+        const added = getPlateSketchEdit()?.addCoincidentRelationForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.relation.pointOnCircle": () => {
+        const added = getPlateSketchEdit()?.addPointOnCircleRelationForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.relation.tangent": () => {
+        const added = getPlateSketchEdit()?.addTangentRelationForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.relation.concentric": () => {
+        const added = getPlateSketchEdit()?.addConcentricRelationForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.relation.equalRadius": () => {
+        const added = getPlateSketchEdit()?.addEqualRadiusRelationForSelection?.();
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return added;
+      },
+      "sketch.selection.clear": () => {
+        const cleared = getPlateSketchEdit()?.clearSelection?.({ force: true });
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        return cleared;
+      },
+      "sketch.view.clean": () => {
+        const cleaned = getPlateSketchEdit()?.setSketchMode?.("clean");
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        updateModelingStatus("Sketch clean view.");
+        return cleaned;
+      },
+      "sketch.exit": () => {
+        getPlateSketchEdit()?.clear?.({ overlay: true });
+        syncSketchRelationsButton();
+        refreshWorkspaceCommandState();
+        updateModelingStatus("Sketch mode closed.");
+        return true;
+      },
       "settings.snap.toggle": shellCommandActions.onSnapSettingsToggle,
       "tools.clashDetection.open": () => {
         updateModelingStatus("Clash detection tools are not available yet.");

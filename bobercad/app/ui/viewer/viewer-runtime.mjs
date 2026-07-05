@@ -118,6 +118,15 @@ function cloneRuntimeSettings(value) {
     : JSON.parse(JSON.stringify(value));
 }
 
+function applyQaGeometrySettings(runtimeSettings, searchParams) {
+  const reliefEvaluator = searchParams.get("qaSheetMetalReliefEvaluator");
+  if (!reliefEvaluator) return;
+  runtimeSettings.geometry = {
+    ...(runtimeSettings.geometry || {}),
+    sheetMetalReliefEvaluator: reliefEvaluator
+  };
+}
+
 function shouldLoadViewerQaBridge(searchParams) {
   return ["qaCapture", "qaView", "qaDebug", "qaSnapSmoke", "qaSelectObject"].some((key) => searchParams.has(key));
 }
@@ -203,6 +212,7 @@ async function main() {
   try {
     settings = await loadJson(settingsUrl);
     const runtimeSettings = cloneRuntimeSettings(settings);
+    applyQaGeometrySettings(runtimeSettings, initialSearchParams);
     const projectUrl = new URL(projectPath(), settingsUrl);
     const project = await loadJson(projectUrl);
     const profilesUrl = new URL(project.libraries.profiles.path, projectUrl);
@@ -635,7 +645,11 @@ async function main() {
       viewer,
       api,
       snapManager,
-      settings: runtimeSettings.authoring || {},
+      settings: {
+        ...(runtimeSettings.authoring || {}),
+        circleSegments: runtimeSettings.render?.curves?.circleSegments,
+        curveSegmentLength: runtimeSettings.render?.curves?.segmentLength
+      },
       onProjectChange: handleProjectChange,
       onStatusChange: updateModelingStatus,
       onSelectionChange: ({ plateId, selection: sketchSelection }) => {
@@ -648,17 +662,46 @@ async function main() {
           ...(sketchSelection?.sketchMode ? { sketchMode: sketchSelection.sketchMode } : {})
         }, { notify: false });
       },
-      requestDimensionInput: ({ promptText, defaultValue }) => window.prompt(promptText, defaultValue)
+      requestDimensionInput: ({ promptText, defaultValue }) => {
+        try {
+          return window.prompt(promptText, defaultValue);
+        } catch (error) {
+          return defaultValue;
+        }
+      }
     });
+    const cornerReliefAuthoringHandler = {
+      needsDragHit: () => false,
+      click: (input) => {
+        const handle = input?.handle || {};
+        if (handle.kind !== "plate-corner-relief") return false;
+        const objectId = handle.objectId || handle.plateId;
+        const vertexId = handle.cornerReliefVertexId || handle.vertexId;
+        if (!objectId || !vertexId) return false;
+        clearMemberEditSilently();
+        editorApi?.selectObject(objectId, {
+          inspectorPanel: "properties",
+          skipSketchEdit: false,
+          sketchMode: "relations",
+          cornerReliefVertexId: vertexId,
+          edgeIds: [],
+          vertexIds: [vertexId]
+        });
+        updateModelingStatus("Corner relief selected.");
+        return true;
+      }
+    };
     const authoringTarget = (input) => {
       if (input?.handle?.kind === "reference-plane-corner") return referencePlaneEdit.authoringHandler;
+      if (input?.handle?.kind === "plate-corner-relief") return cornerReliefAuthoringHandler;
       if (input?.handle?.kind?.startsWith("plate-sketch-")) return plateSketchEdit.authoringHandler;
       return memberEdit.authoringHandler;
     };
     viewer.setAuthoringHandler({
       needsDragHit: (input) => authoringTarget(input)?.needsDragHit?.(input) !== false,
       beginDrag: (input) => authoringTarget(input)?.beginDrag?.(input),
-      click: (input) => authoringTarget(input)?.click?.(input),
+      click: (input) => plateSketchEdit?.authoringHandler?.click?.(input) || authoringTarget(input)?.click?.(input),
+      pointerMove: (input) => plateSketchEdit?.authoringHandler?.pointerMove?.(input) || authoringTarget(input)?.pointerMove?.(input),
       contextMenu: (input) => plateSketchEdit?.authoringHandler?.contextMenu?.(input) || authoringTarget(input)?.contextMenu?.(input),
       quickListAction: (input) => authoringTarget({ handle: input?.item?.handle })?.quickListAction?.(input),
       drag: (input) => authoringTarget(input)?.drag?.(input),
@@ -736,7 +779,20 @@ async function main() {
       if (entry?.collection) {
         if (face?.collection && face.collection !== "members" && objectId) {
           clearMemberEditSilently();
-          editorApi?.selectObject(objectId, face);
+          const detail = face.cornerReliefVertexId && face.collection === "plates"
+            ? {
+                ...face,
+                inspectorPanel: "properties",
+                skipSketchEdit: false,
+                sketchMode: "relations",
+                cornerReliefVertexId: face.cornerReliefVertexId,
+                edgeIds: [],
+                vertexIds: [face.cornerReliefVertexId]
+              }
+            : face.bendId && face.collection === "plates"
+              ? { ...face, inspectorPanel: "properties", skipSketchEdit: true }
+            : face;
+          editorApi?.selectObject(objectId, detail);
           return true;
         }
         return false;
@@ -873,6 +929,17 @@ async function main() {
       },
       onOverlayChange: (overlay) => viewer.setAuthoringOverlay(overlay),
       onProjectChange: handleProjectChange,
+      onSketchCreated: ({ sketchId }) => {
+        commandRegistration.setActiveModelingCommand(null);
+        if (!sketchId) return;
+        if (typeof editorApi?.selectObject === "function") {
+          editorApi.selectObject(sketchId, { inspectorPanel: "properties", sketchMode: "relations" });
+        } else {
+          plateSketchEdit?.selectObject(sketchId, { sketchMode: "relations" });
+          commandRegistration.syncSketchRelationsButton();
+        }
+        updateModelingStatus("Sketch: editing new sketch.");
+      },
       onStatusChange: updateModelingStatus,
       onCommandStart: (type) => {
         trimCreate?.cancel();
@@ -882,6 +949,10 @@ async function main() {
         clearMemberEditSilently();
         clearAuxiliaryEditors();
         selection.clear();
+      },
+      onToolStateChange: () => {
+        editorApi?.refresh?.();
+        workspaceBindings.refreshCommandState?.();
       },
       keyboardTarget: document
     });
@@ -908,7 +979,7 @@ async function main() {
     });
     const handleViewerKeyDelete = (event) => {
       if (!isDeleteSelectionEvent(event) || isTextInput(event.target)) return false;
-      if (plateSketchEdit?.removeSelectedRelation?.()) {
+      if (plateSketchEdit?.removeSelectedSketchEntity?.()) {
         event.preventDefault();
         return true;
       }
@@ -933,6 +1004,10 @@ async function main() {
           event.preventDefault();
           return;
         }
+      }
+      if (!isTextInput(event.target) && plateSketchEdit?.handleKey?.(event)) {
+        event.preventDefault();
+        return;
       }
       if (handleViewerKeyDelete(event)) return;
       if (!isTextInput(event.target) && matchesShortcut(event, shortcutSetting(runtimeSettings.shortcuts?.commands, "createTrim", "T"))) {
@@ -977,7 +1052,14 @@ async function main() {
     }, { capture: true });
 
     renderProject(api.project());
-    qaBridge.mountQaApi({ api, profiles, snapManager });
+    qaBridge.mountQaApi({
+      api,
+      profiles,
+      snapManager,
+      viewerApp,
+      plateSketchEdit,
+      getViewerCommandItems: workspaceBindings.workspaceCommandItems
+    });
     qaBridge.applyQaView(api.project()).catch((error) => console.error(error));
     if (libraryPanel) libraryPanel.hidden = false;
     connectionComponentBrowserUi = trackDisposable(mountSmartComponentBrowser({
@@ -1062,6 +1144,22 @@ async function main() {
           trimJointEditorApi?.selectTrimJoint(objectId, { operationId: detail.operationId, regionKey: detail.regionKey });
           workspaceBindings.showInspectorProperties({ notify: detail.inspectorPanel === "properties" });
         } else if (entry?.collection === "plates") {
+          referencePlaneEdit?.clear({ overlay: true });
+          featureEditorApi?.clear();
+          trimJointEditorApi?.clear();
+          if (detail.skipSketchEdit) {
+            plateSketchEdit?.clear({ overlay: true });
+            workspaceBindings.showInspectorProperties({ notify: detail.inspectorPanel === "properties" });
+          } else {
+            plateSketchEdit?.selectObject(objectId, { sketchMode: detail.sketchMode, notify: false });
+            if (detail.relationId) plateSketchEdit?.selectRelation(detail.relationId, { notify: false });
+            else if (detail.clearSketchSelection) plateSketchEdit?.clearSelection({ notify: false });
+            else if (detail.edgeIds?.length || detail.vertexIds?.length) {
+              plateSketchEdit?.selectEntities({ edgeIds: detail.edgeIds, vertexIds: detail.vertexIds }, { notify: false, sketchMode: detail.sketchMode });
+            }
+          }
+          commandRegistration.syncSketchRelationsButton();
+        } else if (entry?.collection === "sketches") {
           referencePlaneEdit?.clear({ overlay: true });
           featureEditorApi?.clear();
           trimJointEditorApi?.clear();

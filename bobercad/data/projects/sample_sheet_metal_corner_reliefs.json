@@ -1,0 +1,491 @@
+{
+  "$schema": "../../app/schemas/project.schema.json",
+  "schema": "steel-bim-project",
+  "schemaVersion": "0.5.0",
+  "project": {
+    "id": "project_sheet_metal_corner_reliefs",
+    "name": "Sheet Metal Corner Relief Demo",
+    "description": "Three folded sheet metal corners demonstrating SolidWorks-style rectangular, circular, and obround corner reliefs.",
+    "createdWith": "manual-seed-0.6.0"
+  },
+  "settings": {
+    "units": {
+      "length": "mm",
+      "angle": "deg",
+      "mass": "kg"
+    },
+    "coordinateSystem": {
+      "id": "global",
+      "type": "cartesian-3d",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axisX": [
+        1,
+        0,
+        0
+      ],
+      "axisY": [
+        0,
+        1,
+        0
+      ],
+      "axisZ": [
+        0,
+        0,
+        1
+      ]
+    },
+    "modelingConvention": {
+      "memberLocalX": "start-to-end",
+      "memberLocalY": "profile-section-y-width-axis",
+      "memberLocalZ": "profile-section-z-depth-axis",
+      "memberRotation": "degrees-about-member-local-x",
+      "cardinalPoint": "profile-reference-point-name",
+      "objectIndex": "stored-and-authoritative"
+    },
+    "tolerances": {
+      "coincident": 1,
+      "snap": 1,
+      "connectionGap": 2
+    }
+  },
+  "libraries": {
+    "profiles": {
+      "libraryId": "starter-profile-library",
+      "version": "0.2.0",
+      "path": "../libraries/profiles/profile-libraries/starter-profiles/config.json"
+    },
+    "materials": {
+      "libraryId": "starter-material-library",
+      "version": "0.1.0",
+      "path": "../libraries/materials/material-libraries/starter-materials/config.json"
+    },
+    "fasteners": {
+      "libraryId": "starter-fastener-library",
+      "version": "0.1.0",
+      "path": "../libraries/fasteners/fastener-libraries/starter-fasteners/config.json"
+    },
+    "frames": {
+      "libraryId": "starter-frame-library",
+      "version": "0.1.0",
+      "path": "../libraries/frames/frame-register.json"
+    },
+    "smartComponents": {
+      "libraryId": "starter-smart-component-library",
+      "version": "0.1.0",
+      "path": "../libraries/smart-components/smart-component-register.json"
+    }
+  },
+  "projectTree": {
+    "rootNodeId": "site_corner_reliefs",
+    "nodes": {
+      "site_corner_reliefs": {
+        "id": "site_corner_reliefs",
+        "type": "site",
+        "name": "Corner Relief Site",
+        "children": [
+          "zone_corner_reliefs"
+        ]
+      },
+      "zone_corner_reliefs": {
+        "id": "zone_corner_reliefs",
+        "type": "zone",
+        "name": "Corner Relief Comparison",
+        "children": []
+      }
+    }
+  },
+  "objectIndex": {
+    "corner_relief_rectangular": {
+      "collection": "plates",
+      "type": "bent-plate"
+    },
+    "corner_relief_circular": {
+      "collection": "plates",
+      "type": "bent-plate"
+    },
+    "corner_relief_obround": {
+      "collection": "plates",
+      "type": "bent-plate"
+    }
+  },
+  "modelDefaults": {
+    "resolutionOrder": [
+      "collectionDefault",
+      "typeDefault",
+      "object"
+    ],
+    "collections": {}
+  },
+  "model": {
+    "gridSystems": {},
+    "levels": {},
+    "workPoints": {},
+    "referencePlanes": {},
+    "groups": {},
+    "interfaces": {},
+    "connectionZones": {},
+    "assemblies": {},
+    "members": {},
+    "plates": {
+      "corner_relief_rectangular": {
+        "id": "corner_relief_rectangular",
+        "type": "bent-plate",
+        "material": "S355",
+        "thickness": 8,
+        "center": [
+          -155,
+          135,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "display": {
+          "color": "#bdd7e7",
+          "edgeColor": "#0f766e"
+        },
+        "authoring": {
+          "source": "manual-sheet-metal-corner-relief-demo",
+          "notes": "Rectangular corner relief: straight slot-style material removal where two bends meet."
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "corner_relief_rectangular_v1",
+              "point": [
+                -80,
+                -56
+              ]
+            },
+            {
+              "id": "corner_relief_rectangular_v2",
+              "point": [
+                80,
+                -56
+              ]
+            },
+            {
+              "id": "corner_relief_rectangular_v3",
+              "point": [
+                80,
+                56
+              ]
+            },
+            {
+              "id": "corner_relief_rectangular_v4",
+              "point": [
+                -80,
+                56
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "corner_relief_rectangular_e1",
+              "from": "corner_relief_rectangular_v1",
+              "to": "corner_relief_rectangular_v2"
+            },
+            {
+              "id": "corner_relief_rectangular_e2",
+              "from": "corner_relief_rectangular_v2",
+              "to": "corner_relief_rectangular_v3"
+            },
+            {
+              "id": "corner_relief_rectangular_e3",
+              "from": "corner_relief_rectangular_v3",
+              "to": "corner_relief_rectangular_v4"
+            },
+            {
+              "id": "corner_relief_rectangular_e4",
+              "from": "corner_relief_rectangular_v4",
+              "to": "corner_relief_rectangular_v1"
+            }
+          ],
+          "relations": []
+        },
+        "fabrication": {
+          "reliefDefaults": {
+            "type": "rectangular",
+            "size": 1,
+            "flangeGap": 10
+          },
+          "bends": [
+            {
+              "id": "corner_relief_rectangular_bend_1",
+              "edgeId": "corner_relief_rectangular_e1",
+              "direction": "up",
+              "angle": 90,
+              "radius": 10,
+              "flangeLength": 58
+            },
+            {
+              "id": "corner_relief_rectangular_bend_2",
+              "edgeId": "corner_relief_rectangular_e2",
+              "direction": "up",
+              "angle": 90,
+              "radius": 10,
+              "flangeLength": 58
+            }
+          ]
+        }
+      },
+      "corner_relief_circular": {
+        "id": "corner_relief_circular",
+        "type": "bent-plate",
+        "material": "S355",
+        "thickness": 8,
+        "center": [
+          155,
+          135,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "display": {
+          "color": "#c6e0b4",
+          "edgeColor": "#0f766e"
+        },
+        "authoring": {
+          "source": "manual-sheet-metal-corner-relief-demo",
+          "notes": "Circular corner relief: round cut centered on the bend-line intersection."
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "corner_relief_circular_v1",
+              "point": [
+                -80,
+                -56
+              ]
+            },
+            {
+              "id": "corner_relief_circular_v2",
+              "point": [
+                80,
+                -56
+              ]
+            },
+            {
+              "id": "corner_relief_circular_v3",
+              "point": [
+                80,
+                56
+              ]
+            },
+            {
+              "id": "corner_relief_circular_v4",
+              "point": [
+                -80,
+                56
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "corner_relief_circular_e1",
+              "from": "corner_relief_circular_v1",
+              "to": "corner_relief_circular_v2"
+            },
+            {
+              "id": "corner_relief_circular_e2",
+              "from": "corner_relief_circular_v2",
+              "to": "corner_relief_circular_v3"
+            },
+            {
+              "id": "corner_relief_circular_e3",
+              "from": "corner_relief_circular_v3",
+              "to": "corner_relief_circular_v4"
+            },
+            {
+              "id": "corner_relief_circular_e4",
+              "from": "corner_relief_circular_v4",
+              "to": "corner_relief_circular_v1"
+            }
+          ],
+          "relations": []
+        },
+        "fabrication": {
+          "reliefDefaults": {
+            "type": "circular",
+            "size": 2.25,
+            "flangeGap": -8,
+            "flangeGapMode": "butt",
+            "flangeGapSwapped": false
+          },
+          "bends": [
+            {
+              "id": "corner_relief_circular_bend_1",
+              "edgeId": "corner_relief_circular_e1",
+              "direction": "up",
+              "angle": 90,
+              "radius": 10,
+              "flangeLength": 58
+            },
+            {
+              "id": "corner_relief_circular_bend_2",
+              "edgeId": "corner_relief_circular_e2",
+              "direction": "up",
+              "angle": 90,
+              "radius": 10,
+              "flangeLength": 58
+            }
+          ]
+        }
+      },
+      "corner_relief_obround": {
+        "id": "corner_relief_obround",
+        "type": "bent-plate",
+        "material": "S355",
+        "thickness": 8,
+        "center": [
+          -155,
+          -135,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "display": {
+          "color": "#f8d9a8",
+          "edgeColor": "#0f766e"
+        },
+        "authoring": {
+          "source": "manual-sheet-metal-corner-relief-demo",
+          "notes": "Obround corner relief: rectangular cutout footprint with rounded corners."
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "corner_relief_obround_v1",
+              "point": [
+                -80,
+                -56
+              ]
+            },
+            {
+              "id": "corner_relief_obround_v2",
+              "point": [
+                80,
+                -56
+              ]
+            },
+            {
+              "id": "corner_relief_obround_v3",
+              "point": [
+                80,
+                56
+              ]
+            },
+            {
+              "id": "corner_relief_obround_v4",
+              "point": [
+                -80,
+                56
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "corner_relief_obround_e1",
+              "from": "corner_relief_obround_v1",
+              "to": "corner_relief_obround_v2"
+            },
+            {
+              "id": "corner_relief_obround_e2",
+              "from": "corner_relief_obround_v2",
+              "to": "corner_relief_obround_v3"
+            },
+            {
+              "id": "corner_relief_obround_e3",
+              "from": "corner_relief_obround_v3",
+              "to": "corner_relief_obround_v4"
+            },
+            {
+              "id": "corner_relief_obround_e4",
+              "from": "corner_relief_obround_v4",
+              "to": "corner_relief_obround_v1"
+            }
+          ],
+          "relations": []
+        },
+        "fabrication": {
+          "reliefDefaults": {
+            "type": "obround",
+            "size": 1
+          },
+          "bends": [
+            {
+              "id": "corner_relief_obround_bend_1",
+              "edgeId": "corner_relief_obround_e1",
+              "direction": "up",
+              "angle": 90,
+              "radius": 10,
+              "flangeLength": 58
+            },
+            {
+              "id": "corner_relief_obround_bend_2",
+              "edgeId": "corner_relief_obround_e2",
+              "direction": "up",
+              "angle": 90,
+              "radius": 10,
+              "flangeLength": 58
+            }
+          ]
+        }
+      }
+    },
+    "sketches": {},
+    "holePatterns": {},
+    "objectPatterns": {},
+    "features": {},
+    "trimJoints": {},
+    "fastenerGroups": {},
+    "welds": {},
+    "smartComponentInstances": {},
+    "relations": {}
+  }
+}

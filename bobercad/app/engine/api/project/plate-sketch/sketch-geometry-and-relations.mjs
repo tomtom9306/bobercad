@@ -1,5 +1,6 @@
 import { cleanVec2Loop, finiteNumber, finitePositiveNumber, finiteVec3, v } from "../../../core/math.mjs";
 import {
+  sketchConstructionEdges,
   sketchEdges,
   sketchRelationEdges,
   sketchRelationVertices,
@@ -7,7 +8,20 @@ import {
   sketchVertices
 } from "./model-accessors.mjs";
 import {
+  SKETCH_EDGE_CIRCULAR_ARC,
+  SKETCH_EDGE_LINE,
+  normalizeSketchEdge,
+  sampleSketchEdge,
+  sketchEdgeCenterPoint as runtimeSketchEdgeCenterPoint,
+  sketchEdgeKind,
+  sketchEdgeLength as runtimeSketchEdgeLength,
+  sketchEdgePointAt as runtimeSketchEdgePointAt,
+  sketchEdgeQuadrantPoints as runtimeSketchEdgeQuadrantPoints,
+  sketchEdgeRuntime
+} from "./edge-geometry.mjs";
+import {
   SKETCH_DIMENSION_RELATION_MODES,
+  SKETCH_RADIUS_RELATION_DISPLAYS,
   SKETCH_RELATION_TYPES,
   sketchRelationKey,
   sketchRelationLabel
@@ -52,6 +66,12 @@ export function sketchDimensionMode(value, label) {
   if (value === undefined) return "driving";
   if (SKETCH_DIMENSION_RELATION_MODES.has(value)) return value;
   fail(`${label} must be driving or driven`);
+}
+
+export function sketchRadiusDimensionDisplay(value, label) {
+  if (value === undefined || value === "radius") return undefined;
+  if (SKETCH_RADIUS_RELATION_DISPLAYS.has(value)) return value;
+  fail(`${label} must be radius or diameter`);
 }
 
 export function sketchSource(options, id, label) {
@@ -111,14 +131,15 @@ export function finiteAngleDegrees(value, label = "plate sketch angle relation")
   return value;
 }
 
-export function rectangleOutline(width, height) {
+export function rectangleOutline(width, height, center = [0, 0]) {
   if (!finitePositiveNumber(width)) fail("plate width must be a positive number");
   if (!finitePositiveNumber(height)) fail("plate height must be a positive number");
+  const [cy, cz] = vec2(center, "plate rectangle center");
   return [
-    [-width / 2, -height / 2],
-    [width / 2, -height / 2],
-    [width / 2, height / 2],
-    [-width / 2, height / 2]
+    [cy - width / 2, cz - height / 2],
+    [cy + width / 2, cz - height / 2],
+    [cy + width / 2, cz + height / 2],
+    [cy - width / 2, cz + height / 2]
   ];
 }
 
@@ -136,8 +157,247 @@ export function sketchFromOutline(outline, idPrefix = "sketch") {
   return withInferredSketchRelations({ type: "plate-sketch", vertices, edges });
 }
 
-export function sketchFromRectangle(width, height, idPrefix = "sketch") {
-  return sketchFromOutline(rectangleOutline(width, height), idPrefix);
+export function sketchFromRectangle(width, height, idPrefix = "sketch", center = [0, 0]) {
+  return sketchFromOutline(rectangleOutline(width, height, center), idPrefix);
+}
+
+export function sketchFromRoundedRectangle(width, height, radius, idPrefix = "sketch", center = [0, 0]) {
+  if (!finitePositiveNumber(width)) fail("plate sketch rounded rectangle width must be positive");
+  if (!finitePositiveNumber(height)) fail("plate sketch rounded rectangle height must be positive");
+  if (!finitePositiveNumber(radius)) fail("plate sketch rounded rectangle radius must be positive");
+  if (radius * 2 >= Math.min(width, height) - EPSILON) {
+    fail("plate sketch rounded rectangle radius must be less than half the width and height");
+  }
+  const [cy, cz] = vec2(center, "plate sketch rounded rectangle center");
+  const left = cy - width / 2;
+  const right = cy + width / 2;
+  const bottom = cz - height / 2;
+  const top = cz + height / 2;
+  const vertices = [
+    { id: `${idPrefix}_v1`, point: [left + radius, bottom] },
+    { id: `${idPrefix}_v2`, point: [right - radius, bottom] },
+    { id: `${idPrefix}_v3`, point: [right, bottom + radius] },
+    { id: `${idPrefix}_v4`, point: [right, top - radius] },
+    { id: `${idPrefix}_v5`, point: [right - radius, top] },
+    { id: `${idPrefix}_v6`, point: [left + radius, top] },
+    { id: `${idPrefix}_v7`, point: [left, top - radius] },
+    { id: `${idPrefix}_v8`, point: [left, bottom + radius] }
+  ];
+  const edges = [
+    { id: `${idPrefix}_e1`, from: vertices[0].id, to: vertices[1].id },
+    {
+      id: `${idPrefix}_e2`,
+      from: vertices[1].id,
+      to: vertices[2].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: [right - radius, bottom + radius],
+      radius,
+      direction: "ccw"
+    },
+    { id: `${idPrefix}_e3`, from: vertices[2].id, to: vertices[3].id },
+    {
+      id: `${idPrefix}_e4`,
+      from: vertices[3].id,
+      to: vertices[4].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: [right - radius, top - radius],
+      radius,
+      direction: "ccw"
+    },
+    { id: `${idPrefix}_e5`, from: vertices[4].id, to: vertices[5].id },
+    {
+      id: `${idPrefix}_e6`,
+      from: vertices[5].id,
+      to: vertices[6].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: [left + radius, top - radius],
+      radius,
+      direction: "ccw"
+    },
+    { id: `${idPrefix}_e7`, from: vertices[6].id, to: vertices[7].id },
+    {
+      id: `${idPrefix}_e8`,
+      from: vertices[7].id,
+      to: vertices[0].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: [left + radius, bottom + radius],
+      radius,
+      direction: "ccw"
+    }
+  ];
+  return withSketchRelations({ type: "plate-sketch", vertices, edges }, [
+    { type: "radius", edgeId: edges[1].id, value: radius, mode: "driven" },
+    { type: "equal-radius", edgeIds: [edges[1].id, edges[3].id] },
+    { type: "equal-radius", edgeIds: [edges[3].id, edges[5].id] },
+    { type: "equal-radius", edgeIds: [edges[5].id, edges[7].id] },
+    { type: "tangent", edgeIds: [edges[0].id, edges[1].id] },
+    { type: "tangent", edgeIds: [edges[1].id, edges[2].id] },
+    { type: "tangent", edgeIds: [edges[2].id, edges[3].id] },
+    { type: "tangent", edgeIds: [edges[3].id, edges[4].id] },
+    { type: "tangent", edgeIds: [edges[4].id, edges[5].id] },
+    { type: "tangent", edgeIds: [edges[5].id, edges[6].id] },
+    { type: "tangent", edgeIds: [edges[6].id, edges[7].id] },
+    { type: "tangent", edgeIds: [edges[7].id, edges[0].id] }
+  ]);
+}
+
+export function sketchFromCircle(radius, idPrefix = "sketch", center = [0, 0]) {
+  if (!finitePositiveNumber(radius)) fail("plate sketch circle radius must be positive");
+  const [cy, cz] = vec2(center, "plate sketch circle center");
+  const vertices = [
+    { id: `${idPrefix}_v1`, point: [cy + radius, cz] },
+    { id: `${idPrefix}_v2`, point: [cy, cz + radius] },
+    { id: `${idPrefix}_v3`, point: [cy - radius, cz] },
+    { id: `${idPrefix}_v4`, point: [cy, cz - radius] }
+  ];
+  const edges = vertices.map((vertex, index) => ({
+    id: `${idPrefix}_e${index + 1}`,
+    from: vertex.id,
+    to: vertices[(index + 1) % vertices.length].id,
+    kind: SKETCH_EDGE_CIRCULAR_ARC,
+    center: [cy, cz],
+    radius,
+    direction: "ccw"
+  }));
+  return withSketchRelations({ type: "plate-sketch", vertices, edges }, [{
+    type: "radius",
+    edgeId: edges[0].id,
+    value: radius,
+    mode: "driven"
+  }]);
+}
+
+export function sketchFromSlot(length, radius, idPrefix = "sketch", center = [0, 0]) {
+  if (!finitePositiveNumber(length)) fail("plate sketch slot length must be positive");
+  if (!finitePositiveNumber(radius)) fail("plate sketch slot radius must be positive");
+  if (length <= radius * 2 + EPSILON) fail("plate sketch slot length must be greater than diameter");
+  const [cy, cz] = vec2(center, "plate sketch slot center");
+  const halfStraight = (length - radius * 2) / 2;
+  const leftCenter = [cy - halfStraight, cz];
+  const rightCenter = [cy + halfStraight, cz];
+  const vertices = [
+    { id: `${idPrefix}_v1`, point: [leftCenter[0], cz - radius] },
+    { id: `${idPrefix}_v2`, point: [rightCenter[0], cz - radius] },
+    { id: `${idPrefix}_v3`, point: [rightCenter[0], cz + radius] },
+    { id: `${idPrefix}_v4`, point: [leftCenter[0], cz + radius] }
+  ];
+  const edges = [
+    { id: `${idPrefix}_e1`, from: vertices[0].id, to: vertices[1].id },
+    {
+      id: `${idPrefix}_e2`,
+      from: vertices[1].id,
+      to: vertices[2].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: rightCenter,
+      radius,
+      direction: "ccw"
+    },
+    { id: `${idPrefix}_e3`, from: vertices[2].id, to: vertices[3].id },
+    {
+      id: `${idPrefix}_e4`,
+      from: vertices[3].id,
+      to: vertices[0].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: leftCenter,
+      radius,
+      direction: "ccw"
+    }
+  ];
+  return withSketchRelations({ type: "plate-sketch", vertices, edges }, [
+    { type: "radius", edgeId: edges[1].id, value: radius, mode: "driven" },
+    { type: "equal-radius", edgeIds: [edges[1].id, edges[3].id] },
+    { type: "tangent", edgeIds: [edges[0].id, edges[1].id] },
+    { type: "tangent", edgeIds: [edges[1].id, edges[2].id] },
+    { type: "tangent", edgeIds: [edges[2].id, edges[3].id] },
+    { type: "tangent", edgeIds: [edges[3].id, edges[0].id] }
+  ]);
+}
+
+export function sketchFromSlotCenters(startCenterPoint, endCenterPoint, radius, idPrefix = "sketch") {
+  if (!finitePositiveNumber(radius)) fail("plate sketch slot radius must be positive");
+  const startCenter = vec2(startCenterPoint, "plate sketch slot start center");
+  const endCenter = vec2(endCenterPoint, "plate sketch slot end center");
+  const axis = [endCenter[0] - startCenter[0], endCenter[1] - startCenter[1]];
+  const straightLength = Math.hypot(axis[0], axis[1]);
+  if (straightLength <= EPSILON) fail("plate sketch slot centerline must have non-zero length");
+  const unit = [axis[0] / straightLength, axis[1] / straightLength];
+  const normal = [-unit[1], unit[0]];
+  const offset = [normal[0] * radius, normal[1] * radius];
+  const vertices = [
+    { id: `${idPrefix}_v1`, point: [startCenter[0] - offset[0], startCenter[1] - offset[1]] },
+    { id: `${idPrefix}_v2`, point: [endCenter[0] - offset[0], endCenter[1] - offset[1]] },
+    { id: `${idPrefix}_v3`, point: [endCenter[0] + offset[0], endCenter[1] + offset[1]] },
+    { id: `${idPrefix}_v4`, point: [startCenter[0] + offset[0], startCenter[1] + offset[1]] }
+  ];
+  const edges = [
+    { id: `${idPrefix}_e1`, from: vertices[0].id, to: vertices[1].id },
+    {
+      id: `${idPrefix}_e2`,
+      from: vertices[1].id,
+      to: vertices[2].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: endCenter,
+      radius,
+      direction: "ccw"
+    },
+    { id: `${idPrefix}_e3`, from: vertices[2].id, to: vertices[3].id },
+    {
+      id: `${idPrefix}_e4`,
+      from: vertices[3].id,
+      to: vertices[0].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: startCenter,
+      radius,
+      direction: "ccw"
+    }
+  ];
+  return withSketchRelations({ type: "plate-sketch", vertices, edges }, [
+    { type: "radius", edgeId: edges[1].id, value: radius, mode: "driven" },
+    { type: "equal-radius", edgeIds: [edges[1].id, edges[3].id] },
+    { type: "tangent", edgeIds: [edges[0].id, edges[1].id] },
+    { type: "tangent", edgeIds: [edges[1].id, edges[2].id] },
+    { type: "tangent", edgeIds: [edges[2].id, edges[3].id] },
+    { type: "tangent", edgeIds: [edges[3].id, edges[0].id] }
+  ]);
+}
+
+export function sketchFromCenterArc(radius, sweepDegrees = 120, idPrefix = "sketch", center = [0, 0], startAngleDegrees = 0) {
+  if (!finitePositiveNumber(radius)) fail("plate sketch center arc radius must be positive");
+  const sweep = Number(sweepDegrees);
+  if (!Number.isFinite(sweep) || Math.abs(sweep) <= EPSILON || Math.abs(sweep) >= 360 - EPSILON) {
+    fail("plate sketch center arc sweep must be greater than 0 and less than 360 degrees");
+  }
+  const startAngle = Number(startAngleDegrees);
+  if (!Number.isFinite(startAngle)) fail("plate sketch center arc start angle must be finite");
+  const [cy, cz] = vec2(center, "plate sketch center arc center");
+  const start = startAngle * RAD_PER_DEG;
+  const end = (startAngle + sweep) * RAD_PER_DEG;
+  const startPoint = [cy + Math.cos(start) * radius, cz + Math.sin(start) * radius];
+  const endPoint = [cy + Math.cos(end) * radius, cz + Math.sin(end) * radius];
+  const vertices = [
+    { id: `${idPrefix}_v1`, point: [cy, cz] },
+    { id: `${idPrefix}_v2`, point: startPoint },
+    { id: `${idPrefix}_v3`, point: endPoint }
+  ];
+  const edges = [
+    { id: `${idPrefix}_e1`, from: vertices[0].id, to: vertices[1].id },
+    {
+      id: `${idPrefix}_e2`,
+      from: vertices[1].id,
+      to: vertices[2].id,
+      kind: SKETCH_EDGE_CIRCULAR_ARC,
+      center: [cy, cz],
+      radius,
+      direction: sweep >= 0 ? "ccw" : "cw"
+    },
+    { id: `${idPrefix}_e3`, from: vertices[2].id, to: vertices[0].id }
+  ];
+  return withSketchRelations({ type: "plate-sketch", vertices, edges }, [{
+    type: "radius",
+    edgeId: edges[1].id,
+    value: radius,
+    mode: "driven"
+  }]);
 }
 
 export function workPlaneFromThreePoints(first, second, third, id = "work-plane") {
@@ -185,13 +445,37 @@ export function platePlacementFromThreePoints(first, second, third, options = {}
   };
 }
 
-export function outlineFromSketch(sketch) {
-  if (!sketch || typeof sketch !== "object") fail("plate sketch is required");
-  return cleanOutline(orderedSketchLoop(sketch).map((item) => item.point));
+function samePoint2(a, b, tolerance = EPSILON) {
+  return Array.isArray(a)
+    && Array.isArray(b)
+    && Math.hypot(a[0] - b[0], a[1] - b[1]) <= tolerance;
 }
 
-export function plateOutline(plate) {
-  return outlineFromSketch(plate?.sketch);
+export function tessellatedSketchLoop(sketch, options = {}) {
+  if (!sketch || typeof sketch !== "object") fail("plate sketch is required");
+  const loop = orderedSketchLoop(sketch);
+  const edgeMap = new Map(sketchEdges(sketch).map((edge) => [edge.id, edge]));
+  const vertexMap = sketchVertexPointMap(sketch);
+  const points = [];
+  for (const item of loop) {
+    const edge = edgeMap.get(item.outgoingEdgeId);
+    const samples = edge ? sampleSketchEdge(edge, vertexMap, options) : [item.point];
+    for (const point of samples) {
+      if (points.length && samePoint2(points[points.length - 1], point)) continue;
+      points.push(point);
+    }
+  }
+  if (points.length > 1 && samePoint2(points[0], points[points.length - 1])) points.pop();
+  return points;
+}
+
+export function outlineFromSketch(sketch, options = {}) {
+  if (!sketch || typeof sketch !== "object") fail("plate sketch is required");
+  return cleanOutline(tessellatedSketchLoop(sketch, options));
+}
+
+export function plateOutline(plate, options = {}) {
+  return outlineFromSketch(plate?.sketch, options);
 }
 
 export function sketchRelationId(type, ids = []) {
@@ -206,6 +490,36 @@ export function axisRelationTypeForEdgePoints(a, b, tolerance = EPSILON) {
   return null;
 }
 
+function sharedSketchEdgeVertexId(firstEdge, secondEdge) {
+  if (!firstEdge || !secondEdge) return null;
+  return [firstEdge.from, firstEdge.to].find((vertexId) => vertexId === secondEdge.from || vertexId === secondEdge.to) || null;
+}
+
+function sketchEdgesAreTangentAtSharedVertex(sketch, firstEdge, secondEdge, tolerance = 1e-6) {
+  if (!firstEdge || !secondEdge) return false;
+  if (sketchEdgeKind(firstEdge) !== SKETCH_EDGE_CIRCULAR_ARC && sketchEdgeKind(secondEdge) !== SKETCH_EDGE_CIRCULAR_ARC) return false;
+  const sharedVertexId = sharedSketchEdgeVertexId(firstEdge, secondEdge);
+  if (!sharedVertexId) return false;
+  const first = sketchEdgeTangentAtVertex(sketch, firstEdge, sharedVertexId);
+  const second = sketchEdgeTangentAtVertex(sketch, secondEdge, sharedVertexId);
+  return Math.abs(Math.abs(first[0] * second[0] + first[1] * second[1]) - 1) <= tolerance;
+}
+
+function inferredEqualRadiusGroups(sketch, edges) {
+  const groups = [];
+  for (const edge of edges) {
+    if (sketchEdgeKind(edge) !== SKETCH_EDGE_CIRCULAR_ARC) continue;
+    const radius = measuredSketchEdgeRadius(sketch, edge.id);
+    const group = groups.find((item) => Math.abs(item.radius - radius) <= Math.max(EPSILON, Math.max(item.radius, radius) * 1e-6));
+    if (group) {
+      group.edges.push(edge);
+    } else {
+      groups.push({ radius, edges: [edge] });
+    }
+  }
+  return groups.filter((group) => group.edges.length > 1);
+}
+
 export function inferredSketchRelations(sketch) {
   const edges = sketchEdges(sketch);
   const vertexMap = sketchVertexPointMap(sketch);
@@ -213,6 +527,7 @@ export function inferredSketchRelations(sketch) {
   const edgeVectors = new Map();
   const edgeLengths = new Map();
   for (const edge of edges) {
+    if (sketchEdgeKind(edge) !== SKETCH_EDGE_LINE) continue;
     const { a, b } = sketchEdgePoints(sketch, edge, vertexMap);
     const type = axisRelationTypeForEdgePoints(a, b);
     if (type) relations.push({ id: sketchRelationId(type, [edge.id]), type, edgeId: edge.id });
@@ -222,8 +537,9 @@ export function inferredSketchRelations(sketch) {
     edgeLengths.set(edge.id, length);
   }
   for (const edge of edges) {
+    if (sketchEdgeKind(edge) !== SKETCH_EDGE_LINE) continue;
     const next = edges.find((item) => item.from === edge.to);
-    if (!next) continue;
+    if (!next || sketchEdgeKind(next) !== SKETCH_EDGE_LINE) continue;
     const { a, b } = sketchEdgePoints(sketch, edge, vertexMap);
     const { a: c, b: d } = sketchEdgePoints(sketch, next, vertexMap);
     const first = v.safeNorm([b[0] - a[0], b[1] - a[1], 0], [0, 0, 0]);
@@ -240,6 +556,7 @@ export function inferredSketchRelations(sketch) {
   if (edges.length === 4) {
     const pairs = [[edges[0], edges[2]], [edges[1], edges[3]]];
     for (const [firstEdge, secondEdge] of pairs) {
+      if (sketchEdgeKind(firstEdge) !== SKETCH_EDGE_LINE || sketchEdgeKind(secondEdge) !== SKETCH_EDGE_LINE) continue;
       const first = edgeVectors.get(firstEdge.id);
       const second = edgeVectors.get(secondEdge.id);
       if (!first || !second) continue;
@@ -259,12 +576,36 @@ export function inferredSketchRelations(sketch) {
       }
     }
   }
+  for (let firstIndex = 0; firstIndex < edges.length; firstIndex += 1) {
+    for (let secondIndex = firstIndex + 1; secondIndex < edges.length; secondIndex += 1) {
+      const firstEdge = edges[firstIndex];
+      const secondEdge = edges[secondIndex];
+      if (!sketchEdgesAreTangentAtSharedVertex(sketch, firstEdge, secondEdge)) continue;
+      relations.push({
+        id: sketchRelationId("tangent", [firstEdge.id, secondEdge.id]),
+        type: "tangent",
+        edgeIds: [firstEdge.id, secondEdge.id]
+      });
+    }
+  }
+  for (const group of inferredEqualRadiusGroups(sketch, edges)) {
+    for (let index = 1; index < group.edges.length; index += 1) {
+      const firstEdge = group.edges[index - 1];
+      const secondEdge = group.edges[index];
+      relations.push({
+        id: sketchRelationId("equal-radius", [firstEdge.id, secondEdge.id]),
+        type: "equal-radius",
+        edgeIds: [firstEdge.id, secondEdge.id]
+      });
+    }
+  }
   return relations;
 }
 
 export function measuredSketchEdgeLength(sketch, edgeId) {
-  const { a, b } = sketchEdgePoints(sketch, edgeId);
-  const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const edge = edgeById(sketch, edgeId);
+  if (!edge) fail(`plate sketch edge not found: ${edgeId}`);
+  const length = runtimeSketchEdgeLength(edge, sketchVertexPointMap(sketch), { fail });
   if (length <= EPSILON) fail(`plate sketch edge ${edgeId} has zero length`);
   return length;
 }
@@ -281,6 +622,12 @@ export function measuredSketchPointDistance(sketch, vertexIds, vertexMap = sketc
 
 export function sketchPointDistance(sketch, vertexIds) {
   return measuredSketchPointDistance(sketch, vertexIds);
+}
+
+function assertStraightSketchRelationEdge(sketch, edgeId, relation) {
+  if (sketchEdgeIsCircularArc(sketch, edgeId)) {
+    fail(`${sketchRelationLabel(relation)} relation requires straight sketch edges`);
+  }
 }
 
 export function sketchEdgeAngleFromVectors(first, second) {
@@ -312,20 +659,30 @@ export function normalizeSketchRelations(sketch) {
     const type = relation?.type;
     if (!SKETCH_RELATION_TYPES.has(type)) fail(`unsupported plate sketch relation type: ${type || "missing"}`);
     let next = null;
-    if (type === "horizontal" || type === "vertical" || type === "length") {
+    if (type === "horizontal" || type === "vertical" || type === "length" || type === "radius") {
       if (!edgeIds.has(relation.edgeId)) fail(`plate sketch relation references unknown edge ${relation.edgeId}`);
+      if (type === "horizontal" || type === "vertical" || type === "length") {
+        assertStraightSketchRelationEdge(sketch, relation.edgeId, relation);
+      }
       const mode = type === "length" ? sketchDimensionMode(relation.mode, "plate sketch length relation mode") : undefined;
+      const radiusMode = type === "radius" ? sketchDimensionMode(relation.mode, "plate sketch radius relation mode") : undefined;
+      const radiusDisplay = type === "radius" ? sketchRadiusDimensionDisplay(relation.display, "plate sketch radius relation display") : undefined;
       const value = type === "length" && mode === "driven"
         ? measuredSketchEdgeLength(sketch, relation.edgeId)
-        : type === "length"
-          ? relation.value
-          : undefined;
+        : type === "radius" && radiusMode === "driven"
+          ? measuredSketchEdgeRadius(sketch, relation.edgeId)
+          : type === "length" || type === "radius"
+            ? relation.value
+            : undefined;
       if (type === "length" && !finitePositiveNumber(value)) fail("plate sketch length relation requires positive value");
+      if (type === "radius" && !finitePositiveNumber(value)) fail("plate sketch radius relation requires positive value");
+      if (type === "radius" && !sketchEdgeIsCircularArc(sketch, relation.edgeId)) fail("plate sketch radius relation requires a circular arc edge");
       next = {
         id: relation.id || sketchRelationId(type, [relation.edgeId]),
         type,
         edgeId: relation.edgeId,
-        ...(type === "length" ? { value, mode } : {})
+        ...(type === "length" ? { value, mode } : {}),
+        ...(type === "radius" ? { value, mode: radiusMode, ...(radiusDisplay ? { display: radiusDisplay } : {}) } : {})
       };
     } else if (type === "horizontal-points" || type === "vertical-points" || type === "coincident" || type === "distance") {
       const ids = requiredIdPair(relation.vertexIds, `${type} plate sketch relation vertexIds`);
@@ -345,10 +702,14 @@ export function normalizeSketchRelations(sketch) {
         vertexIds: ids,
         ...(type === "distance" ? { value, mode } : {})
       };
-    } else if (type === "point-on-line" || type === "midpoint") {
+    } else if (type === "point-on-line" || type === "point-on-circle" || type === "midpoint") {
       if (!vertexIds.has(relation.vertexId)) fail(`plate sketch relation references unknown vertex ${relation.vertexId}`);
       if (!edgeIds.has(relation.edgeId)) fail(`plate sketch relation references unknown edge ${relation.edgeId}`);
+      if (type === "point-on-line" || type === "midpoint") {
+        assertStraightSketchRelationEdge(sketch, relation.edgeId, relation);
+      }
       assertSketchPointLineRelationCanUseEdge(sketch, relation);
+      if (type === "point-on-circle" && !sketchEdgeIsCircularArc(sketch, relation.edgeId)) fail("point-on-circle plate sketch relation requires a circular arc edge");
       next = {
         id: relation.id || sketchRelationId(type, [relation.vertexId, relation.edgeId]),
         type,
@@ -361,6 +722,7 @@ export function normalizeSketchRelations(sketch) {
         if (!vertexIds.has(vertexId)) fail(`plate sketch relation references unknown vertex ${vertexId}`);
       }
       if (!edgeIds.has(relation.edgeId)) fail(`plate sketch relation references unknown edge ${relation.edgeId}`);
+      assertStraightSketchRelationEdge(sketch, relation.edgeId, relation);
       next = {
         id: relation.id || sketchRelationId(type, [...ids, relation.edgeId]),
         type,
@@ -388,10 +750,19 @@ export function normalizeSketchRelations(sketch) {
           edgeId: relation.edgeId
         };
       }
-    } else if (type === "perpendicular" || type === "parallel" || type === "collinear" || type === "equal-length" || type === "angle") {
+    } else if (type === "perpendicular" || type === "parallel" || type === "collinear" || type === "equal-length" || type === "tangent" || type === "concentric" || type === "equal-radius" || type === "angle") {
       const ids = requiredIdPair(relation.edgeIds, `${type} plate sketch relation edgeIds`);
       for (const edgeId of ids) {
         if (!edgeIds.has(edgeId)) fail(`plate sketch relation references unknown edge ${edgeId}`);
+      }
+      if (type === "perpendicular" || type === "parallel" || type === "collinear" || type === "equal-length" || type === "angle") {
+        ids.forEach((edgeId) => assertStraightSketchRelationEdge(sketch, edgeId, relation));
+      }
+      if ((type === "concentric" || type === "equal-radius") && !ids.every((edgeId) => sketchEdgeIsCircularArc(sketch, edgeId))) {
+        fail(`${type} plate sketch relation requires two circular arc edges`);
+      }
+      if (type === "tangent" && !ids.some((edgeId) => sketchEdgeIsCircularArc(sketch, edgeId))) {
+        fail("tangent plate sketch relation requires at least one circular arc edge");
       }
       const mode = type === "angle" ? sketchDimensionMode(relation.mode, "plate sketch angle relation mode") : undefined;
       const value = type === "angle" && mode === "driven"
@@ -427,7 +798,15 @@ export function withInferredSketchRelations(sketch) {
 
 export function normalizeSketch(sketch) {
   if (!Array.isArray(sketch?.relations)) fail("plate sketch relations must be an array");
-  return withSketchRelations(sketch, sketch.relations);
+  const vertexMap = sketchVertexPointMap(sketch);
+  const next = {
+    ...sketch,
+    edges: sketchEdges(sketch).map((edge) => normalizeSketchEdge(edge, vertexMap, { fail })),
+    ...(sketch.constructionEdges !== undefined
+      ? { constructionEdges: sketchConstructionEdges(sketch).map((edge) => normalizeSketchEdge(edge, vertexMap, { fail })) }
+      : {})
+  };
+  return withSketchRelations(next, next.relations);
 }
 
 export function edgeById(sketch, edgeId) {
@@ -475,6 +854,45 @@ export function sketchEdgePoints(sketch, edgeOrId, vertexMap = sketchVertexPoint
   const b = vertexMap.get(edge.to);
   if (!a || !b) fail(`plate sketch edge ${edge.id} has missing vertices`);
   return { edge, a, b };
+}
+
+export function sketchEdgeSamplePoints(sketch, edgeOrId, options = {}) {
+  const { edge } = sketchEdgePoints(sketch, edgeOrId);
+  return sampleSketchEdge(edge, sketchVertexPointMap(sketch), { fail, ...options });
+}
+
+export function sketchEdgeMidpoint(sketch, edgeOrId) {
+  const { edge } = sketchEdgePoints(sketch, edgeOrId);
+  return runtimeSketchEdgePointAt(edge, sketchVertexPointMap(sketch), 0.5, { fail });
+}
+
+export function sketchEdgeCenterPoint(sketch, edgeOrId) {
+  const { edge } = sketchEdgePoints(sketch, edgeOrId);
+  return runtimeSketchEdgeCenterPoint(edge, sketchVertexPointMap(sketch), { fail });
+}
+
+export function sketchEdgeQuadrantPoints(sketch, edgeOrId) {
+  const { edge } = sketchEdgePoints(sketch, edgeOrId);
+  return runtimeSketchEdgeQuadrantPoints(edge, sketchVertexPointMap(sketch), { fail });
+}
+
+export function sketchEdgeTangentAtVertex(sketch, edgeOrId, vertexId) {
+  const { edge } = sketchEdgePoints(sketch, edgeOrId);
+  if (edge.from !== vertexId && edge.to !== vertexId) fail(`plate sketch edge ${edge.id} does not use vertex ${vertexId}`);
+  const runtime = sketchEdgeRuntime(edge, sketchVertexPointMap(sketch), { fail });
+  return runtime.tangentAt(edge.from === vertexId ? 0 : 1);
+}
+
+export function measuredSketchEdgeRadius(sketch, edgeOrId) {
+  const { edge } = sketchEdgePoints(sketch, edgeOrId);
+  const runtime = sketchEdgeRuntime(edge, sketchVertexPointMap(sketch), { fail });
+  if (runtime.kind !== SKETCH_EDGE_CIRCULAR_ARC) fail(`plate sketch edge ${edge.id} is not a circular arc`);
+  return runtime.radius;
+}
+
+export function sketchEdgeIsCircularArc(sketch, edgeOrId) {
+  const { edge } = sketchEdgePoints(sketch, edgeOrId);
+  return sketchEdgeRuntime(edge, sketchVertexPointMap(sketch), { fail }).kind === SKETCH_EDGE_CIRCULAR_ARC;
 }
 
 export function orderedSketchLoop(sketch) {

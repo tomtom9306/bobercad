@@ -1,5 +1,6 @@
 import { plateBends } from "./model-accessors.mjs";
 import { bendDescendantIds, normalizeBend } from "./bend-normalization.mjs";
+import { cleanPlateCornerReliefFabrication } from "./corner-reliefs.mjs";
 import { normalizePlate } from "./model-and-placement.mjs";
 import { fail, optionalObject } from "./sketch-geometry-and-relations.mjs";
 
@@ -26,13 +27,14 @@ export function upsertPlateBend(plate, bendPatch) {
   const removedIds = bendDescendantIds(existingBends, replacedIds);
   const bends = existingBends.filter((item) => item.id !== bend.id && !removedIds.has(item.id));
   bends.push(bend);
+  const fabrication = cleanPlateCornerReliefFabrication(plate, {
+    ...optionalObject(plate.fabrication, {}, `${plate.id}.fabrication`),
+    bends
+  });
   return normalizePlate({
     ...plate,
     type: "bent-plate",
-    fabrication: {
-      ...optionalObject(plate.fabrication, {}, `${plate.id}.fabrication`),
-      bends
-    }
+    fabrication
   });
 }
 
@@ -45,12 +47,13 @@ export function removePlateBend(plate, bendId) {
   if (!seedIds.length) fail(`${plate?.id || "plate"}: bend not found: ${bendId}`);
   const removedIds = bendDescendantIds(existingBends, seedIds);
   const bends = existingBends.filter((bend) => !removedIds.has(bend.id));
+  const fabrication = cleanPlateCornerReliefFabrication(plate, {
+    ...optionalObject(plate.fabrication, {}, `${plate.id}.fabrication`),
+    bends
+  });
   return normalizePlate({
     ...plate,
     type: bends.length ? "bent-plate" : "plate",
-    fabrication: {
-      ...optionalObject(plate.fabrication, {}, `${plate.id}.fabrication`),
-      bends
-    }
+    fabrication
   });
 }

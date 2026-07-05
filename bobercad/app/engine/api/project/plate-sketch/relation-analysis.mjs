@@ -13,9 +13,11 @@ import {
   isDrivingDimensionRelation,
   isDrivingDistanceRelation,
   isDrivingLengthRelation,
+  isDrivingRadiusRelation,
   isSketchAngleRelationDriven,
   isSketchDistanceRelationDriven,
   isSketchLengthRelationDriven,
+  isSketchRadiusRelationDriven,
   sketchRelationEdgeIds,
   sketchRelationKey,
   sketchRelationLabel,
@@ -32,6 +34,7 @@ import {
   finiteAngleDegrees,
   inferredSketchRelations,
   measuredSketchEdgeAngle,
+  measuredSketchEdgeRadius,
   measuredSketchPointDistance,
   normalizeSketch,
   pointMoved,
@@ -39,7 +42,10 @@ import {
   sketchAngleDeltaDegrees,
   sketchDimensionMode,
   sketchEdgeAngleFromVectors,
+  sketchEdgeCenterPoint,
+  sketchEdgeIsCircularArc,
   sketchEdgePoints,
+  sketchEdgeTangentAtVertex,
   sketchRelationVector,
   sketchVertexPointMap,
   vec2,
@@ -56,6 +62,15 @@ function sketchPointOnLineDistance(sketch, vertexId, edgeId, vertexMap = sketchV
   const edge = sketchRelationVector(sketch, edgeId, vertexMap);
   const offset = [vertex?.[0] - edge.a[0], vertex?.[1] - edge.a[1]];
   return Math.abs(edge.delta[0] * offset[1] - edge.delta[1] * offset[0]) / Math.max(edge.length, EPSILON);
+}
+
+function sketchPointOnCircleDistance(sketch, vertexId, edgeId, vertexMap = sketchVertexPointMap(sketch)) {
+  if (!sketchEdgeIsCircularArc(sketch, edgeId)) return Infinity;
+  const vertex = vertexMap.get(vertexId);
+  if (!vertex) return Infinity;
+  const center = sketchEdgeCenterPoint(sketch, edgeId);
+  const radius = measuredSketchEdgeRadius(sketch, edgeId);
+  return Math.abs(Math.hypot(vertex[0] - center[0], vertex[1] - center[1]) - radius);
 }
 
 function sketchMidpointDistance(sketch, vertexId, edgeId, vertexMap = sketchVertexPointMap(sketch)) {
@@ -77,6 +92,38 @@ function sketchSymmetricResidual(sketch, vertexIds, edgeId, vertexMap = sketchVe
   const midpointDistance = Math.abs(edge.delta[0] * midpointOffset[1] - edge.delta[1] * midpointOffset[0]) / Math.max(edge.length, EPSILON);
   const perpendicularResidual = Math.abs(edge.unit[0] * pair[0] + edge.unit[1] * pair[1]);
   return Math.max(midpointDistance, perpendicularResidual);
+}
+
+function sharedEdgeVertexIds(sketch, edgeIds) {
+  const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds({ edgeIds });
+  const first = edgeById(sketch, firstEdgeId);
+  const second = edgeById(sketch, secondEdgeId);
+  if (!first || !second) return [];
+  return [first.from, first.to].filter((vertexId) => vertexId === second.from || vertexId === second.to);
+}
+
+function sketchTangentResidual(sketch, edgeIds) {
+  const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds({ edgeIds });
+  const shared = sharedEdgeVertexIds(sketch, edgeIds);
+  if (!shared.length) return Infinity;
+  const vertexId = shared[0];
+  const first = sketchEdgeTangentAtVertex(sketch, firstEdgeId, vertexId);
+  const second = sketchEdgeTangentAtVertex(sketch, secondEdgeId, vertexId);
+  return Math.abs(Math.abs(first[0] * second[0] + first[1] * second[1]) - 1);
+}
+
+function sketchArcCenterDistance(sketch, edgeIds) {
+  const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds({ edgeIds });
+  if (!sketchEdgeIsCircularArc(sketch, firstEdgeId) || !sketchEdgeIsCircularArc(sketch, secondEdgeId)) return Infinity;
+  const first = sketchEdgeCenterPoint(sketch, firstEdgeId);
+  const second = sketchEdgeCenterPoint(sketch, secondEdgeId);
+  return Math.hypot(second[0] - first[0], second[1] - first[1]);
+}
+
+function sketchArcRadiusDelta(sketch, edgeIds) {
+  const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds({ edgeIds });
+  if (!sketchEdgeIsCircularArc(sketch, firstEdgeId) || !sketchEdgeIsCircularArc(sketch, secondEdgeId)) return Infinity;
+  return Math.abs(measuredSketchEdgeRadius(sketch, firstEdgeId) - measuredSketchEdgeRadius(sketch, secondEdgeId));
 }
 
 export function assertSketchRelationsSatisfied(sketch) {
@@ -107,6 +154,12 @@ export function assertSketchRelationsSatisfied(sketch) {
     if (relation.type === "point-on-line") {
       if (sketchPointOnLineDistance(sketch, relation.vertexId, relation.edgeId, vertexMap) > 1e-6) {
         fail(`Point on line relation is not satisfied on ${relation.vertexId}/${relation.edgeId}`);
+      }
+      continue;
+    }
+    if (relation.type === "point-on-circle") {
+      if (sketchPointOnCircleDistance(sketch, relation.vertexId, relation.edgeId, vertexMap) > 1e-6) {
+        fail(`Point on circle relation is not satisfied on ${relation.vertexId}/${relation.edgeId}`);
       }
       continue;
     }
@@ -154,6 +207,35 @@ export function assertSketchRelationsSatisfied(sketch) {
       const actual = sketchEdgeAngleFromVectors(first, second);
       if (sketchAngleDeltaDegrees(actual, relation.value) > 1e-6) {
         fail(`Angle relation is not satisfied on ${firstEdgeId}/${secondEdgeId}`);
+      }
+      continue;
+    }
+    if (relation.type === "radius") {
+      if (!isDrivingRadiusRelation(relation)) continue;
+      const actual = measuredSketchEdgeRadius(sketch, relation.edgeId);
+      if (Math.abs(actual - relation.value) > Math.max(1e-6, relation.value * 1e-9)) {
+        fail(`Radius relation is not satisfied on ${relation.edgeId}`);
+      }
+      continue;
+    }
+    if (relation.type === "tangent") {
+      const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds(relation);
+      if (sketchTangentResidual(sketch, relation.edgeIds) > 1e-6) {
+        fail(`Tangent relation is not satisfied on ${firstEdgeId}/${secondEdgeId}`);
+      }
+      continue;
+    }
+    if (relation.type === "concentric") {
+      const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds(relation);
+      if (sketchArcCenterDistance(sketch, relation.edgeIds) > 1e-6) {
+        fail(`Concentric relation is not satisfied on ${firstEdgeId}/${secondEdgeId}`);
+      }
+      continue;
+    }
+    if (relation.type === "equal-radius") {
+      const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds(relation);
+      if (sketchArcRadiusDelta(sketch, relation.edgeIds) > 1e-6) {
+        fail(`Equal radius relation is not satisfied on ${firstEdgeId}/${secondEdgeId}`);
       }
       continue;
     }
@@ -218,6 +300,12 @@ export function sketchRelationSatisfactionIssues(sketch) {
         }
         continue;
       }
+      if (relation.type === "point-on-circle") {
+        if (sketchPointOnCircleDistance(sketch, relation.vertexId, relation.edgeId, vertexMap) > 1e-6) {
+          pushIssue(relation, `Point on circle relation is not satisfied on ${relation.vertexId}/${relation.edgeId}.`);
+        }
+        continue;
+      }
       if (relation.type === "midpoint") {
         if (sketchMidpointDistance(sketch, relation.vertexId, relation.edgeId, vertexMap) > 1e-6) {
           pushIssue(relation, `Midpoint relation is not satisfied on ${relation.vertexId}/${relation.edgeId}.`);
@@ -262,6 +350,35 @@ export function sketchRelationSatisfactionIssues(sketch) {
         const actual = sketchEdgeAngleFromVectors(first, second);
         if (sketchAngleDeltaDegrees(actual, relation.value) > 1e-6) {
           pushIssue(relation, `Angle relation on ${firstEdgeId}/${secondEdgeId} expects ${relation.value} deg but reads ${actual.toFixed(3)} deg.`);
+        }
+        continue;
+      }
+      if (relation.type === "radius") {
+        if (!isDrivingRadiusRelation(relation)) continue;
+        const actual = measuredSketchEdgeRadius(sketch, relation.edgeId);
+        if (Math.abs(actual - relation.value) > Math.max(1e-6, relation.value * 1e-9)) {
+          pushIssue(relation, `Radius relation on ${relation.edgeId} expects ${relation.value} mm but reads ${actual.toFixed(3)} mm.`);
+        }
+        continue;
+      }
+      if (relation.type === "tangent") {
+        const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds(relation);
+        if (sketchTangentResidual(sketch, relation.edgeIds) > 1e-6) {
+          pushIssue(relation, `Tangent relation is not satisfied on ${firstEdgeId}/${secondEdgeId}.`);
+        }
+        continue;
+      }
+      if (relation.type === "concentric") {
+        const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds(relation);
+        if (sketchArcCenterDistance(sketch, relation.edgeIds) > 1e-6) {
+          pushIssue(relation, `Concentric relation is not satisfied on ${firstEdgeId}/${secondEdgeId}.`);
+        }
+        continue;
+      }
+      if (relation.type === "equal-radius") {
+        const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds(relation);
+        if (sketchArcRadiusDelta(sketch, relation.edgeIds) > 1e-6) {
+          pushIssue(relation, `Equal radius relation is not satisfied on ${firstEdgeId}/${secondEdgeId}.`);
         }
         continue;
       }
@@ -348,6 +465,15 @@ export function sketchConstraintSystem(sketch) {
         const edgeVector = [edgePoints.b[0] - edgePoints.a[0], edgePoints.b[1] - edgePoints.a[1]];
         const offset = [point[0] - edgePoints.a[0], point[1] - edgePoints.a[1]];
         return edgeVector[0] * offset[1] - edgeVector[1] * offset[0];
+      });
+    } else if (relation.type === "point-on-circle") {
+      const edge = edges.get(relation.edgeId);
+      if (!edge || edge.kind !== "circular-arc") fail("point-on-circle relation requires a circular arc edge");
+      const center = vec2(edge.center, `plate sketch edge ${relation.edgeId} center`);
+      const radius = finitePositiveNumber(edge.radius) ? edge.radius : measuredSketchEdgeRadius(sketch, relation.edgeId);
+      pushEquation(relation, sketchRelationLabel(relation), (coords) => {
+        const point = pointAt(coords, relation.vertexId);
+        return Math.hypot(point[0] - center[0], point[1] - center[1]) - radius;
       });
     } else if (relation.type === "midpoint") {
       pushEquation(relation, `${sketchRelationLabel(relation)} Y`, (coords) => {
@@ -602,7 +728,7 @@ export function sketchRelationHealth(sketch) {
     relations = sketchRelations(normalized);
     const health = Object.fromEntries(relations.map((relation) => [
       relation.id,
-      isSketchLengthRelationDriven(relation) || isSketchAngleRelationDriven(relation) || isSketchDistanceRelationDriven(relation)
+      isSketchLengthRelationDriven(relation) || isSketchAngleRelationDriven(relation) || isSketchDistanceRelationDriven(relation) || isSketchRadiusRelationDriven(relation)
         ? relationHealthRecord("driven", `Driven reference dimension; it reports the current ${relation.type} and does not solve sketch geometry.`)
         : relationHealthRecord("ok")
     ]));

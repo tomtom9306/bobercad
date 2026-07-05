@@ -15,8 +15,10 @@ export function createCommandController({
   onPreviewChange,
   onOverlayChange,
   onProjectChange,
+  onSketchCreated,
   onStatusChange,
   onCommandStart,
+  onToolStateChange,
   keyboardTarget
 }) {
   if (!keyboardTarget?.addEventListener) throw new Error("createCommandController requires a keyboardTarget event port");
@@ -52,6 +54,8 @@ export function createCommandController({
     snapManager,
     getWorkPlane,
     onProjectChange,
+    onSketchCreated,
+    onOverlayChange,
     onStatusChange
   });
   const workPlaneCreate = createWorkPlaneController({
@@ -62,9 +66,13 @@ export function createCommandController({
     onStatusChange
   });
   const plateBend = createPlateBendController({
+    viewer,
     api,
+    onPreviewChange,
+    onOverlayChange,
     onProjectChange,
-    onStatusChange
+    onStatusChange,
+    onToolStateChange
   });
 
   function switchCommand(type, command, start) {
@@ -128,6 +136,9 @@ export function createCommandController({
     active: commandActive,
     needsPointerHit() {
       return activeCommand?.needsPointerHit?.() !== false;
+    },
+    needsPrecisePointerHit() {
+      return activeCommand?.needsPrecisePointerHit?.() === true;
     },
     pointerMove(pointer) {
       return activeCommand?.pointerMove?.(pointer) || false;

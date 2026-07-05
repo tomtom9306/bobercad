@@ -119,27 +119,84 @@ function checkInspectorObjectContracts(context) {
       id: "plate-b",
       type: "plate",
       thickness: 10,
-      material: "S355"
+      material: "S355",
+      fabrication: {
+        reliefDefaults: { type: "round", size: 1 }
+      }
     },
     objectState: {
       definition: { label: "Defined", relationCount: 6, independentConstraintCount: 6, variableCount: 6 },
       outlineVertices: 4,
       bends: [
-        { id: "bend-a", edgeId: "edge-a", direction: "up", angle: 90, radius: 2, flangeLength: 50, relief: { type: "round", radius: 8 }, targetLabel: "1. edge-a" },
-        { id: "bend-b", edgeId: "edge-b", direction: "down", angle: 45, radius: 3, flangeLength: 75, relief: { type: "rect", radius: 10 }, targetLabel: "2. edge-b" }
+        { id: "bend-a", edgeId: "edge-a", direction: "up", angle: 90, radius: 2, flangeLength: 50, targetLabel: "1. edge-a" },
+        { id: "bend-b", edgeId: "edge-b", direction: "down", angle: 45, radius: 3, flangeLength: 75, targetLabel: "2. edge-b" }
+      ],
+      resolvedReliefDefaults: {
+        type: "circular",
+        size: 1,
+        radius: 10,
+        clearance: 0,
+        flangeGap: 0,
+        flangeGapMode: "symmetric",
+        flangeGapSwapped: false,
+        diagnostics: [],
+        properties: [
+          { key: "size", sourceKey: "size", label: "Size", kind: "number", required: true, value: 1 },
+          { key: "flangeGap", sourceKey: "flangeGap", label: "Flange gap", kind: "signed-number", required: false, value: 0 },
+          { key: "flangeGapMode", sourceKey: "flangeGapMode", label: "Flange offset", kind: "select", required: false, value: "symmetric" },
+          { key: "flangeGapSwapped", sourceKey: "flangeGapSwapped", label: "Swap", kind: "boolean", required: false, value: false }
+        ]
+      },
+      cornerReliefs: [
+        {
+          id: "corner_relief_vertex-a",
+          vertexId: "vertex-a",
+          incomingBendId: "bend-a",
+          outgoingBendId: "bend-b",
+          source: "default",
+          relief: { type: "round", size: 1 },
+          resolvedRelief: {
+            type: "circular",
+            size: 1,
+            radius: 10,
+            clearance: 0,
+            flangeGap: 0,
+            flangeGapMode: "symmetric",
+            flangeGapSwapped: false,
+            diagnostics: [],
+            properties: [
+              { key: "size", sourceKey: "size", label: "Size", kind: "number", required: true, value: 1 },
+              { key: "flangeGap", sourceKey: "flangeGap", label: "Flange gap", kind: "signed-number", required: false, value: 0 },
+              { key: "flangeGapMode", sourceKey: "flangeGapMode", label: "Flange offset", kind: "select", required: false, value: "symmetric" },
+              { key: "flangeGapSwapped", sourceKey: "flangeGapSwapped", label: "Swap", kind: "boolean", required: false, value: false }
+            ]
+          }
+        }
       ]
     }
   });
   const objectPlateBendSections = objectPlateWithBendsSections?.filter((section) => section.id?.startsWith("inspector.properties.object.plate.bend.")) || [];
   const objectPlateBendFields = objectPlateBendSections.flatMap((section) => section.fields || []);
+  const objectPlateCornerReliefFields = objectPlateWithBendsSections?.filter((section) => section.id?.includes("cornerRelief")).flatMap((section) => section.fields || []) || [];
+  const objectPlateCornerReliefTypeFields = objectPlateCornerReliefFields.filter((field) => field.label === "Type");
   if (
     objectPlateBendSections.length !== 2
     || generatedPropertyBindings.generatedPropertyDescriptorsContainFunctions?.(objectPlateWithBendsSections)
-    || !objectPlateBendFields.some((field) => field.label === "Relief radius" && field.commit?.action === "object.plate.bend.update" && JSON.stringify(field.commit?.patchPath) === JSON.stringify(["relief", "radius"]))
+    || objectPlateCornerReliefTypeFields.some((field) => (
+      field.value === "round"
+        || field.value === "rect"
+        || field.options?.some((option) => option.id === "round" || option.id === "rect" || String(option.label || "").includes("legacy"))
+    ))
+    || objectPlateCornerReliefTypeFields.length !== 1
+    || !objectPlateCornerReliefTypeFields.some((field) => field.value === "circular" && JSON.stringify(field.commit?.patchPath) === JSON.stringify(["fabrication", "reliefDefaults", "type"]))
+    || !objectPlateCornerReliefFields.some((field) => field.label === "Size" && field.value === 1 && field.commit?.action === "object.plate.update" && JSON.stringify(field.commit?.patchPath) === JSON.stringify(["fabrication", "reliefDefaults", "size"]))
+    || !objectPlateCornerReliefFields.some((field) => field.label === "Flange gap" && field.value === 0 && field.commit?.action === "object.plate.update" && JSON.stringify(field.commit?.patchPath) === JSON.stringify(["fabrication", "reliefDefaults", "flangeGap"]))
+    || !objectPlateCornerReliefFields.some((field) => field.label === "Flange offset" && field.value === "symmetric" && field.commit?.action === "object.plate.update" && JSON.stringify(field.commit?.patchPath) === JSON.stringify(["fabrication", "reliefDefaults", "flangeGapMode"]))
+    || objectPlateCornerReliefFields.some((field) => ["Default Radius", "Corner Radius", "Default Flange offset", "Corner Flange offset", "Default Swap", "Corner Swap", "Radius", "Width", "Depth", "Kerf", "Clearance", "Flange gap / overlap", "Swap"].includes(field.label))
     || !objectPlateBendFields.some((field) => field.label === "Remove Bend" && field.icon === "cancel" && field.action === "object.plate.bend.remove" && field.payload?.bendId === "bend-a")
     || !objectPlateBendFields.some((field) => field.label === "Direction" && field.commit?.bend?.id === "bend-b")
   ) {
-    fail(errors, `inspector-property-metadata plate bend generated Properties must cover every bend edit/remove descriptor: ${JSON.stringify(objectPlateWithBendsSections)}`);
+    fail(errors, `inspector-property-metadata plate bend generated Properties must cover bend edit/remove and plate corner relief descriptors: ${JSON.stringify(objectPlateWithBendsSections)}`);
   }
   const objectFeatureSections = inspectorPropertyMetadata.inspectorObjectPropertySections?.({
     collection: "features",

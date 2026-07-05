@@ -98,6 +98,7 @@ export function createInspectorPropertyBindings({
       "activeTool.cancel": (field) => activeTool.cancel?.(field)
     },
     commits: {
+      "activeTool.bend.set": (value, commit = {}, field) => activeTool.setBendOption?.(commit.option, value, commit, field),
       "snapStrength.set": (strength, commit, field) => activeTool.setSnapStrength?.(strength, commit, field),
       "selectionScope.set": (mode, commit, field) => activeTool.setSelectionScope?.(mode, commit, field),
       "snapTarget.set": (enabled, commit = {}, field) => activeTool.setSnapTarget?.(commit.target, enabled, commit, field)
@@ -180,9 +181,21 @@ export function createInspectorPropertyBindings({
   });
 
   const objectPropertyActionBindings = () => ({
+    "object.plate.patch": (field) => objects.updatePlatePatch?.(field.payload?.patch || {}),
     "object.plate.relations.toggle": (field) => {
       const payload = field.payload || {};
       objects.selectObjectDetail?.(payload.objectId || selectedObjectId(), payload.detail || {});
+    },
+    "object.plate.cornerRelief.select": (field) => {
+      const payload = field.payload || {};
+      const vertexId = payload.vertexId || "";
+      objects.selectObjectDetail?.(payload.objectId || selectedObjectId(), {
+        ...selectedObjectDetail(),
+        skipSketchEdit: false,
+        cornerReliefVertexId: vertexId,
+        edgeIds: [],
+        vertexIds: vertexId ? [vertexId] : []
+      });
     },
     "object.plate.relations.infer": (field) => objects.inferPlateSketchRelations?.(field.payload?.objectId || selectedObjectId()),
     "object.plate.sketchRelation.select": (field) => objects.selectPlateSketchRelation?.(field.payload || {}),
@@ -191,6 +204,10 @@ export function createInspectorPropertyBindings({
     "object.plate.sketchRelation.remove": (field) => objects.removePlateSketchRelation?.(field.payload || {}),
     "object.plate.sketchRelation.add": (field) => objects.addPlateSketchRelation?.(field.payload || {}),
     "object.plate.sketchConstructionLine.add": (field) => objects.addPlateSketchConstructionLine?.(field.payload || {}),
+    "object.plate.sketchArc.threePoint": (field) => objects.createPlateSketchThreePointArc?.(field.payload || {}),
+    "object.plate.sketchArc.flip": (field) => objects.flipPlateSketchArc?.(field.payload || {}),
+    "object.plate.sketchArc.split": (field) => objects.splitPlateSketchArc?.(field.payload || {}),
+    "object.plate.sketchEdge.arc": (field) => objects.convertPlateSketchEdgeArc?.(field.payload || {}),
     "object.plate.sketchUnderDefined.fixRemaining": (field) => objects.fixPlateSketchUnderDefinedEntities?.(field.payload || {}),
     "object.plate.sketchRelations.unfixAll": (field) => objects.removePlateSketchFixedRelations?.(field.payload || {}),
     "object.plate.bend.remove": (field) => objects.removePlateBend?.(field.payload?.bendId),

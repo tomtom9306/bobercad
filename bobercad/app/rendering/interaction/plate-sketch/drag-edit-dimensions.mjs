@@ -2,6 +2,7 @@ import {
   sketchAngleRelationMode,
   sketchDistanceRelationMode,
   sketchLengthRelationMode,
+  sketchRadiusRelationMode,
   sketchRelationEdgeIds,
   sketchRelationVertexIds,
   sketchRelations,
@@ -15,6 +16,8 @@ export function createPlateSketchDimensionActions({
   requestDimensionInput,
   setSketchEdgeLength,
   setSketchEdgeLengthMode,
+  setSketchEdgeRadius,
+  setSketchEdgeRadiusMode,
   setSketchEdgeAngle,
   setSketchEdgeAngleMode,
   setSketchPointDistance,
@@ -40,6 +43,47 @@ export function createPlateSketchDimensionActions({
       promptText,
       currentValue: currentLength,
       defaultValue: currentLength === null ? "" : String(Math.round(currentLength * 1000) / 1000)
+    });
+    if (raw === null || raw === undefined || raw === "") return null;
+    const parsed = Number.parseFloat(String(raw).replace(",", "."));
+    return Number.isFinite(parsed) && parsed > EPSILON ? parsed : null;
+  }
+
+  function requestEdgeRadius(handle) {
+    const currentRadius = Number.isFinite(handle.edgeRadius) ? handle.edgeRadius : null;
+    const promptText = currentRadius === null
+      ? "Edge radius mm"
+      : `Edge radius mm (${formatMm(currentRadius)})`;
+    const raw = requestDimensionInput({
+      kind: "edge-radius",
+      plateId: handle.plateId,
+      edgeId: handle.edgeId,
+      promptText,
+      currentValue: currentRadius,
+      defaultValue: currentRadius === null ? "" : String(Math.round(currentRadius * 1000) / 1000)
+    });
+    if (raw === null || raw === undefined || raw === "") return null;
+    const parsed = Number.parseFloat(String(raw).replace(",", "."));
+    return Number.isFinite(parsed) && parsed > EPSILON ? parsed : null;
+  }
+
+  function requestEdgeDiameter(handle) {
+    const currentRadius = Number.isFinite(handle.edgeRadius) ? handle.edgeRadius : null;
+    const currentDiameter = Number.isFinite(handle.diameter)
+      ? handle.diameter
+      : currentRadius === null
+        ? null
+        : currentRadius * 2;
+    const promptText = currentDiameter === null
+      ? "Edge diameter mm"
+      : `Edge diameter mm (${formatMm(currentDiameter)})`;
+    const raw = requestDimensionInput({
+      kind: "edge-diameter",
+      plateId: handle.plateId,
+      edgeId: handle.edgeId,
+      promptText,
+      currentValue: currentDiameter,
+      defaultValue: currentDiameter === null ? "" : String(Math.round(currentDiameter * 1000) / 1000)
     });
     if (raw === null || raw === undefined || raw === "") return null;
     const parsed = Number.parseFloat(String(raw).replace(",", "."));
@@ -106,6 +150,67 @@ export function createPlateSketchDimensionActions({
         : `Plate sketch: edge length set to ${formatMm(length)}`);
     } catch (error) {
       onStatusChange?.(error.message || "Plate sketch length update failed");
+    }
+    setActiveSnap(null);
+    renderOverlay();
+    return true;
+  }
+
+  function applyRadiusDimension(handle) {
+    if (handle.relationMode === "driven") {
+      onStatusChange?.("Plate sketch: toggle the radius dimension to driving before editing geometry");
+      return true;
+    }
+    const radius = requestEdgeRadius(handle);
+    if (radius === null) {
+      onStatusChange?.("Plate sketch: radius edit cancelled");
+      return true;
+    }
+    try {
+      const nextProject = setSketchEdgeRadius(handle.plateId, handle.edgeId, radius, { mode: "driving", display: "radius" });
+      const nextPlate = activePlate(nextProject, handle.plateId);
+      const nextRelation = nextPlate
+        ? sketchRelationsForEdge(nextPlate.sketch, handle.edgeId).find((relation) => relation.type === "radius")
+        : null;
+      const nextMode = sketchRadiusRelationMode(nextRelation);
+      onProjectChange?.(nextProject);
+      selectUpdatedRelation(nextRelation);
+      onStatusChange?.(nextMode === "driven"
+        ? `Plate sketch: radius added as reference ${formatMm(nextRelation?.value || radius)}`
+        : `Plate sketch: edge radius set to ${formatMm(radius)}`);
+    } catch (error) {
+      onStatusChange?.(error.message || "Plate sketch radius update failed");
+    }
+    setActiveSnap(null);
+    renderOverlay();
+    return true;
+  }
+
+  function applyDiameterDimension(handle) {
+    if (handle.relationMode === "driven") {
+      onStatusChange?.("Plate sketch: toggle the diameter dimension to driving before editing geometry");
+      return true;
+    }
+    const diameter = requestEdgeDiameter(handle);
+    if (diameter === null) {
+      onStatusChange?.("Plate sketch: diameter edit cancelled");
+      return true;
+    }
+    const radius = diameter / 2;
+    try {
+      const nextProject = setSketchEdgeRadius(handle.plateId, handle.edgeId, radius, { mode: "driving", display: "diameter" });
+      const nextPlate = activePlate(nextProject, handle.plateId);
+      const nextRelation = nextPlate
+        ? sketchRelationsForEdge(nextPlate.sketch, handle.edgeId).find((relation) => relation.type === "radius")
+        : null;
+      const nextMode = sketchRadiusRelationMode(nextRelation);
+      onProjectChange?.(nextProject);
+      selectUpdatedRelation(nextRelation);
+      onStatusChange?.(nextMode === "driven"
+        ? `Plate sketch: diameter added as reference ${formatMm((nextRelation?.value || radius) * 2)}`
+        : `Plate sketch: edge diameter set to ${formatMm(diameter)}`);
+    } catch (error) {
+      onStatusChange?.(error.message || "Plate sketch diameter update failed");
     }
     setActiveSnap(null);
     renderOverlay();
@@ -198,6 +303,9 @@ export function createPlateSketchDimensionActions({
     if (handle.dimensionType === "length") {
       return sketchRelationsForEdge(sketch, handle.edgeId).find((relation) => relation.type === "length") || null;
     }
+    if (handle.dimensionType === "radius" || handle.dimensionType === "diameter") {
+      return sketchRelationsForEdge(sketch, handle.edgeId).find((relation) => relation.type === "radius") || null;
+    }
     if (handle.dimensionType === "angle") {
       return sketchRelations(sketch).find((relation) => relation.type === "angle"
         && sketchRelationEdgeIds(relation).every((edgeId) => handle.edgeIds?.includes(edgeId))) || null;
@@ -215,6 +323,8 @@ export function createPlateSketchDimensionActions({
       let nextProject = null;
       if (handle.dimensionType === "length") {
         nextProject = setSketchEdgeLengthMode(handle.plateId, handle.edgeId, nextMode);
+      } else if (handle.dimensionType === "radius" || handle.dimensionType === "diameter") {
+        nextProject = setSketchEdgeRadiusMode(handle.plateId, handle.edgeId, nextMode);
       } else if (handle.dimensionType === "angle") {
         nextProject = setSketchEdgeAngleMode(handle.plateId, handle.edgeIds, nextMode);
       } else if (handle.dimensionType === "distance") {
@@ -237,6 +347,8 @@ export function createPlateSketchDimensionActions({
 
   function applyDimensionHandleForKind(handle, event) {
     if (handle.kind === "plate-sketch-length-dimension") return applyDimensionHandle(handle, event, applyLengthDimension);
+    if (handle.kind === "plate-sketch-radius-dimension") return applyDimensionHandle(handle, event, applyRadiusDimension);
+    if (handle.kind === "plate-sketch-diameter-dimension") return applyDimensionHandle(handle, event, applyDiameterDimension);
     if (handle.kind === "plate-sketch-angle-dimension") return applyDimensionHandle(handle, event, applyAngleDimension);
     if (handle.kind === "plate-sketch-distance-dimension") return applyDimensionHandle(handle, event, applyDistanceDimension);
     return false;

@@ -69,12 +69,14 @@ export function createViewerAppController({
       const trimCreate = getTrimCreate?.() || null;
       const commandActive = Boolean(command?.active?.());
       const trimActive = Boolean(trimCreate?.active?.());
+      const commandToolState = typeof command?.toolState === "function" ? command.toolState() : {};
       return {
+        ...commandToolState,
         status: trimActive
           ? "Trim: pick two members"
           : typeof command?.status === "function"
             ? command.status()
-            : commandActive ? "Use the canvas to complete the active tool." : "Idle",
+            : commandToolState.status || (commandActive ? "Use the canvas to complete the active tool." : "Idle"),
         canCycleSnap: Boolean(commandActive && typeof command?.cycleSnap === "function"),
         needsPointerHit: typeof command?.needsPointerHit === "function" ? command.needsPointerHit() : true
       };
@@ -84,6 +86,12 @@ export function createViewerAppController({
       const command = getCommandController()?.activeCommand?.() || null;
       if (typeof command?.cycleSnap !== "function") return false;
       return command.cycleSnap();
+    },
+
+    setActiveToolOption(option, value, commit) {
+      const command = getCommandController()?.activeCommand?.() || null;
+      if (typeof command?.setOption !== "function") return false;
+      return command.setOption(option, value, commit);
     },
 
     selectionState() {

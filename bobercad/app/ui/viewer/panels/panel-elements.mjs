@@ -841,14 +841,27 @@ function numericStepMatches(value, options = {}) {
 }
 
 export function numericControl(label, value, onChange, options = {}) {
-  const input = changeControl("input", label, () => {
+  let lastCommittedValue = "";
+  const apply = () => {
+    if (input.value === lastCommittedValue) return;
     const next = parseNumericControlValue(input, options);
-    if (next !== null) onChange(next);
-  });
+    if (next === null) return;
+    lastCommittedValue = input.value;
+    onChange(next);
+  };
+  const input = changeControl("input", label, apply);
   input.type = "text";
   input.inputMode = options.integer ? "numeric" : "decimal";
   input.className = "bc-input";
   input.value = formatControlNumber(value, { digits: 6, trimTrailingZeros: true });
+  lastCommittedValue = input.value;
+  input.addEventListener("blur", apply);
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    apply();
+    input.blur();
+  });
   return input;
 }
 

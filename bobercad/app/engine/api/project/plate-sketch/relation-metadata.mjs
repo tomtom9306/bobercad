@@ -1,17 +1,23 @@
 import { arrayValues } from "../../../core/model.mjs";
 
-export const SKETCH_RELATION_TYPES = new Set(["horizontal", "vertical", "horizontal-points", "vertical-points", "coincident", "point-on-line", "midpoint", "symmetric", "perpendicular", "parallel", "collinear", "equal-length", "fixed", "length", "angle", "distance"]);
+export const SKETCH_RELATION_TYPES = new Set(["horizontal", "vertical", "horizontal-points", "vertical-points", "coincident", "point-on-line", "point-on-circle", "midpoint", "symmetric", "perpendicular", "parallel", "collinear", "equal-length", "tangent", "concentric", "equal-radius", "fixed", "length", "angle", "distance", "radius"]);
 export const SKETCH_DIMENSION_RELATION_MODES = new Set(["driving", "driven"]);
+export const SKETCH_RADIUS_RELATION_DISPLAYS = new Set(["radius", "diameter"]);
+
+export function sketchRadiusRelationDisplay(relation) {
+  if (relation?.type !== "radius") return null;
+  return SKETCH_RADIUS_RELATION_DISPLAYS.has(relation.display) ? relation.display : "radius";
+}
 
 export function sketchRelationKey(relation) {
   if (relation?.type === "horizontal" || relation?.type === "vertical") return `${relation.type}|${relation.edgeId}`;
   if (relation?.type === "horizontal-points" || relation?.type === "vertical-points" || relation?.type === "coincident" || relation?.type === "distance") return `${relation.type}|${arrayValues(relation.vertexIds).sort().join("|")}`;
-  if (relation?.type === "point-on-line" || relation?.type === "midpoint") return `${relation.type}|${relation.vertexId}|${relation.edgeId}`;
+  if (relation?.type === "point-on-line" || relation?.type === "point-on-circle" || relation?.type === "midpoint") return `${relation.type}|${relation.vertexId}|${relation.edgeId}`;
   if (relation?.type === "symmetric") return `${relation.type}|${arrayValues(relation.vertexIds).sort().join("|")}|${relation.edgeId}`;
-  if (relation?.type === "length") return `${relation.type}|${relation.edgeId}`;
+  if (relation?.type === "length" || relation?.type === "radius") return `${relation.type}|${relation.edgeId}`;
   if (relation?.type === "angle") return `${relation.type}|${arrayValues(relation.edgeIds).sort().join("|")}`;
   if (relation?.type === "fixed") return `${relation.type}|${relation.vertexId !== undefined ? relation.vertexId : relation.edgeId}`;
-  if (relation?.type === "perpendicular" || relation?.type === "parallel" || relation?.type === "collinear" || relation?.type === "equal-length") {
+  if (relation?.type === "perpendicular" || relation?.type === "parallel" || relation?.type === "collinear" || relation?.type === "equal-length" || relation?.type === "tangent" || relation?.type === "concentric" || relation?.type === "equal-radius") {
     return `${relation.type}|${arrayValues(relation.edgeIds).sort().join("|")}`;
   }
   return `${relation?.type || ""}|${relation?.id || ""}`;
@@ -35,21 +41,26 @@ export function sketchRelationLabel(relation) {
   if (relation.type === "vertical-points") return "Vertical points";
   if (relation.type === "coincident") return "Coincident";
   if (relation.type === "point-on-line") return "Point on line";
+  if (relation.type === "point-on-circle") return "Point on circle";
   if (relation.type === "midpoint") return "Midpoint";
   if (relation.type === "symmetric") return "Symmetric";
   if (relation.type === "perpendicular") return "Perpendicular";
   if (relation.type === "parallel") return "Parallel";
   if (relation.type === "collinear") return "Collinear";
   if (relation.type === "equal-length") return "Equal length";
+  if (relation.type === "tangent") return "Tangent";
+  if (relation.type === "concentric") return "Concentric";
+  if (relation.type === "equal-radius") return "Equal radius";
   if (relation.type === "length") return "Length";
   if (relation.type === "angle") return "Angle";
   if (relation.type === "distance") return "Distance";
+  if (relation.type === "radius") return sketchRadiusRelationDisplay(relation) === "diameter" ? "Diameter" : "Radius";
   if (relation.type === "fixed") return "Fixed";
   return relation.label || relation.type || "Relation";
 }
 
 export function sketchDimensionRelationMode(relation) {
-  if (relation?.type !== "length" && relation?.type !== "angle" && relation?.type !== "distance") return null;
+  if (relation?.type !== "length" && relation?.type !== "angle" && relation?.type !== "distance" && relation?.type !== "radius") return null;
   return SKETCH_DIMENSION_RELATION_MODES.has(relation.mode) ? relation.mode : "driving";
 }
 
@@ -68,6 +79,11 @@ export function sketchDistanceRelationMode(relation) {
   return sketchDimensionRelationMode(relation);
 }
 
+export function sketchRadiusRelationMode(relation) {
+  if (relation?.type !== "radius") return null;
+  return sketchDimensionRelationMode(relation);
+}
+
 export function isSketchLengthRelationDriven(relation) {
   return relation?.type === "length" && sketchLengthRelationMode(relation) === "driven";
 }
@@ -78,6 +94,10 @@ export function isSketchAngleRelationDriven(relation) {
 
 export function isSketchDistanceRelationDriven(relation) {
   return relation?.type === "distance" && sketchDistanceRelationMode(relation) === "driven";
+}
+
+export function isSketchRadiusRelationDriven(relation) {
+  return relation?.type === "radius" && sketchRadiusRelationMode(relation) === "driven";
 }
 
 export function isDrivingLengthRelation(relation) {
@@ -92,8 +112,12 @@ export function isDrivingDistanceRelation(relation) {
   return relation?.type === "distance" && sketchDistanceRelationMode(relation) === "driving";
 }
 
+export function isDrivingRadiusRelation(relation) {
+  return relation?.type === "radius" && sketchRadiusRelationMode(relation) === "driving";
+}
+
 export function isDrivingDimensionRelation(relation) {
-  return isDrivingLengthRelation(relation) || isDrivingAngleRelation(relation) || isDrivingDistanceRelation(relation);
+  return isDrivingLengthRelation(relation) || isDrivingAngleRelation(relation) || isDrivingDistanceRelation(relation) || isDrivingRadiusRelation(relation);
 }
 
 export function sketchRelationBadge(relation) {
@@ -103,15 +127,20 @@ export function sketchRelationBadge(relation) {
   if (relation?.type === "vertical-points") return "V";
   if (relation?.type === "coincident") return "CO";
   if (relation?.type === "point-on-line") return "ON";
+  if (relation?.type === "point-on-circle") return "ONC";
   if (relation?.type === "midpoint") return "MID";
   if (relation?.type === "symmetric") return "SYM";
   if (relation?.type === "perpendicular") return "PERP";
   if (relation?.type === "parallel") return "PAR";
   if (relation?.type === "collinear") return "COL";
   if (relation?.type === "equal-length") return "EQ";
+  if (relation?.type === "tangent") return "TAN";
+  if (relation?.type === "concentric") return "CON";
+  if (relation?.type === "equal-radius") return "EQR";
   if (relation?.type === "length") return isSketchLengthRelationDriven(relation) ? "REF" : "DIM";
   if (relation?.type === "angle") return isSketchAngleRelationDriven(relation) ? "REF" : "ANG";
   if (relation?.type === "distance") return isSketchDistanceRelationDriven(relation) ? "REF" : "DIST";
+  if (relation?.type === "radius") return isSketchRadiusRelationDriven(relation) ? "REF" : sketchRadiusRelationDisplay(relation) === "diameter" ? "DIA" : "RAD";
   if (relation?.type === "fixed") return "FIX";
   return "R";
 }

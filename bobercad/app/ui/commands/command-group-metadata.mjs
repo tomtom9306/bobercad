@@ -24,7 +24,7 @@ export const COMMAND_GROUPS = Object.fromEntries(COMMAND_GROUP_SPECS.map((group)
 
 export const RIBBON_SECTION_ORDER = {
   view: ["camera", "display", "orientation"],
-  model: ["members", "plates", "connections", "sketching", "references", "modify"],
+  model: ["create", "members", "plates", "connections", "sketching", "references", "modify", "dimensions"],
   annotations: ["relations", "dimensions"],
   tools: ["coordination"],
   "structural-analysis": ["analysis"],
@@ -32,6 +32,7 @@ export const RIBBON_SECTION_ORDER = {
 };
 
 export const RIBBON_SECTION_LABELS = {
+  create: "Create",
   members: "Members",
   plates: "Plates",
   connections: "Connections",

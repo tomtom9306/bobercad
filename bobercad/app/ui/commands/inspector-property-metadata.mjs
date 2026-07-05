@@ -47,6 +47,10 @@ const ACTIVE_TOOL_HINTS = {
   ]
 };
 export const ACTIVE_TOOL_HINT_COMMAND_IDS = Object.freeze(Object.keys(ACTIVE_TOOL_HINTS));
+const ACTIVE_BEND_DIRECTION_OPTIONS = [
+  { id: "up", label: "Up" },
+  { id: "down", label: "Down" }
+];
 
 export function normalizeInspectorPropertySections(sections = []) {
   return (Array.isArray(sections) ? sections : [])
@@ -208,6 +212,12 @@ export function inspectorActiveToolSections({
     label: "Current Tool",
     fields: currentFields
   });
+  const bendFields = activeToolBendFields(command?.id, toolState);
+  if (bendFields.length) sections.push({
+    id: "inspector.properties.activeTool.bend",
+    label: "Bend Properties",
+    fields: bendFields
+  });
   const hintFields = activeToolHintFields(command?.id);
   if (hintFields.length) sections.push({
     id: "inspector.properties.activeTool.guidance",
@@ -241,6 +251,24 @@ export function inspectorActiveToolSections({
     fields: targetFields
   });
   return sections;
+}
+
+function activeToolBendFields(commandId, toolState = {}) {
+  if (commandId !== "model.plateBend.add") return [];
+  const bend = toolState.bend || {};
+  return [
+    { label: "Target edge", value: toolState.targetLabel || "Hover a bendable edge" },
+    toolState.targetObjectId ? { label: "Plate", value: toolState.targetObjectId } : null,
+    { type: "select", label: "Direction", options: ACTIVE_BEND_DIRECTION_OPTIONS, value: bend.direction === "down" ? "down" : "up", commit: activeToolBendCommit("direction") },
+    { type: "number", label: "Angle", value: finiteNumberOr(bend.angle, 90), commit: activeToolBendCommit("angle"), options: { min: 0, minExclusive: true, max: 180 } },
+    { type: "number", label: "Radius", value: finiteNumberOr(bend.radius, 8), commit: activeToolBendCommit("radius"), options: { min: 0 } },
+    { type: "number", label: "K factor", value: finiteNumberOr(bend.kFactor, 0.33), commit: activeToolBendCommit("kFactor"), options: { min: 0, max: 1 } },
+    { type: "number", label: "Flange length", value: finiteNumberOr(bend.flangeLength, 80), commit: activeToolBendCommit("flangeLength"), options: { min: 0, minExclusive: true } }
+  ].filter(Boolean);
+}
+
+function activeToolBendCommit(option) {
+  return { action: "activeTool.bend.set", option };
 }
 
 export function inspectorSelectionQuickActions({

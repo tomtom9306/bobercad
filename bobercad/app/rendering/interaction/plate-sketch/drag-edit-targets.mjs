@@ -1,6 +1,6 @@
 import { v } from "../../../engine/core/math.mjs";
 import { arrayValues } from "../../../engine/core/model.mjs";
-import { addPlateSketchConstructionLine as addPlateSketchConstructionLineData, insertPlateSketchVertex as insertPlateSketchVertexData, notchPlateSketchCorner as notchPlateSketchCornerData, orderedSketchLoop, plateSketchEntityDefinitionStatus, plateSketchRelationActionPreview, plateSketchRelationHealth, removePlateSketchRelation as removePlateSketchRelationData, removePlateSketchVertex as removePlateSketchVertexData, setPlateSketchEdgeAngle as setPlateSketchEdgeAngleData, setPlateSketchEdgeAngleMode as setPlateSketchEdgeAngleModeData, setPlateSketchEdgeLength as setPlateSketchEdgeLengthData, setPlateSketchEdgeLengthMode as setPlateSketchEdgeLengthModeData, setPlateSketchPointDistance as setPlateSketchPointDistanceData, setPlateSketchPointDistanceMode as setPlateSketchPointDistanceModeData, setPlateSketchVertex as setPlateSketchVertexData, setPlateSketchVertices as setPlateSketchVerticesData, sketchAngleRelationMode, sketchConstructionEdges, sketchConstructionVertices, sketchDistanceRelationMode, sketchEdgeAngleDegrees, sketchEdgeAxisRelation, sketchEdges, sketchFromOutline, sketchLengthRelationMode, sketchPointDistance, sketchRelationBadge, sketchRelationEdgeIds, sketchRelationKey, sketchRelationLabel, sketchRelationVertexIds, sketchRelations, sketchRelationsForEdge, sketchRelationsForVertex, sketchVertices, upsertPlateSketchRelation as upsertPlateSketchRelationData } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { addPlateSketchConstructionLine as addPlateSketchConstructionLineData, insertPlateSketchVertex as insertPlateSketchVertexData, notchPlateSketchCorner as notchPlateSketchCornerData, orderedSketchLoop, plateSketchEntityDefinitionStatus, plateSketchRelationActionPreview, plateSketchRelationHealth, removePlateSketchRelation as removePlateSketchRelationData, removePlateSketchVertex as removePlateSketchVertexData, setPlateSketchEdgeAngle as setPlateSketchEdgeAngleData, setPlateSketchEdgeAngleMode as setPlateSketchEdgeAngleModeData, setPlateSketchEdgeLength as setPlateSketchEdgeLengthData, setPlateSketchEdgeLengthMode as setPlateSketchEdgeLengthModeData, setPlateSketchPointDistance as setPlateSketchPointDistanceData, setPlateSketchPointDistanceMode as setPlateSketchPointDistanceModeData, setPlateSketchVertex as setPlateSketchVertexData, setPlateSketchVertices as setPlateSketchVerticesData, sketchAngleRelationMode, sketchConstructionEdges, sketchConstructionVertices, sketchDistanceRelationMode, sketchEdgeAngleDegrees, sketchEdgeAxisRelation, sketchEdgeIsCircularArc, sketchEdges, sketchFromOutline, sketchLengthRelationMode, sketchPointDistance, sketchRelationBadge, sketchRelationEdgeIds, sketchRelationKey, sketchRelationLabel, sketchRelationVertexIds, sketchRelations, sketchRelationsForEdge, sketchRelationsForVertex, sketchVertices, upsertPlateSketchRelation as upsertPlateSketchRelationData } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
 import { snapPointOverlay } from "../../scene/authoring/snap-overlays.mjs";
 import { adaptiveSnapGridStep, adaptiveSnapGridStepForHandle, snapScalarToGrid, snapSketchWorldTolerance } from "../snap-profiles.mjs";
 import { dimensionOverlayForPlate } from "./dimension-overlay.mjs";
@@ -21,11 +21,20 @@ export function rectangleOutlineFromSize(size) {
 }
 
 export function cutBodyOutline(body) {
-  if (body?.type === "polygonal-prism") return arrayValues(body.outline);
+  if (body?.type === "polygonal-prism") {
+    if (body.sketch && typeof body.sketch === "object") {
+      return orderedSketchLoop(body.sketch).map((item) => [...item.point]);
+    }
+    return arrayValues(body.outline);
+  }
   if (body?.type === "box" && Array.isArray(body.size) && body.size.length === 3 && body.size.every(finitePositive)) {
     return rectangleOutlineFromSize(body.size);
   }
   return [];
+}
+
+function cloneSketch(sketch) {
+  return JSON.parse(JSON.stringify(sketch));
 }
 
 export function featureBodySketchPlate(feature) {
@@ -39,6 +48,10 @@ export function featureBodySketchPlate(feature) {
   const outline = cutBodyOutline(body);
   if (!v.isVec3(center) || !v.isVec3(axisX) || !v.isVec3(axisY) || !v.isVec3(axisZ) || !finitePositive(thickness) || outline.length < 3) return null;
   try {
+    const sketch = body.sketch && typeof body.sketch === "object"
+      ? cloneSketch(body.sketch)
+      : sketchFromOutline(outline, `${feature.id}_body`);
+    orderedSketchLoop(sketch);
     return {
       id: feature.id,
       type: "cutting-body-sketch",
@@ -47,7 +60,7 @@ export function featureBodySketchPlate(feature) {
       localAxisY: v.safeNorm(axisY, [0, 1, 0]),
       localAxisZ: v.safeNorm(axisZ, [0, 0, 1]),
       thickness,
-      sketch: sketchFromOutline(outline, `${feature.id}_body`),
+      sketch,
       display: {
         ...(feature.display || {}),
         edgeColor: feature.display?.edgeColor || "#ef4444"
@@ -69,6 +82,10 @@ export function activeSketchTarget(project, objectId) {
     const plate = featureBodySketchPlate(feature);
     return plate ? { id: objectId, collection: "features", feature, plate } : null;
   }
+  if (entry?.collection === "sketches") {
+    const sketchObject = project.model?.sketches?.[objectId] || null;
+    return sketchObject ? { id: objectId, collection: "sketches", sketchObject, plate: sketchObject } : null;
+  }
   return null;
 }
 
@@ -78,6 +95,8 @@ export function activePlate(project, plateId) {
 
 export function featureBodySketchPatch(feature, nextPlate) {
   const body = feature?.body || {};
+  const nextSketch = cloneSketch(nextPlate.sketch);
+  const hasCircularArc = sketchEdges(nextSketch).some((edge) => sketchEdgeIsCircularArc(nextSketch, edge));
   const outline = orderedSketchLoop(nextPlate.sketch).map((item) => [...item.point]);
   if (body.type === "box") {
     return {
@@ -87,9 +106,10 @@ export function featureBodySketchPatch(feature, nextPlate) {
       axisY: [...body.axisY],
       axisZ: [...body.axisZ],
       depth: body.size[0],
-      outline
+      ...(hasCircularArc ? { sketch: nextSketch } : { outline })
     };
   }
+  if (body.sketch || hasCircularArc) return { sketch: nextSketch };
   return { outline };
 }
 

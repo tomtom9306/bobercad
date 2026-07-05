@@ -185,6 +185,7 @@ export function createViewerWorkspaceBindings({
     workspaceCustomizer?.setPanelTabVisible?.(INSPECTOR_PANEL_ID, contextId, true, { notify: false });
     const activeContext = workspaceCustomizer?.setPanelActiveTab?.(INSPECTOR_PANEL_ID, contextId, { notify: false }) || contextId;
     workspaceCustomizer?.setPanelVisible?.(INSPECTOR_PANEL_ID, true);
+    revealInspectorDock();
     syncInspectorDockTabs();
     const shown = inspectorDockApi?.activate?.(activeContext, { notify: false, focus: options.focus !== false, persist: false }) === true;
     if (options.status !== false) {
@@ -192,6 +193,19 @@ export function createViewerWorkspaceBindings({
     }
     refreshCommandState();
     return shown;
+  }
+
+  function revealInspectorDock() {
+    const dock = inspectorDockElement();
+    if (!dock || dock.dataset.workspacePanelSideDock !== "true") return;
+    dock.dataset.workspacePanelRevealed = "true";
+    const revealButton = dock.querySelector(".bc-dock-reveal-toggle");
+    if (revealButton) {
+      revealButton.setAttribute("aria-pressed", "true");
+      revealButton.setAttribute("aria-label", `Hide ${INSPECTOR_PANEL_LABEL}`);
+      revealButton.title = `Hide ${INSPECTOR_PANEL_LABEL}`;
+    }
+    syncNavCubeDockClearance();
   }
 
   function showInspectorProperties(options = {}) {

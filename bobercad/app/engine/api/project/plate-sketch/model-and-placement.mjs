@@ -2,6 +2,7 @@ import { finitePositiveNumber } from "../../../core/math.mjs";
 import { addIndexedObject, nextObjectId } from "../objects.mjs";
 import { plateBends } from "./model-accessors.mjs";
 import { normalizeBend } from "./bend-normalization.mjs";
+import { normalizePlateCornerReliefs, normalizePlateReliefDefaults, plateBendCorners } from "./corner-reliefs.mjs";
 import {
   cleanOutline,
   fail,
@@ -46,6 +47,14 @@ export function normalizePlate(plate) {
     sketch
   }, "plate");
   if (!finitePositiveNumber(next.thickness)) fail(`${next.id || "plate"} thickness must be positive`);
+  if (next.fabrication !== undefined) {
+    const fabrication = optionalObject(next.fabrication, {}, `${next.id || "plate"}.fabrication`);
+    next.fabrication = {
+      ...fabrication,
+      ...(fabrication.reliefDefaults !== undefined ? { reliefDefaults: normalizePlateReliefDefaults(fabrication.reliefDefaults) } : {}),
+      ...(fabrication.cornerReliefs !== undefined ? { cornerReliefs: normalizePlateCornerReliefs(fabrication.cornerReliefs, sketch, fabrication) } : {})
+    };
+  }
   const bends = plateBends(next);
   if (Array.isArray(next.fabrication?.bends)) {
     const bendIds = new Set();
@@ -58,6 +67,12 @@ export function normalizePlate(plate) {
       ...next.fabrication,
       bends: bends.map((bend) => normalizeBend(bend, sketch, bendIds))
     };
+  }
+  if (Array.isArray(next.fabrication?.cornerReliefs)) {
+    const cornerVertexIds = new Set(plateBendCorners(next).map((corner) => corner.vertexId));
+    for (const relief of next.fabrication.cornerReliefs) {
+      if (!cornerVertexIds.has(relief.vertexId)) fail(`${relief.id}: corner relief vertex ${relief.vertexId} is not shared by adjacent bends`);
+    }
   }
   return next;
 }

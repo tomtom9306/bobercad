@@ -13,11 +13,11 @@ export function createViewerCommandItems({
   return commandPaletteSpecs()
     .filter((command) => app?.canRunCommand?.(command.id) || typeof actionHandlers[command.action] === "function")
     .map((command) => {
-      const groupLabel = command.groupLabel || commandGroupLabel(command.group);
       const runtimeState = includeState ? combinedCommandState(command, app, commandStateFor) : {};
+      const resolved = { ...command, ...runtimeState };
+      const groupLabel = resolved.groupLabel || commandGroupLabel(resolved.group || command.group);
       return {
-        ...command,
-        ...runtimeState,
+        ...resolved,
         groupLabel,
         shortcutLabel: shortcutLabelFor(command),
         run: () => {

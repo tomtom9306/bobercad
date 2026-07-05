@@ -49,13 +49,27 @@ export function csgTessellationOptions(viewerSettings) {
   const curves = requiredObject(render.curves, "geometry settings.render.curves");
   const circleSegments = curves.circleSegments;
   if (!Number.isInteger(circleSegments) || circleSegments < 3) geometryError("geometry settings.render.curves.circleSegments must be an integer >= 3");
-  return { circleSegments };
+  const segmentLength = curves.segmentLength;
+  if (segmentLength !== undefined && !finitePositiveNumber(segmentLength)) {
+    geometryError("geometry settings.render.curves.segmentLength must be a positive number");
+  }
+  return {
+    circleSegments,
+    ...(segmentLength !== undefined ? { segmentLength } : {})
+  };
 }
 
 function circleSegments(options = {}) {
   const segments = options.circleSegments;
   if (!Number.isInteger(segments) || segments < 3) geometryError("geometry settings.render.curves.circleSegments must be an integer >= 3");
   return segments;
+}
+
+function curveArcSegments(radius, sweep, options = {}, minimum = 2) {
+  if (finitePositiveNumber(options.segmentLength) && finitePositiveNumber(radius) && finitePositiveNumber(Math.abs(sweep))) {
+    return Math.max(minimum, Math.ceil(Math.abs(radius * sweep) / options.segmentLength));
+  }
+  return Math.max(minimum, Math.ceil(circleSegments(options) * Math.abs(sweep) / (Math.PI * 2)));
 }
 
 function requiredBasis(source, owner = "object") {
@@ -349,7 +363,7 @@ export function cutBodyPolygons(body, shared = {}, tessellation = {}) {
     const radius = requiredNumber(body, "radius", "cylinder body");
     if (radius <= 0) geometryError("cylinder radius must be positive");
     const depth = requiredNumber(body, "depth", "cylinder body");
-    const segments = circleSegments(tessellation);
+    const segments = curveArcSegments(radius, Math.PI * 2, tessellation, 3);
     const outline = [];
     for (let i = 0; i < segments; i += 1) {
       const angle = i / segments * Math.PI * 2;
@@ -366,7 +380,7 @@ export function slotOutline2d(length, width, angle, tessellation = {}) {
   if (length < width) geometryError("slot-hole length must be greater than or equal to width");
   const radius = width / 2;
   const straight = Math.max(0, length - width) / 2;
-  const segments = Math.max(8, Math.floor(circleSegments(tessellation) / 2));
+  const segments = curveArcSegments(radius, Math.PI, tessellation, 8);
   const local = [];
   for (let i = 0; i <= segments; i += 1) {
     const a = Math.PI / 2 + i / segments * Math.PI;

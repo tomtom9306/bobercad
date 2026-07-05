@@ -1,10 +1,16 @@
 import { v } from "../../../engine/core/math.mjs";
 import {
   orderedSketchLoop,
+  measuredSketchEdgeRadius,
   sketchAngleRelationMode,
   sketchDistanceRelationMode,
+  sketchEdgeCenterPoint,
+  sketchEdgeIsCircularArc,
+  sketchEdgeMidpoint,
   sketchEdgeAngleDegrees,
   sketchLengthRelationMode,
+  sketchRadiusRelationDisplay,
+  sketchRadiusRelationMode,
   sketchPointDistance,
   sketchRelationEdgeIds,
   sketchRelationVertexIds,
@@ -93,6 +99,99 @@ export function dimensionOverlayForPlate(plate, edges, vertexMap, settings = {},
   const handles = [];
   const visibleLengthDimensionEdgeIds = plain ? cleanDimensionEdgeIds(edges, vertexMap) : null;
   for (const edge of edges) {
+    const radiusRelation = sketchRelationsForEdge(plate.sketch, edge.id).find((relation) => relation.type === "radius");
+    if (sketchEdgeIsCircularArc(plate.sketch, edge.id)) {
+      if (!radiusRelation && !plain) continue;
+      const center = sketchEdgeCenterPoint(plate.sketch, edge.id);
+      const arcMidpoint = sketchEdgeMidpoint(plate.sketch, edge.id);
+      const radius = measuredSketchEdgeRadius(plate.sketch, edge.id);
+      const relationMode = sketchRadiusRelationMode(radiusRelation);
+      const relationDisplay = sketchRadiusRelationDisplay(radiusRelation);
+      const isDiameter = relationDisplay === "diameter";
+      const isReference = relationMode === "driven";
+      const health = radiusRelation ? relationHealth[radiusRelation.id] : null;
+      const color = relationHealthColor(health, radiusRelation ? (isReference ? referenceColor : drivenColor) : dimensionColor);
+      const dimensionType = isDiameter ? "diameter" : "radius";
+      const dimensionKind = isDiameter ? "plate-sketch-diameter-dimension" : "plate-sketch-radius-dimension";
+      const dimensionLabel = isDiameter ? "diameter" : "radius";
+      const measuredValue = isDiameter ? radius * 2 : radius;
+      const displayText = `${isDiameter ? "\u00d8" : "R"}${formatDraftingNumber(measuredValue)}`;
+      const dimensionId = `${plate.id}:${edge.id}:${dimensionType}`;
+      const placementOffset = Number.isFinite(options.dimensionPlacementOffsets?.[dimensionId])
+        ? options.dimensionPlacementOffsets[dimensionId]
+        : 0;
+      const radiusAxis = norm2(sub2(arcMidpoint, center));
+      const diameterStart = add2(center, mul2(radiusAxis, -radius));
+      const dimensionStart = isDiameter ? diameterStart : center;
+      const labelPoint = add2(midpoint(dimensionStart, arcMidpoint), mul2(radiusAxis, DEFAULT_CLEAN_DIMENSION_LABEL_OFFSET + placementOffset));
+      const worldStart = platePoint(plate, dimensionStart);
+      const worldArc = platePoint(plate, arcMidpoint);
+      const labelWorldPoint = platePoint(plate, labelPoint);
+      lines.push({
+        points: [worldStart, worldArc],
+        color,
+        kind: dimensionKind,
+        objectId: plate.id,
+        dimensionId
+      });
+      labels.push({
+        point: labelWorldPoint,
+        text: displayText,
+        displayText,
+        color,
+        dimensionId,
+        draftingDimension: true,
+        labelAxis: v.norm(v.sub(worldArc, worldStart)),
+        labelUpAxis: v.norm(plate.localAxisZ),
+        screenOffsetPx: { x: 0, y: 0 }
+      });
+      handles.push({
+        type: "circle",
+        kind: dimensionKind,
+        target: `${edge.id}:${dimensionType}`,
+        objectId: plate.id,
+        plateId: plate.id,
+        edgeId: edge.id,
+        edgeRadius: radius,
+        diameter: radius * 2,
+        relationId: radiusRelation?.id || null,
+        relationMode,
+        dimensionType,
+        dimensionPlacementKey: dimensionId,
+        dimensionLocalNormal: radiusAxis,
+        dragAxes: {
+          x: v.norm(plate.localAxisY),
+          y: v.norm(plate.localAxisZ)
+        },
+        draggable: true,
+        point: labelWorldPoint,
+        color,
+        radius: 0,
+        hitTolerancePx: 30,
+        visible: false,
+        hoverLabel: health?.message || (isReference ? `Reference ${dimensionLabel}` : `${dimensionLabel[0].toUpperCase()}${dimensionLabel.slice(1)} dimension`)
+      });
+      if (showRelationControls && radiusRelation) {
+        handles.push({
+          type: "space-toggle",
+          kind: "plate-sketch-dimension-mode-toggle",
+          target: `${edge.id}:${dimensionType}:mode`,
+          objectId: plate.id,
+          plateId: plate.id,
+          dimensionType,
+          edgeId: edge.id,
+          relationMode,
+          draggable: false,
+          point: labelWorldPoint,
+          screenOffsetPx: { x: 36, y: -18 },
+          color,
+          radius: 8,
+          hitTolerancePx: 22,
+          hoverLabel: isReference ? `Make ${dimensionLabel} driving` : `Make ${dimensionLabel} reference`
+        });
+      }
+      continue;
+    }
     if (visibleLengthDimensionEdgeIds && !visibleLengthDimensionEdgeIds.has(edge.id)) continue;
     const from = vertexMap.get(edge.from);
     const to = vertexMap.get(edge.to);

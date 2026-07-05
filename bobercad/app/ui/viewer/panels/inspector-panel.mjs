@@ -2,7 +2,7 @@ import { WORLD_AXIS_DIRECTIONS, WORLD_AXIS_IDS, bounds3, finiteNumber, finitePos
 import { arrayValues, jsonClone as clone, truthyValues } from "../../../engine/core/model.mjs";
 import { axisRelationLabel } from "../../../engine/api/project/axis-relations.mjs";
 import { memberAxisData, memberCenter } from "../../../engine/api/project/members.mjs";
-import { plateBends, plateOutline as sketchPlateOutline, plateSketchDefinitionStatus, sketchConstructionEdges, sketchDefinitionStatus, sketchEdges } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { defaultPlateCornerRelief, plateBends, plateCornerReliefs, plateOutline as sketchPlateOutline, plateSketchDefinitionStatus, resolvePlateCornerReliefSpec, sketchConstructionEdges, sketchDefinitionStatus, sketchEdges } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
 import { trimOperationById, trimOperationReferencePlaneIds, trimOperationUsesMemberB, trimOperationUsesMemberEnd } from "../../../engine/api/project/trim-operations.mjs";
 import { reconcilePlaneTrimRemovedRegionKeys } from "../../../engine/api/model/trim-region-keys.mjs";
 import { setPath } from "../../../engine/modules/smart-components/smart-component-parameters-and-definition.mjs";
@@ -306,6 +306,10 @@ export function mountEditorUi({
     removePlateSketchRelation,
     addPlateSketchRelationFromPayload,
     addPlateSketchConstructionLineFromPayload,
+    createPlateSketchThreePointArcFromPayload,
+    convertPlateSketchEdgeArcFromPayload,
+    flipPlateSketchArcFromPayload,
+    splitPlateSketchArcFromPayload,
     fixPlateSketchUnderDefinedEntities,
     removePlateSketchFixedRelations
   } = createPlateSketchInspector({
@@ -376,7 +380,11 @@ export function mountEditorUi({
       setSnapTarget: (target, enabled) => runActiveToolSetting(() => {
         const current = app?.snapSettings?.()?.scope || {};
         if ((current[target] !== false) !== enabled) app?.runCommand?.(`settings.snapTarget.${target}.toggle`);
-      }, `${target} snap ${enabled ? "enabled" : "disabled"}.`)
+      }, `${target} snap ${enabled ? "enabled" : "disabled"}.`),
+      setBendOption: (option, value) => runActiveToolSetting(
+        () => app?.setActiveToolOption?.(option, value),
+        "Bend properties updated."
+      )
     },
     members: {
       setProfile: (memberId, profileId) => updateMember(() => api.setMemberProfile(memberId, profileId)),
@@ -453,6 +461,10 @@ export function mountEditorUi({
       removePlateSketchRelation: (payload) => removePlateSketchRelation(payload),
       addPlateSketchRelation: (payload) => addPlateSketchRelationFromPayload(payload),
       addPlateSketchConstructionLine: (payload) => addPlateSketchConstructionLineFromPayload(payload),
+      createPlateSketchThreePointArc: (payload) => createPlateSketchThreePointArcFromPayload(payload),
+      convertPlateSketchEdgeArc: (payload) => convertPlateSketchEdgeArcFromPayload(payload),
+      flipPlateSketchArc: (payload) => flipPlateSketchArcFromPayload(payload),
+      splitPlateSketchArc: (payload) => splitPlateSketchArcFromPayload(payload),
       fixPlateSketchUnderDefinedEntities: (payload) => fixPlateSketchUnderDefinedEntities(payload),
       removePlateSketchFixedRelations: (payload) => removePlateSketchFixedRelations(payload),
       selectObjectDetail: (objectId, detail) => selectObject(objectId, detail),
@@ -776,7 +788,7 @@ export function mountEditorUi({
       canCancel: true
     });
     return generatedPropertiesPanel({
-      title: "Active Tool",
+      title: command.id === "model.plateBend.add" ? "Bend Properties" : "Active Tool",
       context: inspectorActiveToolContext({ command }),
       sections: bindGeneratedPropertySections(activeToolSections, generatedActiveToolBindings()),
       emptyMessage: "Use the canvas to complete the active tool."
@@ -1039,13 +1051,20 @@ export function mountEditorUi({
 
   const objectPropertyState = (entry, object) => {
     if (entry.collection === "plates") {
+      const cornerReliefs = plateCornerReliefs(object);
       return {
         definition: plateSketchDefinitionStatus(object),
         outlineVertices: sketchPlateOutline(object).length,
         bends: plateBends(object).map((bend) => ({
           ...bend,
           targetLabel: generatedPlateBendTargetLabel(object, bend)
-        }))
+        })),
+        cornerReliefs,
+        resolvedReliefDefaults: cornerReliefs.length
+          ? resolvePlateCornerReliefSpec(object.fabrication?.reliefDefaults || defaultPlateCornerRelief(object.thickness), object, {
+            source: object.fabrication?.reliefDefaults ? "default" : "auto-default"
+          })
+          : null
       };
     }
     if (entry.collection === "sketches") {
@@ -1077,7 +1096,7 @@ export function mountEditorUi({
       fastenerLengthOptions: (fastenerRef, currentLength) => fastenerLengthOptions(api, fastenerRef, currentLength)
     });
     if (objectSections.length) {
-      return entry.collection === "plates"
+      return entry.collection === "plates" || entry.collection === "sketches"
         ? [...objectSections, plateEditor(object)].filter(Boolean)
         : objectSections;
     }

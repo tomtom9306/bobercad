@@ -272,7 +272,9 @@ export function createSnapManager({ viewer, api = null, profiles = {}, settings 
       context: {
         ...providerContext,
         visibleHit,
-        evaluatedEdges
+        evaluatedEdges,
+        circleSegments: settings.render?.curves?.circleSegments,
+        curveSegmentLength: settings.render?.curves?.segmentLength
       },
       scope,
       profile: activeProfile,

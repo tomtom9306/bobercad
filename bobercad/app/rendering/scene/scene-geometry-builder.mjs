@@ -99,7 +99,13 @@ export function buildScene(project, profiles, fasteners, viewerSettings, options
     else addMember(sceneData, project, previewMember, profile);
   }
   for (const previewPlate of arrayValues(options.previewPlates)) {
-    addPlate(sceneData, project, previewPlate);
+    addPlate(sceneData, project, {
+      ...previewPlate,
+      display: {
+        ...(previewPlate.display || {}),
+        authoringPreview: true
+      }
+    });
   }
 
   for (const plate of renderCollectionObjects(project, "plates", renderObjectIds)) {

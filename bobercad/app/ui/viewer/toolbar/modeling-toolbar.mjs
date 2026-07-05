@@ -105,8 +105,8 @@ export function mountModelingToolbar({
     const active = sketchRelationsAvailable ? sketchRelationsVisible : currentAutoRelationsEnabled;
     const title = sketchRelationsAvailable
       ? sketchRelationsVisible
-        ? "Hide plate sketch relations"
-        : "Show plate sketch relations"
+        ? "Hide sketch relations"
+        : "Show sketch relations"
       : "Automatic axis relations";
     applyCommandState(autoRelations, {
       commandId: "modeling.autoRelations",

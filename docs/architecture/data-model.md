@@ -11,6 +11,7 @@ The product is a JSON-first steel BIM system. The JSON model is a database-like 
 - `bobercad/data/projects/sample_beam_to_beam_end_plate.json` - beam-to-beam end plate connection sample with a stored top flange notch and web bolt pattern.
 - `bobercad/data/projects/sample_trimming_lab.json` - trimming development sample with several intersecting members, trim joints, reference planes, and boolean-part features.
 - `bobercad/data/projects/sample_authoring_nc1_test.json` - compact regression sample for authoring patterns and NC1-ready data.
+- `bobercad/data/projects/sample_rounded_sketch.json` - minimal rounded sketch sample using semantic circular-arc sketch edges.
 - `bobercad/data/libraries/profiles/profile-libraries/starter-profiles/config.json` - point-based profile library.
 - `bobercad/data/libraries/materials/material-libraries/starter-materials/config.json` - material library.
 - `bobercad/data/libraries/fasteners/fastener-libraries/starter-fasteners/config.json` - bolt, blind bolt, hook bolt, anchor, stud, nut, and washer catalog library.
@@ -195,8 +196,12 @@ Plates use a stored semantic `sketch`, not `width`/`height`, `outline`, meshes, 
 A plate sketch is a 2D loop in local `[y, z]` plate coordinates:
 
 - `sketch.vertices`: stable vertex ids with `[y, z]` points
-- `sketch.edges`: stable edge ids connecting vertices
+- `sketch.edges`: stable edge ids connecting vertices; omitted `kind` means a straight `line`
+- circular sketch edges use `kind: "circular-arc"` with local `center`, positive `radius`, and `direction` (`cw` or `ccw`)
+- sketch `relations` may store dimensions and constraints for sketch entities; `radius` relations target one circular-arc edge and store a positive radius value with `mode: "driving"` or `mode: "driven"`, while `tangent`, `concentric`, and `equal-radius` relations target edge pairs
 - `center`, `normal`, `localAxisY`, `localAxisZ`, and `thickness` define placement and extrusion
+
+Do not store sampled arc points in project JSON. For round plates and sketches, keep the analytic arc edge in the sketch and let the viewer/editor/exporter derive tessellated runtime points from the edge when needed.
 
 Connection generators should trim flat plates by producing a semantic `sketch`, not by storing generated mesh data. For example, a sloped fin plate may clip its local sketch against the support face and secondary-member trim plane while keeping the same plate placement axes.
 
@@ -215,7 +220,18 @@ Each bend stores:
 - `radius`
 - `direction`: `up` or `down`
 - `flangeLength`
-- optional `relief`: `none`, `round`, `rect`, `obround`, or `v-notch`
+
+Corner relief is stored on the plate fabrication block, not on individual bends:
+
+- `fabrication.reliefDefaults` stores the plate-wide corner relief type and dimensions; circular relief uses `radius` as the final cut radius, without a separate additive clearance
+- `fabrication.cornerReliefs` stores optional per-corner overrides keyed by sketch `vertexId`; non-circular relief types may use `gap` as cutout clearance, but circular relief should not expose or add `gap` to its radius
+- `fabrication.reliefDefaults.flangeGap` and per-corner `fabrication.cornerReliefs[].flangeGap` store the signed distance control between the two adjacent bent flanges at that relief site; positive values open a gap, negative values create an overlap, and this value is independent of relief cutout dimensions
+- `fabrication.reliefDefaults.flangeGapMode` and per-corner `fabrication.cornerReliefs[].flangeGapMode` choose how that signed flange offset is distributed: `symmetric` splits it across both flanges, while `butt` applies the full gap/overlap to one flange so the other flange stops at the physical contact line
+- `fabrication.reliefDefaults.flangeGapSwapped` and per-corner `fabrication.cornerReliefs[].flangeGapSwapped` flip the active flange when `flangeGapMode` is `butt`; the viewer exposes this as a Swap button instead of naming the two internal bend-order sides
+- relief applies only when two adjacent sketch edges both have bends; a single bend does not create or need relief
+- runtime/API corner relief objects expose a stable `siteKey` and structured `target`; generated bend-on-bend corners use that target instead of relying only on a fake sketch vertex ID, while project JSON remains semantic and does not store generated geometry
+
+The viewer derives the visible curved bend strip from `radius`, `angle`, `direction`, and the bend edge at runtime. Do not store sampled bend-radius faces or arc points in project JSON.
 
 ## Placement Intent
 

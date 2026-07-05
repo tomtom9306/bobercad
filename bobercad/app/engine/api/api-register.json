@@ -480,6 +480,64 @@
       "returns": "store method result"
     },
     {
+      "id": "store.addPlateSketchConstructionArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for add plate sketch construction arc.",
+      "parameters": {
+        "plateId": "method parameter",
+        "centerPoint": "method parameter",
+        "startPoint": "method parameter",
+        "endPoint": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.addSketchConstructionLine",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for add standalone sketch construction line.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "fromPoint": "method parameter",
+        "toPoint": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.addSketchConstructionArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for add standalone sketch construction arc.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "centerPoint": "method parameter",
+        "startPoint": "method parameter",
+        "endPoint": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.removePlateSketchConstructionLine",
+      "module": "../store/project-command-store.mjs",
+      "description": "Remove a plate sketch construction line and orphaned construction points.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.removeSketchConstructionLine",
+      "module": "../store/project-command-store.mjs",
+      "description": "Remove a standalone sketch construction line and orphaned construction points.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
       "id": "store.addTrimJointOperation",
       "module": "../store/project-command-store.mjs",
       "description": "Add one cut operation to a semantic corner trim joint.",
@@ -723,11 +781,32 @@
       "returns": "store method result"
     },
     {
+      "id": "store.inferSketchRelations",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for infer standalone sketch relations.",
+      "parameters": {
+        "sketchId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
       "id": "store.insertPlateSketchVertex",
       "module": "../store/project-command-store.mjs",
       "description": "Public project store API for insert plate sketch vertex.",
       "parameters": {
         "plateId": "method parameter",
+        "edgeId": "method parameter",
+        "point": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.insertSketchVertex",
+      "module": "../store/project-command-store.mjs",
+      "description": "Insert a standalone sketch vertex by splitting one straight outline edge.",
+      "parameters": {
+        "sketchId": "method parameter",
         "edgeId": "method parameter",
         "point": "method parameter",
         "options": "method parameter"
@@ -797,6 +876,131 @@
         "plateId": "method parameter",
         "vertexId": "method parameter",
         "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.filletPlateSketchCorner",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for fillet plate sketch corner.",
+      "parameters": {
+        "plateId": "method parameter",
+        "vertexId": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.filletSketchCorner",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for fillet standalone sketch corner.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "vertexId": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchCircle",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a plate sketch outline with a semantic circular sketch.",
+      "parameters": {
+        "plateId": "method parameter",
+        "options": "circle options such as radius, center, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setPlateSketchOutline",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a plate sketch outline with a closed straight-edge contour from picked points.",
+      "parameters": {
+        "plateId": "method parameter",
+        "options": "outline options such as outline points or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setPlateSketchCenterRectangle",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a plate sketch outline with a center rectangle sketch.",
+      "parameters": {
+        "plateId": "method parameter",
+        "options": "center rectangle options such as width, height, center, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setPlateSketchRoundedRectangle",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a plate sketch outline with a semantic rounded rectangle sketch.",
+      "parameters": {
+        "plateId": "method parameter",
+        "options": "rounded rectangle options such as width, height, radius, center, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setPlateSketchSlot",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a plate sketch outline with a semantic rounded slot sketch.",
+      "parameters": {
+        "plateId": "method parameter",
+        "options": "slot options such as length, radius, center, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setPlateSketchCenterArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a plate sketch outline with a semantic center-arc sector sketch.",
+      "parameters": {
+        "plateId": "method parameter",
+        "options": "center arc options such as radius, center, sweepDegrees, startAngleDegrees, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setPlateSketchEdgeArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Convert a selected plate sketch line edge into a semantic circular arc.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter",
+        "options": "edge arc options such as radius or side"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.flipPlateSketchEdgeArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Flip a selected plate sketch circular arc to the opposite side of its chord.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.splitPlateSketchEdgeArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Split a selected plate sketch circular arc into two tangent circular arcs at its midpoint.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter",
+        "options": "split arc options such as vertexId, firstEdgeId, secondEdgeId, or mode"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchThreePointArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Convert three consecutive plate sketch vertices into one semantic three-point circular arc.",
+      "parameters": {
+        "plateId": "method parameter",
+        "vertexIds": "three consecutive outline vertex ids",
+        "options": "three point arc options such as edgeId"
       },
       "returns": "store method result"
     },
@@ -900,6 +1104,16 @@
       "returns": "store method result"
     },
     {
+      "id": "store.removeSketchRelation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for remove standalone sketch relation.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "relationId": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
       "id": "store.removePlateSketchVertex",
       "module": "../store/project-command-store.mjs",
       "description": "Public project store API for remove plate sketch vertex.",
@@ -908,6 +1122,16 @@
         "vertexId": "method parameter"
       },
       "returns": "store method result"
+    },
+    {
+      "id": "store.removeSketchVertex",
+      "module": "../store/project-command-store.mjs",
+      "description": "Remove a standalone sketch vertex and repair sketch topology.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "vertexId": "method parameter"
+      },
+      "returns": "project JSON"
     },
     {
       "id": "store.removeTrimJointOperation",
@@ -1108,6 +1332,29 @@
       "returns": "store method result"
     },
     {
+      "id": "store.setPlateSketchEdgeRadius",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch edge radius.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter",
+        "radius": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setPlateSketchEdgeRadiusMode",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set plate sketch edge radius mode.",
+      "parameters": {
+        "plateId": "method parameter",
+        "edgeId": "method parameter",
+        "mode": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
       "id": "store.setPlateSketchPointDistance",
       "module": "../store/project-command-store.mjs",
       "description": "Public project store API for set plate sketch point distance.",
@@ -1164,11 +1411,216 @@
     {
       "id": "store.setSketchVertex",
       "module": "../store/project-command-store.mjs",
-      "description": "Public project store API for set sketch vertex.",
+      "description": "Public project store API for set standalone sketch vertex.",
       "parameters": {
         "sketchId": "method parameter",
         "vertexId": "method parameter",
         "point": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchVertices",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch vertices.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "vertexPoints": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchCircle",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a standalone sketch outline with a semantic circular sketch.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "options": "circle options such as radius, center, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setSketchOutline",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a standalone sketch outline with a closed straight-edge contour from picked points.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "options": "outline options such as outline points or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setSketchCenterRectangle",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a standalone sketch outline with a center rectangle sketch.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "options": "center rectangle options such as width, height, center, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setSketchRoundedRectangle",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a standalone sketch outline with a semantic rounded rectangle sketch.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "options": "rounded rectangle options such as width, height, radius, center, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setSketchSlot",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a standalone sketch outline with a semantic rounded slot sketch.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "options": "slot options such as length, radius, center, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setSketchCenterArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Replace a standalone sketch outline with a semantic center-arc sector sketch.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "options": "center arc options such as radius, center, sweepDegrees, startAngleDegrees, or idPrefix"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.setSketchEdgeArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Convert a selected standalone sketch line edge into a semantic circular arc.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeId": "method parameter",
+        "options": "edge arc options such as radius or side"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.flipSketchEdgeArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Flip a selected standalone sketch circular arc to the opposite side of its chord.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeId": "method parameter"
+      },
+      "returns": "project JSON"
+    },
+    {
+      "id": "store.splitSketchEdgeArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Split a selected standalone sketch circular arc into two tangent circular arcs at its midpoint.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeId": "method parameter",
+        "options": "split arc options such as vertexId, firstEdgeId, secondEdgeId, or mode"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchThreePointArc",
+      "module": "../store/project-command-store.mjs",
+      "description": "Convert three consecutive standalone sketch vertices into one semantic three-point circular arc.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "vertexIds": "three consecutive outline vertex ids",
+        "options": "three point arc options such as edgeId"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchEdgeAngle",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch edge angle.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeIds": "method parameter",
+        "angle": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchEdgeAngleMode",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch edge angle mode.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeIds": "method parameter",
+        "mode": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchEdgeLength",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch edge length.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeId": "method parameter",
+        "length": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchEdgeLengthMode",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch edge length mode.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeId": "method parameter",
+        "mode": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchEdgeRadius",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch edge radius.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeId": "method parameter",
+        "radius": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchEdgeRadiusMode",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch edge radius mode.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "edgeId": "method parameter",
+        "mode": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchPointDistance",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch point distance.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "vertexIds": "method parameter",
+        "distance": "method parameter",
+        "options": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.setSketchPointDistanceMode",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for set standalone sketch point distance mode.",
+      "parameters": {
+        "sketchId": "method parameter",
+        "vertexIds": "method parameter",
+        "mode": "method parameter"
       },
       "returns": "store method result"
     },
@@ -1564,6 +2016,16 @@
       "description": "Public project store API for upsert plate sketch relation.",
       "parameters": {
         "plateId": "method parameter",
+        "relation": "method parameter"
+      },
+      "returns": "store method result"
+    },
+    {
+      "id": "store.upsertSketchRelation",
+      "module": "../store/project-command-store.mjs",
+      "description": "Public project store API for upsert standalone sketch relation.",
+      "parameters": {
+        "sketchId": "method parameter",
         "relation": "method parameter"
       },
       "returns": "store method result"

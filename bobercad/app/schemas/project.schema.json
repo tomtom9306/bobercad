@@ -347,6 +347,15 @@
           "items": {
             "$ref": "#/$defs/plateBend"
           }
+        },
+        "reliefDefaults": {
+          "$ref": "#/$defs/plateCornerReliefDefaults"
+        },
+        "cornerReliefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/plateCornerRelief"
+          }
         }
       },
       "additionalProperties": true
@@ -2857,8 +2866,48 @@
         },
         "to": {
           "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "line",
+            "circular-arc"
+          ]
+        },
+        "center": {
+          "$ref": "#/$defs/vec2"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "direction": {
+          "enum": [
+            "cw",
+            "ccw"
+          ]
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "circular-arc"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "center",
+              "radius",
+              "direction"
+            ]
+          }
+        }
+      ],
       "additionalProperties": true
     },
     "plateSketchRelation": {
@@ -2879,16 +2928,21 @@
             "vertical-points",
             "coincident",
             "point-on-line",
+            "point-on-circle",
             "midpoint",
             "symmetric",
             "perpendicular",
             "parallel",
             "collinear",
             "equal-length",
+            "tangent",
+            "concentric",
+            "equal-radius",
             "fixed",
             "length",
             "angle",
-            "distance"
+            "distance",
+            "radius"
           ]
         },
         "vertexId": {
@@ -2922,6 +2976,12 @@
             "driving",
             "driven"
           ]
+        },
+        "display": {
+          "enum": [
+            "radius",
+            "diameter"
+          ]
         }
       },
       "additionalProperties": true
@@ -2933,8 +2993,7 @@
         "angle",
         "radius",
         "direction",
-        "flangeLength",
-        "relief"
+        "flangeLength"
       ],
       "properties": {
         "id": {
@@ -2948,13 +3007,32 @@
         },
         "parentEdge": {
           "enum": [
-            "outer"
+            "outer",
+            "start",
+            "end"
           ]
         },
         "angle": {
           "type": "number"
         },
         "radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "kFactor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "startGap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "endGap": {
           "type": "number",
           "minimum": 0
         },
@@ -2967,34 +3045,28 @@
         "flangeLength": {
           "type": "number",
           "exclusiveMinimum": 0
-        },
-        "relief": {
-          "$ref": "#/$defs/plateBendRelief"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
-    "plateBendRelief": {
+    "plateCornerReliefDefaults": {
       "type": "object",
       "required": [
-        "mode",
         "type"
       ],
       "properties": {
-        "mode": {
-          "enum": [
-            "auto",
-            "manual"
-          ]
-        },
         "type": {
           "enum": [
-            "none",
             "round",
+            "circular",
             "rect",
-            "obround",
-            "v-notch"
+            "rectangular",
+            "obround"
           ]
+        },
+        "size": {
+          "type": "number",
+          "minimum": 0
         },
         "radius": {
           "type": "number",
@@ -3007,9 +3079,83 @@
         "depth": {
           "type": "number",
           "minimum": 0
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "flangeGap": {
+          "type": "number"
+        },
+        "flangeGapMode": {
+          "enum": [
+            "symmetric",
+            "butt"
+          ]
+        },
+        "flangeGapSwapped": {
+          "type": "boolean"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
+    },
+    "plateCornerRelief": {
+      "type": "object",
+      "required": [
+        "id",
+        "vertexId",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "vertexId": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "round",
+            "circular",
+            "rect",
+            "rectangular",
+            "obround"
+          ]
+        },
+        "size": {
+          "type": "number",
+          "minimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "flangeGap": {
+          "type": "number"
+        },
+        "flangeGapMode": {
+          "enum": [
+            "symmetric",
+            "butt"
+          ]
+        },
+        "flangeGapSwapped": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     },
     "profile": {
       "type": "object",
@@ -3150,6 +3296,9 @@
             "$ref": "#/$defs/vec2"
           }
         },
+        "sketch": {
+          "$ref": "#/$defs/plateSketch"
+        },
         "depth": {
           "type": "number",
           "exclusiveMinimum": 0
@@ -3212,8 +3361,19 @@
               "axisX",
               "axisY",
               "axisZ",
-              "outline",
               "depth"
+            ],
+            "anyOf": [
+              {
+                "required": [
+                  "outline"
+                ]
+              },
+              {
+                "required": [
+                  "sketch"
+                ]
+              }
             ]
           }
         },

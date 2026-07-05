@@ -1,10 +1,13 @@
 import { finiteNonNegativeNumber, finiteNumber, finitePositiveNumber } from "../../../core/math.mjs";
 import { uniqueTruthy } from "../../../core/model.mjs";
 import { sketchEdges } from "./model-accessors.mjs";
-import { fail, plainObject } from "./sketch-geometry-and-relations.mjs";
+import { fail, plainObject, sketchEdgeIsCircularArc } from "./sketch-geometry-and-relations.mjs";
+
+const BEND_PARENT_EDGES = new Set(["outer", "start", "end"]);
 
 export function normalizeBend(bend, sketch, bendIds = new Set()) {
   if (!plainObject(bend)) fail("bend must be an object");
+  if (bend.relief !== undefined) fail("bend relief is not supported; use plate fabrication.reliefDefaults and fabrication.cornerReliefs");
   const edgeIds = new Set(sketchEdges(sketch).map((edge) => edge.id));
   const parentBendId = bend.parentBendId;
   if (parentBendId !== undefined && (typeof parentBendId !== "string" || !parentBendId)) fail("bend parentBendId must be a non-empty string");
@@ -13,16 +16,26 @@ export function normalizeBend(bend, sketch, bendIds = new Set()) {
   if (parentBendId) {
     if (!bendIds.has(parentBendId)) fail(`bend references unknown parent bend ${parentBendId}`);
     if (parentBendId === bend.id) fail("bend cannot reference itself as parent");
-    if (bend.parentEdge !== "outer") fail("bend parentEdge must be outer");
+    if (!BEND_PARENT_EDGES.has(bend.parentEdge)) fail("bend parentEdge must be outer, start, or end");
   } else if (!edgeIds.has(edgeId)) {
     fail(`bend references unknown sketch edge ${edgeId}`);
+  } else if (sketchEdgeIsCircularArc(sketch, edgeId)) {
+    fail(`bend edge ${edgeId} must be a straight sketch edge; curved bend edges are not supported yet`);
   }
   const angle = bend.angle;
   const radius = bend.radius;
+  const kFactor = bend.kFactor;
   const flangeLength = bend.flangeLength;
+  const gap = bend.gap;
+  const startGap = bend.startGap;
+  const endGap = bend.endGap;
   if (!finiteNumber(angle)) fail("bend angle must be a finite number");
   if (!finiteNonNegativeNumber(radius)) fail("bend radius must be zero or positive");
+  if (kFactor !== undefined && (!finiteNumber(kFactor) || kFactor < 0 || kFactor > 1)) fail("bend kFactor must be between 0 and 1");
   if (!finitePositiveNumber(flangeLength)) fail("bend flangeLength must be positive");
+  if (gap !== undefined && !finiteNonNegativeNumber(gap)) fail("bend gap must be zero or positive");
+  if (startGap !== undefined && !finiteNonNegativeNumber(startGap)) fail("bend startGap must be zero or positive");
+  if (endGap !== undefined && !finiteNonNegativeNumber(endGap)) fail("bend endGap must be zero or positive");
   if (bend.direction !== "up" && bend.direction !== "down") fail("bend direction must be up or down");
   return {
     id: bend.id,
@@ -30,8 +43,11 @@ export function normalizeBend(bend, sketch, bendIds = new Set()) {
     direction: bend.direction,
     angle,
     radius,
-    flangeLength,
-    relief: normalizeRelief(bend.relief)
+    ...(kFactor !== undefined ? { kFactor } : {}),
+    ...(gap !== undefined ? { gap } : {}),
+    ...(startGap !== undefined ? { startGap } : {}),
+    ...(endGap !== undefined ? { endGap } : {}),
+    flangeLength
   };
 }
 
@@ -48,26 +64,4 @@ export function bendDescendantIds(bends, seedIds) {
     }
   }
   return removed;
-}
-
-export function normalizeRelief(relief) {
-  if (!plainObject(relief)) fail("bend relief must be an object");
-  if (!["auto", "manual"].includes(relief.mode)) fail(`unsupported bend relief mode ${relief.mode}`);
-  if (!["none", "round", "rect", "obround", "v-notch"].includes(relief.type)) fail(`unsupported bend relief type ${relief.type}`);
-  const optionalDimension = (key) => {
-    const value = relief[key];
-    if (value === undefined) return undefined;
-    if (!finiteNonNegativeNumber(value)) fail(`bend relief ${key} must be zero or positive`);
-    return value;
-  };
-  const radius = optionalDimension("radius");
-  const width = optionalDimension("width");
-  const depth = optionalDimension("depth");
-  return {
-    mode: relief.mode,
-    type: relief.type,
-    ...(radius !== undefined ? { radius } : {}),
-    ...(width !== undefined ? { width } : {}),
-    ...(depth !== undefined ? { depth } : {})
-  };
 }

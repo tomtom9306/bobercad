@@ -152,6 +152,10 @@
       "collection": "groups",
       "type": "object-group"
     },
+    "rounded_sketch_arc_demo": {
+      "collection": "sketches",
+      "type": "plate-sketch"
+    },
     "if_col_3_a_top": {
       "collection": "interfaces",
       "type": "member-end-face"
@@ -1884,12 +1888,7 @@
               "direction": "up",
               "angle": 90,
               "radius": 20,
-              "flangeLength": 160,
-              "relief": {
-                "mode": "auto",
-                "type": "round",
-                "radius": 20
-              }
+              "flangeLength": 160
             }
           ]
         },
@@ -2046,7 +2045,201 @@
         }
       }
     },
-    "sketches": {},
+    "sketches": {
+      "rounded_sketch_arc_demo": {
+        "id": "rounded_sketch_arc_demo",
+        "type": "plate-sketch",
+        "center": [
+          1700,
+          1200,
+          1200
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "localAxisY": [
+          1,
+          0,
+          0
+        ],
+        "localAxisZ": [
+          0,
+          1,
+          0
+        ],
+        "display": {
+          "color": "#dbeafe",
+          "edgeColor": "#0ea5e9"
+        },
+        "authoring": {
+          "source": "manual-rounded-sketch-test",
+          "notes": "Standalone rounded sketch sample using semantic circular-arc sketch edges. The project stores arc center, radius, and direction; runtime code derives tessellated display points."
+        },
+        "sketch": {
+          "type": "plate-sketch",
+          "vertices": [
+            {
+              "id": "rounded_sketch_arc_demo_v1",
+              "point": [
+                -115,
+                -90
+              ]
+            },
+            {
+              "id": "rounded_sketch_arc_demo_v2",
+              "point": [
+                115,
+                -90
+              ]
+            },
+            {
+              "id": "rounded_sketch_arc_demo_v3",
+              "point": [
+                150,
+                -55
+              ]
+            },
+            {
+              "id": "rounded_sketch_arc_demo_v4",
+              "point": [
+                150,
+                55
+              ]
+            },
+            {
+              "id": "rounded_sketch_arc_demo_v5",
+              "point": [
+                115,
+                90
+              ]
+            },
+            {
+              "id": "rounded_sketch_arc_demo_v6",
+              "point": [
+                -115,
+                90
+              ]
+            },
+            {
+              "id": "rounded_sketch_arc_demo_v7",
+              "point": [
+                -150,
+                55
+              ]
+            },
+            {
+              "id": "rounded_sketch_arc_demo_v8",
+              "point": [
+                -150,
+                -55
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "rounded_sketch_arc_demo_e1",
+              "from": "rounded_sketch_arc_demo_v1",
+              "to": "rounded_sketch_arc_demo_v2"
+            },
+            {
+              "id": "rounded_sketch_arc_demo_e2",
+              "from": "rounded_sketch_arc_demo_v2",
+              "to": "rounded_sketch_arc_demo_v3",
+              "kind": "circular-arc",
+              "center": [
+                115,
+                -55
+              ],
+              "radius": 35,
+              "direction": "ccw"
+            },
+            {
+              "id": "rounded_sketch_arc_demo_e3",
+              "from": "rounded_sketch_arc_demo_v3",
+              "to": "rounded_sketch_arc_demo_v4"
+            },
+            {
+              "id": "rounded_sketch_arc_demo_e4",
+              "from": "rounded_sketch_arc_demo_v4",
+              "to": "rounded_sketch_arc_demo_v5",
+              "kind": "circular-arc",
+              "center": [
+                115,
+                55
+              ],
+              "radius": 35,
+              "direction": "ccw"
+            },
+            {
+              "id": "rounded_sketch_arc_demo_e5",
+              "from": "rounded_sketch_arc_demo_v5",
+              "to": "rounded_sketch_arc_demo_v6"
+            },
+            {
+              "id": "rounded_sketch_arc_demo_e6",
+              "from": "rounded_sketch_arc_demo_v6",
+              "to": "rounded_sketch_arc_demo_v7",
+              "kind": "circular-arc",
+              "center": [
+                -115,
+                55
+              ],
+              "radius": 35,
+              "direction": "ccw"
+            },
+            {
+              "id": "rounded_sketch_arc_demo_e7",
+              "from": "rounded_sketch_arc_demo_v7",
+              "to": "rounded_sketch_arc_demo_v8"
+            },
+            {
+              "id": "rounded_sketch_arc_demo_e8",
+              "from": "rounded_sketch_arc_demo_v8",
+              "to": "rounded_sketch_arc_demo_v1",
+              "kind": "circular-arc",
+              "center": [
+                -115,
+                -55
+              ],
+              "radius": 35,
+              "direction": "ccw"
+            }
+          ],
+          "relations": [
+            {
+              "id": "rel_radius_rounded_sketch_arc_demo_e2",
+              "type": "radius",
+              "edgeId": "rounded_sketch_arc_demo_e2",
+              "value": 35,
+              "mode": "driven"
+            },
+            {
+              "id": "rel_radius_rounded_sketch_arc_demo_e4",
+              "type": "radius",
+              "edgeId": "rounded_sketch_arc_demo_e4",
+              "value": 35,
+              "mode": "driven"
+            },
+            {
+              "id": "rel_radius_rounded_sketch_arc_demo_e6",
+              "type": "radius",
+              "edgeId": "rounded_sketch_arc_demo_e6",
+              "value": 35,
+              "mode": "driven"
+            },
+            {
+              "id": "rel_radius_rounded_sketch_arc_demo_e8",
+              "type": "radius",
+              "edgeId": "rounded_sketch_arc_demo_e8",
+              "value": 35,
+              "mode": "driven"
+            }
+          ]
+        }
+      }
+    },
     "holePatterns": {
       "hole_pattern_2x2_m16": {
         "id": "hole_pattern_2x2_m16",

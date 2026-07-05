@@ -214,6 +214,7 @@ Bent plates add stored bend operations:
     ]
   },
   "fabrication": {
+    "reliefDefaults": { "type": "round", "radius": 8 },
     "bends": [
       {
         "id": "bend_1",
@@ -221,8 +222,7 @@ Bent plates add stored bend operations:
         "angle": 90,
         "radius": 12,
         "direction": "up",
-        "flangeLength": 80,
-        "relief": { "mode": "auto", "type": "round", "radius": 8 }
+        "flangeLength": 80
       }
     ]
   }

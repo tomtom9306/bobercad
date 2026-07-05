@@ -1,6 +1,6 @@
 import { v } from "../../../engine/core/math.mjs";
 import { arrayValues } from "../../../engine/core/model.mjs";
-import { addPlateSketchConstructionLine as addPlateSketchConstructionLineData, insertPlateSketchVertex as insertPlateSketchVertexData, notchPlateSketchCorner as notchPlateSketchCornerData, orderedSketchLoop, plateSketchEntityDefinitionStatus, plateSketchRelationActionPreview, plateSketchRelationHealth, removePlateSketchRelation as removePlateSketchRelationData, removePlateSketchVertex as removePlateSketchVertexData, setPlateSketchEdgeAngle as setPlateSketchEdgeAngleData, setPlateSketchEdgeAngleMode as setPlateSketchEdgeAngleModeData, setPlateSketchEdgeLength as setPlateSketchEdgeLengthData, setPlateSketchEdgeLengthMode as setPlateSketchEdgeLengthModeData, setPlateSketchPointDistance as setPlateSketchPointDistanceData, setPlateSketchPointDistanceMode as setPlateSketchPointDistanceModeData, setPlateSketchVertex as setPlateSketchVertexData, setPlateSketchVertices as setPlateSketchVerticesData, sketchAngleRelationMode, sketchConstructionEdges, sketchConstructionVertices, sketchDistanceRelationMode, sketchEdgeAngleDegrees, sketchEdgeAxisRelation, sketchEdges, sketchFromOutline, sketchLengthRelationMode, sketchPointDistance, sketchRelationBadge, sketchRelationEdgeIds, sketchRelationKey, sketchRelationLabel, sketchRelationVertexIds, sketchRelations, sketchRelationsForEdge, sketchRelationsForVertex, sketchVertices, upsertPlateSketchRelation as upsertPlateSketchRelationData } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
+import { addPlateSketchConstructionLine as addPlateSketchConstructionLineData, insertPlateSketchVertex as insertPlateSketchVertexData, notchPlateSketchCorner as notchPlateSketchCornerData, orderedSketchLoop, plateSketchEntityDefinitionStatus, plateSketchRelationActionPreview, plateSketchRelationHealth, removePlateSketchRelation as removePlateSketchRelationData, removePlateSketchVertex as removePlateSketchVertexData, setPlateSketchEdgeAngle as setPlateSketchEdgeAngleData, setPlateSketchEdgeAngleMode as setPlateSketchEdgeAngleModeData, setPlateSketchEdgeLength as setPlateSketchEdgeLengthData, setPlateSketchEdgeLengthMode as setPlateSketchEdgeLengthModeData, setPlateSketchPointDistance as setPlateSketchPointDistanceData, setPlateSketchPointDistanceMode as setPlateSketchPointDistanceModeData, setPlateSketchVertex as setPlateSketchVertexData, setPlateSketchVertices as setPlateSketchVerticesData, sketchDefinitionStatus, sketchAngleRelationMode, sketchConstructionEdges, sketchConstructionVertices, sketchDistanceRelationMode, sketchEdgeAngleDegrees, sketchEdgeAxisRelation, sketchEdgeIsCircularArc, sketchEdges, sketchFromOutline, sketchLengthRelationMode, sketchPointDistance, sketchRelationBadge, sketchRelationEdgeIds, sketchRelationHealth, sketchRelationKey, sketchRelationLabel, sketchRelationVertexIds, sketchRelations, sketchRelationsForEdge, sketchRelationsForVertex, sketchVertices, upsertPlateSketchRelation as upsertPlateSketchRelationData, upsertSketchRelation } from "../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
 import { snapPointOverlay } from "../../scene/authoring/snap-overlays.mjs";
 import { adaptiveSnapGridStep, adaptiveSnapGridStepForHandle, snapScalarToGrid, snapSketchWorldTolerance } from "../snap-profiles.mjs";
 import { dimensionOverlayForPlate } from "./dimension-overlay.mjs";
@@ -105,9 +105,11 @@ export function edgeLength(edges, vertexMap, edgeId) {
 }
 
 export function equalLengthTarget(sketch, edgeId) {
+  if (sketchEdgeIsCircularArc(sketch, edgeId)) return null;
   const relation = sketchRelationsForEdge(sketch, edgeId).find((item) => item.type === "equal-length");
   if (!relation) return null;
   const otherEdgeId = sketchRelationEdgeIds(relation).find((id) => id !== edgeId);
+  if (sketchEdgeIsCircularArc(sketch, otherEdgeId)) return null;
   const edges = sketchEdges(sketch);
   const vertexMap = new Map(sketchVertices(sketch).map((vertex) => [vertex.id, vertex]));
   const length = edgeLength(edges, vertexMap, otherEdgeId);
@@ -119,7 +121,7 @@ export function equalLengthSnapTargets(sketch, excludeEdgeIds = []) {
   const edges = sketchEdges(sketch);
   const vertexMap = new Map(sketchVertices(sketch).map((vertex) => [vertex.id, vertex]));
   return edges
-    .filter((edge) => !excluded.has(edge.id))
+    .filter((edge) => !excluded.has(edge.id) && !sketchEdgeIsCircularArc(sketch, edge.id))
     .map((edge) => ({ edgeId: edge.id, length: edgeLength(edges, vertexMap, edge.id) }))
     .filter((target) => Number.isFinite(target.length) && target.length > EPSILON);
 }
@@ -145,14 +147,22 @@ export function relationActionBadge(type) {
   if (type === "vertical-points") return "V";
   if (type === "coincident") return "CO";
   if (type === "point-on-line") return "ON";
+  if (type === "point-on-circle") return "ONC";
   if (type === "midpoint") return "MID";
   if (type === "symmetric") return "SYM";
   if (type === "parallel") return "PAR";
   if (type === "collinear") return "COL";
   if (type === "perpendicular") return "PERP";
   if (type === "equal-length") return "EQ";
+  if (type === "tangent") return "TAN";
+  if (type === "concentric") return "CON";
+  if (type === "equal-radius") return "EQR";
   if (type === "angle") return "ANG";
   if (type === "distance") return "DIST";
+  if (type === "radius") return "RAD";
+  if (type === "diameter") return "DIA";
+  if (type === "flip-arc") return "FLIP";
+  if (type === "split-arc") return "SPLIT";
   if (type === "fixed") return "FIX";
   if (type === "construction-line") return "CL";
   return "REL";
@@ -163,7 +173,7 @@ export function relationPatchFromActionData(type, options = {}) {
   if (type === "horizontal-points" || type === "vertical-points" || type === "coincident") {
     return { type, vertexIds: options.vertexIds };
   }
-  if (type === "point-on-line" || type === "midpoint") {
+  if (type === "point-on-line" || type === "point-on-circle" || type === "midpoint") {
     return { type, vertexId: options.vertexId, edgeId: options.edgeId };
   }
   if (type === "symmetric") return { type, vertexIds: options.vertexIds, edgeId: options.edgeId };
@@ -172,7 +182,7 @@ export function relationPatchFromActionData(type, options = {}) {
       ? { type, vertexId: options.vertexId }
       : { type, edgeId: options.edgeId };
   }
-  if (type === "parallel" || type === "collinear" || type === "perpendicular" || type === "equal-length") {
+  if (type === "parallel" || type === "collinear" || type === "perpendicular" || type === "equal-length" || type === "tangent" || type === "concentric" || type === "equal-radius") {
     return { type, edgeIds: options.edgeIds, targetEdgeId: options.targetEdgeId };
   }
   if (type === "angle" && Number.isFinite(options.angle)) {
@@ -180,6 +190,12 @@ export function relationPatchFromActionData(type, options = {}) {
   }
   if (type === "distance" && Number.isFinite(options.distance)) {
     return { type, vertexIds: options.vertexIds, value: options.distance, mode: "driving", targetVertexId: options.targetVertexId };
+  }
+  if (type === "radius" && Number.isFinite(options.radius)) {
+    return { type, edgeId: options.edgeId, value: options.radius, mode: "driven", display: "radius" };
+  }
+  if (type === "diameter" && Number.isFinite(options.radius)) {
+    return { type: "radius", edgeId: options.edgeId, value: options.radius, mode: "driven", display: "diameter" };
   }
   return null;
 }
@@ -195,6 +211,19 @@ export function relationActionPreview(plate, type, options = {}) {
   const relationPatch = relationPatchFromActionData(type, options);
   if (!relationPatch) return null;
   try {
+    if (plate?.type === "plate-sketch") {
+      const nextSketchObject = upsertSketchRelation(plate, relationPatch);
+      const relationKey = sketchRelationKey(relationPatch);
+      const nextRelation = sketchRelations(nextSketchObject?.sketch)
+        .find((relation) => sketchRelationKey(relation) === relationKey) || null;
+      return {
+        relation: nextRelation,
+        health: nextRelation
+          ? sketchRelationHealth(nextSketchObject.sketch)[nextRelation.id] || { status: "ok", severity: "ok" }
+          : { status: "conflicted", severity: "error", message: "Relation could not be evaluated." },
+        definition: sketchDefinitionStatus(nextSketchObject?.sketch)
+      };
+    }
     return plateSketchRelationActionPreview(plate, relationPatch);
   } catch (error) {
     return {
@@ -232,15 +261,30 @@ export function screenDeltaToSketch(handle, totalDx, totalDy) {
   ];
 }
 
-export function segmentIntersection(a, b, c, d) {
+export function lineIntersectionPoint(a, b, c, d) {
   const ab = sub2(b, a);
   const cd = sub2(d, c);
   const ac = sub2(c, a);
   const denominator = cross2(ab, cd);
-  if (Math.abs(denominator) <= EPSILON) return false;
+  if (Math.abs(denominator) <= EPSILON) return null;
   const t = cross2(ac, cd) / denominator;
   const u = cross2(ac, ab) / denominator;
-  return t > EPSILON && t < 1 - EPSILON && u > EPSILON && u < 1 - EPSILON;
+  return {
+    point: [a[0] + ab[0] * t, a[1] + ab[1] * t],
+    t,
+    u
+  };
+}
+
+export function segmentIntersectionPoint(a, b, c, d) {
+  const intersection = lineIntersectionPoint(a, b, c, d);
+  if (!intersection) return null;
+  if (intersection.t <= EPSILON || intersection.t >= 1 - EPSILON || intersection.u <= EPSILON || intersection.u >= 1 - EPSILON) return null;
+  return intersection.point;
+}
+
+export function segmentIntersection(a, b, c, d) {
+  return Boolean(segmentIntersectionPoint(a, b, c, d));
 }
 
 export function hasSelfIntersection(points) {

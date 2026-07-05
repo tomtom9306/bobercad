@@ -179,11 +179,18 @@ export function addCsgFaces(scene, polygons, color, meta = {}) {
   }
 }
 
-export function addPlateSolid(scene, midPoints, normal, thickness, color, edgeColor, meta = {}) {
+export function addPlateSolid(scene, midPoints, normal, thickness, color, edgeColor, meta = {}, options = {}) {
   const n = v.norm(normal);
   const hx = thickness / 2;
   const back = midPoints.map((point) => v.add(point, v.mul(n, -hx)));
   const front = midPoints.map((point) => v.add(point, v.mul(n, hx)));
+  const skipThicknessEdgeIndices = new Set(Array.isArray(options.skipThicknessEdgeIndices) ? options.skipThicknessEdgeIndices : []);
+  const hideSideFaceEdgeIndices = new Set(Array.isArray(options.hideSideFaceEdgeIndices) ? options.hideSideFaceEdgeIndices : []);
+  const sideFaceMetaByEdgeIndex = new Map(
+    Array.isArray(options.sideFaceMetaByEdgeIndex)
+      ? options.sideFaceMetaByEdgeIndex.map((item, index) => Array.isArray(item) ? item : [index, item]).filter(([, item]) => item && typeof item === "object")
+      : []
+  );
 
   scene.faces.push({ points: back, color, ...meta });
   scene.faces.push({ points: [...front].reverse(), color, ...meta });
@@ -191,8 +198,14 @@ export function addPlateSolid(scene, midPoints, normal, thickness, color, edgeCo
   addLoopLines(scene, front, edgeColor, meta);
   for (let i = 0; i < midPoints.length; i += 1) {
     const j = (i + 1) % midPoints.length;
-    scene.faces.push({ points: [back[i], back[j], front[j], front[i]], color, ...meta });
-    addLine(scene, back[i], front[i], edgeColor, meta);
+    const sideMeta = hideSideFaceEdgeIndices.has(i) || hideSideFaceEdgeIndices.has(j)
+      ? { ...meta, hideEdges: true }
+      : meta;
+    const edgeMeta = sideFaceMetaByEdgeIndex.has(i)
+      ? { ...sideMeta, ...sideFaceMetaByEdgeIndex.get(i) }
+      : sideMeta;
+    scene.faces.push({ points: [back[i], back[j], front[j], front[i]], color, ...edgeMeta });
+    if (!skipThicknessEdgeIndices.has(i)) addLine(scene, back[i], front[i], edgeColor, meta);
   }
 }
 

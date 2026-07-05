@@ -8,6 +8,14 @@ import { createWebglDrawRuntime } from "./webgl-draw-utils.mjs";
 import { createWebglProgramRegistry } from "./webgl-programs.mjs";
 import { highlightedObjectIdsForOverlay as filteredHighlightedObjectIds } from "./webgl-highlight-policy.mjs";
 
+function renderableFaceTriangles(points) {
+  try {
+    return triangulateFace(points);
+  } catch {
+    return [];
+  }
+}
+
 export function createWebglRenderOrchestrator({
   gl,
   canvas,
@@ -81,8 +89,16 @@ export function createWebglRenderOrchestrator({
     return scene ? camera.clipPoint(point, scene, canvas) : null;
   }
 
-  function shadedRgba(color, points, opacity = 1) {
+  function shadedRgba(color, points, opacity = 1, item = null) {
     const rgb = hexToRgb(color);
+    if (item?.unlit === true) {
+      return [
+        rgb[0],
+        rgb[1],
+        rgb[2],
+        Math.round(255 * opacity)
+      ];
+    }
     const n = faceNormal(points);
     const light = v.norm(settings.render.lighting.direction);
     const shade = settings.render.lighting.ambient + Math.max(0, v.dot(n, light)) * settings.render.lighting.diffuse;
@@ -268,9 +284,9 @@ export function createWebglRenderOrchestrator({
     for (const face of scene.faces) {
       if (!shouldDrawSceneItem(face)) continue;
       const surfaceGroup = renderGroupBucket((face.opacity ?? 1) >= 1 ? opaqueFaces : transparentFaces);
-      const rgba = shadedRgba(face.color, face.points, face.opacity ?? 1);
+      const rgba = shadedRgba(face.color, face.points, face.opacity ?? 1, face);
       const pickRgba = pickColorForItem(face);
-      for (const triangle of triangulateFace(face.points)) {
+      for (const triangle of renderableFaceTriangles(face.points)) {
         for (const point of triangle) appendWorldVertex(surfaceGroup, point, rgba, pickRgba);
       }
       if (face.hideEdges) continue;
@@ -285,8 +301,10 @@ export function createWebglRenderOrchestrator({
       if (!shouldDrawSceneItem(line)) continue;
       const lineGroup = renderGroupBucket(line.depthTest === false ? xrayLineGroups : lineGroups);
       const rgba = hexToRgba(line.color, line.opacity ?? 1);
-      appendWorldVertex(lineGroup, line.points[0], rgba);
-      appendWorldVertex(lineGroup, line.points[1], rgba);
+      for (let pointIndex = 0; pointIndex < line.points.length - 1; pointIndex += 1) {
+        appendWorldVertex(lineGroup, line.points[pointIndex], rgba);
+        appendWorldVertex(lineGroup, line.points[pointIndex + 1], rgba);
+      }
     }
     return {
       opaqueFaces: uploadRenderGroups(opaqueFaces, gl.TRIANGLES),
@@ -537,8 +555,8 @@ export function createWebglRenderOrchestrator({
       const opacity = objectPreview.previewOpacity(face.opacity ?? 1);
       if ((opacity < 1) !== transparent) continue;
       const points = face.points.map((point) => objectPreview.previewPointForItem(face, point));
-      const rgba = shadedRgba(face.color, points, opacity);
-      for (const triangle of triangulateFace(points)) {
+      const rgba = shadedRgba(face.color, points, opacity, face);
+      for (const triangle of renderableFaceTriangles(points)) {
         for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
       }
     }
@@ -558,8 +576,8 @@ export function createWebglRenderOrchestrator({
     for (const face of arrayValues(authoringPreviewScene.faces)) {
       const opacity = face.opacity ?? 1;
       if ((opacity < 1) !== transparent) continue;
-      const rgba = shadedRgba(face.color, face.points, opacity);
-      for (const triangle of triangulateFace(face.points)) {
+      const rgba = shadedRgba(face.color, face.points, opacity, face);
+      for (const triangle of renderableFaceTriangles(face.points)) {
         for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
       }
     }
@@ -582,9 +600,13 @@ export function createWebglRenderOrchestrator({
       }
     }
     for (const line of preview.lines) {
+      const points = arrayValues(line.points).map((point) => objectPreview.previewPointForItem(line, point));
+      if (points.length < 2) continue;
       const rgba = hexToRgba(line.color, objectPreview.previewOpacity(line.opacity ?? 1));
-      appendWorldVertex(positions, colors, objectPreview.previewPointForItem(line, line.points[0]), rgba);
-      appendWorldVertex(positions, colors, objectPreview.previewPointForItem(line, line.points[1]), rgba);
+      for (let pointIndex = 1; pointIndex < points.length; pointIndex += 1) {
+        appendWorldVertex(positions, colors, points[pointIndex - 1], rgba);
+        appendWorldVertex(positions, colors, points[pointIndex], rgba);
+      }
     }
     drawWorldArrays(gl.LINES, positions, colors);
   }
@@ -607,9 +629,13 @@ export function createWebglRenderOrchestrator({
       }
     }
     for (const line of arrayValues(authoringPreviewScene.lines)) {
+      const points = arrayValues(line.points);
+      if (points.length < 2) continue;
       const rgba = hexToRgba(line.color, line.opacity ?? 1);
-      appendWorldVertex(positions, colors, line.points[0], rgba);
-      appendWorldVertex(positions, colors, line.points[1], rgba);
+      for (let pointIndex = 1; pointIndex < points.length; pointIndex += 1) {
+        appendWorldVertex(positions, colors, points[pointIndex - 1], rgba);
+        appendWorldVertex(positions, colors, points[pointIndex], rgba);
+      }
     }
     drawWorldArrays(gl.LINES, positions, colors);
   }
@@ -635,7 +661,11 @@ export function createWebglRenderOrchestrator({
     for (const line of arrayValues(scene.lines)) {
       if (!visibleHighlightedObjectIds.has(line.objectId)) continue;
       if (!shouldDrawSceneItem(line)) continue;
-      appendWorldLine(positions, colors, line.points[0], line.points[1], rgba);
+      const points = arrayValues(line.points);
+      if (points.length < 2) continue;
+      for (let pointIndex = 1; pointIndex < points.length; pointIndex += 1) {
+        appendWorldLine(positions, colors, points[pointIndex - 1], points[pointIndex], rgba);
+      }
     }
     drawWorldArrays(gl.LINES, positions, colors);
   }
@@ -770,7 +800,7 @@ export function createWebglRenderOrchestrator({
       const rgba = hexToRgba(face.color, face.opacity ?? 0.32);
       const positions = face.depthTest === true ? depthTestedAuthoringFacePositions : xrayAuthoringFacePositions;
       const colors = face.depthTest === true ? depthTestedAuthoringFaceColors : xrayAuthoringFaceColors;
-      for (const triangle of triangulateFace(arrayValues(face.points))) {
+      for (const triangle of renderableFaceTriangles(arrayValues(face.points))) {
         for (const point of triangle) appendWorldVertex(positions, colors, point, rgba);
       }
     }
@@ -809,11 +839,15 @@ export function createWebglRenderOrchestrator({
         || (hoveredHandle.kind === "plate-sketch-construction-edge" && line.kind === "plate-sketch-construction-edge");
     };
     for (const line of arrayValues(authoringOverlay.lines)) {
+      const points = arrayValues(line.points);
+      if (points.length < 2) continue;
       const hovered = isHoveredAuthoringLine(line);
       const rgba = hexToRgba(hovered ? settings.authoring?.hoverColor || "#fef08a" : line.color);
       const group = authoringLineGroup(hovered ? Math.max(line.lineWidth || defaultAuthoringLineWidth, settings.authoring?.hoverLineWidth || 6) : line.lineWidth);
-      pushVertex(group.positions, group.colors, clipPoint(line.points[0]), rgba);
-      pushVertex(group.positions, group.colors, clipPoint(line.points[1]), rgba);
+      for (let pointIndex = 1; pointIndex < points.length; pointIndex += 1) {
+        pushVertex(group.positions, group.colors, clipPoint(points[pointIndex - 1]), rgba);
+        pushVertex(group.positions, group.colors, clipPoint(points[pointIndex]), rgba);
+      }
     }
     if (authoringLineGroups.size) {
       gl.disable(gl.DEPTH_TEST);

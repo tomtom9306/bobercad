@@ -33,6 +33,86 @@ const ICONS = {
       <circle cx="19" cy="5" r="1.6" />
     </svg>
   `,
+  line: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 19L19 5" />
+      <circle cx="5" cy="19" r="1.8" />
+      <circle cx="19" cy="5" r="1.8" />
+    </svg>
+  `,
+  circle: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="7" />
+      <path d="M12 5v3" />
+      <path d="M12 16v3" />
+      <path d="M5 12h3" />
+      <path d="M16 12h3" />
+    </svg>
+  `,
+  rectangle: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="5" y="7" width="14" height="10" />
+      <path d="M12 4v4" />
+      <path d="M12 16v4" />
+      <path d="M3 12h4" />
+      <path d="M17 12h4" />
+    </svg>
+  `,
+  "rounded-rectangle": `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="5" y="6" width="14" height="12" rx="3" />
+      <path d="M9 6h6" />
+      <path d="M9 18h6" />
+      <path d="M5 10v4" />
+      <path d="M19 10v4" />
+    </svg>
+  `,
+  slot: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 7h8a5 5 0 0 1 0 10H8A5 5 0 0 1 8 7z" />
+      <path d="M8 7a5 5 0 0 0 0 10" />
+      <path d="M16 7a5 5 0 0 1 0 10" />
+      <path d="M8 12h8" />
+    </svg>
+  `,
+  arc: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 18A12 12 0 0 1 18 6" />
+      <path d="M12 12L6 18" />
+      <path d="M12 12L18 6" />
+      <circle cx="12" cy="12" r="1.5" />
+      <circle cx="6" cy="18" r="1.25" />
+      <circle cx="18" cy="6" r="1.25" />
+    </svg>
+  `,
+  radius: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 19A14 14 0 0 1 19 5" />
+      <path d="M6 18L18 6" />
+      <circle cx="18" cy="6" r="1.5" />
+      <path d="M7 10h4a2 2 0 0 1 0 4H7z" />
+      <path d="M11 14l2 3" />
+    </svg>
+  `,
+  diameter: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="7" />
+      <path d="M7 17L17 7" />
+      <path d="M6 6l12 12" />
+      <path d="M5 17h3" />
+      <path d="M16 7h3" />
+    </svg>
+  `,
+  dimension: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 17h14" />
+      <path d="M7 15l-2 2 2 2" />
+      <path d="M17 15l2 2-2 2" />
+      <path d="M5 6v14" />
+      <path d="M19 6v14" />
+      <path d="M8 8h8" />
+    </svg>
+  `,
   "work-plane": `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M4 16l8-11 8 11z" />
@@ -72,6 +152,22 @@ const ICONS = {
       <path d="M5 18h14" />
       <path d="M8 6l8 12" />
       <path d="M16 6L8 18" />
+    </svg>
+  `,
+  extend: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 8h8" />
+      <path d="M5 16h8" />
+      <path d="M13 8l5 4-5 4" />
+      <path d="M15 12H8" />
+    </svg>
+  `,
+  swap: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 7h10" />
+      <path d="M14 4l3 3-3 3" />
+      <path d="M17 17H7" />
+      <path d="M10 14l-3 3 3 3" />
     </svg>
   `,
   "trim-butt-a-to-b": `
@@ -263,6 +359,23 @@ const ICONS = {
       <path d="M19 19v-6" />
       <path d="M8 8l8 8" />
       <path d="M16 8L8 16" />
+    </svg>
+  `,
+  "clean-view": `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 12s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5z" />
+      <circle cx="12" cy="12" r="2.2" />
+      <path d="M7 19l10-14" />
+    </svg>
+  `,
+  delete: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 7h14" />
+      <path d="M9 7V5h6v2" />
+      <path d="M8 10v9" />
+      <path d="M16 10v9" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
     </svg>
   `,
   units: `

@@ -83,6 +83,18 @@
       "trimming-lab-1": {
         "path": "../../../data/projects/sample_trimming_lab.json"
       },
+      "rounded-sketch-1": {
+        "path": "../../../data/projects/sample_rounded_sketch.json"
+      },
+      "rounded-plate-1": {
+        "path": "../../../data/projects/sample_rounded_plate.json"
+      },
+      "sheet-metal-corner-reliefs-1": {
+        "path": "../../../data/projects/sample_sheet_metal_corner_reliefs.json"
+      },
+      "bent-plate-radius-1": {
+        "path": "../../../data/projects/sample_bent_plate_radius.json"
+      },
       "warehouse-12x24": {
         "path": "../../../data/projects/sample_warehouse_12x24.json"
       },
@@ -117,6 +129,9 @@
     "panSpeed": 1,
     "zoomInFactor": 1.1,
     "zoomOutFactor": 0.9
+  },
+  "geometry": {
+    "sheetMetalReliefEvaluator": "charts-supported"
   },
   "shortcuts": {
     "commands": {
@@ -238,6 +253,9 @@
     },
     "plateSketchDefaultNotchSize": 10,
     "plateSketchDefaultNotchMaxSize": 40,
+    "plateSketchDefaultCircleRadius": 50,
+    "plateSketchDefaultPlateThickness": 8,
+    "plateSketchDefaultArcSweepDegrees": 120,
     "globalAxisSnapSpan": 100000,
     "globalAxisGuideSpan": 12000,
     "activeReferenceMemberLimit": 2,
@@ -357,8 +375,9 @@
       "maxAutoDetailObjects": 600
     },
     "curves": {
-      "circleSegments": 32,
-      "discSegments": 24
+      "circleSegments": 96,
+      "segmentLength": 0.75,
+      "discSegments": 48
     }
   },
   "ui": {

@@ -15,12 +15,14 @@ const BEND_DIRECTION_OPTIONS = [
   { id: "up", label: "Up" },
   { id: "down", label: "Down" }
 ];
-const BEND_RELIEF_OPTIONS = [
-  { id: "round", label: "Round" },
-  { id: "rect", label: "Rect" },
-  { id: "obround", label: "Obround" },
-  { id: "v-notch", label: "V notch" },
-  { id: "none", label: "None" }
+const CORNER_RELIEF_TYPE_OPTIONS = [
+  { id: "circular", label: "Circular" },
+  { id: "rectangular", label: "Rectangular" },
+  { id: "obround", label: "Obround" }
+];
+const CORNER_RELIEF_FLANGE_GAP_MODE_OPTIONS = [
+  { id: "symmetric", label: "Symmetric" },
+  { id: "butt", label: "Butt" }
 ];
 const OBJECT_REF_ACTION_SPECS = Object.freeze({
   select: Object.freeze({ action: "objectRef.select", label: "Select", icon: "selection" }),
@@ -30,6 +32,27 @@ const MITER_MODE_OPTIONS = Object.freeze([
   { id: "equal-angle", label: "Equal angle" },
   { id: "profile-balanced", label: "Balanced profile" }
 ]);
+
+function canonicalCornerReliefType(type) {
+  const normalized = String(type || "circular").trim().toLowerCase();
+  if (normalized === "round") return "circular";
+  if (normalized === "rect") return "rectangular";
+  return CORNER_RELIEF_TYPE_OPTIONS.some((option) => option.id === normalized)
+    ? normalized
+    : "circular";
+}
+
+function canonicalCornerReliefFlangeGapMode(value) {
+  const normalized = String(value || "symmetric").trim().toLowerCase();
+  return CORNER_RELIEF_FLANGE_GAP_MODE_OPTIONS.some((option) => option.id === normalized)
+    ? normalized
+    : "symmetric";
+}
+
+function cornerReliefFlangeGapSwapped(relief = {}, resolved = null) {
+  if (typeof relief?.flangeGapSwapped === "boolean") return relief.flangeGapSwapped;
+  return resolved?.flangeGapSwapped === true;
+}
 
 export function inspectorEditableObjectPropertySections({
   collection = "",
@@ -53,6 +76,22 @@ export function inspectorEditableObjectPropertySections({
 
 function objectPropertyCommit(action, patchKey, extras = {}) {
   return { action, patchKey, ...extras };
+}
+
+function patchForObjectPropertyCommitValue(commit = {}, value) {
+  if (Array.isArray(commit.arrayObjectValue) && Number.isInteger(commit.itemIndex) && commit.childKey) {
+    const nextArray = commit.arrayObjectValue.map((item, index) => (
+      index === commit.itemIndex && item && typeof item === "object" && !Array.isArray(item)
+        ? { ...item, [commit.childKey]: value }
+        : item
+    ));
+    return Array.isArray(commit.patchPath) && commit.patchPath.length
+      ? commit.patchPath.slice().reverse().reduce((patch, key) => ({ [key]: patch }), nextArray)
+      : {};
+  }
+  return Array.isArray(commit.patchPath) && commit.patchPath.length
+    ? commit.patchPath.slice().reverse().reduce((patch, key) => ({ [key]: patch }), value)
+    : {};
 }
 
 function featureEditorCommit(action, patchKey, extras = {}) {
@@ -235,10 +274,82 @@ function sketchPropertiesSections({ objectId = "", objectState = {} } = {}) {
   }];
 }
 
+function cornerReliefDimensionFields(relief = {}, commitForKey = () => null, labelPrefix = "", resolvedSpec = null) {
+  const resolved = resolvedSpec || {
+    type: canonicalCornerReliefType(relief?.type),
+    properties: [],
+    diagnostics: [{
+      code: "corner-relief.resolver.missing",
+      severity: "warning",
+      message: "Corner relief effective dimensions are unavailable because resolved model state was not provided."
+    }]
+  };
+  const propertyValue = (property) => {
+    const sourceKey = property.sourceKey || property.key;
+    if (property.kind === "select") return relief?.[sourceKey] || property.value || property.defaultValue || "";
+    if (property.kind === "boolean") return typeof relief?.[sourceKey] === "boolean" ? relief[sourceKey] : property.value === true;
+    return finiteNumberOr(relief?.[sourceKey], finiteNumberOr(property.value, 0));
+  };
+  const numberField = (property) => ({
+    type: "number",
+    label: `${labelPrefix}${property.label || property.key}`,
+    value: propertyValue(property),
+    commit: commitForKey(property.sourceKey || property.key),
+    options: property.kind === "signed-number" ? {} : { min: 0 }
+  });
+  const propertyByKey = new Map((resolved.properties || []).map((property) => [property.key, property]));
+  const flangeGapMode = () => canonicalCornerReliefFlangeGapMode(propertyValue(propertyByKey.get("flangeGapMode") || { key: "flangeGapMode", value: "symmetric" }));
+  const fieldForProperty = (property) => {
+    if (!property || property.kind === "boolean") return null;
+    if (property.key === "flangeGapMode") {
+      return {
+        type: "select",
+        label: `${labelPrefix}${property.label || "Flange offset"}`,
+        options: CORNER_RELIEF_FLANGE_GAP_MODE_OPTIONS,
+        value: flangeGapMode(),
+        commit: commitForKey(property.sourceKey || property.key)
+      };
+    }
+    if (property.kind === "select") return null;
+    return numberField(property);
+  };
+  const flangeSwapField = (property) => {
+    if (flangeGapMode() !== "butt") return null;
+    const swapped = cornerReliefFlangeGapSwapped(relief, resolved);
+    const commit = commitForKey(property?.sourceKey || "flangeGapSwapped");
+    return {
+      type: "action",
+      label: `${labelPrefix}${property?.label || "Swap"}`,
+      icon: "swap",
+      title: "Swap which flange receives the butt overlap/gap",
+      action: "object.plate.patch",
+      payload: { patch: patchForObjectPropertyCommitValue(commit, !swapped) },
+      pressed: swapped
+    };
+  };
+  const diagnosticsField = resolved.diagnostics?.length
+    ? { label: `${labelPrefix}Diagnostics`, value: resolved.diagnostics.map((diagnostic) => diagnostic.message).join("; ") }
+    : null;
+  const fields = (resolved.properties || []).map((property) => (
+    property.key === "flangeGapSwapped"
+      ? flangeSwapField(property)
+      : fieldForProperty(property)
+  ));
+  return [...fields, diagnosticsField].filter(Boolean);
+}
+
 function platePropertiesSections(plate, { objectId = "", objectDetail = {}, objectState = {} } = {}) {
   const definition = objectState.definition || { label: "-" };
   const outlineVertices = finiteNumber(objectState.outlineVertices) ? objectState.outlineVertices : 0;
   const bends = arrayValues(objectState.bends);
+  const cornerReliefs = arrayValues(objectState.cornerReliefs);
+  const selectedBendId = objectDetail?.bendId || "";
+  const selectedCornerVertexId = objectDetail?.cornerReliefVertexId || "";
+  const resolvedReliefDefaults = objectState.resolvedReliefDefaults || null;
+  const reliefDefaults = plate.fabrication?.reliefDefaults || objectState.resolvedReliefDefaults || { type: "circular", size: 2 };
+  const selectedCorner = selectedCornerVertexId
+    ? cornerReliefs.find((corner) => corner.vertexId === selectedCornerVertexId) || null
+    : null;
   const relationsVisibleIn3d = objectId === plate.id && objectDetail?.sketchMode === "relations";
   const relationViewDetail = relationsVisibleIn3d
     ? { sketchMode: "clean", clearSketchSelection: true }
@@ -273,26 +384,84 @@ function platePropertiesSections(plate, { objectId = "", objectDetail = {}, obje
     {
       id: "inspector.properties.object.plate.bends",
       label: "Bends",
-      fields: [{ label: "Count", value: String(bends.length) }]
+      fields: [
+        { label: "Count", value: String(bends.length) },
+        selectedBendId ? { label: "Selected", value: selectedBendId } : null
+      ].filter(Boolean)
     },
-    ...bends.map((bend, index) => plateBendPropertiesSection(plate, bend, index))
+    ...(cornerReliefs.length && !selectedCorner ? [{
+      id: "inspector.properties.object.plate.cornerRelief",
+      label: "Corner Relief",
+      fields: [
+        { type: "select", label: "Type", options: CORNER_RELIEF_TYPE_OPTIONS, value: canonicalCornerReliefType(reliefDefaults.type), commit: objectPropertyCommit("object.plate.update", null, { patchPath: ["fabrication", "reliefDefaults", "type"] }) },
+        ...cornerReliefDimensionFields(
+          reliefDefaults,
+          (key) => objectPropertyCommit("object.plate.update", null, { patchPath: ["fabrication", "reliefDefaults", key] }),
+          "",
+          resolvedReliefDefaults
+        )
+      ].filter(Boolean)
+    }] : []),
+    ...(selectedCorner ? [plateCornerReliefPropertiesSection(plate, selectedCorner, cornerReliefs.indexOf(selectedCorner), selectedCornerVertexId, reliefDefaults)] : []),
+    ...bends.map((bend, index) => plateBendPropertiesSection(plate, bend, index, selectedBendId))
   ];
 }
 
-function plateBendPropertiesSection(plate, bend, index) {
+function plateCornerReliefPropertiesSection(plate, corner, index, selectedCornerVertexId = "", reliefDefaults = {}) {
+  const selected = Boolean(selectedCornerVertexId) && corner.vertexId === selectedCornerVertexId;
+  const relief = corner.relief || reliefDefaults || {};
+  const overrideEdit = cornerReliefOverrideEdit(plate, corner, reliefDefaults);
+  return {
+    id: `inspector.properties.object.plate.cornerRelief.${safeInspectorId(corner.vertexId || index + 1)}`,
+    label: selected ? `Relief Corner ${index + 1} (selected)` : `Relief Corner ${index + 1}`,
+    open: selected || (!selectedCornerVertexId && index === 0),
+    fields: [
+      { type: "select", label: "Type", options: CORNER_RELIEF_TYPE_OPTIONS, value: canonicalCornerReliefType(relief.type), commit: objectPropertyCommit("object.plate.update", null, { patchPath: ["fabrication", "cornerReliefs"], arrayObjectValue: overrideEdit.items, itemIndex: overrideEdit.index, childKey: "type" }) },
+      ...cornerReliefDimensionFields(
+        relief,
+        (key) => objectPropertyCommit("object.plate.update", null, { patchPath: ["fabrication", "cornerReliefs"], arrayObjectValue: overrideEdit.items, itemIndex: overrideEdit.index, childKey: key }),
+        "",
+        corner.resolvedRelief || null
+      )
+    ].filter(Boolean)
+  };
+}
+
+function cornerReliefOverrideEdit(plate, corner, reliefDefaults = {}) {
+  const items = arrayValues(plate.fabrication?.cornerReliefs).map((item) => ({ ...item }));
+  const existingIndex = items.findIndex((item) => item.vertexId === corner.vertexId);
+  if (existingIndex >= 0) return { items, index: existingIndex };
+  const item = {
+    id: `corner_relief_${corner.vertexId}`,
+    vertexId: corner.vertexId,
+    type: canonicalCornerReliefType(reliefDefaults.type)
+  };
+  if (finiteNumber(reliefDefaults.size)) item.size = reliefDefaults.size;
+  if (finiteNumber(reliefDefaults.radius)) item.radius = reliefDefaults.radius;
+  if (finiteNumber(reliefDefaults.width)) item.width = reliefDefaults.width;
+  if (finiteNumber(reliefDefaults.depth)) item.depth = reliefDefaults.depth;
+  if (finiteNumber(reliefDefaults.gap)) item.gap = reliefDefaults.gap;
+  if (finiteNumber(reliefDefaults.flangeGap)) item.flangeGap = reliefDefaults.flangeGap;
+  item.flangeGapMode = canonicalCornerReliefFlangeGapMode(reliefDefaults.flangeGapMode);
+  item.flangeGapSwapped = reliefDefaults.flangeGapSwapped === true;
+  items.push(item);
+  return { items, index: items.length - 1 };
+}
+
+function plateBendPropertiesSection(plate, bend, index, selectedBendId = "") {
+  const selected = Boolean(selectedBendId) && bend.id === selectedBendId;
   return {
     id: `inspector.properties.object.plate.bend.${safeInspectorId(bend.id || bend.edgeId || index + 1)}`,
-    label: `Bend ${index + 1}`,
-    open: index === 0,
+    label: selected ? `Bend ${index + 1} (selected)` : `Bend ${index + 1}`,
+    open: selected || (!selectedBendId && index === 0),
     fields: [
       { label: "ID", value: bend.id || bend.edgeId || "bend" },
       { label: "Target", value: bend.targetLabel || "-" },
       { type: "select", label: "Direction", options: BEND_DIRECTION_OPTIONS, value: bend.direction || "up", commit: objectPropertyCommit("object.plate.bend.update", "direction", { bend }) },
       { type: "number", label: "Angle", value: finiteNumberOr(bend.angle, 90), commit: objectPropertyCommit("object.plate.bend.update", "angle", { bend }) },
       { type: "number", label: "Radius", value: finiteNumberOr(bend.radius, 0), commit: objectPropertyCommit("object.plate.bend.update", "radius", { bend }), options: { min: 0 } },
+      { type: "number", label: "K factor", value: finiteNumberOr(bend.kFactor, 0.33), commit: objectPropertyCommit("object.plate.bend.update", "kFactor", { bend }), options: { min: 0, max: 1 } },
       { type: "number", label: "Flange length", value: finiteNumberOr(bend.flangeLength, 0), commit: objectPropertyCommit("object.plate.bend.update", "flangeLength", { bend }), options: { min: 0, minExclusive: true } },
-      { type: "select", label: "Relief", options: BEND_RELIEF_OPTIONS, value: bend.relief?.type || "round", commit: objectPropertyCommit("object.plate.bend.update", null, { bend, patchPath: ["relief", "type"] }) },
-      { type: "number", label: "Relief radius", value: finiteNumberOr(bend.relief?.radius, Math.max(finiteNumberOr(plate.thickness, 8), 8)), commit: objectPropertyCommit("object.plate.bend.update", null, { bend, patchPath: ["relief", "radius"] }), options: { min: 0 } },
       bend.id ? { type: "action", label: "Remove Bend", icon: "cancel", danger: true, action: "object.plate.bend.remove", payload: { objectId: plate.id, bendId: bend.id } } : null
     ].filter(Boolean)
   };

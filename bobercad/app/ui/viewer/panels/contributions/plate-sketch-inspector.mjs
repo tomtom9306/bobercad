@@ -4,18 +4,28 @@ import {
   plateSketchDefinitionStatus,
   plateSketchRelationActionPreview,
   plateSketchRelationHealth,
+  sketchDefinitionStatus,
   sketchAngleRelationMode,
   sketchConstructionEdges,
   sketchConstructionVertices,
   sketchDistanceRelationMode,
+  sketchEdgeIsCircularArc,
   sketchEdges,
   sketchLengthRelationMode,
+  measuredSketchEdgeRadius,
+  sketchRadiusRelationDisplay,
+  sketchRadiusRelationMode,
   sketchRelationBadge,
   sketchRelationEdgeIds,
   sketchRelationKey,
   sketchRelationLabel,
   sketchRelationVertexIds,
   sketchRelations,
+  sketchRelationHealth,
+  setSketchEdgeAngleMode as previewSetSketchEdgeAngleMode,
+  setSketchEdgeLengthMode as previewSetSketchEdgeLengthMode,
+  setSketchPointDistanceMode as previewSetSketchPointDistanceMode,
+  upsertSketchRelation as previewUpsertSketchRelation,
   sketchVertices
 } from "../../../../engine/api/project/plate-sketch-relations-and-bends.mjs";
 
@@ -37,6 +47,66 @@ export function createPlateSketchInspector({
   function selectedObjectDetail() {
     return getSelectedObjectDetail?.() || null;
   }
+
+  function sketchHostFromProject(project, objectId = selectedObjectId()) {
+    if (!objectId) return null;
+    const entry = project?.objectIndex?.[objectId] || null;
+    if (entry?.collection !== "plates" && entry?.collection !== "sketches") return null;
+    const host = project?.model?.[entry.collection]?.[objectId] || null;
+    return host?.sketch ? { id: objectId, collection: entry.collection, object: host, sketch: host.sketch } : null;
+  }
+
+  const sketchHostForId = (objectId = selectedObjectId()) => sketchHostFromProject(api.project(), objectId);
+
+  const sketchHostLabel = (host) => (host?.collection === "sketches" ? "Sketch" : "Plate");
+
+  const updateSketchHostAndSelectRelation = (operation, relationId, message = "Sketch updated.", objectId = selectedObjectId()) => {
+    const host = sketchHostForId(objectId);
+    if (!host) return;
+    try {
+      const nextProject = operation(host.id, host);
+      applyProjectChange(nextProject);
+      const nextHost = sketchHostFromProject(nextProject, host.id);
+      const nextRelation = sketchRelations(nextHost?.sketch)
+        .find((relation) => relation.id === relationId);
+      selectObject(host.id, nextRelation ? { relationId: nextRelation.id } : {});
+      setMessage(message, "ok");
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const updateSketchHostAndSelectDetail = (operation, detail = {}, message = "Sketch updated.", objectId = selectedObjectId()) => {
+    const host = sketchHostForId(objectId);
+    if (!host) return;
+    try {
+      const nextProject = operation(host.id, host);
+      applyProjectChange(nextProject);
+      selectObject(host.id, detail || {});
+      setMessage(message, "ok");
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const updateSketchHostAndSelectRelationPatch = (operation, relationPatch, message = "Sketch updated.", objectId = selectedObjectId()) => {
+    const host = sketchHostForId(objectId);
+    if (!host || !relationPatch) return;
+    try {
+      const nextProject = operation(host.id, host);
+      applyProjectChange(nextProject);
+      selection.select([host.id]);
+      const nextHost = sketchHostFromProject(nextProject, host.id);
+      const relationKey = sketchRelationKey(relationPatch);
+      const nextRelation = nextHost
+        ? sketchRelations(nextHost.sketch).find((relation) => sketchRelationKey(relation) === relationKey)
+        : null;
+      selectObject(host.id, nextRelation ? { relationId: nextRelation.id } : {});
+      setMessage(message, "ok");
+    } catch (error) {
+      showError(error);
+    }
+  };
 
   function inferPlateSketchRelations(plateId = selectedObjectId()) {
     if (!plateId) return;
@@ -114,16 +184,16 @@ export function createPlateSketchInspector({
   const sketchRelationRemoveLabel = (relation) => (relation?.type === "fixed" ? "Unfix" : "Remove");
   const sketchRelationRemoveMessage = (relation) => (relation?.type === "fixed" ? "Sketch entity unfixed." : "Sketch relation removed.");
 
-  const currentPlateSketchRelation = (plateId, relationId) => {
-    if (!plateId || !relationId) return null;
-    const plate = api.project().model?.plates?.[plateId];
-    return sketchRelations(plate?.sketch).find((relation) => relation.id === relationId) || null;
+  const currentSketchRelation = (objectId, relationId) => {
+    if (!objectId || !relationId) return null;
+    const host = sketchHostForId(objectId);
+    return sketchRelations(host?.sketch).find((relation) => relation.id === relationId) || null;
   };
 
-  const relationPayloadPlateId = (payload = {}) => payload.objectId || selectedObjectId();
+  const relationPayloadObjectId = (payload = {}) => payload.objectId || selectedObjectId();
 
   const relationFromPayload = (payload = {}) => (
-    currentPlateSketchRelation(relationPayloadPlateId(payload), payload.relationId)
+    currentSketchRelation(relationPayloadObjectId(payload), payload.relationId)
     || payload.relation
     || null
   );
@@ -132,20 +202,36 @@ export function createPlateSketchInspector({
     const relation = relationFromPayload(commit);
     if (!relation) return;
     if (relation.type === "length") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchEdgeLength(plateId, relation.edgeId, value, { mode: "driving" }),
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeLength(objectId, relation.edgeId, value, { mode: "driving" })
+          : api.setPlateSketchEdgeLength(objectId, relation.edgeId, value, { mode: "driving" }),
         relation.id,
         "Sketch dimension updated."
       );
     } else if (relation.type === "angle") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchEdgeAngle(plateId, relation.edgeIds, value, { mode: "driving", targetEdgeId: relation.edgeIds?.[1] }),
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeAngle(objectId, relation.edgeIds, value, { mode: "driving", targetEdgeId: relation.edgeIds?.[1] })
+          : api.setPlateSketchEdgeAngle(objectId, relation.edgeIds, value, { mode: "driving", targetEdgeId: relation.edgeIds?.[1] }),
         relation.id,
         "Sketch dimension updated."
       );
     } else if (relation.type === "distance") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchPointDistance(plateId, relation.vertexIds, value, { mode: "driving", targetVertexId: relation.vertexIds?.[1] }),
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchPointDistance(objectId, relation.vertexIds, value, { mode: "driving", targetVertexId: relation.vertexIds?.[1] })
+          : api.setPlateSketchPointDistance(objectId, relation.vertexIds, value, { mode: "driving", targetVertexId: relation.vertexIds?.[1] }),
+        relation.id,
+        "Sketch dimension updated."
+      );
+    } else if (relation.type === "radius") {
+      const display = sketchRadiusRelationDisplay(relation);
+      const radius = display === "diameter" ? value / 2 : value;
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeRadius(objectId, relation.edgeId, radius, { mode: "driving", display })
+          : api.setPlateSketchEdgeRadius(objectId, relation.edgeId, radius, { mode: "driving", display }),
         relation.id,
         "Sketch dimension updated."
       );
@@ -153,8 +239,8 @@ export function createPlateSketchInspector({
   };
 
   const selectPlateSketchRelation = (payload = {}) => {
-    const plateId = relationPayloadPlateId(payload);
-    if (plateId && payload.relationId) selectObject(plateId, { relationId: payload.relationId });
+    const objectId = relationPayloadObjectId(payload);
+    if (objectId && payload.relationId) selectObject(objectId, { relationId: payload.relationId });
   };
 
   const setPlateSketchRelationMode = (payload = {}) => {
@@ -162,20 +248,34 @@ export function createPlateSketchInspector({
     const nextMode = payload.mode;
     if (!relation || !["driving", "driven"].includes(nextMode)) return;
     if (relation.type === "length") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchEdgeLengthMode(plateId, relation.edgeId, nextMode),
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeLengthMode(objectId, relation.edgeId, nextMode)
+          : api.setPlateSketchEdgeLengthMode(objectId, relation.edgeId, nextMode),
         relation.id,
         `Sketch dimension set ${nextMode}.`
       );
     } else if (relation.type === "angle") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchEdgeAngleMode(plateId, relation.edgeIds, nextMode),
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeAngleMode(objectId, relation.edgeIds, nextMode)
+          : api.setPlateSketchEdgeAngleMode(objectId, relation.edgeIds, nextMode),
         relation.id,
         `Sketch dimension set ${nextMode}.`
       );
     } else if (relation.type === "distance") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.setPlateSketchPointDistanceMode(plateId, relation.vertexIds, nextMode),
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchPointDistanceMode(objectId, relation.vertexIds, nextMode)
+          : api.setPlateSketchPointDistanceMode(objectId, relation.vertexIds, nextMode),
+        relation.id,
+        `Sketch dimension set ${nextMode}.`
+      );
+    } else if (relation.type === "radius") {
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeRadiusMode(objectId, relation.edgeId, nextMode)
+          : api.setPlateSketchEdgeRadiusMode(objectId, relation.edgeId, nextMode),
         relation.id,
         `Sketch dimension set ${nextMode}.`
       );
@@ -196,8 +296,10 @@ export function createPlateSketchInspector({
   const removePlateSketchRelation = (payload = {}) => {
     const relation = relationFromPayload(payload);
     if (!relation) return;
-    updatePlateAndSelectSketchDetail(
-      (plateId) => api.removePlateSketchRelation(plateId, relation.id),
+    updateSketchHostAndSelectDetail(
+      (objectId, host) => host.collection === "sketches"
+        ? api.removeSketchRelation(objectId, relation.id)
+        : api.removePlateSketchRelation(objectId, relation.id),
       payload.detail || {},
       sketchRelationRemoveMessage(relation)
     );
@@ -205,60 +307,150 @@ export function createPlateSketchInspector({
 
   const addPlateSketchRelationFromPayload = (payload = {}) => {
     const relation = payload.relation;
-    const plateId = payload.objectId || selectedObjectId();
-    if (!plateId || !relation) return;
+    const objectId = payload.objectId || selectedObjectId();
+    if (!objectId || !relation) return;
     if (relation.type === "length") {
-      updatePlateAndSelectRelationPatch(
-        (plateId) => api.setPlateSketchEdgeLengthMode(plateId, relation.edgeId, "driving"),
+      updateSketchHostAndSelectRelationPatch(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeLengthMode(objectId, relation.edgeId, "driving")
+          : api.setPlateSketchEdgeLengthMode(objectId, relation.edgeId, "driving"),
         { type: "length", edgeId: relation.edgeId },
-        "Plate updated.",
-        plateId
+        `${sketchHostLabel(sketchHostForId(objectId))} updated.`,
+        objectId
       );
       return;
     }
     if (relation.type === "angle") {
-      updatePlateAndSelectRelationPatch(
-        (plateId) => api.setPlateSketchEdgeAngleMode(plateId, relation.edgeIds, "driving"),
+      updateSketchHostAndSelectRelationPatch(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeAngleMode(objectId, relation.edgeIds, "driving")
+          : api.setPlateSketchEdgeAngleMode(objectId, relation.edgeIds, "driving"),
         { type: "angle", edgeIds: relation.edgeIds },
-        "Plate updated.",
-        plateId
+        `${sketchHostLabel(sketchHostForId(objectId))} updated.`,
+        objectId
       );
       return;
     }
     if (relation.type === "distance") {
-      updatePlateAndSelectRelationPatch(
-        (plateId) => api.setPlateSketchPointDistanceMode(plateId, relation.vertexIds, "driving"),
+      updateSketchHostAndSelectRelationPatch(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchPointDistanceMode(objectId, relation.vertexIds, "driving")
+          : api.setPlateSketchPointDistanceMode(objectId, relation.vertexIds, "driving"),
         { type: "distance", vertexIds: relation.vertexIds },
-        "Plate updated.",
-        plateId
+        `${sketchHostLabel(sketchHostForId(objectId))} updated.`,
+        objectId
       );
       return;
     }
-    updatePlateAndSelectRelationPatch(
-      (plateId) => api.upsertPlateSketchRelation(plateId, relation),
+    if (relation.type === "radius") {
+      updateSketchHostAndSelectRelationPatch(
+        (objectId, host) => host.collection === "sketches"
+          ? api.setSketchEdgeRadius(objectId, relation.edgeId, relation.value, { mode: "driven", ...(relation.display ? { display: relation.display } : {}) })
+          : api.setPlateSketchEdgeRadius(objectId, relation.edgeId, relation.value, { mode: "driven", ...(relation.display ? { display: relation.display } : {}) }),
+        { type: "radius", edgeId: relation.edgeId },
+        `${sketchHostLabel(sketchHostForId(objectId))} updated.`,
+        objectId
+      );
+      return;
+    }
+    updateSketchHostAndSelectRelationPatch(
+      (objectId, host) => host.collection === "sketches"
+        ? api.upsertSketchRelation(objectId, relation)
+        : api.upsertPlateSketchRelation(objectId, relation),
       relation,
-      "Plate updated.",
-      plateId
+      `${sketchHostLabel(sketchHostForId(objectId))} updated.`,
+      objectId
     );
   };
 
   const addPlateSketchConstructionLineFromPayload = (payload = {}) => {
-    const plateId = payload.objectId || selectedObjectId();
+    const objectId = payload.objectId || selectedObjectId();
     const { from, to } = payload;
-    if (!plateId || !Array.isArray(from) || !Array.isArray(to)) return;
+    if (!objectId || !Array.isArray(from) || !Array.isArray(to)) return;
+    const host = sketchHostForId(objectId);
+    if (!host) return;
     try {
-      const nextProject = api.addPlateSketchConstructionLine(plateId, from, to);
+      const nextProject = host.collection === "sketches"
+        ? api.addSketchConstructionLine(objectId, from, to)
+        : api.addPlateSketchConstructionLine(objectId, from, to);
       applyProjectChange(nextProject);
-      const nextEdges = sketchConstructionEdges(nextProject.model?.plates?.[plateId]?.sketch);
-      const nextVertexMap = sketchVertexPointMap(nextProject.model?.plates?.[plateId]?.sketch);
+      const nextHost = sketchHostFromProject(nextProject, objectId);
+      const nextEdges = sketchConstructionEdges(nextHost?.sketch);
+      const nextVertexMap = sketchVertexPointMap(nextHost?.sketch);
       const newEdge = [...nextEdges].reverse().find((edge) => {
         const edgeFrom = nextVertexMap.get(edge.from);
         const edgeTo = nextVertexMap.get(edge.to);
         return (sameSketchPoint(edgeFrom, from) && sameSketchPoint(edgeTo, to))
           || (sameSketchPoint(edgeFrom, to) && sameSketchPoint(edgeTo, from));
       });
-      selectObject(plateId, newEdge ? { edgeIds: [newEdge.id] } : {});
-      setMessage("Plate updated.", "ok");
+      selectObject(objectId, newEdge ? { edgeIds: [newEdge.id] } : {});
+      setMessage(`${sketchHostLabel(host)} updated.`, "ok");
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const createPlateSketchThreePointArcFromPayload = (payload = {}) => {
+    const objectId = payload.objectId || selectedObjectId();
+    const vertexIds = arrayValues(payload.vertexIds).filter(Boolean);
+    if (!objectId || vertexIds.length !== 3) return;
+    const host = sketchHostForId(objectId);
+    if (!host) return;
+    try {
+      const result = host.collection === "sketches"
+        ? api.setSketchThreePointArc(objectId, vertexIds, { mode: "driven" })
+        : api.setPlateSketchThreePointArc(objectId, vertexIds, { mode: "driven" });
+      applyProjectChange(result.project);
+      selectObject(objectId, result.edgeId ? { edgeIds: [result.edgeId] } : {});
+      setMessage("3 point arc created.", "ok");
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const convertPlateSketchEdgeArcFromPayload = (payload = {}) => {
+    const objectId = payload.objectId || selectedObjectId();
+    const edgeId = payload.edgeId;
+    if (!objectId || !edgeId) return;
+    updateSketchHostAndSelectDetail(
+      (objectId, host) => host.collection === "sketches"
+        ? api.setSketchEdgeArc(objectId, edgeId, { radius: payload.radius, side: payload.side || "left", mode: "driven" })
+        : api.setPlateSketchEdgeArc(objectId, edgeId, { radius: payload.radius, side: payload.side || "left", mode: "driven" }),
+      { edgeIds: [edgeId] },
+      "Sketch edge converted to arc."
+    );
+  };
+
+  const flipPlateSketchArcFromPayload = (payload = {}) => {
+    const objectId = payload.objectId || selectedObjectId();
+    const edgeId = payload.edgeId;
+    if (!objectId || !edgeId) return;
+    updateSketchHostAndSelectDetail(
+      (objectId, host) => host.collection === "sketches"
+        ? api.flipSketchEdgeArc(objectId, edgeId)
+        : api.flipPlateSketchEdgeArc(objectId, edgeId),
+      { edgeIds: [edgeId] },
+      "Sketch arc flipped."
+    );
+  };
+
+  const splitPlateSketchArcFromPayload = (payload = {}) => {
+    const objectId = payload.objectId || selectedObjectId();
+    const edgeId = payload.edgeId;
+    if (!objectId || !edgeId) return;
+    const host = sketchHostForId(objectId);
+    if (!host) return;
+    try {
+      const result = host.collection === "sketches"
+        ? api.splitSketchEdgeArc(objectId, edgeId, { mode: "driven" })
+        : api.splitPlateSketchEdgeArc(objectId, edgeId, { mode: "driven" });
+      applyProjectChange(result.project);
+      selectObject(objectId, {
+        edgeIds: arrayValues(result.edgeIds).filter(Boolean).slice(0, 2),
+        vertexIds: result.vertexId ? [result.vertexId] : [],
+        sketchMode: "relations"
+      });
+      setMessage("Sketch arc split.", "ok");
     } catch (error) {
       showError(error);
     }
@@ -285,7 +477,9 @@ export function createPlateSketchInspector({
       ? sketchAngleRelationMode(relation)
       : relation.type === "distance"
         ? sketchDistanceRelationMode(relation)
-        : sketchLengthRelationMode(relation)
+        : relation.type === "radius"
+          ? sketchRadiusRelationMode(relation)
+          : sketchLengthRelationMode(relation)
   );
 
   const sketchRelationHealthStatus = (health) => health?.status === "driven" ? "reference" : health?.status;
@@ -297,6 +491,8 @@ export function createPlateSketchInspector({
         ? `${(relation.edgeIds || []).join(" + ")} (${relationMode === "driven" ? `reference ${relation.value} deg` : "driving"})`
       : relation.type === "distance"
         ? `${(relation.vertexIds || []).join(" + ")} (${relationMode === "driven" ? `reference ${relation.value} mm` : "driving"})`
+      : relation.type === "radius"
+        ? `${relation.edgeId} (${relationMode === "driven" ? `reference ${sketchRadiusRelationDisplay(relation) === "diameter" ? relation.value * 2 : relation.value} mm` : "driving"})`
       : relation.type === "point-on-line"
         ? `${relation.vertexId} on ${relation.edgeId}`
       : relation.type === "midpoint"
@@ -357,6 +553,12 @@ export function createPlateSketchInspector({
       .map((status) => ({ status, label: sketchRelationGroupLabel(status), relations: buckets.get(status) }));
   };
 
+  const previewRelationHealthRecord = (status, message = "") => ({
+    status,
+    severity: status === "ok" ? "ok" : status === "driven" ? "info" : status === "redundant" ? "warning" : "error",
+    ...(message ? { message } : {})
+  });
+
   const sortedSketchRelations = (relations, relationHealth) => relations
     .map((relation, index) => ({ relation, index, weight: sketchRelationSortWeight(relation, relationHealth) }))
     .sort((a, b) => a.weight - b.weight || a.index - b.index)
@@ -364,64 +566,96 @@ export function createPlateSketchInspector({
 
   const resolveSketchRelation = (relation, relationMode, healthStatus, relationDetail = {}) => {
     if (healthStatus === "conflicted") {
-      updatePlateAndSelectRelation(
-        (plateId) => api.solvePlateSketchRelation(plateId, relation.id),
+      updateSketchHostAndSelectRelation(
+        (objectId, host) => host.collection === "sketches"
+          ? api.removeSketchRelation(objectId, relation.id)
+          : api.solvePlateSketchRelation(objectId, relation.id),
         relation.id,
-        "Sketch relation resolved."
+        sketchHostForId()?.collection === "sketches" ? "Sketch relation removed." : "Sketch relation resolved."
       );
       return;
     }
     if (healthStatus === "redundant" && relationMode === "driving") {
       if (relation.type === "length") {
-        updatePlateAndSelectRelation(
-          (plateId) => api.setPlateSketchEdgeLengthMode(plateId, relation.edgeId, "driven"),
+        updateSketchHostAndSelectRelation(
+          (objectId, host) => host.collection === "sketches"
+            ? api.setSketchEdgeLengthMode(objectId, relation.edgeId, "driven")
+            : api.setPlateSketchEdgeLengthMode(objectId, relation.edgeId, "driven"),
           relation.id,
           "Sketch relation converted to reference."
         );
         return;
       }
       if (relation.type === "angle") {
-        updatePlateAndSelectRelation(
-          (plateId) => api.setPlateSketchEdgeAngleMode(plateId, relation.edgeIds, "driven"),
+        updateSketchHostAndSelectRelation(
+          (objectId, host) => host.collection === "sketches"
+            ? api.setSketchEdgeAngleMode(objectId, relation.edgeIds, "driven")
+            : api.setPlateSketchEdgeAngleMode(objectId, relation.edgeIds, "driven"),
           relation.id,
           "Sketch relation converted to reference."
         );
         return;
       }
       if (relation.type === "distance") {
-        updatePlateAndSelectRelation(
-          (plateId) => api.setPlateSketchPointDistanceMode(plateId, relation.vertexIds, "driven"),
+        updateSketchHostAndSelectRelation(
+          (objectId, host) => host.collection === "sketches"
+            ? api.setSketchPointDistanceMode(objectId, relation.vertexIds, "driven")
+            : api.setPlateSketchPointDistanceMode(objectId, relation.vertexIds, "driven"),
+          relation.id,
+          "Sketch relation converted to reference."
+        );
+        return;
+      }
+      if (relation.type === "radius") {
+        updateSketchHostAndSelectRelation(
+          (objectId, host) => host.collection === "sketches"
+            ? api.setSketchEdgeRadiusMode(objectId, relation.edgeId, "driven")
+            : api.setPlateSketchEdgeRadiusMode(objectId, relation.edgeId, "driven"),
           relation.id,
           "Sketch relation converted to reference."
         );
         return;
       }
     }
-    updatePlateAndSelectSketchDetail(
-      (plateId) => api.removePlateSketchRelation(plateId, relation.id),
+    updateSketchHostAndSelectDetail(
+      (objectId, host) => host.collection === "sketches"
+        ? api.removeSketchRelation(objectId, relation.id)
+        : api.removePlateSketchRelation(objectId, relation.id),
       relationDetail,
       "Sketch relation removed."
     );
   };
 
   const plateEditor = (plate) => {
-    const definition = plateSketchDefinitionStatus(plate);
+    const host = sketchHostForId(plate?.id);
+    const isStandaloneSketch = host?.collection === "sketches";
+    const definition = isStandaloneSketch ? sketchDefinitionStatus(plate?.sketch) : plateSketchDefinitionStatus(plate);
     const fields = [];
     const outlineEdges = sketchEdges(plate.sketch);
     const constructionEdges = sketchConstructionEdges(plate.sketch);
     const edgeById = new Map([...outlineEdges, ...constructionEdges].map((edge, index) => [edge.id, { edge, index }]));
+    const vertices = sketchVertices(plate.sketch);
+    const vertexIds = new Set(vertices.map((vertex) => vertex.id));
     const relations = sketchRelations(plate.sketch);
+    const relationIds = new Set(relations.map((relation) => relation.id));
     const fixedRelations = relations.filter((relation) => relation.type === "fixed");
-    const relationHealth = plateSketchRelationHealth(plate);
-    const activeRelationId = selectedObjectId() === plate.id ? selectedObjectDetail()?.relationId || null : null;
+    const relationHealth = isStandaloneSketch ? sketchRelationHealth(plate.sketch) : plateSketchRelationHealth(plate);
+    const selectedDetail = selectedObjectId() === plate.id ? selectedObjectDetail() || {} : {};
+    const activeRelationId = relationIds.has(selectedDetail.relationId) ? selectedDetail.relationId : null;
     const activeRelation = activeRelationId ? sketchRelations(plate.sketch).find((relation) => relation.id === activeRelationId) || null : null;
-    const activeEdgeIds = selectedObjectId() === plate.id ? arrayValues(selectedObjectDetail()?.edgeIds).filter(Boolean).slice(0, 2) : [];
-    const activeVertexIds = selectedObjectId() === plate.id ? arrayValues(selectedObjectDetail()?.vertexIds).filter(Boolean).slice(0, 2) : [];
+    const activeEdgeIds = arrayValues(selectedDetail.edgeIds).filter((edgeId) => edgeById.has(edgeId)).slice(0, 2);
+    const activeVertexIds = arrayValues(selectedDetail.vertexIds).filter((vertexId) => vertexIds.has(vertexId)).slice(0, 3);
     const constructionEdgeIds = new Set(constructionEdges.map((edge) => edge.id));
     const canConstrainVertexToEdge = (vertexId, edgeId) => {
       const edge = edgeById.get(edgeId)?.edge;
       return Boolean(edge && edge.from !== vertexId && edge.to !== vertexId);
     };
+    const vertexTouchesOtherCircularArc = (vertexId, targetEdgeId) => Boolean(vertexId && targetEdgeId && [...outlineEdges, ...constructionEdges].some((edge) => (
+      edge?.id
+      && edge.id !== targetEdgeId
+      && (edge.from === vertexId || edge.to === vertexId)
+      && sketchEdgeIsCircularArc(plate.sketch, edge.id)
+    )));
 
     const relationSelectionDetail = (relation) => {
       const edgeIds = sketchRelationEdgeIds(relation).filter(Boolean);
@@ -461,7 +695,7 @@ export function createPlateSketchInspector({
         type: "statusListCard",
         title: "Under-defined entities",
         status: "redundant",
-        actions: [{
+        actions: isStandaloneSketch ? [] : [{
           label: "Fix remaining",
           primary: true,
           action: "object.plate.sketchUnderDefined.fixRemaining",
@@ -489,10 +723,13 @@ export function createPlateSketchInspector({
     const relationRemoveLabel = sketchRelationRemoveLabel;
 
     const sketchRelationValueDescriptor = (relation, relationMode) => {
-      if (!["length", "angle", "distance"].includes(relation.type) || relationMode === "driven") return {};
+      if (!["length", "angle", "distance", "radius"].includes(relation.type) || relationMode === "driven") return {};
       const unit = relation.type === "angle" ? "deg" : "mm";
+      const value = relation.type === "radius" && sketchRadiusRelationDisplay(relation) === "diameter"
+        ? relation.value * 2
+        : relation.value;
       return {
-        value: relation.value,
+        value,
         valueLabel: `${sketchRelationLabel(relation)} ${unit}`,
         valueTitle: `Driving ${sketchRelationLabel(relation).toLowerCase()} (${unit})`,
         options: { min: 0, minExclusive: true },
@@ -506,7 +743,7 @@ export function createPlateSketchInspector({
     };
 
     const relationModeToggleAction = (relation, relationMode) => {
-      if (!["length", "angle", "distance"].includes(relation.type)) return null;
+      if (!["length", "angle", "distance", "radius"].includes(relation.type)) return null;
       const nextMode = relationMode === "driven" ? "driving" : "driven";
       return {
         label: relationMode === "driven" ? "Make Driving" : "Make Driven",
@@ -526,9 +763,11 @@ export function createPlateSketchInspector({
           label: "Resolve",
           primary: true,
           action: "object.plate.sketchRelation.resolve",
-          title: healthStatus === "conflicted"
+          title: healthStatus === "conflicted" && isStandaloneSketch
+            ? "Remove this conflicted relation from the standalone sketch."
+            : healthStatus === "conflicted"
             ? "Try to move sketch geometry so this relation is satisfied."
-            : healthStatus === "redundant" && relationMode === "driving" && ["length", "angle", "distance"].includes(relation.type)
+            : healthStatus === "redundant" && relationMode === "driving" && ["length", "angle", "distance", "radius"].includes(relation.type)
               ? "Convert this redundant driving dimension to reference."
               : "Remove this relation to resolve the sketch issue.",
           payload: {
@@ -686,9 +925,34 @@ export function createPlateSketchInspector({
       return relations.find((item) => sketchRelationKey(item) === key) || null;
     };
 
+    const standaloneSketchRelationActionPreview = (relationPatch) => {
+      if (relationPatch.type === "length") {
+        return previewSetSketchEdgeLengthMode(plate, relationPatch.edgeId, "driving");
+      }
+      if (relationPatch.type === "angle") {
+        return previewSetSketchEdgeAngleMode(plate, relationPatch.edgeIds, "driving");
+      }
+      if (relationPatch.type === "distance") {
+        return previewSetSketchPointDistanceMode(plate, relationPatch.vertexIds, "driving");
+      }
+      return previewUpsertSketchRelation(plate, relationPatch);
+    };
+
     const relationActionPreview = (relation) => {
       try {
-        return plateSketchRelationActionPreview(plate, relation);
+        if (!isStandaloneSketch) return plateSketchRelationActionPreview(plate, relation);
+        const nextSketchObject = standaloneSketchRelationActionPreview(relation);
+        const relationKey = sketchRelationKey(relation);
+        const nextRelation = sketchRelations(nextSketchObject?.sketch).find((item) => sketchRelationKey(item) === relationKey) || null;
+        const health = nextRelation
+          ? sketchRelationHealth(nextSketchObject.sketch)[nextRelation.id] || previewRelationHealthRecord("ok")
+          : previewRelationHealthRecord("conflicted", "Relation could not be evaluated.");
+        return {
+          plate: nextSketchObject,
+          relation: nextRelation,
+          health,
+          definition: sketchDefinitionStatus(nextSketchObject?.sketch)
+        };
       } catch (error) {
         return {
           relation: null,
@@ -712,7 +976,10 @@ export function createPlateSketchInspector({
     const relationActionDescriptor = (relation, label = null) => {
       const actionLabel = label || sketchRelationLabel(relation);
       const existingRelation = existingRelationForAction(relation);
-      if (existingRelation) {
+      const radiusDisplaySwitch = existingRelation?.type === "radius"
+        && relation.type === "radius"
+        && sketchRadiusRelationDisplay(existingRelation) !== sketchRadiusRelationDisplay(relation);
+      if (existingRelation && !radiusDisplaySwitch) {
         return {
           label: `${actionLabel} (existing)`,
           status: "existing",
@@ -743,10 +1010,47 @@ export function createPlateSketchInspector({
       payload: { objectId: plate.id, from: clone(from), to: clone(to) }
     });
 
+    const edgeArcActionDescriptor = (edgeId, edgePoints) => ({
+      label: "Edge Arc",
+      action: "object.plate.sketchEdge.arc",
+      title: "Convert this straight sketch edge into a circular arc.",
+      payload: {
+        objectId: plate.id,
+        edgeId,
+        radius: defaultEdgeArcRadius(edgePoints),
+        side: "left"
+      }
+    });
+
+    const flipArcActionDescriptor = (edgeId) => ({
+      label: "Flip Arc",
+      action: "object.plate.sketchArc.flip",
+      title: "Flip this circular arc to the opposite side of its chord.",
+      payload: { objectId: plate.id, edgeId }
+    });
+
+    const splitArcActionDescriptor = (edgeId) => ({
+      label: "Split Arc",
+      action: "object.plate.sketchArc.split",
+      title: "Split this circular arc into two tangent arcs at its midpoint.",
+      payload: { objectId: plate.id, edgeId }
+    });
+
     const selectedEntityRelationActions = () => {
       const actions = [];
+      if (activeVertexIds.length === 3 && !activeEdgeIds.length) {
+        actions.push({
+          label: "3 Point Arc",
+          action: "object.plate.sketchArc.threePoint",
+          title: "Convert these three consecutive sketch vertices into a circular arc.",
+          payload: { objectId: plate.id, vertexIds: [...activeVertexIds] }
+        });
+        return actions;
+      }
       if (activeVertexIds.length === 2 && activeEdgeIds.length === 1) {
-        actions.push(relationActionDescriptor({ type: "symmetric", vertexIds: activeVertexIds, edgeId: activeEdgeIds[0] }));
+        if (!sketchEdgeIsCircularArc(plate.sketch, activeEdgeIds[0])) {
+          actions.push(relationActionDescriptor({ type: "symmetric", vertexIds: activeVertexIds, edgeId: activeEdgeIds[0] }));
+        }
         return actions;
       }
       if (activeVertexIds.length === 2) {
@@ -764,9 +1068,14 @@ export function createPlateSketchInspector({
       }
       if (activeVertexIds.length === 1 && activeEdgeIds.length === 1) {
         if (canConstrainVertexToEdge(activeVertexIds[0], activeEdgeIds[0])) {
+          const isCircularArc = sketchEdgeIsCircularArc(plate.sketch, activeEdgeIds[0]);
+          const canPointOnCircle = isCircularArc && !vertexTouchesOtherCircularArc(activeVertexIds[0], activeEdgeIds[0]);
           actions.push(
-            relationActionDescriptor({ type: "point-on-line", vertexId: activeVertexIds[0], edgeId: activeEdgeIds[0] }),
-            relationActionDescriptor({ type: "midpoint", vertexId: activeVertexIds[0], edgeId: activeEdgeIds[0] })
+            ...(canPointOnCircle ? [relationActionDescriptor({ type: "point-on-circle", vertexId: activeVertexIds[0], edgeId: activeEdgeIds[0] })] : []),
+            ...(!isCircularArc ? [
+              relationActionDescriptor({ type: "point-on-line", vertexId: activeVertexIds[0], edgeId: activeEdgeIds[0] }),
+              relationActionDescriptor({ type: "midpoint", vertexId: activeVertexIds[0], edgeId: activeEdgeIds[0] })
+            ] : [])
           );
         }
         return actions;
@@ -776,23 +1085,54 @@ export function createPlateSketchInspector({
         return actions;
       }
       if (activeEdgeIds.length === 2) {
+        const selectedArcEdgeCount = activeEdgeIds.filter((edgeId) => sketchEdgeIsCircularArc(plate.sketch, edgeId)).length;
         actions.push(
-          relationActionDescriptor({ type: "parallel", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
-          relationActionDescriptor({ type: "collinear", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
-          relationActionDescriptor({ type: "perpendicular", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
-          relationActionDescriptor({ type: "equal-length", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
-          relationActionDescriptor({ type: "angle", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }, "Angle")
+          ...(selectedArcEdgeCount >= 1 ? [relationActionDescriptor({ type: "tangent", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] })] : []),
+          ...(selectedArcEdgeCount === 2 ? [
+            relationActionDescriptor({ type: "concentric", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
+            relationActionDescriptor({ type: "equal-radius", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] })
+          ] : []),
+          ...(!selectedArcEdgeCount ? [
+            relationActionDescriptor({ type: "parallel", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
+            relationActionDescriptor({ type: "collinear", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
+            relationActionDescriptor({ type: "perpendicular", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
+            relationActionDescriptor({ type: "equal-length", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }),
+            relationActionDescriptor({ type: "angle", edgeIds: activeEdgeIds, targetEdgeId: activeEdgeIds[1] }, "Angle")
+          ] : [])
         );
         return actions;
       }
       if (activeEdgeIds.length === 1) {
         const edgePoints = sketchEdgePoints(plate.sketch, activeEdgeIds[0]);
+        const isCircularArc = sketchEdgeIsCircularArc(plate.sketch, activeEdgeIds[0]);
+        const isConstructionEdge = constructionEdgeIds.has(activeEdgeIds[0]);
         actions.push(
-          relationActionDescriptor({ type: "horizontal", edgeId: activeEdgeIds[0] }),
-          relationActionDescriptor({ type: "vertical", edgeId: activeEdgeIds[0] }),
+          ...(!isCircularArc && !isConstructionEdge && edgePoints
+            ? [edgeArcActionDescriptor(activeEdgeIds[0], edgePoints)]
+            : []),
+          ...(isCircularArc && !isConstructionEdge ? [flipArcActionDescriptor(activeEdgeIds[0])] : []),
+          ...(isCircularArc && !isConstructionEdge ? [splitArcActionDescriptor(activeEdgeIds[0])] : []),
+          ...(!isCircularArc ? [
+            relationActionDescriptor({ type: "horizontal", edgeId: activeEdgeIds[0] }),
+            relationActionDescriptor({ type: "vertical", edgeId: activeEdgeIds[0] }),
+            relationActionDescriptor({ type: "length", edgeId: activeEdgeIds[0] }, "Length")
+          ] : []),
           relationActionDescriptor({ type: "fixed", edgeId: activeEdgeIds[0] }),
-          relationActionDescriptor({ type: "length", edgeId: activeEdgeIds[0] }, "Length"),
-          ...(constructionEdgeIds.has(activeEdgeIds[0]) || !edgePoints ? [] : [constructionLineActionDescriptor(edgePoints.from, edgePoints.to)])
+          ...(isCircularArc ? [relationActionDescriptor({
+            type: "radius",
+            edgeId: activeEdgeIds[0],
+            value: measuredSketchEdgeRadius(plate.sketch, activeEdgeIds[0]),
+            mode: "driven",
+            display: "radius"
+          }, "Radius")] : []),
+          ...(isCircularArc ? [relationActionDescriptor({
+            type: "radius",
+            edgeId: activeEdgeIds[0],
+            value: measuredSketchEdgeRadius(plate.sketch, activeEdgeIds[0]),
+            mode: "driven",
+            display: "diameter"
+          }, "Diameter")] : []),
+          ...(isCircularArc || isConstructionEdge || !edgePoints ? [] : [constructionLineActionDescriptor(edgePoints.from, edgePoints.to)])
         );
       }
       return actions;
@@ -860,7 +1200,7 @@ export function createPlateSketchInspector({
     if (inspector) fields.push(inspector);
     const entityInspector = selectedEntityInspector();
     if (entityInspector) fields.push(entityInspector);
-    if (fixedRelations.length) {
+    if (!isStandaloneSketch && fixedRelations.length) {
       fields.push({
         type: "action",
         label: `Unfix all (${fixedRelations.length})`,
@@ -896,6 +1236,10 @@ export function createPlateSketchInspector({
     removePlateSketchRelation,
     addPlateSketchRelationFromPayload,
     addPlateSketchConstructionLineFromPayload,
+    createPlateSketchThreePointArcFromPayload,
+    convertPlateSketchEdgeArcFromPayload,
+    flipPlateSketchArcFromPayload,
+    splitPlateSketchArcFromPayload,
     fixPlateSketchUnderDefinedEntities,
     removePlateSketchFixedRelations,
     plateEditor
@@ -918,4 +1262,11 @@ function sketchEdgePoints(sketch, edgeId) {
   const from = edge ? vertexMap.get(edge.from) : null;
   const to = edge ? vertexMap.get(edge.to) : null;
   return from && to ? { from, to } : null;
+}
+
+function defaultEdgeArcRadius(edgePoints) {
+  if (!edgePoints?.from || !edgePoints?.to) return 50;
+  const chordLength = Math.hypot(edgePoints.to[0] - edgePoints.from[0], edgePoints.to[1] - edgePoints.from[1]);
+  const radius = Math.max(chordLength * 0.75, chordLength / 2 + 1, 10);
+  return Math.round(radius * 1000) / 1000;
 }

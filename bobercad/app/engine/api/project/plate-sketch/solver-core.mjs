@@ -32,6 +32,7 @@ import {
   finiteAngleDegrees,
   inferredSketchRelations,
   measuredSketchEdgeAngle,
+  measuredSketchEdgeRadius,
   measuredSketchPointDistance,
   normalizeSketch,
   pointMoved,
@@ -39,7 +40,10 @@ import {
   sketchAngleDeltaDegrees,
   sketchDimensionMode,
   sketchEdgeAngleFromVectors,
+  sketchEdgeCenterPoint,
+  sketchEdgeIsCircularArc,
   sketchEdgePoints,
+  sketchEdgeTangentAtVertex,
   sketchRelationVector,
   sketchVertexPointMap,
   vec2,
@@ -352,6 +356,17 @@ export function solveSketchRelationsAfterVertexChange(sketch, changedVertexIds =
     if (!fixed.has(edge.from)) setPoint(edge.from, [from[0] + offset[0], from[1] + offset[1]]);
     if (!fixed.has(edge.to)) setPoint(edge.to, [to[0] + offset[0], to[1] + offset[1]]);
   };
+  const applyPointOnCircleRelation = (vertexId, edgeId) => {
+    const vertexPoint = point(vertexId);
+    if (!vertexPoint || fixed.has(vertexId) || !sketchEdgeIsCircularArc(sketch, edgeId)) return;
+    const center = sketchEdgeCenterPoint(sketch, edgeId);
+    const radius = measuredSketchEdgeRadius(sketch, edgeId);
+    const vector = [vertexPoint[0] - center[0], vertexPoint[1] - center[1]];
+    const distance = Math.hypot(vector[0], vector[1]);
+    const unit = distance > EPSILON ? [vector[0] / distance, vector[1] / distance] : [1, 0];
+    const projected = [center[0] + unit[0] * radius, center[1] + unit[1] * radius];
+    setPoint(vertexId, projected);
+  };
   const applyMidpointRelation = (vertexId, edgeId) => {
     const edge = edgeById(sketch, edgeId);
     const vertexPoint = point(vertexId);
@@ -491,6 +506,7 @@ export function solveSketchRelationsAfterVertexChange(sketch, changedVertexIds =
       if (relation.type === "vertical-points") setPointAxisRelation(relation.vertexIds, "y");
       if (relation.type === "coincident") applyCoincidentRelation(relation.vertexIds);
       if (relation.type === "point-on-line") applyPointOnLineRelation(relation.vertexId, relation.edgeId);
+      if (relation.type === "point-on-circle") applyPointOnCircleRelation(relation.vertexId, relation.edgeId);
       if (relation.type === "midpoint") applyMidpointRelation(relation.vertexId, relation.edgeId);
       if (relation.type === "symmetric") applySymmetricRelation(relation.vertexIds, relation.edgeId);
     }
@@ -539,6 +555,7 @@ export function solveSketchRelationsAfterVertexChange(sketch, changedVertexIds =
       if (relation.type === "vertical-points") setPointAxisRelation(relation.vertexIds, "y");
       if (relation.type === "coincident") applyCoincidentRelation(relation.vertexIds);
       if (relation.type === "point-on-line") applyPointOnLineRelation(relation.vertexId, relation.edgeId);
+      if (relation.type === "point-on-circle") applyPointOnCircleRelation(relation.vertexId, relation.edgeId);
       if (relation.type === "midpoint") applyMidpointRelation(relation.vertexId, relation.edgeId);
       if (relation.type === "symmetric") applySymmetricRelation(relation.vertexIds, relation.edgeId);
     }
@@ -560,11 +577,65 @@ function relationTouchesVertices(sketch, relation, vertexIds) {
   return sketchRelationEdgeIds(relation).some((edgeId) => edgeEndpointIds(sketch, edgeId).some((vertexId) => ids.has(vertexId)));
 }
 
+function sharedEdgeVertexIds(sketch, edgeIds) {
+  const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds({ edgeIds });
+  const first = edgeById(sketch, firstEdgeId);
+  const second = edgeById(sketch, secondEdgeId);
+  if (!first || !second) return [];
+  return [first.from, first.to].filter((vertexId) => vertexId === second.from || vertexId === second.to);
+}
+
+function sketchTangentResidual(sketch, edgeIds) {
+  const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds({ edgeIds });
+  const shared = sharedEdgeVertexIds(sketch, edgeIds);
+  if (!shared.length) return Infinity;
+  const vertexId = shared[0];
+  const first = sketchEdgeTangentAtVertex(sketch, firstEdgeId, vertexId);
+  const second = sketchEdgeTangentAtVertex(sketch, secondEdgeId, vertexId);
+  return Math.abs(Math.abs(first[0] * second[0] + first[1] * second[1]) - 1);
+}
+
+function sketchEqualRadiusResidual(sketch, edgeIds) {
+  const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds({ edgeIds });
+  try {
+    const first = measuredSketchEdgeRadius(sketch, firstEdgeId);
+    const second = measuredSketchEdgeRadius(sketch, secondEdgeId);
+    return Math.abs(first - second);
+  } catch {
+    return Infinity;
+  }
+}
+
+function sketchConcentricResidual(sketch, edgeIds) {
+  const [firstEdgeId, secondEdgeId] = sketchRelationEdgeIds({ edgeIds });
+  try {
+    const first = sketchEdgeCenterPoint(sketch, firstEdgeId);
+    const second = sketchEdgeCenterPoint(sketch, secondEdgeId);
+    if (!first || !second) return Infinity;
+    return Math.hypot(second[0] - first[0], second[1] - first[1]);
+  } catch {
+    return Infinity;
+  }
+}
+
+function shouldRelaxForDirectVertexMove(sketch, relation, changedVertexIds) {
+  if (relation.type === "equal-length") return relationTouchesVertices(sketch, relation, changedVertexIds);
+  if (relation.type === "tangent") {
+    return relationTouchesVertices(sketch, relation, changedVertexIds) && sketchTangentResidual(sketch, relation.edgeIds) > 1e-6;
+  }
+  if (relation.type === "equal-radius") {
+    return relationTouchesVertices(sketch, relation, changedVertexIds) && sketchEqualRadiusResidual(sketch, relation.edgeIds) > 1e-6;
+  }
+  if (relation.type === "concentric") {
+    return relationTouchesVertices(sketch, relation, changedVertexIds) && sketchConcentricResidual(sketch, relation.edgeIds) > 1e-6;
+  }
+  return false;
+}
+
 export function relaxRelationsForDirectVertexMove(sketch, changedVertexIds = []) {
   if (!changedVertexIds.length) return sketch;
   const relations = sketchRelations(sketch).filter((relation) => {
-    if (relation.type !== "equal-length") return true;
-    return !relationTouchesVertices(sketch, relation, changedVertexIds);
+    return !shouldRelaxForDirectVertexMove(sketch, relation, changedVertexIds);
   });
   return withSketchRelations(sketch, relations);
 }
